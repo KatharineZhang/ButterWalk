@@ -17,7 +17,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.betterwalk.betterwalk",
       "config": {
-        "googleMapsApiKey": // INSERT API KEY HERE
+        "googleMapsApiKey": "AIzaSyChTTcBidR0I2xpN4COBPXddUCKv4E24R4"
       }
     },
     "android": {
@@ -28,7 +28,7 @@
       "package": "com.betterwalk.betterwalk",
       "config": {
         "googleMaps": {
-        "apiKey":  // INSERT API KEY HERE
+        "apiKey": "AIzaSyChTTcBidR0I2xpN4COBPXddUCKv4E24R4"
         }
       }
     },

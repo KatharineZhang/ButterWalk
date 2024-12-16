@@ -7,6 +7,6 @@
 - If you do not have axios, download by `npm install axios`
 
 # To Run
-- cd into the server folder and run ```npm run build``` then `npm run start`
+- cd into the server folder and run ```npm run buildandstart```
 - cd into the client folder and run ```npx expo start```
 - Scan the QR code that appears in the terminal with your phone, which should open the app in Expo Go!
