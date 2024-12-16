@@ -5,6 +5,6 @@
 - Install the Expo Go app on your phone or a mobile emulator onto your computer.
 
 # To Run
-- cd into the server folder and run ```npm run buildandstart```
+- cd into the server folder and run ```npm run build```
 - cd into the client folder and run ```npx expo start```
 - Scan the QR code that appears in the terminal with your phone, which should open the app in Expo Go!
