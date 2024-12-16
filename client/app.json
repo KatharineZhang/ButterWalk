@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Husky BetterWalk",
+    "slug": "husky-betterWalk",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/betterWalkLogo.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/betterWalkLogo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.betterwalk.betterwalk",
+      "config": {
+        "googleMapsApiKey": "AIzaSyChTTcBidR0I2xpN4COBPXddUCKv4E24R4"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/betterWalkLogo.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.betterwalk.betterwalk",
+      "config": {
+        "googleMaps": {
+        "apiKey": "AIzaSyChTTcBidR0I2xpN4COBPXddUCKv4E24R4"
+        }
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/betterWalkLogo.png"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
