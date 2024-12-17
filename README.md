@@ -6,7 +6,6 @@
   - Fill in the EXPO_PUBLIC_GOOGLE_MAPS_APIKEY. Ask someone on the dev team for this key.
 - cd into both the client and server folders and run ```npm i```
 - Install the Expo Go app on your phone or a mobile emulator onto your computer.
-- If you do not have axios, download by `npm install axios` (what is this needed for? I don't have it installed -Snigdha)
 
 # To Run
 - cd into the server folder and run ```npm run buildandstart```
