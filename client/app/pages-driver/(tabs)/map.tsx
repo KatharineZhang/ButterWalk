@@ -37,7 +37,9 @@ export default function App() {
   //fake destination from back when i was just trying to get the directions to work
   //const destination = {latitude: 37.771707, longitude: -122.4053769};
   //api key curtesey of snigdha (three cheers!!)
-  const GOOGLE_MAPS_APIKEY = 'AIzaSyAi4GiqY4FUMk7CQWB0MxNQIGWOsr_laBw';
+  const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
+  ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
+  : "";
   //again, this is fake data (i was testing out putting markers on the map)
   const locationData = [
    // {latitude: lat, longitude: long},
