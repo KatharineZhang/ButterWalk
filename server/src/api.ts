@@ -14,6 +14,7 @@ export type ErrorResponse = { success: false, error: string };
 export type AcceptResponse = 
 { student: { accepted: true }, 
 driver: {  netID: string, location: string, destination: string, numRiders: number, requestid: number } };
+export type CancelResponse = { success: { cancelled: true }, otherNetId?: string };
 
 // custom Queue implementation
 class Queue<T> {
@@ -58,8 +59,3 @@ export const removeRideReq = (netid: string): void => {
   });
   rideReqQueue = newQueue;
 }
-
-// TODO: these will be phased out
-export let uniqueUsers = new Set<number>();
-export const users: User[] = []; // users array
-
