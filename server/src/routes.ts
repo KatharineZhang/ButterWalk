@@ -230,7 +230,8 @@ driverLocation?: [ latitude: number, longitude: number ]): { success: true, wait
     return { success: true, waitTime: ETA };
 }
 
-/* refresh, each user will send its own location to the websocket, 
+/* We need to know where either the student or driver is at any given time to update map ui. On 
+refresh, each user will send its own location to the websocket, 
 which will pass that information to the opposite user (student → driver, driver → student).
 
 Takes in: { directive: "LOCATION”, id: string, latitude: number, longitude: number }
