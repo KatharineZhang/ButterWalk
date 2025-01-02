@@ -182,8 +182,8 @@ export let rideReqQueue = new Queue<localRideRequest>(); // rideRequests Queue
 
 // TODO: this is a temporary solution. We will need to implement a more robust solution
 export const removeRideReq = (netid: string): void => {
-  let newQueue = new Queue<localRideRequest>();
-  let rideReq = rideReqQueue.get();
+  const newQueue = new Queue<localRideRequest>();
+  const rideReq = rideReqQueue.get();
   rideReq.forEach((request) => {
     if (request.netid != netid) {
       newQueue.add(request);

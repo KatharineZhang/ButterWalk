@@ -30,7 +30,7 @@ wss.on("connection", (ws: WebSocketServer) => {
     netid: "unknown",
   }); // add the client to the list
 
-  ws.on("message", (message: string, id: any) => {
+  ws.on("message", (message: string) => {
     handleWebSocketMessage(ws, message);
   });
 

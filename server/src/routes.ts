@@ -41,7 +41,7 @@ export const signIn = async (
   // TODO: check the users database for the specific id, and if it is not there, will add a new user.
   // TODO: make sure this user is not in the ProblematicUsers table with a blacklisted field of 1
   try {
-    const addedUser = await createUser({
+    await createUser({
       netid,
       name,
       phone_number,
@@ -181,6 +181,7 @@ export const cancelRide = (
     // since drivers will only be attached to accepted requests
     status = "1";
   }
+  console.log(status); // to make eslint happy for now
 
   // TODO: look through all the ride requests made by this specific user using the status
   // TODO: change any active (based on status) request to canceled (status: -1)
@@ -386,6 +387,8 @@ export const query = (
   date?: Date,
   rating?: number
 ): QueryResponse | ErrorResponse => {
+  console.log(`rideorApp: ${rideorApp}, date: ${date}, rating: ${rating}`); // to make eslint happy for now
+
   // TODO: get some basic stats about our current feedback table back to the client
   // types of canned queries we will return are: number of feedback entries,
   // filter ride or app feedback, all feedback from a date, all feedback from a specific rating

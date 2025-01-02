@@ -17,9 +17,9 @@ const db = getFirestore(app);
 
 // Various tables / collections in the database
 const usersCollection = collection(db, "Users");
-const feedbackCollection = collection(db, "Feedback");
-const RideRequestsCollection = collection(db, "RideRequests");
-const ProblematicUsersCollection = collection(db, "ProblematicUsers");
+// const feedbackCollection = collection(db, "Feedback");
+// const RideRequestsCollection = collection(db, "RideRequests");
+// const ProblematicUsersCollection = collection(db, "ProblematicUsers");
 
 // Adds a user to the database
 export async function createUser(user: User) {
