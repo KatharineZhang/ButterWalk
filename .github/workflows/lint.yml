@@ -1,0 +1,50 @@
+name: Lint
+
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
+  push:
+    branches:
+      - main
+  # Replace pull_request with pull_request_target if you
+  # plan to use this action with forks, see the Limitations section
+  pull_request:
+    branches:
+      - main
+
+# Down scope as necessary via https://docs.github.com/en/actions/security-guides/automatic-token-authentication#modifying-the-permissions-for-the-github_token
+permissions:
+  checks: write
+  contents: write
+
+jobs:
+  run-linters:
+    name: Run linters
+    runs-on: ${{ matrix.os }} # Use the matrix of OS to see what this script can run on
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest] # Matrix of valid OS that can run this job on
+
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+        # Step 2: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22.12.0" # Use your preferred version of Node.js
+
+        # Step 3: Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+        # Step 4: Run ESLint
+      - name: Run ESLint
+        run: npm run lint
+
+        # Step 5: Run Prettier fix
+      - name: Run Prettier fix
+        run: npm run prettier-fix
