@@ -34,21 +34,20 @@ jobs:
 
       # Step 3: Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: npm install --prefix ./server
+          npm install --prefix ./client
 
-      # Step 4: Run linters using lint-action
-      - name: Run linters
-        uses: wearerequired/lint-action@v2
-        with:
-          eslint: true
-          prettier: true
+      # Step 5: Run ESLint in server directory
+      - name: Run ESLint
+        run: npm run lint
+        working-directory: ./server # for now there is only eslint set up in server
 
-      # Optional Steps (if you prefer explicit lint steps for ESLint and Prettier)
-      # If you want to run ESLint and Prettier separately and have more control over the configuration:
-      # Step 5: Run ESLint
-      # - name: Run ESLint
-      #   run: npm run lint
+      # Step 6: Run Prettier fix in server directory
+      - name: Run Prettier fix in server directory
+        run: npm run prettier-fix
+        working-directory: ./server
 
-      # Step 6: Run Prettier fix
-      # - name: Run Prettier fix
-      #   run: npm run prettier-fix
+      # Step 7: Run Prettier fix in client directory
+      - name: Run Prettier fix in client directory
+        run: npm run prettier-fix
+        working-directory: ./client
