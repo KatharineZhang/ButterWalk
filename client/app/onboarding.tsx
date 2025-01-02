@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import { styles } from "@/assets/styles";
 import { useState, useRef } from "react";
 import {
@@ -7,6 +8,7 @@ import {
   FlatList,
   Animated,
   Pressable,
+  ImageSourcePropType,
 } from "react-native";
 import OnboardingItem from "../components/OnboardingItem";
 import Paginator from "@/components/Paginator";
@@ -15,12 +17,15 @@ import { Link } from "expo-router";
 //Onboarding Page
 export default function Onboarding() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [buttonTitle, setButtonTitle] = useState("Skip");
+  // const [buttonTitle, setButtonTitle] = useState("Skip");
   const scrollX = useRef(new Animated.Value(0)).current;
   const pagesRef = useRef(null);
 
-  const viewableItemsChanged = useRef(({ viewableItems }: any) => {
-    setCurrentIndex(viewableItems[0].index); //changes the current index to the index of the viewable item
+  const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
+    const firstViewableItem = viewableItems[0];
+    if (firstViewableItem.index !== null) {
+      setCurrentIndex(firstViewableItem.index); //changes the current index to the index of the viewable item
+    }
   }).current;
 
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current; //next slide must be 50% visible to change the current index
@@ -63,7 +68,7 @@ export default function Onboarding() {
 const pages: Array<{
   id: string;
   title: string;
-  image: any;
+  image: ImageSourcePropType;
 }> = [
   {
     id: "1",

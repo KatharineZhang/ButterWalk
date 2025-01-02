@@ -1,8 +1,9 @@
+// import React, { useState } from "react";
 import React, { useState, useEffect } from "react";
-import MapView, { Marker, Heatmap } from "react-native-maps";
-import { StyleSheet, View } from "react-native";
+import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import * as Location from "expo-location";
+import { styles } from "@/assets/styles";
 
 // KATHARINE MADE A CHANGE
 
@@ -11,16 +12,18 @@ import * as Location from "expo-location";
 //i think this is going to require getting the location before going to the map page
 //TBD when I get it (pros and cons to each)
 export default function App() {
-  const [location, setLocation] = useState();
+  // const [location, setLocation] = useState();
+  const [destination, setDestination] = useState<{ latitude: number; longitude: number } | null>(null);
+
   //getting permissions to use their location (this is the popup thingie asking if we can use location)
   const getPermissions = async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync();
+    const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
       console.log("Please grant location permission");
       //it was telling me i couldn't return nothing, so this is just a garbage return
       return { location: 22, longitude: 33 };
     }
-    let currentLocation = await Location.getCurrentPositionAsync({});
+    const currentLocation = await Location.getCurrentPositionAsync({});
     //print current user's location to console
     //this worked when i had this function in the useEffect(), but that only got the
     //location when the page re-rendered, so i need a different plan
@@ -31,10 +34,13 @@ export default function App() {
       longitude: currentLocation.coords.latitude,
     };
   };
-  //left useEffect() here because maybe it'll be useful someday?
-  //useEffect(() => {
-  //call to get permissions:
-  let destination = getPermissions();
+  useEffect(() => {
+    const fetchDestination = async () => {
+      const location = await getPermissions();
+      setDestination({ latitude: location.location, longitude: location.longitude });
+    };
+    fetchDestination();
+  }, []);
   //}, []);
   //fake destination from back when i was just trying to get the directions to work
   //const destination = {latitude: 37.771707, longitude: -122.4053769};
@@ -72,25 +78,15 @@ export default function App() {
           title={`Marker ${index + 1}`}
         />
       ))}
-      <MapViewDirections
-        //doesn't work but hopefully someday this will route directions btwn the current location
-        //and the target destination
-        //we're gonna have to update this a lot as the current location changes
-        //google maps api doesn't have realtime updates as far as i could figure out :(
-        destination={destination}
-        apikey={GOOGLE_MAPS_APIKEY}
-      />
+      {destination && (
+        <MapViewDirections
+          destination={destination}
+          //and the target destination
+          //we're gonna have to update this a lot as the current location changes
+          //google maps api doesn't have realtime updates as far as i could figure out :(
+          apikey={GOOGLE_MAPS_APIKEY}
+        />
+      )}
     </MapView>
   );
 }
-
-//Styling stuff
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  map: {
-    width: "100%",
-    height: "100%",
-  },
-});
