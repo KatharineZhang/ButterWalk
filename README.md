@@ -16,7 +16,7 @@
 
 # Development
 
-## Websocket and Database: Things to know
+### Websocket and Database: Things to know
 
 - If your app is not connecting to the websocket immidiately upon arriving to the home page and the
   connection the said websocket is timing out, make sure your IP Address in the .env is correct
