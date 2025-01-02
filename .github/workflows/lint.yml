@@ -41,12 +41,12 @@ jobs:
         run: npm install --prefix ./client
 
       # Step 5: Run ESLint in client directory
-      - name: Run ESLint
+      - name: Run ESLint in client directory
         run: npm run lint
         working-directory: ./client
 
       # Step 6: Run ESLint in server directory
-      - name: Run ESLint
+      - name: Run ESLint in server directory
         run: npm run lint
         working-directory: ./server
 
