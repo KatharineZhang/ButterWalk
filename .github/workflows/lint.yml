@@ -6,8 +6,6 @@ on:
   push:
     branches:
       - main
-  # Replace pull_request with pull_request_target if you
-  # plan to use this action with forks, see the Limitations section
   pull_request:
     branches:
       - main
@@ -15,36 +13,42 @@ on:
 # Down scope as necessary via https://docs.github.com/en/actions/security-guides/automatic-token-authentication#modifying-the-permissions-for-the-github_token
 permissions:
   checks: write
-  contents: write
+  contents: read # Read permission is sufficient here
 
 jobs:
   run-linters:
     name: Run linters
-    runs-on: ${{ matrix.os }} # Use the matrix of OS to see what this script can run on
 
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest] # Matrix of valid OS that can run this job on
+    runs-on: ubuntu-latest # run the checks on ubuntu
 
     steps:
       # Step 1: Checkout code
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3 # Use the latest version of the checkout action
 
-        # Step 2: Set up Node.js
+      # Step 2: Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "22.12.0" # Use your preferred version of Node.js
+          node-version: "22.12.0"
 
-        # Step 3: Install dependencies
+      # Step 3: Install dependencies
       - name: Install dependencies
         run: npm install
 
-        # Step 4: Run ESLint
-      - name: Run ESLint
-        run: npm run lint
+      # Step 4: Run linters using lint-action
+      - name: Run linters
+        uses: wearerequired/lint-action@v2
+        with:
+          eslint: true
+          prettier: true
 
-        # Step 5: Run Prettier fix
-      - name: Run Prettier fix
-        run: npm run prettier-fix
+      # Optional Steps (if you prefer explicit lint steps for ESLint and Prettier)
+      # If you want to run ESLint and Prettier separately and have more control over the configuration:
+      # Step 5: Run ESLint
+      # - name: Run ESLint
+      #   run: npm run lint
+
+      # Step 6: Run Prettier fix
+      # - name: Run Prettier fix
+      #   run: npm run prettier-fix
