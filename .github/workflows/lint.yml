@@ -24,7 +24,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest] # Matrix of valid OS that can run this job on
+        os: [windows-latest, macos-latest] # Matrix of valid OS that can run this job on
 
     steps:
       # Step 1: Checkout code
