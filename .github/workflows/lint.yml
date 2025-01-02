@@ -32,10 +32,13 @@ jobs:
         with:
           node-version: "22.12.0"
 
-      # Step 3: Install dependencies
-      - name: Install dependencies
+      # Step 3: Install dependencies in server
+      - name: Install dependencies for server
         run: npm install --prefix ./server
-          npm install --prefix ./client
+
+      # Step 4: Install dependencies in client
+      - name: Install dependencies for client
+        run: npm install --prefix ./client
 
       # Step 5: Run ESLint in server directory
       - name: Run ESLint
