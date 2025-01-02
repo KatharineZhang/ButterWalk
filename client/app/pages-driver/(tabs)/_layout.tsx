@@ -1,5 +1,5 @@
 import Header from "@/components/Header";
-import WebSocketService from "@/types/WebSocketService";
+import WebSocketService from "@/services/WebSocketService";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Tabs, useLocalSearchParams } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";

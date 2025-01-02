@@ -1,7 +1,7 @@
 import { View, Pressable, Text } from "react-native";
 import { styles } from "../assets/styles";
 import { Link, Redirect } from "expo-router";
-import WebSocketService from "@/types/WebSocketService";
+import WebSocketService from "@/services/WebSocketService";
 import { useState } from "react";
 
 interface HeaderProps {

@@ -33,5 +33,6 @@ service cloud.firestore {
 }
 ```
 
-- Run `npm run prettier-fix` in any server code before pushing to format it,
-  `npm run lint` to check for any eslint errors
+- Run `npm run prettier-fix` in any client or server code before pushing to format it,
+  and `npm run lint` in server code to check for any eslint errors.
+  NOTE: Snigdha couldn't figure out eslint for client code, so if you know, please add that as well!

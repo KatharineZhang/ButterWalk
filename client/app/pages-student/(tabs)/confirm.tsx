@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { styles } from "@/assets/styles";
-import WebSocketService from "../../../types/WebSocketService";
+import WebSocketService from "../../../services/WebSocketService";
 
 //this is the ride confirmation page
 export default function Tab() {

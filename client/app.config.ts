@@ -1,5 +1,5 @@
-import { ExpoConfig, ConfigContext } from '@expo/config';
-import * as dotenv from 'dotenv';
+import { ExpoConfig, ConfigContext } from "@expo/config";
+import * as dotenv from "dotenv";
 
 // initialize dotenv
 dotenv.config();
@@ -20,34 +20,34 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   splash: {
     image: "./assets/images/betterWalkLogo.png",
     resizeMode: "contain",
-    backgroundColor: "#ffffff"
+    backgroundColor: "#ffffff",
   },
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.betterwalk.betterwalk",
     config: {
-      googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
-    }
+      googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY,
+    },
   },
   android: {
     adaptiveIcon: {
       foregroundImage: "./assets/images/betterWalkLogo.png",
-      backgroundColor: "#ffffff"
+      backgroundColor: "#ffffff",
     },
     package: "com.betterwalk.betterwalk",
     config: {
       googleMaps: {
-        apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
-      }
-    }
+        apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY,
+      },
+    },
   },
   web: {
     bundler: "metro",
     output: "static",
-    favicon: "./assets/images/betterWalkLogo.png"
+    favicon: "./assets/images/betterWalkLogo.png",
   },
   plugins: ["expo-router"],
   experiments: {
-    typedRoutes: true
-  }
+    typedRoutes: true,
+  },
 });

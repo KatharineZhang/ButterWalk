@@ -2,7 +2,7 @@ import Header from "@/components/Header";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Tabs, useLocalSearchParams } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import WebSocketService from "../../../types/WebSocketService";
+import WebSocketService from "../../../services/WebSocketService";
 
 //Each like subgroup of pages should have a _layout.tsx file, which specifies how our pages are organized
 
