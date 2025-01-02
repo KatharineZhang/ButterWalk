@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import {
-  rideRequest,
+  localRideRequest,
   rideReqQueue,
   ErrorResponse,
   removeRideReq,
@@ -12,6 +12,7 @@ import {
   LocationResponse,
   QueryResponse,
 } from "./api";
+import { createUser } from "./firebaseActions";
 dotenv.config();
 
 /* Signs a specific student or driver into the app. Will check the users database for the specific id, 
@@ -23,14 +24,14 @@ directive: "SIGNIN", phoneNum: string, netID: string, name: string, studentNum: 
 
 - On error, returns the json object in the form:  { response: “ERROR”, success: false, error: string, category: “SIGNIN” }. 
 - Returns a json object TO THE STUDENT in the form: { response: “SIGNIN”, success: true }. */
-export const signIn = (
-  phoneNum: string,
+export const signIn = async (
   netid: string,
   name: string,
-  studentNum: number,
-  role: "STUDENT" | "DRIVER"
-): GeneralResponse | ErrorResponse => {
-  if (!phoneNum || !netid || !role || !name || studentNum <= 0) {
+  phone_number: string,
+  student_number: string,
+  student_or_driver: 0 | 1
+): Promise<GeneralResponse | ErrorResponse> => {
+  if (!phone_number || !netid || !name || !student_number) {
     return {
       response: "ERROR",
       error: "Missing or invalid sign in details.",
@@ -39,7 +40,22 @@ export const signIn = (
   }
   // TODO: check the users database for the specific id, and if it is not there, will add a new user.
   // TODO: make sure this user is not in the ProblematicUsers table with a blacklisted field of 1
-  return { response: "SIGNIN", success: true };
+  try {
+    const addedUser = await createUser({
+      netid,
+      name,
+      phone_number,
+      student_number,
+      student_or_driver,
+    });
+    return { response: "SIGNIN", success: true };
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error adding user to database: ${e}.`,
+      category: "SIGNIN",
+    };
+  }
 };
 
 /* Adds a new ride request object to the queue using the parameters given. 
@@ -73,7 +89,7 @@ export const requestRide = (
   // on error, return { success: false, error: 'Error adding ride request to the database.'};
 
   // we also want to keep the requests locally in the server queue, but without too much information
-  const newRideReq: rideRequest = { requestid, netid };
+  const newRideReq: localRideRequest = { requestid, netid };
   rideReqQueue.add(newRideReq);
   return { response: "REQUEST_RIDE", requestid };
 };
@@ -100,7 +116,7 @@ export const acceptRide = (): AcceptResponse | ErrorResponse => {
   }
 
   // get the next request in the queue
-  const nextRide = rideReqQueue.pop() as rideRequest;
+  const nextRide = rideReqQueue.pop() as localRideRequest;
   // TODO: look up the request in the database
   // TODO: update the request in database to add the driver id and change the status of the request to 1 (accepted)
   // if there is an error, return { success: false, error: 'Error accepting ride request.'};
@@ -144,7 +160,7 @@ And if there driver needs to be notified, the json object returned TO THE DRIVER
 { response: "CANCEL", success: true } */
 export const cancelRide = (
   netid: string,
-  role: "STUDENT" | "DRIVER"
+  role: 0 | 1
 ): CancelResponse | ErrorResponse => {
   if (!netid) {
     return {
@@ -155,7 +171,7 @@ export const cancelRide = (
   }
 
   let status: "0 or 1" | "1";
-  if (role === "STUDENT") {
+  if (role === 0) {
     // get rid of any pending requests in the local queue that have the same netid
     removeRideReq(netid);
     // look from either accepted or pending requests
@@ -373,5 +389,18 @@ export const query = (
   // TODO: get some basic stats about our current feedback table back to the client
   // types of canned queries we will return are: number of feedback entries,
   // filter ride or app feedback, all feedback from a date, all feedback from a specific rating
+
+  // EXAMPLE OF HOW TO QUERY THE DATABASE, ESPECIALLY THE MAPPING OF THE DATA
+  // try {
+  //   const results = await queryUsers("bob");
+  //   const users = results.docs.map((d) => ({ id: d.id, ...d.data() }));
+  //   console.log(users);
+  // } catch (e) {
+  //   return {
+  //     response: "ERROR",
+  //     error: `Error querying users: ${e}`,
+  //     category: "QUERY",
+  //   };
+  // }
   return { response: "QUERY", numberOfEntries: 0, feedback: [] };
 };

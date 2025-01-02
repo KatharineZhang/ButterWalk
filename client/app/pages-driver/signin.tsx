@@ -28,8 +28,6 @@ const Login = () => {
     }
 
     try {
-      //call route
-      // alert("call route here");
       setSignedIn(true);
     } catch (error: any) {
       console.error(error.message);
@@ -44,7 +42,7 @@ const Login = () => {
     return (
       <Redirect
         href={{
-          pathname: "/pages-driver/(tabs)/",
+          pathname: "/pages-driver/(tabs)",
           params: {
             netID: netID != "" ? netID.replace("@uw.edu", "") : "dev-netID",
           },

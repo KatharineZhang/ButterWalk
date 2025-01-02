@@ -52,7 +52,7 @@ const Login = () => {
     return (
       <Redirect
         href={{
-          pathname: "/pages-student/(tabs)/",
+          pathname: "/pages-student/(tabs)",
           params: {
             netID: email != "" ? email.replace("@uw.edu", "") : "dev-netID",
           },

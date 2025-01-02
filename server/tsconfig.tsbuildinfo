@@ -1,1 +1,1 @@
-{"root":["./src/api.ts","./src/firebaseconfig.ts","./src/index.ts","./src/routes.ts","./src/websocket.ts"],"version":"5.6.2"}
+{"root":["./src/api.ts","./src/firebaseactions.ts","./src/firebaseconfig.ts","./src/index.ts","./src/routes.ts","./src/websocket.ts"],"version":"5.6.2"}

@@ -20,10 +20,10 @@ import {
   WebSocketResponse,
 } from "./api";
 
-export const handleWebSocketMessage = (
+export const handleWebSocketMessage = async (
   ws: WebSocketServer,
   message: string
-): void => {
+): Promise<void> => {
   let input: WebSocketMessage;
   let resp;
 
@@ -53,10 +53,10 @@ export const handleWebSocketMessage = (
       break;
 
     case "SIGNIN":
-      resp = signIn(
-        input.phoneNum,
+      resp = await signIn(
         input.netid,
         input.name,
+        input.phoneNum,
         input.studentNum,
         input.role
       );
@@ -96,13 +96,22 @@ export const handleWebSocketMessage = (
 
     case "CANCEL":
       resp = cancelRide(input.netid, input.role);
-      const cancelResponse = resp as CancelResponse;
-      // send response back to client (usually the student)
-      sendWebSocketMessage(ws, cancelResponse.info);
-      if (cancelResponse.otherNetid) {
-        // send response back to opposite client (the driver usually)
-        // this could be the student if the driver cancels after a 5 minute wait
-        sendMessageToNetidnetid(cancelResponse.otherNetid, cancelResponse.info);
+      if ("info" in resp) {
+        // if there is info, we know it is a CancelResponse
+        const cancelResponse = resp as CancelResponse;
+        // send response back to client (usually the student)
+        sendWebSocketMessage(ws, cancelResponse.info);
+        if (cancelResponse.otherNetid) {
+          // send response back to opposite client (the driver usually)
+          // this could be the student if the driver cancels after a 5 minute wait
+          sendMessageToNetidnetid(
+            cancelResponse.otherNetid,
+            cancelResponse.info
+          );
+        }
+      } else {
+        // the ErrorResponse case, send only to original client
+        sendWebSocketMessage(ws, resp);
       }
       break;
 

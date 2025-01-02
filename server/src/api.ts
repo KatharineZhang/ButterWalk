@@ -1,6 +1,7 @@
-// This is where all the server data structures will go
+// This is where all the server / database data structures will go
+import { Timestamp } from "firebase/firestore";
 
-// All commands
+// Webhook commands
 export type commands =
   | "CONNECT"
   | "SIGNIN"
@@ -20,11 +21,11 @@ export type WebSocketMessage =
   | { directive: "CONNECT"; netid: string }
   | {
       directive: "SIGNIN";
-      phoneNum: string;
       netid: string;
       name: string;
-      studentNum: number;
-      role: "STUDENT" | "DRIVER";
+      phoneNum: string;
+      studentNum: string;
+      role: 0 | 1; //  "STUDENT" | "DRIVER";
     }
   | {
       directive: "REQUEST_RIDE";
@@ -35,7 +36,7 @@ export type WebSocketMessage =
       numRiders: number;
     }
   | { directive: "ACCEPT_RIDE" }
-  | { directive: "CANCEL"; netid: string; role: "STUDENT" | "DRIVER" }
+  | { directive: "CANCEL"; netid: string; role: 0 | 1 } //  "STUDENT" | "DRIVER"
   | { directive: "COMPLETE"; requestid: number }
   | {
       directive: "ADD_FEEDBACK";
@@ -141,12 +142,13 @@ export type ErrorResponse = {
     | "QUERY";
 };
 
-// custom Queue implementation
-export type rideRequest = {
+// Server Types and Data Structures
+export type localRideRequest = {
   requestid: number;
   netid: string;
 };
 
+// TODO: Change this implementation to be specific to localRideRequest
 class Queue<T> {
   private items: T[];
 
@@ -176,11 +178,11 @@ class Queue<T> {
   };
 }
 
-export let rideReqQueue = new Queue<rideRequest>(); // rideRequests Queue
+export let rideReqQueue = new Queue<localRideRequest>(); // rideRequests Queue
 
 // TODO: this is a temporary solution. We will need to implement a more robust solution
 export const removeRideReq = (netid: string): void => {
-  let newQueue = new Queue<rideRequest>();
+  let newQueue = new Queue<localRideRequest>();
   let rideReq = rideReqQueue.get();
   rideReq.forEach((request) => {
     if (request.netid != netid) {
@@ -188,4 +190,49 @@ export const removeRideReq = (netid: string): void => {
     }
   });
   rideReqQueue = newQueue;
+};
+
+// Database Types
+
+// CREATE TABLE Users ( netid varchar(20) PRIMARY KEY, name text, student_num char(7),
+// phone_num char(10), student_or_driver int); –- 0 for student, 1 for driver
+export type User = {
+  netid: string;
+  name: string;
+  phone_number: string;
+  student_number: string;
+  student_or_driver: number;
+};
+
+// CREATE TABLE Feedback (feedbackid int PRIMARY KEY, rating float, textFeedback text,
+// rideOrApp int); -- 0 for ride, 1 for app feedback
+export type Feedback = {
+  feedbackid: number;
+  rating: number;
+  textFeedback: string;
+  rideOrApp: 0 | 1;
+};
+
+// CREATE TABLE RideRequests (requestid int PRIMARY KEY, netid varchar(20) REFERENCES Users(netid),
+// driverid varchar(20) REFERENCES Drivers(driverid),
+// pickedUpAt smalldatetime, locationFrom geography, locationTo geography, numRiders int,
+// status int); –- -1 for canceled, 0 for requested, 1 for accepted, 2 for completed
+export type RideRequest = {
+  requestid: number;
+  netid: string;
+  driverid: string | null;
+  pickedUpAt: Timestamp | null;
+  locationFrom: string; // TODO: should these be coordinates or location names?
+  locationTo: string;
+  numRiders: number;
+  status: -1 | 0 | 1 | 2;
+};
+
+// CREATE TABLE ProblematicUsers (netid varchar(20) REFERENCES Users(netid) PRIMARY KEY,
+// requestid int REFERENCES RideRequests(requestid), reason text, blacklisted int); -- 0 for reported, 1 for blacklisted
+export type ProblematicUser = {
+  netid: string;
+  requestid: number;
+  reason: string;
+  blacklisted: 0 | 1;
 };
