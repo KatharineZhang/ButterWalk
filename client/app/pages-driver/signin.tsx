@@ -29,9 +29,13 @@ const Login = () => {
 
     try {
       setSignedIn(true);
-    } catch (error: any) {
-      console.error(error.message);
-      alert("Sign In Failed" + error.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error.message);
+        alert("Sign In Failed" + error.message);
+      } else {
+        console.error("An unknown error occurred");
+      }
     } finally {
       setLoading(false);
     }

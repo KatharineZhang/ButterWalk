@@ -1,11 +1,11 @@
 import { styles } from "@/assets/styles";
-import { View, Text, Image, useWindowDimensions } from "react-native";
+import { View, Text, Image, useWindowDimensions, ImageSourcePropType } from "react-native";
 
 interface OnboardingItemProps {
   item: {
     id: string;
     title: string;
-    image: any;
+    image: ImageSourcePropType;
   };
 }
 

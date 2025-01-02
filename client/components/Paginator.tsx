@@ -1,13 +1,13 @@
 import { styles } from "@/assets/styles";
-import { View, Animated, useWindowDimensions } from "react-native";
+import { View, Animated, useWindowDimensions, ImageSourcePropType } from "react-native";
 
 interface PaginatorProps {
   data: Array<{
     id: string;
     title: string;
-    image: any;
+    image: ImageSourcePropType;
   }>;
-  scrollX: any;
+  scrollX: Animated.Value;
 }
 export default function Paginator({ data, scrollX }: PaginatorProps) {
   const { width } = useWindowDimensions();

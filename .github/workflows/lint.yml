@@ -40,17 +40,22 @@ jobs:
       - name: Install dependencies for client
         run: npm install --prefix ./client
 
-      # Step 5: Run ESLint in server directory
-      - name: Run ESLint
+      # Step 5: Run ESLint in client directory
+      - name: Run ESLint in client directory
         run: npm run lint
-        working-directory: ./server # for now there is only eslint set up in server
+        working-directory: ./client
 
-      # Step 6: Run Prettier fix in server directory
+      # Step 6: Run ESLint in server directory
+      - name: Run ESLint in server directory
+        run: npm run lint
+        working-directory: ./server
+
+      # Step 7: Run Prettier fix in server directory
       - name: Run Prettier fix in server directory
         run: npm run prettier-fix
         working-directory: ./server
 
-      # Step 7: Run Prettier fix in client directory
+      # Step 8: Run Prettier fix in client directory
       - name: Run Prettier fix in client directory
         run: npm run prettier-fix
         working-directory: ./client

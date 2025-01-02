@@ -13,7 +13,7 @@ class WebSocketService {
       return;
     }
 
-    let IP_ADDRESS = process.env.EXPO_PUBLIC_IP_ADDRESS
+    const IP_ADDRESS = process.env.EXPO_PUBLIC_IP_ADDRESS
       ? process.env.EXPO_PUBLIC_IP_ADDRESS
       : undefined;
     if (!IP_ADDRESS) {
