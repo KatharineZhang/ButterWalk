@@ -21,12 +21,14 @@ export default function Onboarding() {
   const scrollX = useRef(new Animated.Value(0)).current;
   const pagesRef = useRef(null);
 
-  const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
-    const firstViewableItem = viewableItems[0];
-    if (firstViewableItem.index !== null) {
-      setCurrentIndex(firstViewableItem.index); //changes the current index to the index of the viewable item
+  const viewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
+      const firstViewableItem = viewableItems[0];
+      if (firstViewableItem.index !== null) {
+        setCurrentIndex(firstViewableItem.index); //changes the current index to the index of the viewable item
+      }
     }
-  }).current;
+  ).current;
 
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current; //next slide must be 50% visible to change the current index
 

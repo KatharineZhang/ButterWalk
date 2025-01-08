@@ -46,7 +46,7 @@ const Login = () => {
     return (
       <Redirect
         href={{
-          pathname: "/pages-driver/(tabs)",
+          pathname: "/map",
           params: {
             netID: netID != "" ? netID.replace("@uw.edu", "") : "dev-netID",
           },

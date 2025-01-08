@@ -3,9 +3,11 @@ import React, { useState, useEffect } from "react";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import * as Location from "expo-location";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import Header from "@/components/Header";
+// import { View, StyleSheet } from "react-native";
 import { styles } from "@/assets/styles";
-
-// KATHARINE MADE A CHANGE
+import { View } from "react-native";
 
 //right now the map shows but the console just has errors - i'm trying to get location
 //before i show the map so that I can route directions from their location
@@ -13,7 +15,10 @@ import { styles } from "@/assets/styles";
 //TBD when I get it (pros and cons to each)
 export default function App() {
   // const [location, setLocation] = useState();
-  const [destination, setDestination] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [destination, setDestination] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   //getting permissions to use their location (this is the popup thingie asking if we can use location)
   const getPermissions = async () => {
@@ -37,7 +42,10 @@ export default function App() {
   useEffect(() => {
     const fetchDestination = async () => {
       const location = await getPermissions();
-      setDestination({ latitude: location.location, longitude: location.longitude });
+      setDestination({
+        latitude: location.location,
+        longitude: location.longitude,
+      });
     };
     fetchDestination();
   }, []);
@@ -58,35 +66,49 @@ export default function App() {
 
   return (
     //putting the map region on the screen
-    <MapView
-      style={styles.container}
-      initialRegion={{
-        latitude: 47.78825,
-        longitude: -122.4324,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
-      }}
-    >
-      {locationData.map((data, index) => (
-        //putting the markers on the map
-        <Marker
-          key={index}
-          coordinate={{
-            latitude: data.latitude,
-            longitude: data.longitude,
-          }}
-          title={`Marker ${index + 1}`}
-        />
-      ))}
-      {destination && (
-        <MapViewDirections
-          destination={destination}
-          //and the target destination
-          //we're gonna have to update this a lot as the current location changes
-          //google maps api doesn't have realtime updates as far as i could figure out :(
-          apikey={GOOGLE_MAPS_APIKEY}
-        />
-      )}
-    </MapView>
+    <View>
+      <SafeAreaProvider style={{ flex: 1 }} />
+      <Header netID={"jdhkjdhf" as string} />
+      <MapView
+        style={styles.map}
+        initialRegion={{
+          latitude: 47.78825,
+          longitude: -122.4324,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        }}
+      >
+        {locationData.map((data, index) => (
+          //putting the markers on the map
+          <Marker
+            key={index}
+            coordinate={{
+              latitude: data.latitude,
+              longitude: data.longitude,
+            }}
+            title={`Marker ${index + 1}`}
+          />
+        ))}
+        {destination && (
+          <MapViewDirections
+            destination={destination}
+            //and the target destination
+            //we're gonna have to update this a lot as the current location changes
+            //google maps api doesn't have realtime updates as far as i could figure out :(
+            apikey={GOOGLE_MAPS_APIKEY}
+          />
+        )}
+      </MapView>
+    </View>
   );
 }
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//   },
+//   map: {
+//     width: "100%",
+//     height: "100%",
+//   },
+// });
