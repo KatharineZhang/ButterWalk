@@ -8,8 +8,8 @@ import {
   Pressable,
 } from "react-native";
 import { useState } from "react";
-import { Redirect } from "expo-router";
 import { styles } from "@/assets/styles";
+import { Redirect } from "expo-router";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -52,7 +52,7 @@ const Login = () => {
     return (
       <Redirect
         href={{
-          pathname: "/pages-student/(tabs)",
+          pathname: "/map",
           params: {
             netID: email != "" ? email.replace("@uw.edu", "") : "dev-netID",
           },
@@ -71,14 +71,14 @@ const Login = () => {
           placeholderTextColor={"#808080"}
           onChangeText={(text) => setEmail(text)}
           autoCapitalize="none"
-        ></TextInput>
+        />
         <TextInput
           value={phoneNumber}
           style={localStyles.input}
-          placeholder="Phone Number ( XXX - XXX - XXXX )"
+          placeholder="Phone Number ( ### - ### - #### )"
           placeholderTextColor={"#808080"}
           onChangeText={(text) => setPhoneNumber(text)}
-        ></TextInput>
+        />
         {loading ? (
           <ActivityIndicator size="large" color="#0000ff" />
         ) : (

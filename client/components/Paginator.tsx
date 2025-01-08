@@ -1,5 +1,10 @@
 import { styles } from "@/assets/styles";
-import { View, Animated, useWindowDimensions, ImageSourcePropType } from "react-native";
+import {
+  View,
+  Animated,
+  useWindowDimensions,
+  ImageSourcePropType,
+} from "react-native";
 
 interface PaginatorProps {
   data: Array<{
