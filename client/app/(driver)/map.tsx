@@ -8,13 +8,19 @@ import Header from "@/components/Header";
 // import { View, StyleSheet } from "react-native";
 import { styles } from "@/assets/styles";
 import { View } from "react-native";
+import { useLocalSearchParams } from "expo-router";
+import WebSocketService from "@/services/WebSocketService";
 
 //right now the map shows but the console just has errors - i'm trying to get location
 //before i show the map so that I can route directions from their location
 //i think this is going to require getting the location before going to the map page
 //TBD when I get it (pros and cons to each)
 export default function App() {
-  // const [location, setLocation] = useState();
+  // Extract netid from Redirect URL from signin page
+  const { netid } = useLocalSearchParams();
+  // Use netid to pair this WebSocket connection with a netid
+  WebSocketService.connect(netid as string);
+
   const [destination, setDestination] = useState<{
     latitude: number;
     longitude: number;
@@ -68,7 +74,7 @@ export default function App() {
     //putting the map region on the screen
     <View>
       <SafeAreaProvider style={{ flex: 1 }} />
-      <Header netID={"jdhkjdhf" as string} />
+      <Header netid={netid as string} />
       <MapView
         style={styles.map}
         initialRegion={{

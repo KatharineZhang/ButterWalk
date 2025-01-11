@@ -5,10 +5,10 @@ import WebSocketService from "@/services/WebSocketService";
 import { useState } from "react";
 
 interface HeaderProps {
-  netID: string;
+  netid: string;
 }
 
-export default function Header({ netID }: HeaderProps) {
+export default function Header({ netid }: HeaderProps) {
   const [signedIn, setSignedIn] = useState(true);
   const logout = () => {
     // Disconnect from websocket
@@ -17,7 +17,7 @@ export default function Header({ netID }: HeaderProps) {
   };
 
   if (!signedIn) {
-    return <Redirect href="/driverOrstudent" />;
+    return <Redirect href={{ pathname: "/driverOrstudent" }} />;
   }
 
   return (
@@ -28,7 +28,7 @@ export default function Header({ netID }: HeaderProps) {
           { margin: 20, fontWeight: "bold", color: "#ffffff" },
         ]}
       >
-        {netID}
+        {netid}
       </Text>
       <View style={styles.headerButtonContainer}>
         <Pressable style={styles.button} onPress={logout}>

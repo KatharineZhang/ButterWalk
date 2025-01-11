@@ -12,15 +12,15 @@ import { Redirect } from "expo-router";
 import { styles } from "@/assets/styles";
 
 const Login = () => {
-  const [netID, setNetID] = useState("");
+  const [netid, setNetID] = useState("");
   const [loading, setLoading] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
 
   const signIn = async () => {
     setLoading(true);
-    setNetID(netID.trim());
+    setNetID(netid.trim());
 
-    if (!netID) {
+    if (!netid) {
       alert("Driver Net ID is required");
       setLoading(false);
 
@@ -46,9 +46,9 @@ const Login = () => {
     return (
       <Redirect
         href={{
-          pathname: "/map",
+          pathname: "/(driver)/map",
           params: {
-            netID: netID != "" ? netID.replace("@uw.edu", "") : "dev-netID",
+            netid: netid != "" ? netid.replace("@uw.edu", "") : "dev-netID",
           },
         }}
       />
@@ -58,7 +58,7 @@ const Login = () => {
     <View style={styles.container}>
       <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
         <TextInput
-          value={netID}
+          value={netid}
           style={localStyles.input}
           placeholder="UW Police Department Driver NetID"
           placeholderTextColor={"#808080"}
