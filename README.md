@@ -16,10 +16,24 @@
 
 # Development
 
+### Expo: Things to know
+
+- If you run `npx expo start` and see errors that look like:
+
+```
+The following packages should be updated for best compatibility with the installed expo version:
+  expo@52.0.20 - expected version: ~52.0.25
+  expo-constants@17.0.3 - expected version: ~17.0.4
+  expo-font@13.0.2 - expected version: ~13.0.3 ...
+```
+
+run a command similar to `npm i expo@52.0.25 expo-constants@17.0.4 expo-font@13.0.3...` where you update the recommended packages to the expected versions.
+
 ### Websocket and Database: Things to know
 
 - If your app is not connecting to the websocket immidiately upon arriving to the home page and the
   connection the said websocket is timing out, make sure your IP Address in the .env is correct
+  (SOMETIMES YOUR IPV4 ADDRESS CHANGES!!!)
 - Before testing the database, make sure the database rules are set to true not false. Otherwise,
   you will run into a permission issue. TODO: Change the rules programmatically upon authentication
 

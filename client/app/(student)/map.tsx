@@ -4,16 +4,22 @@ import { View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Header from "@/components/Header";
 import { styles } from "@/assets/styles";
+import { useLocalSearchParams } from "expo-router";
+import WebSocketService from "@/services/WebSocketService";
 
-//Just a component for the <MapView> feature
-//Currently defaults u to some spot between edmonds and kingston bc i was trying to figure out the coords to have it default to UW
-//but it wouldnt work T^T (but at least its kind of close B))
+// Home component with the <MapView> feature
+// Currently defaults u to some spot between edmonds and kingston bc i was trying to figure out the coords to have it default to UW
+// but it wouldnt work T^T (but at least its kind of close B))
 export default function App() {
-  // TODO: plumb netid here
+  // Extract netid from Redirect URL from signin page
+  const { netid } = useLocalSearchParams();
+  // Use netid to pair this WebSocket connection with a netid
+  WebSocketService.connect(netid as string);
+
   return (
     <View>
       <SafeAreaProvider style={{ flex: 1 }} />
-      <Header netID={"jdhkjdhf" as string} />
+      <Header netid={netid as string} />
       <MapView
         style={styles.map}
         initialRegion={{
