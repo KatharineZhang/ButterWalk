@@ -176,14 +176,6 @@ class Queue<T> {
   peek = (): T | undefined => {
     return this.items[0];
   };
-  toString = (): string => {
-    let str = "";
-    this.items.forEach((item) => {
-      const req = item as unknown as localRideRequest;
-      str += req.netid + ", ";
-    });
-    return str;
-  };
 }
 
 export let rideReqQueue = new Queue<localRideRequest>(); // rideRequests Queue
@@ -209,16 +201,16 @@ export type User = {
   name: string;
   phone_number: string;
   student_number: string;
-  student_or_driver: number;
+  student_or_driver: 0 | 1; // 0 for student, 1 for driver
 };
 
 // CREATE TABLE Feedback (feedbackid int PRIMARY KEY, rating float, textFeedback text,
 // rideOrApp int); -- 0 for ride, 1 for app feedback
 export type Feedback = {
-  // feedbackid: number;
+  // feedbackid created and stored in the database, we don't have to worry about it
   rating: number;
   textFeedback: string;
-  rideOrApp: 0 | 1;
+  rideOrApp: 0 | 1; // 0 for ride, 1 for app feedback
 };
 
 // CREATE TABLE RideRequests (requestid int PRIMARY KEY, netid varchar(20) REFERENCES Users(netid),
@@ -226,7 +218,7 @@ export type Feedback = {
 // completedAt smalldatetime, locationFrom geography, locationTo geography, numRiders int,
 // status int); –- -1 for canceled, 0 for requested, 1 for accepted, 2 for completed
 export type RideRequest = {
-  // requestid: number; actually a string.
+  // requestid created and stored in the database, we can't store it here
   netid: string;
   driverid: string | null;
   completedAt: Timestamp | null;
@@ -242,5 +234,5 @@ export type ProblematicUser = {
   netid: string;
   requestid: string;
   reason: string;
-  blacklisted: 0 | 1;
+  blacklisted: 0 | 1; // 0 for reported, 1 for blacklisted
 };
