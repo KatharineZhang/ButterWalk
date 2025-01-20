@@ -87,7 +87,7 @@ export type GeneralResponse = {
 
 export type RequestRideResponse = {
   response: "REQUEST_RIDE";
-  requestid: number;
+  requestid: string;
 };
 
 export type WaitTimeResponse = { response: "WAIT_TIME"; waitTime: number };
@@ -103,7 +103,7 @@ export type DriverAcceptResponse = {
   location: string;
   destination: string;
   numRiders: number;
-  requestid: number;
+  requestid: string;
 };
 
 export type CancelResponse = {
@@ -121,7 +121,7 @@ export type LocationResponse = {
 export type QueryResponse = {
   response: "QUERY";
   numberOfEntries: number;
-  feedback: { rating: number; textFeeback: string }[];
+  feedback: Feedback[];
 };
 
 export type ErrorResponse = {
@@ -144,7 +144,7 @@ export type ErrorResponse = {
 
 // Server Types and Data Structures
 export type localRideRequest = {
-  requestid: number;
+  requestid: string;
   netid: string;
 };
 
@@ -207,7 +207,7 @@ export type User = {
 // CREATE TABLE Feedback (feedbackid int PRIMARY KEY, rating float, textFeedback text,
 // rideOrApp int); -- 0 for ride, 1 for app feedback
 export type Feedback = {
-  feedbackid: number;
+  // feedbackid: number;
   rating: number;
   textFeedback: string;
   rideOrApp: 0 | 1;
@@ -215,24 +215,24 @@ export type Feedback = {
 
 // CREATE TABLE RideRequests (requestid int PRIMARY KEY, netid varchar(20) REFERENCES Users(netid),
 // driverid varchar(20) REFERENCES Drivers(driverid),
-// pickedUpAt smalldatetime, locationFrom geography, locationTo geography, numRiders int,
+// completedAt smalldatetime, locationFrom geography, locationTo geography, numRiders int,
 // status int); –- -1 for canceled, 0 for requested, 1 for accepted, 2 for completed
 export type RideRequest = {
-  requestid: number;
+  // requestid: number; actually a string.
   netid: string;
   driverid: string | null;
-  pickedUpAt: Timestamp | null;
+  completedAt: Timestamp | null;
   locationFrom: string; // TODO: should these be coordinates or location names?
   locationTo: string;
   numRiders: number;
-  status: -1 | 0 | 1 | 2;
+  status: -1 | 0 | 1 | 2; // -1 for canceled, 0 for requested, 1 for accepted, 2 for completed
 };
 
 // CREATE TABLE ProblematicUsers (netid varchar(20) REFERENCES Users(netid) PRIMARY KEY,
 // requestid int REFERENCES RideRequests(requestid), reason text, blacklisted int); -- 0 for reported, 1 for blacklisted
 export type ProblematicUser = {
   netid: string;
-  requestid: number;
+  requestid: string;
   reason: string;
   blacklisted: 0 | 1;
 };
