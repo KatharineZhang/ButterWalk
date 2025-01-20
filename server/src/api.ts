@@ -35,9 +35,9 @@ export type WebSocketMessage =
       destination: string;
       numRiders: number;
     }
-  | { directive: "ACCEPT_RIDE" }
+  | { directive: "ACCEPT_RIDE"; driverid: string }
   | { directive: "CANCEL"; netid: string; role: 0 | 1 } //  "STUDENT" | "DRIVER"
-  | { directive: "COMPLETE"; requestid: number }
+  | { directive: "COMPLETE"; requestid: string }
   | {
       directive: "ADD_FEEDBACK";
       rating: number;
@@ -48,7 +48,7 @@ export type WebSocketMessage =
   | { directive: "BLACKLIST"; netid: string }
   | {
       directive: "WAIT_TIME";
-      requestid: number;
+      requestid: string;
       pickupLocation?: [latitude: number, longitude: number];
       driverLocation?: [latitude: number, longitude: number];
     }
@@ -56,7 +56,7 @@ export type WebSocketMessage =
   | {
       directive: "QUERY";
       rideorApp?: 0 | 1; // 0 for ride, 1 for app, default: query both
-      date?: Date;
+      date?: { start: Date; end: Date };
       rating?: number;
     };
 
@@ -175,6 +175,14 @@ class Queue<T> {
   // returns first item of queue without removing it
   peek = (): T | undefined => {
     return this.items[0];
+  };
+  toString = (): string => {
+    let str = "";
+    this.items.forEach((item) => {
+      const req = item as unknown as localRideRequest;
+      str += req.netid + ", ";
+    });
+    return str;
   };
 }
 

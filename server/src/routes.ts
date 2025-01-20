@@ -217,7 +217,7 @@ export const cancelRide = async (
   }
 
   try {
-    const driverid = await cancelRideRequest(netid);
+    const driverid = await cancelRideRequest(netid, role);
     if (driverid && netid != driverid) {
       // since drivers can also cancel rides, it makes no sense to notify
       // the person who canceled AND the driver of the request because they are the same person
@@ -424,6 +424,7 @@ export const waitTime = (
     const index = rideReqQueue
       .get()
       .findIndex((request) => request.requestid === requestid);
+    console.log(index);
     if (index === -1) {
       return {
         response: "ERROR",
@@ -431,7 +432,8 @@ export const waitTime = (
         category: "WAIT_TIME",
       };
     }
-    ETA = index * 15;
+    // eliminate 0 based indexing
+    ETA = (index + 1) * 15;
   }
   return { response: "WAIT_TIME", waitTime: ETA };
 };
@@ -479,17 +481,15 @@ export const location = async (
 The types of canned queries we will return are: number of feedback entries, filter ride or app feedback, 
 all feedback from a date, all feedback from a specific rating.
 
-- Takes in: { directive: "QUERY”, rideorApp?: bigint // 0 for ride, 1 for app, default: query both, date?: Date, rating?: bigint }
+- Takes in: { directive: "QUERY”, rideorApp?: bigint // 0 for ride, 1 for app, default: query both, date?: { start: Date; end: Date }, rating?: bigint }
 - On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: “QUERY” }.
 - Returns a json object TO THE DRIVER in the format: 
 { response: “QUERY”, numberOfEntries: bigint, feedback: [ { rating: bigint, textFeeback: string } ] } */
 export const query = async (
   rideorApp?: 0 | 1,
-  date?: Date,
+  date?: { start: Date; end: Date },
   rating?: number
 ): Promise<QueryResponse | ErrorResponse> => {
-  console.log(`rideorApp: ${rideorApp}, date: ${date}, rating: ${rating}`); // to make eslint happy for now
-
   // get some basic stats about our current feedback table back to the client
   // types of canned queries we will return are: number of feedback entries,
   // filter ride or app feedback, all feedback from a date, all feedback from a specific rating

@@ -65,7 +65,7 @@ export const handleWebSocketMessage = async (
       break;
 
     case "REQUEST_RIDE":
-      resp = requestRide(
+      resp = await requestRide(
         input.phoneNum,
         input.netid,
         input.location,
@@ -77,7 +77,7 @@ export const handleWebSocketMessage = async (
       break;
 
     case "ACCEPT_RIDE":
-      resp = acceptRide();
+      resp = await acceptRide(input.driverid);
       if ("driver" in resp && "student" in resp) {
         const acceptResponse = resp as AcceptResponse;
         // send response back to client (the driver)
@@ -95,7 +95,7 @@ export const handleWebSocketMessage = async (
       break;
 
     case "CANCEL":
-      resp = cancelRide(input.netid, input.role);
+      resp = await cancelRide(input.netid, input.role);
       if ("info" in resp) {
         // if there is info, we know it is a CancelResponse
         const cancelResponse = resp as CancelResponse;
@@ -116,31 +116,31 @@ export const handleWebSocketMessage = async (
       break;
 
     case "COMPLETE":
-      resp = completeRide(input.requestid);
+      resp = await completeRide(input.requestid);
       // send response back to client (the driver)
       sendWebSocketMessage(ws, resp);
       break;
 
     case "ADD_FEEDBACK":
-      resp = addFeedback(input.rating, input.feedback, input.appOrRide);
+      resp = await addFeedback(input.rating, input.feedback, input.appOrRide);
       // send response back to client (the driver)
       sendWebSocketMessage(ws, resp);
       break;
 
     case "REPORT":
-      resp = report(input.netid, input.requestid, input.reason);
+      resp = await report(input.netid, input.requestid, input.reason);
       // send response back to client (the driver)
       sendWebSocketMessage(ws, resp);
       break;
 
     case "BLACKLIST":
-      resp = blacklist(input.netid);
+      resp = await blacklist(input.netid);
       // send response back to client (the driver)
       sendWebSocketMessage(ws, resp);
       break;
 
     case "WAIT_TIME":
-      resp = waitTime(
+      resp = await waitTime(
         input.requestid,
         input.pickupLocation,
         input.driverLocation
@@ -150,7 +150,7 @@ export const handleWebSocketMessage = async (
       break;
 
     case "LOCATION":
-      resp = location(input.id, input.latitude, input.longitude);
+      resp = await location(input.id, input.latitude, input.longitude);
       if ("netid" in resp) {
         // send response to opposite client
         sendMessageToNetidnetid(resp.netid as string, resp);
@@ -161,7 +161,7 @@ export const handleWebSocketMessage = async (
       break;
 
     case "QUERY":
-      resp = query(input.rideorApp, input.date, input.rating);
+      resp = await query(input.rideorApp, input.date, input.rating);
       // send response back to client (the driver)
       sendWebSocketMessage(ws, resp);
       break;

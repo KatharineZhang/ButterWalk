@@ -52,6 +52,17 @@ export async function addRideRequest(
   destination: string,
   numRiders: number
 ): Promise<string> {
+  // make sure there are no pending rides in the database by this user
+  const queryExistingRide = query(
+    rideRequestsCollection,
+    where("netid", "==", netid),
+    where("status", "in", [0, 1])
+  );
+  const inDatabase = await getDocs(queryExistingRide); // get the document by netid
+  //  check if user is in problematicUsers table
+  if (inDatabase.size > 0) {
+    throw new Error(`${netid} already has a pending ride`);
+  }
   const rideRequest: RideRequest = {
     netid,
     driverid: null,
@@ -75,12 +86,22 @@ export async function acceptRideRequest(requestid: string, driverid: string) {
 
 // CANCEL RIDE - Update a ride request to canceled
 // returns the driver id if there was a ride request that was accepted or null if not
-export async function cancelRideRequest(netid: string): Promise<string | null> {
+export async function cancelRideRequest(
+  netid: string,
+  role: 0 | 1
+): Promise<string | null> {
   // look through all the ride requests made by this specific user using the status
-  const queryRequests = query(
-    rideRequestsCollection,
-    where("netid", "==", netid)
-  );
+  let queryRequests;
+  if (role == 0) {
+    // student query
+    queryRequests = query(rideRequestsCollection, where("netid", "==", netid));
+  } else {
+    // driver query
+    queryRequests = query(
+      rideRequestsCollection,
+      where("driverid", "==", netid)
+    );
+  }
   const docs = await getDocs(queryRequests);
 
   let driverid: string | null = null;
@@ -105,7 +126,11 @@ export async function completeRideRequest(requestid: string) {
 
 // ADD FEEDBACK - Add feedback to the database
 export async function addFeedbackToDb(feedback: Feedback) {
-  return await addDoc(feedbackCollection, feedback);
+  const toAdd = {
+    ...feedback,
+    date: Timestamp.now(),
+  };
+  return await addDoc(feedbackCollection, toAdd);
 }
 
 // REPORT - Add problematic user to the database
@@ -115,7 +140,16 @@ export async function addProblematic(problem: ProblematicUser) {
 
 // BLACKLIST - Update a problematic user to blacklisted
 export async function blacklistUser(netid: string) {
-  const docRef = doc(problematicUsersCollection, netid); // get the document by id
+  const queryProblem = query(
+    problematicUsersCollection,
+    where("netid", "==", netid)
+  );
+  const inDatabase = await getDocs(queryProblem); // get the document by netid
+  //  check if user is in problematicUsers table
+  if (inDatabase.size == 0) {
+    throw new Error(`${netid} not found in ProblematicUsers table`);
+  }
+  const docRef = doc(problematicUsersCollection, inDatabase.docs[0].id);
   return await updateDoc(docRef, { blacklisted: 1 }); // 1 for blacklisted
 }
 
@@ -160,11 +194,14 @@ export async function getOtherNetId(netid: string): Promise<string> {
 // QUERY - Get all ride requests based on parameters
 export async function queryFeedback(
   rideorApp?: 0 | 1,
-  date?: Date,
+  date?: { start: Date; end: Date },
   rating?: number
 ): Promise<Feedback[]> {
-  const filters: { field: string; operator: WhereFilterOp; value: string }[] =
-    [];
+  const filters: {
+    field: string;
+    operator: WhereFilterOp;
+    value: string | Date | number;
+  }[] = [];
   if (rideorApp) {
     filters.push({
       field: "rideorApp",
@@ -173,10 +210,19 @@ export async function queryFeedback(
     });
   }
   if (date) {
-    filters.push({ field: "date", operator: "==", value: date.toString() }); // unsure if this will work
+    filters.push({
+      field: "date",
+      operator: ">=",
+      value: new Date(date.start),
+    });
+    filters.push({
+      field: "date",
+      operator: "<=",
+      value: new Date(date.end),
+    });
   }
   if (rating) {
-    filters.push({ field: "rating", operator: "==", value: rating.toString() });
+    filters.push({ field: "rating", operator: "==", value: rating });
   }
 
   const queryConstraints: QueryConstraint[] = filters.map((f) => {

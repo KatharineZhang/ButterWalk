@@ -34,6 +34,7 @@ class WebSocketService {
     };
     this.websocket.onmessage = (event) => {
       console.log(`WEBSOCKET: Received message => ${event.data}`);
+      // TODO: send message to component
     };
     this.websocket.onclose = () => {
       console.log("WEBSOCKET: Disconnected from Websocket");
