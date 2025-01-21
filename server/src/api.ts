@@ -25,7 +25,7 @@ export type WebSocketMessage =
       name: string;
       phoneNum: string;
       studentNum: string;
-      role: 0 | 1; //  "STUDENT" | "DRIVER";
+      role: "STUDENT" | "DRIVER";
     }
   | {
       directive: "REQUEST_RIDE";
@@ -36,13 +36,13 @@ export type WebSocketMessage =
       numRiders: number;
     }
   | { directive: "ACCEPT_RIDE"; driverid: string }
-  | { directive: "CANCEL"; netid: string; role: 0 | 1 } //  "STUDENT" | "DRIVER"
+  | { directive: "CANCEL"; netid: string; role: "STUDENT" | "DRIVER" }
   | { directive: "COMPLETE"; requestid: string }
   | {
       directive: "ADD_FEEDBACK";
       rating: number;
       feedback: string;
-      appOrRide: 0 | 1;
+      rideOrApp: "RIDE" | "APP";
     }
   | { directive: "REPORT"; netid: string; requestid: string; reason: string }
   | { directive: "BLACKLIST"; netid: string }
@@ -55,7 +55,7 @@ export type WebSocketMessage =
   | { directive: "LOCATION"; id: string; latitude: number; longitude: number }
   | {
       directive: "QUERY";
-      rideorApp?: 0 | 1; // 0 for ride, 1 for app, default: query both
+      rideorApp?: "RIDE" | "APP"; // if rideOrApp is undefined, the default is to query both feebcack types
       date?: { start: Date; end: Date };
       rating?: number;
     };
@@ -201,7 +201,7 @@ export type User = {
   name: string;
   phone_number: string;
   student_number: string;
-  student_or_driver: 0 | 1; // 0 for student, 1 for driver
+  student_or_driver: "STUDENT" | "DRIVER";
 };
 
 // CREATE TABLE Feedback (feedbackid int PRIMARY KEY, rating float, textFeedback text,
@@ -210,7 +210,7 @@ export type Feedback = {
   // feedbackid created and stored in the database, we don't have to worry about it
   rating: number;
   textFeedback: string;
-  rideOrApp: 0 | 1; // 0 for ride, 1 for app feedback
+  rideOrApp: "RIDE" | "APP";
 };
 
 // CREATE TABLE RideRequests (requestid int PRIMARY KEY, netid varchar(20) REFERENCES Users(netid),
@@ -225,7 +225,7 @@ export type RideRequest = {
   locationFrom: string; // TODO: should these be coordinates or location names?
   locationTo: string;
   numRiders: number;
-  status: -1 | 0 | 1 | 2; // -1 for canceled, 0 for requested, 1 for accepted, 2 for completed
+  status: "CANCELED" | "REQUESTED" | "ACCEPTED" | "COMPLETED";
 };
 
 // CREATE TABLE ProblematicUsers (netid varchar(20) REFERENCES Users(netid) PRIMARY KEY,
@@ -234,5 +234,5 @@ export type ProblematicUser = {
   netid: string;
   requestid: string;
   reason: string;
-  blacklisted: 0 | 1; // 0 for reported, 1 for blacklisted
+  category: "REPORTED" | "BLACKLISTED";
 };
