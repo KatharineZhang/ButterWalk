@@ -208,6 +208,7 @@ export type User = {
 // rideOrApp int); -- 0 for ride, 1 for app feedback
 export type Feedback = {
   // feedbackid created and stored in the database, we don't have to worry about it
+  // feedbackid created and stored in the database, we don't have to worry about it
   rating: number;
   textFeedback: string;
   rideOrApp: "RIDE" | "APP";
@@ -216,8 +217,10 @@ export type Feedback = {
 // CREATE TABLE RideRequests (requestid int PRIMARY KEY, netid varchar(20) REFERENCES Users(netid),
 // driverid varchar(20) REFERENCES Drivers(driverid),
 // completedAt smalldatetime, locationFrom geography, locationTo geography, numRiders int,
+// completedAt smalldatetime, locationFrom geography, locationTo geography, numRiders int,
 // status int); –- -1 for canceled, 0 for requested, 1 for accepted, 2 for completed
 export type RideRequest = {
+  // requestid created and stored in the database, we can't store it here
   // requestid created and stored in the database, we can't store it here
   netid: string;
   driverid: string | null;
