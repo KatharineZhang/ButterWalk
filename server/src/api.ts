@@ -35,9 +35,9 @@ export type WebSocketMessage =
       destination: string;
       numRiders: number;
     }
-  | { directive: "ACCEPT_RIDE" }
+  | { directive: "ACCEPT_RIDE"; driverid: string }
   | { directive: "CANCEL"; netid: string; role: 0 | 1 } //  "STUDENT" | "DRIVER"
-  | { directive: "COMPLETE"; requestid: number }
+  | { directive: "COMPLETE"; requestid: string }
   | {
       directive: "ADD_FEEDBACK";
       rating: number;
@@ -48,7 +48,7 @@ export type WebSocketMessage =
   | { directive: "BLACKLIST"; netid: string }
   | {
       directive: "WAIT_TIME";
-      requestid: number;
+      requestid: string;
       pickupLocation?: [latitude: number, longitude: number];
       driverLocation?: [latitude: number, longitude: number];
     }
@@ -56,7 +56,7 @@ export type WebSocketMessage =
   | {
       directive: "QUERY";
       rideorApp?: 0 | 1; // 0 for ride, 1 for app, default: query both
-      date?: Date;
+      date?: { start: Date; end: Date };
       rating?: number;
     };
 
@@ -87,7 +87,7 @@ export type GeneralResponse = {
 
 export type RequestRideResponse = {
   response: "REQUEST_RIDE";
-  requestid: number;
+  requestid: string;
 };
 
 export type WaitTimeResponse = { response: "WAIT_TIME"; waitTime: number };
@@ -103,7 +103,7 @@ export type DriverAcceptResponse = {
   location: string;
   destination: string;
   numRiders: number;
-  requestid: number;
+  requestid: string;
 };
 
 export type CancelResponse = {
@@ -121,7 +121,7 @@ export type LocationResponse = {
 export type QueryResponse = {
   response: "QUERY";
   numberOfEntries: number;
-  feedback: { rating: number; textFeeback: string }[];
+  feedback: Feedback[];
 };
 
 export type ErrorResponse = {
@@ -144,7 +144,7 @@ export type ErrorResponse = {
 
 // Server Types and Data Structures
 export type localRideRequest = {
-  requestid: number;
+  requestid: string;
   netid: string;
 };
 
@@ -201,38 +201,38 @@ export type User = {
   name: string;
   phone_number: string;
   student_number: string;
-  student_or_driver: number;
+  student_or_driver: 0 | 1; // 0 for student, 1 for driver
 };
 
 // CREATE TABLE Feedback (feedbackid int PRIMARY KEY, rating float, textFeedback text,
 // rideOrApp int); -- 0 for ride, 1 for app feedback
 export type Feedback = {
-  feedbackid: number;
+  // feedbackid created and stored in the database, we don't have to worry about it
   rating: number;
   textFeedback: string;
-  rideOrApp: 0 | 1;
+  rideOrApp: 0 | 1; // 0 for ride, 1 for app feedback
 };
 
 // CREATE TABLE RideRequests (requestid int PRIMARY KEY, netid varchar(20) REFERENCES Users(netid),
 // driverid varchar(20) REFERENCES Drivers(driverid),
-// pickedUpAt smalldatetime, locationFrom geography, locationTo geography, numRiders int,
+// completedAt smalldatetime, locationFrom geography, locationTo geography, numRiders int,
 // status int); –- -1 for canceled, 0 for requested, 1 for accepted, 2 for completed
 export type RideRequest = {
-  requestid: number;
+  // requestid created and stored in the database, we can't store it here
   netid: string;
   driverid: string | null;
-  pickedUpAt: Timestamp | null;
+  completedAt: Timestamp | null;
   locationFrom: string; // TODO: should these be coordinates or location names?
   locationTo: string;
   numRiders: number;
-  status: -1 | 0 | 1 | 2;
+  status: -1 | 0 | 1 | 2; // -1 for canceled, 0 for requested, 1 for accepted, 2 for completed
 };
 
 // CREATE TABLE ProblematicUsers (netid varchar(20) REFERENCES Users(netid) PRIMARY KEY,
 // requestid int REFERENCES RideRequests(requestid), reason text, blacklisted int); -- 0 for reported, 1 for blacklisted
 export type ProblematicUser = {
   netid: string;
-  requestid: number;
+  requestid: string;
   reason: string;
-  blacklisted: 0 | 1;
+  blacklisted: 0 | 1; // 0 for reported, 1 for blacklisted
 };

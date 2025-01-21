@@ -11,8 +11,23 @@ import {
   WaitTimeResponse,
   LocationResponse,
   QueryResponse,
+  RideRequest,
+  Feedback,
+  ProblematicUser,
 } from "./api";
-import { createUser } from "./firebaseActions";
+import {
+  acceptRideRequest,
+  addFeedbackToDb,
+  addProblematic,
+  addRideRequest,
+  blacklistUser,
+  cancelRideRequest,
+  completeRideRequest,
+  createUser,
+  getOtherNetId,
+  isProblematic,
+  queryFeedback,
+} from "./firebaseActions";
 dotenv.config();
 
 /* Signs a specific student or driver into the app. Will check the users database for the specific id, 
@@ -38,8 +53,16 @@ export const signIn = async (
       category: "SIGNIN",
     };
   }
-  // TODO: check the users database for the specific id, and if it is not there, will add a new user.
-  // TODO: make sure this user is not in the ProblematicUsers table with a blacklisted field of 1
+  // TODO: Email (and phone number?) validation
+  // make sure this user is not in the ProblematicUsers table with a blacklisted field of 1
+  if (await isProblematic(netid)) {
+    return {
+      response: "ERROR",
+      error: `${netid} is blacklisted.`,
+      category: "SIGNIN",
+    };
+  }
+  // else, try to make user entry
   try {
     await createUser({
       netid,
@@ -65,14 +88,14 @@ Will add a new request to the database, populated with the fields passed in and 
 { directive: "REQUEST_RIDE", phoneNum: string, netID: string, location: string, destination: string; numRiders: bigint }.
 
 - On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: “REQUEST_RIDE” }.
-- Returns a json object TO THE STUDENT in the form: { response: “REQUEST_RIDE”, requestid: bigint }. */
-export const requestRide = (
+- Returns a json object TO THE STUDENT in the form: { response: “REQUEST_RIDE”, requestid: string }. */
+export const requestRide = async (
   phoneNum: string,
   netid: string,
   from: string,
   to: string,
   numRiders: number
-): RequestRideResponse | ErrorResponse => {
+): Promise<RequestRideResponse | ErrorResponse> => {
   if (!phoneNum || !from || !to || numRiders <= 0) {
     return {
       response: "ERROR",
@@ -81,12 +104,18 @@ export const requestRide = (
     };
   }
 
-  // TODO: Based on the number of requests in the RideRequests table, the next requestID will be the number of requests + 1
-  // for now, since there is no db, we will just use the size of the queue
-  const requestid = rideReqQueue.size() + 1;
-
-  // TODO: add a new request to the database, populated with the fields passed in and a request status of 0
+  // add a new request to the database, populated with the fields passed in and a request status of 0
   // on error, return { success: false, error: 'Error adding ride request to the database.'};
+  let requestid;
+  try {
+    requestid = await addRideRequest(netid, from, to, numRiders);
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error adding ride request to the database: ${e}`,
+      category: "REQUEST_RIDE",
+    };
+  }
 
   // we also want to keep the requests locally in the server queue, but without too much information
   const newRideReq: localRideRequest = { requestid, netid };
@@ -102,11 +131,13 @@ and change the status of the request to 1 (accepted).
 - On error, returns the json object in the form:  { response: “ERROR”, success: false, error: string, category: “ACCEPT_RIDE” }.
 - Returns a json object in the form: 
 { student: { response: "ACCEPT_RIDE", success: true }, 
- driver: { response: "ACCEPT_RIDE", netID: string, location: string, destination: string, numRiders: number, requestid: number }}
+ driver: { response: "ACCEPT_RIDE", netID: string, location: string, destination: string, numRiders: number, requestid: string }}
 Where the object that should be returned TO THE STUDENT is in the form: { response: "ACCEPT_RIDE", success: true }
 and the object that should be returned TO THE DRIVER is in the format: 
-{ response: "ACCEPT_RIDE", netID: string, location: string, destination: string, numRiders: number, requestid: number } */
-export const acceptRide = (): AcceptResponse | ErrorResponse => {
+{ response: "ACCEPT_RIDE", netID: string, location: string, destination: string, numRiders: number, requestid: string } */
+export const acceptRide = async (
+  driverid: string
+): Promise<AcceptResponse | ErrorResponse> => {
   if (!rideReqQueue.peek()) {
     return {
       response: "ERROR",
@@ -117,21 +148,31 @@ export const acceptRide = (): AcceptResponse | ErrorResponse => {
 
   // get the next request in the queue
   const nextRide = rideReqQueue.pop() as localRideRequest;
-  // TODO: look up the request in the database
-  // TODO: update the request in database to add the driver id and change the status of the request to 1 (accepted)
+  // update the request in database to add the driver id and change the status of the request to 1 (accepted)
   // if there is an error, return { success: false, error: 'Error accepting ride request.'};
-
-  return {
-    student: { response: "ACCEPT_RIDE", success: true },
-    driver: {
-      response: "ACCEPT_RIDE",
-      netid: nextRide.netid,
-      location: "DUMMY",
-      destination: "DUMMY",
-      numRiders: 100,
-      requestid: nextRide.requestid,
-    },
-  };
+  try {
+    const req: RideRequest = await acceptRideRequest(
+      nextRide.requestid,
+      driverid
+    );
+    return {
+      student: { response: "ACCEPT_RIDE", success: true },
+      driver: {
+        response: "ACCEPT_RIDE",
+        netid: nextRide.netid,
+        location: req.locationFrom,
+        destination: req.locationTo,
+        numRiders: req.numRiders,
+        requestid: nextRide.requestid,
+      },
+    };
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error accepting ride request: ${e}`,
+      category: "ACCEPT_RIDE",
+    };
+  }
 };
 
 /* Allows the student to cancel a ride and updates the server and notifies the user. 
@@ -158,10 +199,10 @@ This is done by returning their netid under otherNetId.
 Where the object that should be returned  TO THE STUDENT is in the format: { response: "CANCEL", success: true }
 And if there driver needs to be notified, the json object returned TO THE DRIVER is in the format: 
 { response: "CANCEL", success: true } */
-export const cancelRide = (
+export const cancelRide = async (
   netid: string,
   role: 0 | 1
-): CancelResponse | ErrorResponse => {
+): Promise<CancelResponse | ErrorResponse> => {
   if (!netid) {
     return {
       response: "ERROR",
@@ -170,46 +211,44 @@ export const cancelRide = (
     };
   }
 
-  let status: "0 or 1" | "1";
   if (role === 0) {
     // get rid of any pending requests in the local queue that have the same netid
     removeRideReq(netid);
-    // look from either accepted or pending requests
-    status = "0 or 1";
-  } else {
-    // for drivers, we only want to look for requests with a status of 1 (accepted)
-    // since drivers will only be attached to accepted requests
-    status = "1";
-  }
-  console.log(status); // to make eslint happy for now
-
-  // TODO: look through all the ride requests made by this specific user using the status
-  // TODO: change any active (based on status) request to canceled (status: -1)
-
-  // TODO: if a request has a status of 1, notify the corresponding driver
-  const accepted = false; // dummy value
-  if (accepted) {
-    // TODO: figure out what driver to sent to from the ride request
-    return { info: { response: "CANCEL", success: true }, otherNetid: "DUMMY" };
   }
 
-  // TODO: if there is an error, return { success: false, error: 'Error canceling ride request.'};
-
-  // no driver specified in this pending request case!
-  return { info: { response: "CANCEL", success: true } };
+  try {
+    const driverid = await cancelRideRequest(netid, role);
+    if (driverid && netid != driverid) {
+      // since drivers can also cancel rides, it makes no sense to notify
+      // the person who canceled AND the driver of the request because they are the same person
+      return {
+        info: { response: "CANCEL", success: true },
+        otherNetid: driverid,
+      };
+    }
+    // no driver specified in this pending request case!
+    return { info: { response: "CANCEL", success: true } };
+  } catch (e) {
+    // if there is an error, return { success: false, error: 'Error canceling ride request.'};
+    return {
+      response: "ERROR",
+      error: `Error canceling ride request: ${e}`,
+      category: "CANCEL",
+    };
+  }
 };
 
 /* Once a ride is finished, the driver will set that specific request status to 2 in the database. 
 (Both the student and driver will still get a notification that the ride is completed)
 
-- Takes in a json object in the form: { directive: "COMPLETE", requestid: bigint }.
+- Takes in a json object in the form: { directive: "COMPLETE", requestid: string }.
 
 - On error, returns the json object in the form: 
 { response: “ERROR”, success: false, error: string, category: “COMPLETE” }.
 - Returns a json object TO THE DRIVER in the format: { response: “COMPLETE”, success: true } */
-export const completeRide = (
-  requestid: number
-): GeneralResponse | ErrorResponse => {
+export const completeRide = async (
+  requestid: string
+): Promise<GeneralResponse | ErrorResponse> => {
   if (!requestid) {
     return {
       response: "ERROR",
@@ -217,9 +256,19 @@ export const completeRide = (
       category: "COMPLETE",
     };
   }
-  // TODO: set the specific request status to 2 in the database
+  // set the specific request status to 2 in the database
   // if there is an error, return { success: false, error: 'Error completing ride request.'};
-  return { response: "COMPLETE", success: true };
+  try {
+    await completeRideRequest(requestid);
+    return { response: "COMPLETE", success: true };
+  } catch (e) {
+    // if there is an error, return { success: false, error: 'Error completing ride request.'};
+    return {
+      response: "ERROR",
+      error: `Error completing ride request: ${e}`,
+      category: "COMPLETE",
+    };
+  }
 };
 
 /* The student can give us feedback on a specific ride they just took. 
@@ -229,20 +278,34 @@ This feedback is added to the Feedback table using the fields passed in. Feedbac
 
 - On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: “ADD_FEEDBACK” }.
 - Returns a json object TO THE STUDENT in the format: { response: “ADD_FEEDBACK”, success: true } */
-export const addFeedback = (
+export const addFeedback = async (
   rating: number,
-  feedback: string,
-  appOrRide: 0 | 1
-): GeneralResponse | ErrorResponse => {
-  if (!rating || !feedback || !appOrRide) {
+  textFeedback: string,
+  rideOrApp: 0 | 1
+): Promise<GeneralResponse | ErrorResponse> => {
+  if (!rating || !textFeedback || !rideOrApp) {
     return {
       response: "ERROR",
       error: "Missing required fields.",
       category: "ADD_FEEDBACK",
     };
   }
-  // TODO: add feedback to the Feeback table using the fields passed in
-  // if there is an error, return { success: false, error: 'Error adding feedback to the database.'};
+  const feedback: Feedback = {
+    rating,
+    textFeedback,
+    rideOrApp,
+  };
+  try {
+    // add feedback to the Feeback table using the fields passed in
+    await addFeedbackToDb(feedback);
+  } catch (e) {
+    // if there is an error, return { success: false, error: 'Error adding feedback to the database.'};
+    return {
+      response: "ERROR",
+      error: `Error adding feedback to the database: ${e}`,
+      category: "ADD_FEEDBACK",
+    };
+  }
   return { response: "ADD_FEEDBACK", success: true };
 };
 
@@ -252,11 +315,11 @@ This will add a new student entry to the ProblematicUsers table with a blacklist
 
 - On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: “REPORT” }.
 - Returns a json object TO THE DRIVER in the format: { response: “REPORT”, success: true } */
-export const report = (
+export const report = async (
   netid: string,
   requestid: string,
   reason: string
-): GeneralResponse | ErrorResponse => {
+): Promise<GeneralResponse | ErrorResponse> => {
   if (!netid || !requestid || !reason) {
     return {
       response: "ERROR",
@@ -264,9 +327,25 @@ export const report = (
       category: "REPORT",
     };
   }
-  // TODO: add a new student entry to the ProblematicUsers table with a blacklisted field of 0
-  // if there is an error, return { success: false, error: 'Error reporting student.'};
-  return { response: "REPORT", success: true };
+  // add a new student entry to the ProblematicUsers table with a blacklisted field of 0
+  const problem: ProblematicUser = {
+    netid,
+    requestid,
+    reason,
+    blacklisted: 0,
+  };
+
+  try {
+    await addProblematic(problem);
+    return { response: "REPORT", success: true };
+  } catch (error) {
+    // if there is an error, return { success: false, error: 'Error reporting student.'};
+    return {
+      response: "ERROR",
+      error: `Error reporting student: ${error}`,
+      category: "REPORT",
+    };
+  }
 };
 
 /* UWPD needs to be able to manually blacklist a specific student they’ve reported. 
@@ -277,7 +356,9 @@ Will use netid to modify the ‘ProblematicUsers’ table so that the blackliste
 - On error, returns the json object in the form: 
 { response: “ERROR”, success: false, error: string, category: “BLACKLIST” }.
 - Returns a json object TO THE DRIVER in the format: { response: “BLACKLIST”, success: true } */
-export const blacklist = (netid: string): GeneralResponse | ErrorResponse => {
+export const blacklist = async (
+  netid: string
+): Promise<GeneralResponse | ErrorResponse> => {
   if (!netid) {
     return {
       response: "ERROR",
@@ -285,9 +366,18 @@ export const blacklist = (netid: string): GeneralResponse | ErrorResponse => {
       category: "BLACKLIST",
     };
   }
-  // TODO: modify the ‘ProblematicUsers’ table so that the blacklisted field is 1
+  // modify the ‘ProblematicUsers’ table so that the blacklisted field is 1
   // if there is an error, return { success: false, error: 'Error blacklisting student.'};
-  return { response: "BLACKLIST", success: true };
+  try {
+    await blacklistUser(netid);
+    return { response: "BLACKLIST", success: true };
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error blacklisting student: ${e}`,
+      category: "BLACKLIST",
+    };
+  }
 };
 
 /* A specific user needs to know when approximately the driver will accept their ride.
@@ -304,14 +394,14 @@ If the user’s request has been accepted, both pickupLocation and driverLocatio
 Wait time will be the ETA of the corresponding driverid to the user’s pick up location. 
 We do this by calculating the ETA from driverLocation to pickupLocation.
 
-- Takes in: { directive: "WAIT_TIME”, requestid: bigint, pickupLocation?: 
+- Takes in: { directive: "WAIT_TIME”, requestid: string, pickupLocation?: 
     [ latitude: number, longitude: number ], driverLocation?: [ latitude: number, longitude: number ] }
 
     - On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: “WAIT_TIME” }.
 - Returns a json object TO THE STUDENT in the format: { response: “WAIT_TIME”, waitTime: bigint //in minutes }	
  */
 export const waitTime = (
-  requestid: number,
+  requestid: string,
   pickupLocation?: [latitude: number, longitude: number],
   driverLocation?: [latitude: number, longitude: number]
 ): WaitTimeResponse | ErrorResponse => {
@@ -334,6 +424,7 @@ export const waitTime = (
     const index = rideReqQueue
       .get()
       .findIndex((request) => request.requestid === requestid);
+    console.log(index);
     if (index === -1) {
       return {
         response: "ERROR",
@@ -341,7 +432,8 @@ export const waitTime = (
         category: "WAIT_TIME",
       };
     }
-    ETA = index * 15;
+    // eliminate 0 based indexing
+    ETA = (index + 1) * 15;
   }
   return { response: "WAIT_TIME", waitTime: ETA };
 };
@@ -357,11 +449,11 @@ information to the opposite user (student → driver, driver → student).
 { response: “LOCATION”, netid: string, latitude: number, longitude: number } where netid is the id of the opposite user. */
 
 // TODO: THIS MAY NOT NEED TO BE A FUNCTION AND CAN BE HANDLED IN THE WEBSOCKET??
-export const location = (
+export const location = async (
   id: string,
   latitude: number,
   longitude: number
-): LocationResponse | ErrorResponse => {
+): Promise<LocationResponse | ErrorResponse> => {
   if (!id || !latitude || !longitude) {
     return {
       response: "ERROR",
@@ -369,41 +461,47 @@ export const location = (
       category: "LOCATION",
     };
   }
-  // TODO: Look for an accepted request with the netid passed in and extract the opposite user netid
+  // Look for an accepted request with the netid passed in and extract the opposite user netid
+  let otherNetId;
+  try {
+    otherNetId = await getOtherNetId(id);
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error getting other netid: ${e}`,
+      category: "LOCATION",
+    };
+  }
+  // TODO: get the location of the user
   // pass the location information to the opposite user
-  return { response: "LOCATION", netid: "DUMMY", latitude, longitude };
+  return { response: "LOCATION", netid: otherNetId, latitude, longitude };
 };
 
 /* We need to get some basic stats about our current feedback table back to the client. 
 The types of canned queries we will return are: number of feedback entries, filter ride or app feedback, 
 all feedback from a date, all feedback from a specific rating.
 
-- Takes in: { directive: "QUERY”, rideorApp?: bigint // 0 for ride, 1 for app, default: query both, date?: Date, rating?: bigint }
+- Takes in: { directive: "QUERY”, rideorApp?: bigint // 0 for ride, 1 for app, default: query both, date?: { start: Date; end: Date }, rating?: bigint }
 - On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: “QUERY” }.
 - Returns a json object TO THE DRIVER in the format: 
 { response: “QUERY”, numberOfEntries: bigint, feedback: [ { rating: bigint, textFeeback: string } ] } */
-export const query = (
+export const query = async (
   rideorApp?: 0 | 1,
-  date?: Date,
+  date?: { start: Date; end: Date },
   rating?: number
-): QueryResponse | ErrorResponse => {
-  console.log(`rideorApp: ${rideorApp}, date: ${date}, rating: ${rating}`); // to make eslint happy for now
-
-  // TODO: get some basic stats about our current feedback table back to the client
+): Promise<QueryResponse | ErrorResponse> => {
+  // get some basic stats about our current feedback table back to the client
   // types of canned queries we will return are: number of feedback entries,
   // filter ride or app feedback, all feedback from a date, all feedback from a specific rating
-
-  // EXAMPLE OF HOW TO QUERY THE DATABASE, ESPECIALLY THE MAPPING OF THE DATA
-  // try {
-  //   const results = await queryUsers("bob");
-  //   const users = results.docs.map((d) => ({ id: d.id, ...d.data() }));
-  //   console.log(users);
-  // } catch (e) {
-  //   return {
-  //     response: "ERROR",
-  //     error: `Error querying users: ${e}`,
-  //     category: "QUERY",
-  //   };
-  // }
-  return { response: "QUERY", numberOfEntries: 0, feedback: [] };
+  // if there is an error, return { success: false, error: 'Error querying feedback.'};
+  try {
+    const queried: Feedback[] = await queryFeedback(rideorApp, date, rating);
+    return { response: "QUERY", numberOfEntries: 0, feedback: queried };
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error querying feedback: ${e}`,
+      category: "QUERY",
+    };
+  }
 };
