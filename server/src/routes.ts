@@ -44,7 +44,7 @@ export const signIn = async (
   name: string,
   phone_number: string,
   student_number: string,
-  student_or_driver: 0 | 1
+  student_or_driver: "STUDENT" | "DRIVER"
 ): Promise<GeneralResponse | ErrorResponse> => {
   if (!phone_number || !netid || !name || !student_number) {
     return {
@@ -201,7 +201,7 @@ And if there driver needs to be notified, the json object returned TO THE DRIVER
 { response: "CANCEL", success: true } */
 export const cancelRide = async (
   netid: string,
-  role: 0 | 1
+  role: "STUDENT" | "DRIVER"
 ): Promise<CancelResponse | ErrorResponse> => {
   if (!netid) {
     return {
@@ -211,7 +211,7 @@ export const cancelRide = async (
     };
   }
 
-  if (role === 0) {
+  if (role === "STUDENT") {
     // get rid of any pending requests in the local queue that have the same netid
     removeRideReq(netid);
   }
@@ -281,7 +281,7 @@ This feedback is added to the Feedback table using the fields passed in. Feedbac
 export const addFeedback = async (
   rating: number,
   textFeedback: string,
-  rideOrApp: 0 | 1
+  rideOrApp: "RIDE" | "APP"
 ): Promise<GeneralResponse | ErrorResponse> => {
   if (!rating || !textFeedback || !rideOrApp) {
     return {
@@ -327,12 +327,12 @@ export const report = async (
       category: "REPORT",
     };
   }
-  // add a new student entry to the ProblematicUsers table with a blacklisted field of 0
+  // add a new student entry to the ProblematicUsers table with the reported category
   const problem: ProblematicUser = {
     netid,
     requestid,
     reason,
-    blacklisted: 0,
+    category: "REPORTED",
   };
 
   try {
@@ -486,7 +486,7 @@ all feedback from a date, all feedback from a specific rating.
 - Returns a json object TO THE DRIVER in the format: 
 { response: “QUERY”, numberOfEntries: bigint, feedback: [ { rating: bigint, textFeeback: string } ] } */
 export const query = async (
-  rideorApp?: 0 | 1,
+  rideorApp?: "RIDE" | "APP",
   date?: { start: Date; end: Date },
   rating?: number
 ): Promise<QueryResponse | ErrorResponse> => {
