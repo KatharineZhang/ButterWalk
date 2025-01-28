@@ -2,7 +2,7 @@
 import { Timestamp } from "firebase/firestore";
 
 // Webhook commands
-export type commands =
+export type Commands =
   | "CONNECT"
   | "SIGNIN"
   | "REQUEST_RIDE"

@@ -2,7 +2,7 @@ import { Link } from "expo-router";
 import { openBrowserAsync } from "expo-web-browser";
 import { type ComponentProps } from "react";
 import { Platform } from "react-native";
-import * as Router from 'expo-router';
+import * as Router from "expo-router";
 
 type Props = Omit<ComponentProps<typeof Link>, "href"> & { href: string };
 
