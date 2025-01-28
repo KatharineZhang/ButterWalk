@@ -156,6 +156,7 @@ export const acceptRide = async (
       driverid
     );
     return {
+      response: "ACCEPT_RIDE",
       student: { response: "ACCEPT_RIDE", success: true },
       driver: {
         response: "ACCEPT_RIDE",
@@ -222,12 +223,13 @@ export const cancelRide = async (
       // since drivers can also cancel rides, it makes no sense to notify
       // the person who canceled AND the driver of the request because they are the same person
       return {
+        response: "CANCEL",
         info: { response: "CANCEL", success: true },
         otherNetid: driverid,
       };
     }
     // no driver specified in this pending request case!
-    return { info: { response: "CANCEL", success: true } };
+    return { response: "CANCEL", info: { response: "CANCEL", success: true } };
   } catch (e) {
     // if there is an error, return { success: false, error: 'Error canceling ride request.'};
     return {

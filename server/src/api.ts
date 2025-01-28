@@ -2,7 +2,7 @@
 import { Timestamp } from "firebase/firestore";
 
 // Webhook commands
-export type commands =
+export type Command =
   | "CONNECT"
   | "SIGNIN"
   | "REQUEST_RIDE"
@@ -14,7 +14,8 @@ export type commands =
   | "BLACKLIST"
   | "WAIT_TIME"
   | "LOCATION"
-  | "QUERY";
+  | "QUERY"
+  | "ERROR";
 
 // Input types
 export type WebSocketMessage =
@@ -93,6 +94,7 @@ export type RequestRideResponse = {
 export type WaitTimeResponse = { response: "WAIT_TIME"; waitTime: number };
 
 export type AcceptResponse = {
+  response: "ACCEPT_RIDE";
   student: { response: "ACCEPT_RIDE"; success: true }; // of type GeneralResponse
   driver: DriverAcceptResponse;
 };
@@ -107,6 +109,7 @@ export type DriverAcceptResponse = {
 };
 
 export type CancelResponse = {
+  response: "CANCEL";
   info: { response: "CANCEL"; success: true }; // of type GeneralResponse
   otherNetid?: string;
 };

@@ -122,7 +122,7 @@ export const handleWebSocketMessage = async (
       break;
 
     case "ADD_FEEDBACK":
-      resp = await addFeedback(input.rating, input.feedback, input.appOrRide);
+      resp = await addFeedback(input.rating, input.feedback, input.rideOrApp);
       // send response back to client (the driver)
       sendWebSocketMessage(ws, resp);
       break;
