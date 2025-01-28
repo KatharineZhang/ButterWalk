@@ -1,5 +1,6 @@
 // This is where all the server / database data structures will go
 import { Timestamp } from "firebase/firestore";
+import { Mutex } from "async-mutex";
 
 // Webhook commands
 export type Command =
@@ -151,49 +152,71 @@ export type localRideRequest = {
   netid: string;
 };
 
-// TODO: Change this implementation to be specific to localRideRequest
-class Queue<T> {
-  private items: T[];
+class RideRequestQueue {
+  private items: localRideRequest[];
+  private mutex: Mutex = new Mutex();
 
   constructor() {
     this.items = [];
   }
 
   // return all the items in the queue
-  get = (): T[] => {
-    return this.items;
+  get = (): localRideRequest[] => {
+    this.mutex.acquire();
+    try {
+      return this.items;
+    } finally {
+      this.mutex.release();
+    }
   };
   // adding to the back of the queue
-  add = (item: T): void => {
-    this.items.push(item);
+  add = (item: localRideRequest): void => {
+    this.mutex.acquire();
+    try {
+      this.items.push(item);
+    } finally {
+      this.mutex.release();
+    }
   };
   // removing from the front of the queue
-  pop = (): T | undefined => {
-    return this.items.shift();
+  pop = (): localRideRequest | undefined => {
+    this.mutex.acquire();
+    try {
+      return this.items.shift();
+    } finally {
+      this.mutex.release();
+    }
   };
   // returns size of queue
   size = (): number => {
-    return this.items.length;
+    this.mutex.acquire();
+    try {
+      return this.items.length;
+    } finally {
+      this.mutex.release();
+    }
   };
   // returns first item of queue without removing it
-  peek = (): T | undefined => {
-    return this.items[0];
+  peek = (): localRideRequest | undefined => {
+    this.mutex.acquire();
+    try {
+      return this.items[0];
+    } finally {
+      this.mutex.release();
+    }
+  };
+
+  remove = (netid: string): void => {
+    this.mutex.acquire();
+    try {
+      this.items = this.items.filter((item) => item.netid !== netid);
+    } finally {
+      this.mutex.release();
+    }
   };
 }
 
-export let rideReqQueue = new Queue<localRideRequest>(); // rideRequests Queue
-
-// TODO: this is a temporary solution. We will need to implement a more robust solution
-export const removeRideReq = (netid: string): void => {
-  const newQueue = new Queue<localRideRequest>();
-  const rideReq = rideReqQueue.get();
-  rideReq.forEach((request) => {
-    if (request.netid != netid) {
-      newQueue.add(request);
-    }
-  });
-  rideReqQueue = newQueue;
-};
+export const rideReqQueue = new RideRequestQueue(); // rideRequests Queue
 
 // Database Types
 

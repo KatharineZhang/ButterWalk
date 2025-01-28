@@ -3,7 +3,6 @@ import {
   localRideRequest,
   rideReqQueue,
   ErrorResponse,
-  removeRideReq,
   AcceptResponse,
   CancelResponse,
   GeneralResponse,
@@ -214,7 +213,7 @@ export const cancelRide = async (
 
   if (role === "STUDENT") {
     // get rid of any pending requests in the local queue that have the same netid
-    removeRideReq(netid);
+    rideReqQueue.remove(netid);
   }
 
   try {
