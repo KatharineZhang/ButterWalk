@@ -17,7 +17,7 @@ import {
 } from "firebase/firestore";
 import { Feedback, ProblematicUser, RideRequest, User } from "./api";
 
-const db = getFirestore(app);
+export const db = getFirestore(app);
 
 // GREAT RESOURCE FOR BASIC FIRESTORE WORK: https://www.youtube.com/watch?v=kwVbKV0ZFEs
 

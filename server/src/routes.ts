@@ -26,8 +26,16 @@ import {
   getOtherNetId,
   isProblematic,
   queryFeedback,
+  db,
 } from "./firebaseActions";
+import { runTransaction } from "firebase/firestore";
+import { Mutex } from "async-mutex";
 dotenv.config();
+
+// every time we access the queue and the database,
+// we want to lock the entire section to make both the database action
+// and the queue action combined into one atomic action to prevent data races
+const queueLock: Mutex = new Mutex();
 
 /* Signs a specific student or driver into the app. Will check the users database for the specific id, 
 and if it is not there, will add a new user. If the user is in the table, we need to make sure this user 
@@ -53,28 +61,26 @@ export const signIn = async (
     };
   }
   // TODO: Email (and phone number?) validation
-  // make sure this user is not in the ProblematicUsers table with a blacklisted field of 1
-  if (await isProblematic(netid)) {
-    return {
-      response: "ERROR",
-      error: `${netid} is blacklisted.`,
-      category: "SIGNIN",
-    };
-  }
-  // else, try to make user entry
   try {
-    await createUser({
-      netid,
-      name,
-      phone_number,
-      student_number,
-      student_or_driver,
+    await runTransaction(db, async () => {
+      // make sure this user is not in the ProblematicUsers table with a blacklisted field of 1
+      if (await isProblematic(netid)) {
+        throw new Error(`${netid} is blacklisted.`);
+      }
+      // else, try to make user entry
+      await createUser({
+        netid,
+        name,
+        phone_number,
+        student_number,
+        student_or_driver,
+      });
     });
     return { response: "SIGNIN", success: true };
-  } catch (e) {
+  } catch (e: unknown) {
     return {
       response: "ERROR",
-      error: `Error adding user to database: ${e}.`,
+      error: `Error adding user to database: ${(e as Error).message}.`,
       category: "SIGNIN",
     };
   }
@@ -103,23 +109,29 @@ export const requestRide = async (
     };
   }
 
+  queueLock.acquire();
   // add a new request to the database, populated with the fields passed in and a request status of 0
   // on error, return { success: false, error: 'Error adding ride request to the database.'};
-  let requestid;
   try {
-    requestid = await addRideRequest(netid, from, to, numRiders);
+    const requestid = await runTransaction(db, async () => {
+      // we cannot directly assign the requestid to the return value of addRideRequest
+      // since you cannot alter app state in a transaction
+      return await addRideRequest(netid, from, to, numRiders);
+    });
+    // can't do this in the transaction unfortuntely
+    // we also want to keep the requests locally in the server queue, but without too much information
+    const newRideReq: localRideRequest = { requestid, netid };
+    rideReqQueue.add(newRideReq);
+    return { response: "REQUEST_RIDE", requestid };
   } catch (e) {
     return {
       response: "ERROR",
       error: `Error adding ride request to the database: ${e}`,
       category: "REQUEST_RIDE",
     };
+  } finally {
+    queueLock.release();
   }
-
-  // we also want to keep the requests locally in the server queue, but without too much information
-  const newRideReq: localRideRequest = { requestid, netid };
-  rideReqQueue.add(newRideReq);
-  return { response: "REQUEST_RIDE", requestid };
 };
 
 /* Pops the next ride request in the queue and assigns it to the driver. 
@@ -137,7 +149,9 @@ and the object that should be returned TO THE DRIVER is in the format:
 export const acceptRide = async (
   driverid: string
 ): Promise<AcceptResponse | ErrorResponse> => {
+  queueLock.acquire();
   if (!rideReqQueue.peek()) {
+    queueLock.release();
     return {
       response: "ERROR",
       error: "No ride requests in the queue.",
@@ -146,14 +160,14 @@ export const acceptRide = async (
   }
 
   // get the next request in the queue
+  // can't do this in the transaction unfortuntely
   const nextRide = rideReqQueue.pop() as localRideRequest;
   // update the request in database to add the driver id and change the status of the request to 1 (accepted)
   // if there is an error, return { success: false, error: 'Error accepting ride request.'};
   try {
-    const req: RideRequest = await acceptRideRequest(
-      nextRide.requestid,
-      driverid
-    );
+    const req: RideRequest = await runTransaction(db, async () => {
+      return await acceptRideRequest(nextRide.requestid, driverid);
+    });
     return {
       response: "ACCEPT_RIDE",
       student: { response: "ACCEPT_RIDE", success: true },
@@ -172,6 +186,8 @@ export const acceptRide = async (
       error: `Error accepting ride request: ${e}`,
       category: "ACCEPT_RIDE",
     };
+  } finally {
+    queueLock.release();
   }
 };
 
@@ -211,24 +227,31 @@ export const cancelRide = async (
     };
   }
 
+  queueLock.acquire();
+  // can't do this in the transaction unfortuntely
   if (role === "STUDENT") {
     // get rid of any pending requests in the local queue that have the same netid
     rideReqQueue.remove(netid);
   }
 
   try {
-    const driverid = await cancelRideRequest(netid, role);
-    if (driverid && netid != driverid) {
-      // since drivers can also cancel rides, it makes no sense to notify
-      // the person who canceled AND the driver of the request because they are the same person
+    return await runTransaction(db, async () => {
+      const driverid = await cancelRideRequest(netid, role);
+      if (driverid && netid != driverid) {
+        // since drivers can also cancel rides, it makes no sense to notify
+        // the person who canceled AND the driver of the request because they are the same person
+        return {
+          response: "CANCEL",
+          info: { response: "CANCEL", success: true },
+          otherNetid: driverid,
+        };
+      }
+      // no driver specified in this pending request case!
       return {
         response: "CANCEL",
         info: { response: "CANCEL", success: true },
-        otherNetid: driverid,
       };
-    }
-    // no driver specified in this pending request case!
-    return { response: "CANCEL", info: { response: "CANCEL", success: true } };
+    });
   } catch (e) {
     // if there is an error, return { success: false, error: 'Error canceling ride request.'};
     return {
@@ -236,6 +259,8 @@ export const cancelRide = async (
       error: `Error canceling ride request: ${e}`,
       category: "CANCEL",
     };
+  } finally {
+    queueLock.release();
   }
 };
 
@@ -260,8 +285,10 @@ export const completeRide = async (
   // set the specific request status to 2 in the database
   // if there is an error, return { success: false, error: 'Error completing ride request.'};
   try {
-    await completeRideRequest(requestid);
-    return { response: "COMPLETE", success: true };
+    return await runTransaction(db, async () => {
+      await completeRideRequest(requestid);
+      return { response: "COMPLETE", success: true };
+    });
   } catch (e) {
     // if there is an error, return { success: false, error: 'Error completing ride request.'};
     return {
@@ -291,14 +318,18 @@ export const addFeedback = async (
       category: "ADD_FEEDBACK",
     };
   }
-  const feedback: Feedback = {
-    rating,
-    textFeedback,
-    rideOrApp,
-  };
+
   try {
-    // add feedback to the Feeback table using the fields passed in
-    await addFeedbackToDb(feedback);
+    return await runTransaction(db, async () => {
+      const feedback: Feedback = {
+        rating,
+        textFeedback,
+        rideOrApp,
+      };
+      // add feedback to the Feeback table using the fields passed in
+      await addFeedbackToDb(feedback);
+      return { response: "ADD_FEEDBACK", success: true };
+    });
   } catch (e) {
     // if there is an error, return { success: false, error: 'Error adding feedback to the database.'};
     return {
@@ -307,7 +338,6 @@ export const addFeedback = async (
       category: "ADD_FEEDBACK",
     };
   }
-  return { response: "ADD_FEEDBACK", success: true };
 };
 
 /* Driver needs to be able to report a specific student they just dropped off for bad behavior. 
@@ -328,17 +358,19 @@ export const report = async (
       category: "REPORT",
     };
   }
-  // add a new student entry to the ProblematicUsers table with the reported category
-  const problem: ProblematicUser = {
-    netid,
-    requestid,
-    reason,
-    category: "REPORTED",
-  };
 
   try {
-    await addProblematic(problem);
-    return { response: "REPORT", success: true };
+    return await runTransaction(db, async () => {
+      // add a new student entry to the ProblematicUsers table with the reported category
+      const problem: ProblematicUser = {
+        netid,
+        requestid,
+        reason,
+        category: "REPORTED",
+      };
+      await addProblematic(problem);
+      return { response: "REPORT", success: true };
+    });
   } catch (error) {
     // if there is an error, return { success: false, error: 'Error reporting student.'};
     return {
@@ -370,8 +402,10 @@ export const blacklist = async (
   // modify the ‘ProblematicUsers’ table so that the blacklisted field is 1
   // if there is an error, return { success: false, error: 'Error blacklisting student.'};
   try {
-    await blacklistUser(netid);
-    return { response: "BLACKLIST", success: true };
+    return await runTransaction(db, async () => {
+      await blacklistUser(netid);
+      return { response: "BLACKLIST", success: true };
+    });
   } catch (e) {
     return {
       response: "ERROR",
@@ -420,6 +454,7 @@ export const waitTime = (
     // TODO: calculate the ETA from driverLocation to pickupLocation
     ETA = 100; // dummy value
   } else {
+    queueLock.acquire();
     // else if the request has not been accepted,
     // wait time will be the requestid’s position in the local server queue * 15 minutes
     const index = rideReqQueue
@@ -427,6 +462,7 @@ export const waitTime = (
       .findIndex((request) => request.requestid === requestid);
     console.log(index);
     if (index === -1) {
+      queueLock.release();
       return {
         response: "ERROR",
         error: "Request not found in the queue.",
@@ -436,6 +472,7 @@ export const waitTime = (
     // eliminate 0 based indexing
     ETA = (index + 1) * 15;
   }
+  queueLock.release();
   return { response: "WAIT_TIME", waitTime: ETA };
 };
 
@@ -496,8 +533,10 @@ export const query = async (
   // filter ride or app feedback, all feedback from a date, all feedback from a specific rating
   // if there is an error, return { success: false, error: 'Error querying feedback.'};
   try {
-    const queried: Feedback[] = await queryFeedback(rideorApp, date, rating);
-    return { response: "QUERY", numberOfEntries: 0, feedback: queried };
+    return await runTransaction(db, async () => {
+      const queried: Feedback[] = await queryFeedback(rideorApp, date, rating);
+      return { response: "QUERY", numberOfEntries: 0, feedback: queried };
+    });
   } catch (e) {
     return {
       response: "ERROR",
