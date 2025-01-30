@@ -18,6 +18,7 @@ export let clients: {
   websocketid: string;
   websocketInstance: WebSocketServer;
   netid: string;
+  role: "STUDENT" | "DRIVER";
 }[] = [];
 
 wss.on("connection", (ws: WebSocketServer) => {
@@ -28,6 +29,7 @@ wss.on("connection", (ws: WebSocketServer) => {
     websocketid: instanceId,
     websocketInstance: ws,
     netid: "unknown",
+    role: "STUDENT",
   }); // add the client to the list
 
   ws.on("message", (message: string) => {
@@ -36,6 +38,18 @@ wss.on("connection", (ws: WebSocketServer) => {
 
   ws.on("close", () => {
     console.log(`WEBSOCKET: ${instanceId} disconnected`);
+    const client = clients.find((client) => client.websocketid == instanceId);
+    if (client) {
+      // cancel any pending rides by this client if they close the app
+      handleWebSocketMessage(
+        ws,
+        JSON.stringify({
+          directive: "CANCEL",
+          netid: client?.netid,
+          role: client?.role,
+        })
+      );
+    }
     clients = clients.filter((client) => client.websocketid != instanceId); // remove the client from the list
   });
 });

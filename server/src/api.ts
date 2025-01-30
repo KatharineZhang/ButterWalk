@@ -20,7 +20,7 @@ export type Command =
 
 // Input types
 export type WebSocketMessage =
-  | { directive: "CONNECT"; netid: string }
+  | { directive: "CONNECT"; netid: string; role: "STUDENT" | "DRIVER" }
   | {
       directive: "SIGNIN";
       netid: string;

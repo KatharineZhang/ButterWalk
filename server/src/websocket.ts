@@ -48,6 +48,7 @@ export const handleWebSocketMessage = async (
       clients.map((client) => {
         if (client.websocketInstance == ws) {
           client.netid = input.netid;
+          client.role = input.role;
         }
       });
       break;
