@@ -19,11 +19,12 @@ export type Command =
 
 // Input types
 export type WebSocketMessage =
-  | { directive: "CONNECT"; netid: string }
+  | { directive: "CONNECT"; netid: string; role: "STUDENT" | "DRIVER" }
   | {
       directive: "SIGNIN";
       netid: string;
-      name: string;
+      first_name: string;
+      last_name: string;
       phoneNum: string;
       studentNum: string;
       role: "STUDENT" | "DRIVER";
@@ -56,7 +57,7 @@ export type WebSocketMessage =
   | { directive: "LOCATION"; id: string; latitude: number; longitude: number }
   | {
       directive: "QUERY";
-      rideorApp?: "RIDE" | "APP"; // if rideOrApp is undefined, the default is to query both feebcack types
+      rideOrApp?: "RIDE" | "APP"; // if rideOrApp is undefined, the default is to query both feebcack types
       date?: { start: Date; end: Date };
       rating?: number;
     };
@@ -151,24 +152,23 @@ export type localRideRequest = {
   netid: string;
 };
 
-// TODO: Change this implementation to be specific to localRideRequest
-class Queue<T> {
-  private items: T[];
+class RideRequestQueue {
+  private items: localRideRequest[];
 
   constructor() {
     this.items = [];
   }
 
   // return all the items in the queue
-  get = (): T[] => {
+  get = (): localRideRequest[] => {
     return this.items;
   };
   // adding to the back of the queue
-  add = (item: T): void => {
+  add = (item: localRideRequest): void => {
     this.items.push(item);
   };
   // removing from the front of the queue
-  pop = (): T | undefined => {
+  pop = (): localRideRequest | undefined => {
     return this.items.shift();
   };
   // returns size of queue
@@ -176,24 +176,16 @@ class Queue<T> {
     return this.items.length;
   };
   // returns first item of queue without removing it
-  peek = (): T | undefined => {
+  peek = (): localRideRequest => {
     return this.items[0];
+  };
+
+  remove = (netid: string): void => {
+    this.items = this.items.filter((item) => item.netid !== netid);
   };
 }
 
-export let rideReqQueue = new Queue<localRideRequest>(); // rideRequests Queue
-
-// TODO: this is a temporary solution. We will need to implement a more robust solution
-export const removeRideReq = (netid: string): void => {
-  const newQueue = new Queue<localRideRequest>();
-  const rideReq = rideReqQueue.get();
-  rideReq.forEach((request) => {
-    if (request.netid != netid) {
-      newQueue.add(request);
-    }
-  });
-  rideReqQueue = newQueue;
-};
+export const rideReqQueue = new RideRequestQueue(); // rideRequests Queue
 
 // Database Types
 
@@ -201,7 +193,8 @@ export const removeRideReq = (netid: string): void => {
 // phone_num char(10), student_or_driver int); –- 0 for student, 1 for driver
 export type User = {
   netid: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   phone_number: string;
   student_number: string;
   student_or_driver: "STUDENT" | "DRIVER";

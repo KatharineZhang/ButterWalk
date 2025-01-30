@@ -19,7 +19,7 @@ class WebSocketService {
    * @param netid
    * @returns
    */
-  connect(netid: string) {
+  connect(netid: string, role: "STUDENT" | "DRIVER") {
     if (
       this.websocket != null &&
       this.websocket.readyState === WebSocket.OPEN
@@ -44,7 +44,7 @@ class WebSocketService {
 
     this.websocket.onopen = () => {
       console.log("WEBSOCKET: Connected to Websocket");
-      this.send({ directive: "CONNECT", netid: netid });
+      this.send({ directive: "CONNECT", netid: netid, role: role });
     };
 
     this.websocket.onmessage = (event) => {

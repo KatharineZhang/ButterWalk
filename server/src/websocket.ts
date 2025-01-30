@@ -48,6 +48,7 @@ export const handleWebSocketMessage = async (
       clients.map((client) => {
         if (client.websocketInstance == ws) {
           client.netid = input.netid;
+          client.role = input.role;
         }
       });
       break;
@@ -55,7 +56,8 @@ export const handleWebSocketMessage = async (
     case "SIGNIN":
       resp = await signIn(
         input.netid,
-        input.name,
+        input.first_name,
+        input.last_name,
         input.phoneNum,
         input.studentNum,
         input.role
@@ -161,7 +163,7 @@ export const handleWebSocketMessage = async (
       break;
 
     case "QUERY":
-      resp = await query(input.rideorApp, input.date, input.rating);
+      resp = await query(input.rideOrApp, input.date, input.rating);
       // send response back to client (the driver)
       sendWebSocketMessage(ws, resp);
       break;
