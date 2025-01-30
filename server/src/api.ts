@@ -57,7 +57,7 @@ export type WebSocketMessage =
   | { directive: "LOCATION"; id: string; latitude: number; longitude: number }
   | {
       directive: "QUERY";
-      rideorApp?: "RIDE" | "APP"; // if rideOrApp is undefined, the default is to query both feebcack types
+      rideOrApp?: "RIDE" | "APP"; // if rideOrApp is undefined, the default is to query both feebcack types
       date?: { start: Date; end: Date };
       rating?: number;
     };

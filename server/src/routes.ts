@@ -24,7 +24,6 @@ import {
   completeRideRequest,
   createUser,
   getOtherNetId,
-  isProblematic,
   queryFeedback,
   db,
 } from "./firebaseActions";
@@ -62,13 +61,8 @@ export const signIn = async (
   }
   // TODO: Email (and phone number?) validation
   try {
-    await runTransaction(db, async () => {
-      // make sure this user is not in the ProblematicUsers table with a blacklisted field of 1
-      if (await isProblematic(netid)) {
-        throw new Error(`${netid} is blacklisted.`);
-      }
-      // else, try to make user entry
-      await createUser({
+    await runTransaction(db, async (transaction) => {
+      await createUser(transaction, {
         netid,
         name,
         phone_number,
@@ -113,10 +107,10 @@ export const requestRide = async (
   // add a new request to the database, populated with the fields passed in and a request status of 0
   // on error, return { success: false, error: 'Error adding ride request to the database.'};
   try {
-    const requestid = await runTransaction(db, async () => {
+    const requestid = await runTransaction(db, async (transaction) => {
       // we cannot directly assign the requestid to the return value of addRideRequest
       // since you cannot alter app state in a transaction
-      return await addRideRequest(netid, from, to, numRiders);
+      return await addRideRequest(transaction, netid, from, to, numRiders);
     });
     // can't do this in the transaction unfortuntely
     // we also want to keep the requests locally in the server queue, but without too much information
@@ -165,8 +159,8 @@ export const acceptRide = async (
   // update the request in database to add the driver id and change the status of the request to 1 (accepted)
   // if there is an error, return { success: false, error: 'Error accepting ride request.'};
   try {
-    const req: RideRequest = await runTransaction(db, async () => {
-      return await acceptRideRequest(nextRide.requestid, driverid);
+    const req: RideRequest = await runTransaction(db, async (transaction) => {
+      return await acceptRideRequest(transaction, nextRide.requestid, driverid);
     });
     return {
       response: "ACCEPT_RIDE",
@@ -228,15 +222,15 @@ export const cancelRide = async (
   }
 
   queueLock.acquire();
-  // can't do this in the transaction unfortuntely
+  // can't do this in the transaction unfortuntely, so lock instead
   if (role === "STUDENT") {
     // get rid of any pending requests in the local queue that have the same netid
     rideReqQueue.remove(netid);
   }
 
   try {
-    return await runTransaction(db, async () => {
-      const driverid = await cancelRideRequest(netid, role);
+    return await runTransaction(db, async (transaction) => {
+      const driverid = await cancelRideRequest(transaction, netid, role);
       if (driverid && netid != driverid) {
         // since drivers can also cancel rides, it makes no sense to notify
         // the person who canceled AND the driver of the request because they are the same person
@@ -285,8 +279,8 @@ export const completeRide = async (
   // set the specific request status to 2 in the database
   // if there is an error, return { success: false, error: 'Error completing ride request.'};
   try {
-    return await runTransaction(db, async () => {
-      await completeRideRequest(requestid);
+    return await runTransaction(db, async (transaction) => {
+      await completeRideRequest(transaction, requestid);
       return { response: "COMPLETE", success: true };
     });
   } catch (e) {
@@ -320,14 +314,14 @@ export const addFeedback = async (
   }
 
   try {
-    return await runTransaction(db, async () => {
+    return await runTransaction(db, async (transaction) => {
       const feedback: Feedback = {
         rating,
         textFeedback,
         rideOrApp,
       };
       // add feedback to the Feeback table using the fields passed in
-      await addFeedbackToDb(feedback);
+      await addFeedbackToDb(transaction, feedback);
       return { response: "ADD_FEEDBACK", success: true };
     });
   } catch (e) {
@@ -360,7 +354,7 @@ export const report = async (
   }
 
   try {
-    return await runTransaction(db, async () => {
+    return await runTransaction(db, async (transaction) => {
       // add a new student entry to the ProblematicUsers table with the reported category
       const problem: ProblematicUser = {
         netid,
@@ -368,7 +362,7 @@ export const report = async (
         reason,
         category: "REPORTED",
       };
-      await addProblematic(problem);
+      await addProblematic(transaction, problem);
       return { response: "REPORT", success: true };
     });
   } catch (error) {
@@ -402,8 +396,8 @@ export const blacklist = async (
   // modify the ‘ProblematicUsers’ table so that the blacklisted field is 1
   // if there is an error, return { success: false, error: 'Error blacklisting student.'};
   try {
-    return await runTransaction(db, async () => {
-      await blacklistUser(netid);
+    return await runTransaction(db, async (transaction) => {
+      await blacklistUser(transaction, netid);
       return { response: "BLACKLIST", success: true };
     });
   } catch (e) {
@@ -502,7 +496,11 @@ export const location = async (
   // Look for an accepted request with the netid passed in and extract the opposite user netid
   let otherNetId;
   try {
-    otherNetId = await getOtherNetId(id);
+    return await runTransaction(db, async () => {
+      // we can't use transactions to query so hopefully this is fine
+      otherNetId = await getOtherNetId(id);
+      return { response: "LOCATION", netid: otherNetId, latitude, longitude };
+    });
   } catch (e) {
     return {
       response: "ERROR",
@@ -512,19 +510,18 @@ export const location = async (
   }
   // TODO: get the location of the user
   // pass the location information to the opposite user
-  return { response: "LOCATION", netid: otherNetId, latitude, longitude };
 };
 
 /* We need to get some basic stats about our current feedback table back to the client. 
 The types of canned queries we will return are: number of feedback entries, filter ride or app feedback, 
 all feedback from a date, all feedback from a specific rating.
 
-- Takes in: { directive: "QUERY”, rideorApp?: bigint // 0 for ride, 1 for app, default: query both, date?: { start: Date; end: Date }, rating?: bigint }
+- Takes in: { directive: "QUERY”, rideOrApp?: bigint // 0 for ride, 1 for app, default: query both, date?: { start: Date; end: Date }, rating?: bigint }
 - On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: “QUERY” }.
 - Returns a json object TO THE DRIVER in the format: 
 { response: “QUERY”, numberOfEntries: bigint, feedback: [ { rating: bigint, textFeeback: string } ] } */
 export const query = async (
-  rideorApp?: "RIDE" | "APP",
+  rideOrApp?: "RIDE" | "APP",
   date?: { start: Date; end: Date },
   rating?: number
 ): Promise<QueryResponse | ErrorResponse> => {
@@ -534,7 +531,7 @@ export const query = async (
   // if there is an error, return { success: false, error: 'Error querying feedback.'};
   try {
     return await runTransaction(db, async () => {
-      const queried: Feedback[] = await queryFeedback(rideorApp, date, rating);
+      const queried: Feedback[] = await queryFeedback(rideOrApp, date, rating);
       return { response: "QUERY", numberOfEntries: 0, feedback: queried };
     });
   } catch (e) {

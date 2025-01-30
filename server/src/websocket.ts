@@ -161,7 +161,7 @@ export const handleWebSocketMessage = async (
       break;
 
     case "QUERY":
-      resp = await query(input.rideorApp, input.date, input.rating);
+      resp = await query(input.rideOrApp, input.date, input.rating);
       // send response back to client (the driver)
       sendWebSocketMessage(ws, resp);
       break;
