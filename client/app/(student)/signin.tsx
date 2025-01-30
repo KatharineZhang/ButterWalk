@@ -9,21 +9,21 @@ import {
 } from "react-native";
 import { useState } from "react";
 import { styles } from "@/assets/styles";
-import { Redirect } from "expo-router";
+import { Redirect, Link } from "expo-router";
 
 const Login = () => {
   const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
 
   const signIn = async () => {
     setLoading(true);
     setEmail(email.trim());
-    setPhoneNumber(phoneNumber.trim());
+    setPassword(password.trim());
 
-    if (!email || !phoneNumber) {
-      alert("Email and phone number are required");
+    if (!email || !password) {
+      alert("Email and password are required");
       setLoading(false);
 
       return;
@@ -36,14 +36,13 @@ const Login = () => {
       return;
     }
 
-    const phoneRegex = /^\d{3}-\d{3}-\d{4}$/;
-    if (!phoneRegex.test(phoneNumber)) {
-      alert("Phone number must be in the format ###-###-####");
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      alert("Password must be at least 8 characters long and include at least one letter, one number, and one special character.");
       setLoading(false);
 
       return;
     }
-
     setSignedIn(true);
     setLoading(false);
   };
@@ -73,11 +72,11 @@ const Login = () => {
           autoCapitalize="none"
         />
         <TextInput
-          value={phoneNumber}
+          value={password}
           style={localStyles.input}
-          placeholder="Phone Number ( ### - ### - #### )"
+          placeholder="Password"
           placeholderTextColor={"#808080"}
-          onChangeText={(text) => setPhoneNumber(text)}
+          onChangeText={(text) => setPassword(text)}
         />
         {loading ? (
           <ActivityIndicator size="large" color="#0000ff" />
@@ -96,6 +95,9 @@ const Login = () => {
           </>
         )}
       </KeyboardAvoidingView>
+      <Link href="/(student)/create_acc">
+        <Text style={localStyles.link}>Don't have an account yet? <Text style={localStyles.linkText}>Create Account here!</Text></Text>
+      </Link>
     </View>
   );
 };
@@ -127,5 +129,13 @@ const localStyles = StyleSheet.create({
     fontWeight: "bold",
     letterSpacing: 0.25,
     color: "white",
+  },
+  link: {
+    fontSize: 14,
+    color: "black",
+  },
+  linkText: {
+    color: "purple",
+    textDecorationLine: "underline",
   },
 });

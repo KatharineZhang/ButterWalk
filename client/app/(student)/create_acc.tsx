@@ -1,5 +1,5 @@
 import {
-  View,
+  ScrollView,
   Text,
   StyleSheet,
   TextInput,
@@ -9,21 +9,29 @@ import {
 } from "react-native";
 import { useState } from "react";
 import { styles } from "@/assets/styles";
-import { Redirect } from "expo-router";
+import { Redirect, Link } from "expo-router";
+import { registerUser } from "../../../server/src/firebaseEmailAuth"
 
-const Login = () => {
+const createAcc = () => {
+
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [signedIn, setSignedIn] = useState(false);
+  const [accCreated, setAccCreated] = useState(false);
 
-  const signIn = async () => {
+  const create = async () => {
     setLoading(true);
+    setFirstName(firstName.trim());
+    setLastName(lastName.trim());
     setEmail(email.trim());
     setPhoneNumber(phoneNumber.trim());
+    setPassword(password.trim());
 
-    if (!email || !phoneNumber) {
-      alert("Email and phone number are required");
+    if (!firstName || !lastName || !email || !phoneNumber || !password) {
+      alert("All fields are required");
       setLoading(false);
 
       return;
@@ -31,7 +39,7 @@ const Login = () => {
 
     const UWregex = /@uw.edu$/;
     if (!UWregex.test(email)) {
-      alert("Enter a valid UW email");
+      alert("Please ensure your using your UW email");
       setLoading(false);
       return;
     }
@@ -44,11 +52,20 @@ const Login = () => {
       return;
     }
 
-    setSignedIn(true);
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      alert("Password must be 8 characters long with a number and a symbol");
+      setLoading(false);
+
+      return;
+    }
+
+    setAccCreated(true);
     setLoading(false);
   };
 
-  if (signedIn) {
+  if (accCreated) {
+    registerUser(firstName, lastName, email, phoneNumber, password, setLoading);
     return (
       <Redirect
         href={{
@@ -61,71 +78,122 @@ const Login = () => {
     );
   }
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.scrollContainer} bounces={true}>
       <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
-        <Text>Welcome Back!</Text>
+        <Text>Welcome! Butter create your account below!</Text>
+        <Text style={localStyles.description}>First Name (the same as your UW NetID):</Text>
+        <TextInput
+          value={firstName}
+          style={localStyles.input}
+          placeholder="First name"
+          placeholderTextColor={"#808080"}
+          onChangeText={(text) => setFirstName(text)}
+          autoCapitalize="none"
+        />
+
+        <Text style={localStyles.description}>Last Name (the same as your UW NetID):</Text>
+        <TextInput
+          value={lastName}
+          style={localStyles.input}
+          placeholder="Last name"
+          placeholderTextColor={"#808080"}
+          onChangeText={(text) => setLastName(text)}
+          autoCapitalize="none"
+        />
+
+        <Text style={localStyles.description}>Enter your UW email:</Text>
         <TextInput
           value={email}
           style={localStyles.input}
-          placeholder="UW Email"
+          placeholder="UW email"
           placeholderTextColor={"#808080"}
           onChangeText={(text) => setEmail(text)}
           autoCapitalize="none"
         />
+
+        <Text style={localStyles.description}>Enter your phone number ( ### - ### - #### ):</Text>
         <TextInput
           value={phoneNumber}
           style={localStyles.input}
-          placeholder="Phone Number ( ### - ### - #### )"
+          placeholder="Phone Number"
           placeholderTextColor={"#808080"}
           onChangeText={(text) => setPhoneNumber(text)}
+          autoCapitalize="none"
+        />
+
+        <Text style={localStyles.description}>Enter your password</Text>
+        <Text style={localStyles.description}>(Minimum eight characters, at least one letter, one number and one special character):</Text>
+        <TextInput
+          value={password}
+          style={localStyles.input}
+          placeholder="Password"
+          placeholderTextColor={"#808080"}
+          onChangeText={(text) => setPassword(text)}
         />
         {loading ? (
           <ActivityIndicator size="large" color="#0000ff" />
         ) : (
           <>
-            <Pressable style={localStyles.button} onPress={signIn}>
-              <Text style={localStyles.text}>Log In</Text>
+            <Pressable style={localStyles.button} onPress={create}>
+              <Text style={localStyles.text}>Create Account</Text>
             </Pressable>
             <Text>For easier dev testing (will be removed later) </Text>
             <Pressable
               style={localStyles.button}
-              onPress={() => setSignedIn(true)}
+              onPress={() => setAccCreated(true)}
             >
               <Text style={localStyles.text}>Bypass Signin</Text>
             </Pressable>
           </>
         )}
       </KeyboardAvoidingView>
-    </View>
-  );
-};
+      <Link href="/(student)/signin">
+        <Text style={localStyles.link}>Already have an account? <Text style={localStyles.linkText}>Sign in here!</Text></Text>
+      </Link>
+    </ScrollView>
+      );
+    };
 
-export default Login;
+    export default createAcc;
 
-const localStyles = StyleSheet.create({
-  input: {
-    height: 50,
-    width: 300,
-    borderWidth: 1,
-    marginVertical: 4,
-    borderRadius: 4,
-    padding: 10,
-    backgroundColor: "#f9f9f9",
-  },
-  button: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 4,
-    elevation: 3,
-    backgroundColor: "#4B2E83",
-  },
-  text: {
-    fontSize: 16,
-    lineHeight: 21,
-    fontWeight: "bold",
-    letterSpacing: 0.25,
-    color: "white",
-  },
-});
+    const localStyles = StyleSheet.create({
+      input: {
+        height: 50,
+        width: 300,
+        borderWidth: 1,
+        marginVertical: 4,
+        borderRadius: 4,
+        padding: 10,
+        backgroundColor: "#f9f9f9"
+      },
+      button: {
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: 12,
+        paddingHorizontal: 32,
+        borderRadius: 4,
+        elevation: 3,
+        backgroundColor: "#4B2E83",
+      },
+      text: {
+        fontSize: 16,
+        lineHeight: 21,
+        fontWeight: "bold",
+        letterSpacing: 0.25,
+        color: "white",
+      },
+      description: {
+        fontSize: 14,
+        lineHeight: 18,
+        letterSpacing: 0.25,
+        color: "black",
+      },
+      link: {
+        fontSize: 14,
+        color: "black",
+      },
+      linkText: {
+        color: "purple",
+        textDecorationLine: "underline",
+      },
+    });

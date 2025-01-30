@@ -8,6 +8,11 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     display: "flex",
   },
+  scrollContainer: {
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  }, 
   largeText: {
     fontSize: 25,
   },
