@@ -47,12 +47,19 @@ directive: "SIGNIN", phoneNum: string, netID: string, name: string, studentNum: 
 - Returns a json object TO THE STUDENT in the form: { response: “SIGNIN”, success: true }. */
 export const signIn = async (
   netid: string,
-  name: string,
+  first_name: string,
+  last_name: string,
   phone_number: string,
   student_number: string,
   student_or_driver: "STUDENT" | "DRIVER"
 ): Promise<GeneralResponse | ErrorResponse> => {
-  if (!phone_number || !netid || !name || !student_number) {
+  if (
+    !phone_number ||
+    !netid ||
+    !first_name ||
+    !!last_name ||
+    !student_number
+  ) {
     return {
       response: "ERROR",
       error: "Missing or invalid sign in details.",
@@ -64,7 +71,8 @@ export const signIn = async (
     await runTransaction(db, async (transaction) => {
       await createUser(transaction, {
         netid,
-        name,
+        first_name,
+        last_name,
         phone_number,
         student_number,
         student_or_driver,

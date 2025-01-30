@@ -56,7 +56,8 @@ export const handleWebSocketMessage = async (
     case "SIGNIN":
       resp = await signIn(
         input.netid,
-        input.name,
+        input.first_name,
+        input.last_name,
         input.phoneNum,
         input.studentNum,
         input.role

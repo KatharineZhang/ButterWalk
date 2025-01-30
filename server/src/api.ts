@@ -1,6 +1,5 @@
 // This is where all the server / database data structures will go
 import { Timestamp } from "firebase/firestore";
-import { Mutex } from "async-mutex";
 
 // Webhook commands
 export type Command =
@@ -24,7 +23,8 @@ export type WebSocketMessage =
   | {
       directive: "SIGNIN";
       netid: string;
-      name: string;
+      first_name: string;
+      last_name: string;
       phoneNum: string;
       studentNum: string;
       role: "STUDENT" | "DRIVER";
@@ -154,7 +154,6 @@ export type localRideRequest = {
 
 class RideRequestQueue {
   private items: localRideRequest[];
-  private mutex: Mutex = new Mutex();
 
   constructor() {
     this.items = [];
@@ -162,57 +161,27 @@ class RideRequestQueue {
 
   // return all the items in the queue
   get = (): localRideRequest[] => {
-    this.mutex.acquire();
-    try {
-      return this.items;
-    } finally {
-      this.mutex.release();
-    }
+    return this.items;
   };
   // adding to the back of the queue
   add = (item: localRideRequest): void => {
-    this.mutex.acquire();
-    try {
-      this.items.push(item);
-    } finally {
-      this.mutex.release();
-    }
+    this.items.push(item);
   };
   // removing from the front of the queue
   pop = (): localRideRequest | undefined => {
-    this.mutex.acquire();
-    try {
-      return this.items.shift();
-    } finally {
-      this.mutex.release();
-    }
+    return this.items.shift();
   };
   // returns size of queue
   size = (): number => {
-    this.mutex.acquire();
-    try {
-      return this.items.length;
-    } finally {
-      this.mutex.release();
-    }
+    return this.items.length;
   };
   // returns first item of queue without removing it
-  peek = (): localRideRequest | undefined => {
-    this.mutex.acquire();
-    try {
-      return this.items[0];
-    } finally {
-      this.mutex.release();
-    }
+  peek = (): localRideRequest => {
+    return this.items[0];
   };
 
   remove = (netid: string): void => {
-    this.mutex.acquire();
-    try {
-      this.items = this.items.filter((item) => item.netid !== netid);
-    } finally {
-      this.mutex.release();
-    }
+    this.items = this.items.filter((item) => item.netid !== netid);
   };
 }
 
@@ -224,7 +193,8 @@ export const rideReqQueue = new RideRequestQueue(); // rideRequests Queue
 // phone_num char(10), student_or_driver int); –- 0 for student, 1 for driver
 export type User = {
   netid: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   phone_number: string;
   student_number: string;
   student_or_driver: "STUDENT" | "DRIVER";
