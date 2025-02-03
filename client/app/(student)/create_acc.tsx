@@ -10,7 +10,7 @@ import {
 import { useState } from "react";
 import { styles } from "@/assets/styles";
 import { Redirect, Link } from "expo-router";
-import { registerUser } from "../../../server/src/firebaseEmailAuth"
+import { registerUser } from "../../services/firebaseEmailAuth";
 
 const createAcc = () => {
 

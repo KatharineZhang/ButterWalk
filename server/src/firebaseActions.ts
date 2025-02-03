@@ -1,5 +1,5 @@
 // This is where we will directly interact with the firestore database
-import app from "./firebaseConfig";
+import { app } from "./firebaseConfig";
 import {
   collection,
   doc,
