@@ -19,7 +19,7 @@ export default function App() {
   // Extract netid from Redirect URL from signin page
   const { netid } = useLocalSearchParams();
   // Use netid to pair this WebSocket connection with a netid
-  WebSocketService.connect(netid as string);
+  WebSocketService.connect(netid as string, "DRIVER");
 
   const [destination, setDestination] = useState<{
     latitude: number;
