@@ -22,7 +22,8 @@ export type WebSocketMessage =
   | { directive: "CONNECT"; netid: string; role: "STUDENT" | "DRIVER" }
   | {
       directive: "SIGNIN";
-      netid: string;
+      uwEmail: string;
+      password: string;
       first_name: string;
       last_name: string;
       phoneNum: string;

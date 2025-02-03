@@ -29,6 +29,12 @@ import {
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { Mutex } from "async-mutex";
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  sendEmailVerification,
+} from "firebase/auth";
+import { auth } from "./firebaseConfig";
 dotenv.config();
 
 // every time we access the queue and the database,
@@ -46,7 +52,8 @@ directive: "SIGNIN", phoneNum: string, netID: string, name: string, studentNum: 
 - On error, returns the json object in the form:  { response: “ERROR”, success: false, error: string, category: “SIGNIN” }. 
 - Returns a json object TO THE STUDENT in the form: { response: “SIGNIN”, success: true }. */
 export const signIn = async (
-  netid: string,
+  uwEmail: string, // for firebase auth
+  password: string, // for firebase auth
   first_name: string,
   last_name: string,
   phone_number: string,
@@ -55,7 +62,8 @@ export const signIn = async (
 ): Promise<GeneralResponse | ErrorResponse> => {
   if (
     !phone_number ||
-    !netid ||
+    !uwEmail ||
+    !password ||
     !first_name ||
     !!last_name ||
     !student_number
@@ -66,7 +74,50 @@ export const signIn = async (
       category: "SIGNIN",
     };
   }
-  // TODO: Email (and phone number?) validation
+
+  // if the user is not in the FIREBASE auth database, call create acount functions
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      try {
+        // create a new user
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          uwEmail,
+          password
+        );
+        const results = userCredential.user;
+        console.log(results);
+        // send an email verification to the user's email
+        await sendEmailVerification(results);
+        alert(
+          `A verification email has been sent to your email address ${first_name}`
+        );
+      } catch (error) {
+        // something went wrong in creating the user
+        return {
+          response: "ERROR",
+          error: `Error creating user in firebasse: ${error}`,
+          category: "SIGNIN",
+        };
+      }
+    } else {
+      // call firebase sign in functions
+      const isEmailVerified = user.emailVerified;
+
+      if (isEmailVerified) {
+        // Email is verified
+        console.log("Email is verified");
+      } else {
+        // Email is not verified
+        console.log("Email is not verified");
+      }
+    }
+  });
+
+  // parse email to netid for database
+  const netid = uwEmail.replace("@uw.edu", "");
+
+  // try to add user to the custom FIRESTORE database
   try {
     await runTransaction(db, async (transaction) => {
       await createUser(transaction, {
