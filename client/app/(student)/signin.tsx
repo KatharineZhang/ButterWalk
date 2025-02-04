@@ -13,11 +13,10 @@ import { styles } from "@/assets/styles";
 import { Redirect, Link } from "expo-router";
 
 // need to import the image Katharine sent in discord to Hyejin
-import Glogo from '../assets/images/Glogo.png';
+import Glogo from '../../assets/images/Glogo.png';
 import * as WebBrowser from 'expo-web-browser';
 // need to npm i the google auth thing. But I forgot what it was.
 import * as Google from "expo-auth-session/providers/google";
-import LoginWithGoogle from "../components/LoginWithGoogle";
 
 const webClientID = '115222638597-9fsnarg3ujfemeb2vmtj5spscbj4ei8a.apps.googleusercontent.com';
 const androidClientID = '115222638597-45egn9a398joau1s6tmmd7qv6s68f47i.apps.googleusercontent.com';
@@ -41,7 +40,7 @@ const Login = () => {
   let netid = "";
 
 
-  const [request, response, promptAsync] = Google.useAUthRequest(config);
+  const [request, response, promptAsync] = Google.useAuthRequest(config);
 
   const getUserProfile = async (token: string) => {
     if(!token) return;
