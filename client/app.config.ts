@@ -28,6 +28,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     config: {
       googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY,
     },
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false
+    }
   },
   android: {
     adaptiveIcon: {

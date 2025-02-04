@@ -6,46 +6,79 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Pressable,
+  TouchableOpacity,
 } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { styles } from "@/assets/styles";
 import { Redirect, Link } from "expo-router";
 
+// need to import the image Katharine sent in discord to Hyejin
+import Glogo from '../assets/images/Glogo.png';
+import * as WebBrowser from 'expo-web-browser';
+// need to npm i the google auth thing. But I forgot what it was.
+import * as Google from "expo-auth-session/providers/google";
+import LoginWithGoogle from "../components/LoginWithGoogle";
+
+const webClientID = '115222638597-9fsnarg3ujfemeb2vmtj5spscbj4ei8a.apps.googleusercontent.com';
+const androidClientID = '115222638597-45egn9a398joau1s6tmmd7qv6s68f47i.apps.googleusercontent.com';
+const iosClientID = '115222638597-uisr924s4l8ngmg467u1ipsh0jli9hfd.apps.googleusercontent.com';
+
+WebBrowser.maybeCompleteAuthSession();
+
+
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [signedIn, setSignedIn] = useState(false);
+  const [signedIn,setSignedIn] = useState(false);
+  const config = {
+    webClientID,
+    androidClientID,
+    iosClientID
+  }
 
-  const signIn = async () => {
-    setLoading(true);
-    setEmail(email.trim());
-    setPassword(password.trim());
+  // FIX THIS LATER!!! THIS ISN'T GOOD PRACTIFCE!!
+  let email = "";
+  let first_name = "";
+  let last_name = "";
+  let netid = "";
 
-    if (!email || !password) {
-      alert("Email and password are required");
-      setLoading(false);
 
-      return;
+  const [request, response, promptAsync] = Google.useAUthRequest(config);
+
+  const getUserProfile = async (token: string) => {
+    if(!token) return;
+    try {
+      const response = await fetch("https://www.googleapis.com/oauth2/v1/userinfo?alt=json", 
+          {headers: {Authorization: `Bearer ${token}`}});
+      
+          const userInfo = await response.json();
+          email = userInfo.email;
+          first_name = userInfo.given_name;
+          last_name = userInfo.family_name;
+          netid = email.replace("@uw.edu", "");
+
+          console.log("Email:", email);
+          console.log("First Name:", first_name);
+          console.log("Last Name:", last_name);
+          console.log("NetID:", netid);
+          console.log("user info", userInfo);
+    } catch (error) {
+      console.log("error fetching user info", error);
     }
+  }
 
-    const UWregex = /@uw.edu$/;
-    if (!UWregex.test(email)) {
-      alert("Enter a valid UW email");
-      setLoading(false);
-      return;
+  const handleToken = () => {
+    if(response?.type === "success") {
+      const {authentication} = response;
+      const token = authentication?.accessToken;
+      console.log("access token", token);
+      getUserProfile(token);
+      setSignedIn(true);
     }
+  }
 
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
-    if (!passwordRegex.test(password)) {
-      alert("Password must be at least 8 characters long and include at least one letter, one number, and one special character.");
-      setLoading(false);
 
-      return;
-    }
-    setSignedIn(true);
-    setLoading(false);
-  };
+  useEffect(() => {
+    handleToken();
+  } , [response]);
 
   if (signedIn) {
     return (
@@ -63,37 +96,21 @@ const Login = () => {
     <View style={styles.container}>
       <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
         <Text>Welcome Back!</Text>
-        <TextInput
-          value={email}
-          style={localStyles.input}
-          placeholder="UW Email"
-          placeholderTextColor={"#808080"}
-          onChangeText={(text) => setEmail(text)}
-          autoCapitalize="none"
-        />
-        <TextInput
-          value={password}
-          style={localStyles.input}
-          placeholder="Password"
-          placeholderTextColor={"#808080"}
-          onChangeText={(text) => setPassword(text)}
-        />
-        {loading ? (
-          <ActivityIndicator size="large" color="#0000ff" />
-        ) : (
-          <>
-            <Pressable style={localStyles.button} onPress={signIn}>
-              <Text style={localStyles.text}>Log In</Text>
-            </Pressable>
-            <Text>For easier dev testing (will be removed later) </Text>
-            <Pressable
-              style={localStyles.button}
-              onPress={() => setSignedIn(true)}
-            >
-              <Text style={localStyles.text}>Bypass Signin</Text>
-            </Pressable>
-          </>
-        )}
+
+        <TouchableOpacity onPress={() => promptAsync()}>
+          <image source={Glogo}/>
+          <Text>Sign in with UW Google</Text>
+        </TouchableOpacity>
+
+        <Pressable
+          style={localStyles.button}
+          onPress={() => setSignedIn(true)}
+        >
+          <Text style={localStyles.text}>Bypass Signin</Text>
+        </Pressable>
+
+
+          
       </KeyboardAvoidingView>
       <Link href="/(student)/create_acc">
         <Text style={localStyles.link}>Don't have an account yet? <Text style={localStyles.linkText}>Create Account here!</Text></Text>
