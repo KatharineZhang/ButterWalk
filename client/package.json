@@ -22,6 +22,7 @@
     "@capacitor/geolocation": "^7.0.0",
     "@capacitor/google-maps": "^7.0.0",
     "@expo/vector-icons": "^14.0.3",
+    "@gorhom/bottom-sheet": "^5.0.6",
     "@react-navigation/native": "^7.0.0",
     "dotenv": "^16.4.7",
     "expo": "^52.0.36",
