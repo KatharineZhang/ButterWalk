@@ -1,6 +1,6 @@
 import React from "react";
 import MapView from "react-native-maps";
-import { View } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Header from "@/components/Header";
 import { styles } from "@/assets/styles";
@@ -60,15 +60,26 @@ export default function App() {
   const handleLocation = (message: WebSocketResponse) => {
     if ("response" in message && message.response === "LOCATION") {
       console.log("LOCATION message received:", message);
-      // TODO: update the marker on the driver's location from 
+      // TODO: update the marker on the driver's location from
       // (message as LocationResponse).latitude and (message as LocationResponse).longitude
     }
   };
   WebSocketService.addListener(handleLocation, "LOCATION");
+
+  const sendRequest = () => {
+    WebSocketService.send({
+      directive: "REQUEST_RIDE",
+      phoneNum: "hi",
+      netid: netid as string,
+      location: "hi",
+      destination: "hi",
+      numRiders: 1,
+    });
+  };
   // end of important part
 
   return (
-    <View>
+    <View style={styles.mapContainer}>
       <SafeAreaProvider style={{ flex: 1 }} />
       <Header netid={netid as string} />
       <MapView
@@ -80,6 +91,26 @@ export default function App() {
           longitudeDelta: 0.0421,
         }}
       ></MapView>
+      {/* Temporary footer */}
+      <View
+        style={{
+          position: "absolute",
+          bottom: 0,
+          width: "100%",
+          padding: 20,
+          backgroundColor: "#D1AE49",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 10,
+        }}
+      >
+        <Pressable
+          onPress={sendRequest}
+          style={{ backgroundColor: "#4B2E83", padding: 10, borderRadius: 5 }}
+        >
+          <Text style={{ color: "white" }}>Request Ride</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }

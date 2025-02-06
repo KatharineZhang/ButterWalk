@@ -75,12 +75,15 @@ export const styles = StyleSheet.create({
     backgroundColor: "#4B2E83",
   },
   header: {
+    position: "absolute",
+    top: 1,
     height: "15%",
     width: "100%",
     paddingTop: 40,
     backgroundColor: "#D1AE49",
     flexDirection: "row",
     alignItems: "center",
+    zIndex:1
   },
   image: {
     flex: 0.7,

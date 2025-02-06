@@ -94,14 +94,13 @@ export default function App() {
   };
   const handleAccept = (message: WebSocketResponse) => {
     if ("response" in message && message.response === "ACCEPT_RIDE") {
-      console.log("ACCEPT message received:", message);
       setRideInfo(message as DriverAcceptResponse);
     }
   };
   WebSocketService.addListener(handleAccept, "ACCEPT_RIDE");
 
   // bonus. since we accepted rides, we might as well complete them
-  // currently there are no listeners on these routes 
+  // currently there are no listeners on these routes
   // because we don't need then right now!
   const sendCancel = () => {
     WebSocketService.send({
@@ -120,7 +119,7 @@ export default function App() {
   // end of the important part
 
   return (
-    <View>
+    <View style={styles.mapContainer}>
       <SafeAreaProvider style={{ flex: 1 }} />
       <Header netid={netid as string} />
       <MapView
@@ -132,34 +131,37 @@ export default function App() {
           longitudeDelta: 0.0421,
         }}
       ></MapView>
-      <View>
-        <Text>{JSON.stringify(rideInfo)}</Text>
-      </View>
       <View
         style={{
-          flexDirection: "row",
+          position: "absolute",
+          bottom: 0,
+          width: "100%",
+          padding: 20,
+          backgroundColor: "#D1AE49",
+          alignItems: "center",
           justifyContent: "space-between",
-          zIndex: 1,
+          gap: 10,
         }}
       >
         {/* temporary buttons */}
+        <Text>Ride Info: {JSON.stringify(rideInfo)}</Text>
         <Pressable
           onPress={sendAccept}
           style={{ backgroundColor: "#4B2E83", padding: 10, borderRadius: 5 }}
         >
-          <Text>Accept</Text>
+          <Text style={{ color: "white" }}>Accept</Text>
         </Pressable>
         <Pressable
           onPress={sendCancel}
           style={{ backgroundColor: "#4B2E83", padding: 10, borderRadius: 5 }}
         >
-          <Text>Cancel</Text>
+          <Text style={{ color: "white" }}>Cancel</Text>
         </Pressable>
         <Pressable
           onPress={sendComplete}
           style={{ backgroundColor: "#4B2E83", padding: 10, borderRadius: 5 }}
         >
-          <Text>Complete</Text>
+          <Text style={{ color: "white" }}>Complete</Text>
         </Pressable>
       </View>
     </View>
