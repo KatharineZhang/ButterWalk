@@ -12,15 +12,14 @@ import { useState, useEffect } from "react";
 import { styles } from "@/assets/styles";
 import { Redirect, Link } from "expo-router";
 
-// need to import the image Katharine sent in discord to Hyejin
-import Glogo from '../../assets/images/Glogo.png';
+import { Image } from "react-native";
 import * as WebBrowser from 'expo-web-browser';
-// need to npm i the google auth thing. But I forgot what it was.
+// need to 'npx expo install expo-web-browser expo-auth-session expo-crypto'
 import * as Google from "expo-auth-session/providers/google";
 
-const webClientID = '115222638597-9fsnarg3ujfemeb2vmtj5spscbj4ei8a.apps.googleusercontent.com';
-const androidClientID = '115222638597-45egn9a398joau1s6tmmd7qv6s68f47i.apps.googleusercontent.com';
-const iosClientID = '115222638597-uisr924s4l8ngmg467u1ipsh0jli9hfd.apps.googleusercontent.com';
+const webClientId = '115222638597-9fsnarg3ujfemeb2vmtj5spscbj4ei8a.apps.googleusercontent.com';
+const iosClientId = '115222638597-uisr924s4l8ngmg467u1ipsh0jli9hfd.apps.googleusercontent.com';
+const androidClientId = '115222638597-45egn9a398joau1s6tmmd7qv6s68f47i.apps.googleusercontent.com';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -28,9 +27,9 @@ WebBrowser.maybeCompleteAuthSession();
 const Login = () => {
   const [signedIn,setSignedIn] = useState(false);
   const config = {
-    webClientID,
-    androidClientID,
-    iosClientID
+    webClientId,
+    iosClientId,
+    androidClientId
   }
 
   // FIX THIS LATER!!! THIS ISN'T GOOD PRACTIFCE!!
@@ -42,7 +41,7 @@ const Login = () => {
 
   const [request, response, promptAsync] = Google.useAuthRequest(config);
 
-  const getUserProfile = async (token: string) => {
+  const getUserProfile = async (token: any) => {
     if(!token) return;
     try {
       const response = await fetch("https://www.googleapis.com/oauth2/v1/userinfo?alt=json", 
@@ -77,7 +76,7 @@ const Login = () => {
 
   useEffect(() => {
     handleToken();
-  } , [response]);
+  }, [response]);
 
   if (signedIn) {
     return (
@@ -97,7 +96,7 @@ const Login = () => {
         <Text>Welcome Back!</Text>
 
         <TouchableOpacity onPress={() => promptAsync()}>
-          <image source={Glogo}/>
+          <Image source={require('../../assets/images/Glogo.png')}/>
           <Text>Sign in with UW Google</Text>
         </TouchableOpacity>
 
