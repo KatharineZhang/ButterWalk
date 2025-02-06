@@ -1,0 +1,6 @@
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>We need your location to show your position on the map</string>
+<key>NSLocationAlwaysUsageDescription</key>
+<string>We need access to your location even when the app is in the background</string>
+<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+<string>We need your location for real-time tracking</string>

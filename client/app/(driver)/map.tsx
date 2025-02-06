@@ -6,7 +6,7 @@ import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Header from "@/components/Header";
 import { styles } from "@/assets/styles";
-import { View } from "react-native";
+import { Pressable, View, Text } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
 import { Alert, Linking } from "react-native";
@@ -108,8 +108,7 @@ export default function App() {
     : "";
 
   return (
-    //putting the map region on the screen
-    <View>
+    <View style={styles.mapContainer}>
       <SafeAreaProvider style={{ flex: 1 }} />
       <Header netid={netid as string} />
       <MapView
