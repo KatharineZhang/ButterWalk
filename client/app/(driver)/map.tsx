@@ -1,74 +1,111 @@
 // import React, { useState } from "react";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Header from "@/components/Header";
-// import { View, StyleSheet } from "react-native";
 import { styles } from "@/assets/styles";
 import { View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
+import { Alert, Linking } from "react-native";
 
-//right now the map shows but the console just has errors - i'm trying to get location
-//before i show the map so that I can route directions from their location
-//i think this is going to require getting the location before going to the map page
-//TBD when I get it (pros and cons to each)
 export default function App() {
   // Extract netid from Redirect URL from signin page
   const { netid } = useLocalSearchParams();
   // Use netid to pair this WebSocket connection with a netid
   WebSocketService.connect(netid as string, "DRIVER");
 
-  const [destination, setDestination] = useState<{
+  // the drivers's location
+  const [userLocation, setuserLocation] = useState<{
     latitude: number;
     longitude: number;
-  } | null>(null);
+  }>({latitude: 0, longitude: 0});
+  const mapRef = useRef<MapView>(null);
 
-  //getting permissions to use their location (this is the popup thingie asking if we can use location)
+  // SHOW THE USER'S LOCATION
+  // get permission to accass location of if permission is granted, get the user's location
   const getPermissions = async () => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
+    let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
       console.log("Please grant location permission");
-      //it was telling me i couldn't return nothing, so this is just a garbage return
-      return { location: 22, longitude: 33 };
+      Alert.alert(
+        "Location Permission Required",
+        "You have denied location access. Please enable it in settings.",
+        [
+            { text: "Cancel", style: "cancel" },
+            { text: "Open Settings", onPress: () => Linking.openSettings() },
+        ]
+    );
+    return;
     }
     const currentLocation = await Location.getCurrentPositionAsync({});
+    
     //print current user's location to console
-    //this worked when i had this function in the useEffect(), but that only got the
-    //location when the page re-rendered, so i need a different plan
     console.log("Location: ");
     console.log(currentLocation);
+    // zoom into this location on map
     return {
-      location: currentLocation.coords.latitude,
-      longitude: currentLocation.coords.latitude,
+      latitude: currentLocation.coords.latitude,
+      longitude: currentLocation.coords.longitude,
     };
   };
+
+
   useEffect(() => {
-    const fetchDestination = async () => {
+    // get and set our state to the location
+    const fetchuserLocation = async () => {
       const location = await getPermissions();
-      setDestination({
-        latitude: location.location,
-        longitude: location.longitude,
+      setuserLocation({
+        latitude: location?.latitude ?? 0,
+        longitude: location?.longitude ?? 0,
       });
     };
-    fetchDestination();
+    fetchuserLocation();
+    watchLocation();
   }, []);
-  //}, []);
-  //fake destination from back when i was just trying to get the directions to work
-  //const destination = {latitude: 37.771707, longitude: -122.4053769};
-  //api key curtesey of snigdha (three cheers!!)
+
+  // Zoom into the user's current location HOW TO USE??
+  const zoomIntoLocation = () => {
+    mapRef?.current?.animateToRegion({
+      latitude: userLocation.latitude != 0? userLocation.latitude: 47.65462693267042,
+      longitude: userLocation.longitude != 0? userLocation.longitude: -122.30938853301136,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    })
+  }
+
+  // WATCH POSITION
+  async function watchLocation() {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      console.log('Permission to access location was denied');
+      return;
+    }
+  
+    let subscription = await Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.High,
+        timeInterval: 1000, // Update every second
+        distanceInterval: 1, // Update every meter
+      },
+      (location) => {
+        // when location changes, change our state
+        console.log("LOCATION CHANGED: " + location);
+        setuserLocation({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+      }
+    );
+  }
+
+  // MARK A SPECIFIC LOCTION OF THE STUDENT?
+
   const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
     ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
     : "";
-  //again, this is fake data (i was testing out putting markers on the map)
-  const locationData = [
-    // {latitude: lat, longitude: long},
-    { latitude: 6.841776681, longitude: 79.869319 },
-    { latitude: 37.3318456, longitude: -122.0296002 }, //san francisco
-    { latitude: 37.771707, longitude: -122.4053769 }, //near san jose
-  ];
 
   return (
     //putting the map region on the screen
@@ -78,43 +115,21 @@ export default function App() {
       <MapView
         style={styles.map}
         initialRegion={{
-          latitude: 47.78825,
-          longitude: -122.4324,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
+          latitude: userLocation.latitude != 0? userLocation.latitude: 47.65462693267042,
+          longitude: userLocation.longitude != 0? userLocation.longitude: -122.30938853301136,
+          latitudeDelta: 0.015,
+          longitudeDelta: 0.015,
         }}
       >
-        {locationData.map((data, index) => (
-          //putting the markers on the map
-          <Marker
-            key={index}
-            coordinate={{
-              latitude: data.latitude,
-              longitude: data.longitude,
-            }}
-            title={`Marker ${index + 1}`}
-          />
-        ))}
-        {destination && (
-          <MapViewDirections
-            destination={destination}
-            //and the target destination
-            //we're gonna have to update this a lot as the current location changes
-            //google maps api doesn't have realtime updates as far as i could figure out :(
-            apikey={GOOGLE_MAPS_APIKEY}
-          />
-        )}
+        {/* show the user's location*/}
+        <Marker
+          coordinate={{
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude,
+          }}
+          title={"userLocation"}
+        />
       </MapView>
     </View>
   );
 }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//   },
-//   map: {
-//     width: "100%",
-//     height: "100%",
-//   },
-// });

@@ -119,7 +119,7 @@ export async function cancelRideRequest(
     // only cancel requests that are not completed
     if (data.status != "REQUESTED" && data.status != "ACCEPTED") {
       throw new Error(
-        "Cannot cancel a ride that is not 'requested' or 'accepted'"
+        "Cannot cancel a ride that is not 'REQUESTED' or 'ACCEPTED'"
       );
     }
 
@@ -143,7 +143,7 @@ export async function completeRideRequest(
   const docSnap = await transaction.get(docRef);
   if (docSnap.exists() && docSnap.data().status != "ACCEPTED") {
     throw new Error(
-      "Only can complete a ride that is 'accepted' not " + docSnap.data().status
+      "Only can complete a ride that is 'ACCEPTED' not " + docSnap.data().status
     );
   }
   transaction.update(docRef, {
