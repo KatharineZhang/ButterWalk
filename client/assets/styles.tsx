@@ -1,4 +1,4 @@
-import { StyleSheet, useWindowDimensions } from "react-native";
+import { StyleSheet } from "react-native";
 
 //More random styling things that I think i copied from chatgpt....
 export const styles = StyleSheet.create({

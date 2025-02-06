@@ -1,15 +1,16 @@
-// import React, { useState } from "react";
-import React, { useState, useEffect } from "react";
-import MapView, { Marker } from "react-native-maps";
-import MapViewDirections from "react-native-maps-directions";
-import * as Location from "expo-location";
+import MapView from "react-native-maps";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Header from "@/components/Header";
-// import { View, StyleSheet } from "react-native";
 import { styles } from "@/assets/styles";
-import { View } from "react-native";
+import { Pressable, View, Text } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
+import { Geolocation } from "@capacitor/Geolocation";
+import {
+  DriverAcceptResponse,
+  WebSocketResponse,
+} from "../../../server/src/api";
+import React from "react";
 
 //right now the map shows but the console just has errors - i'm trying to get location
 //before i show the map so that I can route directions from their location
@@ -21,57 +22,104 @@ export default function App() {
   // Use netid to pair this WebSocket connection with a netid
   WebSocketService.connect(netid as string, "DRIVER");
 
-  const [destination, setDestination] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
-
-  //getting permissions to use their location (this is the popup thingie asking if we can use location)
-  const getPermissions = async () => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") {
-      console.log("Please grant location permission");
-      //it was telling me i couldn't return nothing, so this is just a garbage return
-      return { location: 22, longitude: 33 };
-    }
-    const currentLocation = await Location.getCurrentPositionAsync({});
-    //print current user's location to console
-    //this worked when i had this function in the useEffect(), but that only got the
-    //location when the page re-rendered, so i need a different plan
-    console.log("Location: ");
-    console.log(currentLocation);
-    return {
-      location: currentLocation.coords.latitude,
-      longitude: currentLocation.coords.latitude,
-    };
+  // TODO: I nuked all the previous code, and replaced it with the code Parshvi gave me
+  // replace this as necessary
+  const requestPermissions = async () => {
+    const status = await Geolocation.requestPermissions();
+    console.log("Permission Status:", status);
   };
-  useEffect(() => {
-    const fetchDestination = async () => {
-      const location = await getPermissions();
-      setDestination({
-        latitude: location.location,
-        longitude: location.longitude,
-      });
-    };
-    fetchDestination();
-  }, []);
-  //}, []);
-  //fake destination from back when i was just trying to get the directions to work
-  //const destination = {latitude: 37.771707, longitude: -122.4053769};
-  //api key curtesey of snigdha (three cheers!!)
-  const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
-    ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
-    : "";
-  //again, this is fake data (i was testing out putting markers on the map)
-  const locationData = [
-    // {latitude: lat, longitude: long},
-    { latitude: 6.841776681, longitude: 79.869319 },
-    { latitude: 37.3318456, longitude: -122.0296002 }, //san francisco
-    { latitude: 37.771707, longitude: -122.4053769 }, //near san jose
-  ];
+
+  requestPermissions();
+
+  const getCurrentLocation = async () => {
+    try {
+      const position = await Geolocation.getCurrentPosition();
+      console.log("Latitude:", position.coords.latitude);
+      console.log("Longitude:", position.coords.longitude);
+    } catch (error) {
+      console.error("Error getting location", error);
+    }
+  };
+
+  getCurrentLocation();
+
+  //to continuously check the driver's position update
+  Geolocation.watchPosition({}, (position, err) => {
+    if (position) {
+      console.log("Updated Latitude:", position.coords.latitude);
+      console.log("Updated Longitude:", position.coords.longitude);
+      // update the student when the driver has accepted the ride
+
+      if (rideInfo.requestid) {
+        // if we have accepted a ride, we have someone to send this information to
+        WebSocketService.send({
+          directive: "LOCATION",
+          id: netid as string,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      }
+    }
+    if (err) {
+      console.error("Error watching position", err);
+    }
+  });
+
+  // The important part
+  // temporary state to manage the currently accepted ride,
+  // idealy should be at the top after the map stuff is finaliazed
+  const [rideInfo, setRideInfo] = React.useState<DriverAcceptResponse>({
+    response: "ACCEPT_RIDE",
+    netid: "",
+    location: "",
+    destination: "",
+    numRiders: 0,
+    requestid: "",
+  });
+
+  // listen for any LOCATION messages from the server
+  const handleLocation = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "LOCATION") {
+      console.log("LOCATION message received:", message);
+    }
+  };
+  WebSocketService.addListener(handleLocation, "LOCATION");
+
+  // need to accept a ride to send locations
+  const sendAccept = () => {
+    WebSocketService.send({
+      directive: "ACCEPT_RIDE",
+      driverid: netid as string,
+    });
+  };
+  const handleAccept = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "ACCEPT_RIDE") {
+      console.log("ACCEPT message received:", message);
+      setRideInfo(message as DriverAcceptResponse);
+    }
+  };
+  WebSocketService.addListener(handleAccept, "ACCEPT_RIDE");
+
+  // bonus. since we accepted rides, we might as well complete them
+  // currently there are no listeners on these routes 
+  // because we don't need then right now!
+  const sendCancel = () => {
+    WebSocketService.send({
+      directive: "CANCEL",
+      netid: netid as string,
+      role: "DRIVER",
+    });
+  };
+
+  const sendComplete = () => {
+    WebSocketService.send({
+      directive: "COMPLETE",
+      requestid: rideInfo.requestid,
+    });
+  };
+  // end of the important part
 
   return (
-    //putting the map region on the screen
     <View>
       <SafeAreaProvider style={{ flex: 1 }} />
       <Header netid={netid as string} />
@@ -83,38 +131,37 @@ export default function App() {
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         }}
+      ></MapView>
+      <View>
+        <Text>{JSON.stringify(rideInfo)}</Text>
+      </View>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          zIndex: 1,
+        }}
       >
-        {locationData.map((data, index) => (
-          //putting the markers on the map
-          <Marker
-            key={index}
-            coordinate={{
-              latitude: data.latitude,
-              longitude: data.longitude,
-            }}
-            title={`Marker ${index + 1}`}
-          />
-        ))}
-        {destination && (
-          <MapViewDirections
-            destination={destination}
-            //and the target destination
-            //we're gonna have to update this a lot as the current location changes
-            //google maps api doesn't have realtime updates as far as i could figure out :(
-            apikey={GOOGLE_MAPS_APIKEY}
-          />
-        )}
-      </MapView>
+        {/* temporary buttons */}
+        <Pressable
+          onPress={sendAccept}
+          style={{ backgroundColor: "#4B2E83", padding: 10, borderRadius: 5 }}
+        >
+          <Text>Accept</Text>
+        </Pressable>
+        <Pressable
+          onPress={sendCancel}
+          style={{ backgroundColor: "#4B2E83", padding: 10, borderRadius: 5 }}
+        >
+          <Text>Cancel</Text>
+        </Pressable>
+        <Pressable
+          onPress={sendComplete}
+          style={{ backgroundColor: "#4B2E83", padding: 10, borderRadius: 5 }}
+        >
+          <Text>Complete</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//   },
-//   map: {
-//     width: "100%",
-//     height: "100%",
-//   },
-// });

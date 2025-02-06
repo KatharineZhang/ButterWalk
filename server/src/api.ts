@@ -54,7 +54,12 @@ export type WebSocketMessage =
       pickupLocation?: [latitude: number, longitude: number];
       driverLocation?: [latitude: number, longitude: number];
     }
-  | { directive: "LOCATION"; id: string; latitude: number; longitude: number }
+  | {
+      directive: "LOCATION";
+      id: string; // the netid of the student or driver
+      latitude: number;
+      longitude: number;
+    }
   | {
       directive: "QUERY";
       rideOrApp?: "RIDE" | "APP"; // if rideOrApp is undefined, the default is to query both feebcack types
