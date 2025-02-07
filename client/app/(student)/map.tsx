@@ -22,7 +22,7 @@ export default function App() {
     latitude: number;
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
-  
+
   // the driver's location
   const [driverLocation, setDriverLocation] = useState<{
     latitude: number;
@@ -206,15 +206,13 @@ export default function App() {
           title={"userLocation"}
         />
         {/* show the driver's location if they don't have default coordinate values //TODO: FIX*/}
-        {driverLocation.latitude !== 0 && driverLocation.longitude !== 0 && (
-          <Marker
-            coordinate={{
-              latitude: driverLocation.latitude,
-              longitude: driverLocation.longitude,
-            }}
-            title={"driverLocation"}
-          />
-        )}
+        <Marker
+          coordinate={{
+            latitude: driverLocation.latitude,
+            longitude: driverLocation.longitude,
+          }}
+          title={"driverLocation"}
+        />
       </MapView>
       {/* Temporary footer for requestig rides*/}
       <View
