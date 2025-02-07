@@ -506,7 +506,8 @@ export const location = async (
   try {
     return await runTransaction(db, async () => {
       // we can't use transactions to query so hopefully this is fine
-      otherNetId = await getOtherNetId(id);
+      otherNetId = await getOtherNetId(id); // get the location of the user
+      // pass the location information to the opposite user
       return { response: "LOCATION", netid: otherNetId, latitude, longitude };
     });
   } catch (e) {
@@ -516,8 +517,6 @@ export const location = async (
       category: "LOCATION",
     };
   }
-  // TODO: get the location of the user
-  // pass the location information to the opposite user
 };
 
 /* We need to get some basic stats about our current feedback table back to the client. 

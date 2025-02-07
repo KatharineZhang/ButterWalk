@@ -112,15 +112,13 @@ export async function cancelRideRequest(
   const docs = await getDocs(queryRequests);
 
   let driverid: string | null = null;
-  docs.forEach(async (doc) => {
+  for (const doc of docs.docs) {
     // change any active (based on status) request to canceleD
     const data = doc.data() as RideRequest;
 
     // only cancel requests that are not completed
     if (data.status != "REQUESTED" && data.status != "ACCEPTED") {
-      throw new Error(
-        "Cannot cancel a ride that is not 'REQUESTED' or 'ACCEPTED'"
-      );
+      continue;
     }
 
     if (data.status == "ACCEPTED") {
@@ -129,7 +127,7 @@ export async function cancelRideRequest(
     }
 
     await transaction.update(doc.ref, { status: "CANCELLED" });
-  });
+  }
 
   return driverid; // return the driver id if there was a ride request that was accepted
 }

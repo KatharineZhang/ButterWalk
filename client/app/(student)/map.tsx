@@ -5,10 +5,11 @@ import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Header from "@/components/Header";
 import { styles } from "@/assets/styles";
-import { View } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
 import { Alert, Linking } from "react-native";
+import { LocationResponse, WebSocketResponse } from "../../../server/src/api";
 
 export default function App() {
   // Extract netid from Redirect URL from signin page
@@ -16,8 +17,13 @@ export default function App() {
   // Use netid to pair this WebSocket connection with a netid
   WebSocketService.connect(netid as string, "DRIVER");
 
-  // the drivers's location
-  const [userLocation, setuserLocation] = useState<{
+  // the student's location
+  const [userLocation, setUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  }>({ latitude: 0, longitude: 0 });
+  // the driver's location
+  const [driverLocation, setDriverLocation] = useState<{
     latitude: number;
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
@@ -54,7 +60,7 @@ export default function App() {
     const fetchuserLocation = async () => {
       const location = await getPermissions();
       if (location) {
-        setuserLocation({
+        setUserLocation({
           latitude:
             location.latitude != 0 ? location.latitude : 47.65462693267042,
           longitude:
@@ -65,9 +71,32 @@ export default function App() {
     fetchuserLocation();
   }, []);
 
-  // const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
-  //   ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
-  //   : "";
+  // WEBSOCKET PLUMBING
+  // listen for any LOCATION messages from the server about the driver's location
+  const handleLocation = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "LOCATION") {
+      console.log("LOCATION message received:", message);
+      // update the marker on the driver's location from
+      // (message as LocationResponse).latitude and (message as LocationResponse).longitude
+      const driverResp = message as LocationResponse;
+      setDriverLocation({
+        latitude: driverResp.latitude,
+        longitude: driverResp.longitude,
+      });
+    }
+  };
+  WebSocketService.addListener(handleLocation, "LOCATION");
+
+  const sendRequest = () => {
+    WebSocketService.send({
+      directive: "REQUEST_RIDE",
+      phoneNum: "hi",
+      netid: netid as string,
+      location: "hi",
+      destination: "hi",
+      numRiders: 1,
+    });
+  };
 
   return (
     //putting the map region on the screen
@@ -89,15 +118,45 @@ export default function App() {
           longitudeDelta: 0.015,
         }}
       >
-        {/* show the user's location */}
-        <Marker
-          coordinate={{
-            latitude: userLocation.latitude,
-            longitude: userLocation.longitude,
-          }}
-          title={"userLocation"}
-        />
+        {/* show the users's location if they don't have default corrdinate values */}
+          <Marker
+            coordinate={{
+              latitude: userLocation.latitude,
+              longitude: userLocation.longitude,
+            }}
+            title={"userLocation"}
+          />
+        {/* show the drivers's location if they don't have default corrdinate values */}
+        {/* {driverLocation.latitude !== 0 && driverLocation.longitude !== 0 && ( */}
+          <Marker style={{backgroundColor: "blue"}}
+            coordinate={{
+              latitude: driverLocation.latitude,
+              longitude: driverLocation.longitude,
+            }}
+            title={"driverLocation"}
+          />
+        {/* )} */}
       </MapView>
+      {/* Temporary footer for requestig rides*/}
+      <View
+        style={{
+          position: "absolute",
+          bottom: 0,
+          width: "100%",
+          padding: 20,
+          backgroundColor: "#D1AE49",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 10,
+        }}
+      >
+        <Pressable
+          onPress={sendRequest}
+          style={{ backgroundColor: "#4B2E83", padding: 10, borderRadius: 5 }}
+        >
+          <Text style={{ color: "white" }}>Request Ride</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
