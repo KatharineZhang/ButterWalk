@@ -9,7 +9,10 @@ import { View, Text, Pressable } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
 import { Alert, Linking } from "react-native";
-import { DriverAcceptResponse, WebSocketResponse } from "../../../server/src/api";
+import {
+  DriverAcceptResponse,
+  WebSocketResponse,
+} from "../../../server/src/api";
 
 export default function App() {
   // Extract netid from Redirect URL from signin page
@@ -27,7 +30,6 @@ export default function App() {
   const mapRef = useRef<MapView>(null);
 
   // temporary state to manage the currently accepted ride,
-  // idealy should be at the top after the map stuff is finaliazed
   const [rideInfo, setRideInfo] = React.useState<DriverAcceptResponse>({
     response: "ACCEPT_RIDE",
     netid: "",
@@ -37,8 +39,47 @@ export default function App() {
     requestid: "",
   });
 
+  useEffect(() => {
+    // on the first render, get the user's location
+    // and set up state
+    WebSocketService.addListener(handleLocation, "LOCATION");
+    WebSocketService.addListener(handleAccept, "ACCEPT_RIDE");
+    fetchuserLocation();
+    watchLocation();
+  }, []);
+
+  useEffect(() => {
+    // whenever userLocation changes, zoom into the new location
+    centerMapOnLocations([userLocation]);
+
+    // send the location to the student
+    if (rideInfo.netid != "") {
+      // we are currently processing a ride
+      // send the changed driver info to the student
+      WebSocketService.send({
+        directive: "LOCATION",
+        id: netid as string,
+        latitude: 47.6599,
+        longitude: -122.306,
+      });
+    }
+  }, [userLocation, rideInfo]);
+
+  /* FUNCTIONS */
+
   // SHOW THE USER'S LOCATION
-  // get permission to accass location of if permission is granted, get the user's location
+  const fetchuserLocation = async () => {
+    const location = await getPermissions();
+    console.log(
+      "FETCHING LOCATION: " + location?.latitude + ", " + location?.longitude
+    );
+    setUserLocation({
+      latitude: location?.latitude ?? 0,
+      longitude: location?.longitude ?? 0,
+    });
+  };
+
+  // HELPER: GET PERMISSIONS FOR ACCESSING LOCATION
   const getPermissions = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
@@ -55,41 +96,19 @@ export default function App() {
     }
     const currentLocation = await Location.getCurrentPositionAsync({});
 
-    //print current user's location to console
-    console.log("Location: ");
-    console.log(currentLocation);
-    // zoom into this location on map
     return {
       latitude: currentLocation.coords.latitude,
       longitude: currentLocation.coords.longitude,
     };
   };
 
-  useEffect(() => {
-    // get and set our state to the location
-    const fetchuserLocation = async () => {
-      const location = await getPermissions();
-      setUserLocation({
-        latitude: location?.latitude ?? 0,
-        longitude: location?.longitude ?? 0,
-      });
-    };
-    fetchuserLocation();
-    watchLocation();
-    zoomIntoLocation();
-  }, []);
-
-  // Zoom into the user's current location TODO: HOW TO USE??
-  const zoomIntoLocation = () => {
-    mapRef?.current?.animateToRegion({
-      latitude:
-        userLocation.latitude != 0 ? userLocation.latitude : 47.65462693267042,
-      longitude:
-        userLocation.longitude != 0
-          ? userLocation.longitude
-          : -122.30938853301136,
-      latitudeDelta: 0.0922,
-      longitudeDelta: 0.0421,
+  // ZOOM INTO GIVEN LOCATIONS
+  const centerMapOnLocations = (
+    locations: { latitude: number; longitude: number }[]
+  ) => {
+    mapRef?.current?.fitToCoordinates(locations, {
+      edgePadding: { top: 100, right: 100, bottom: 50, left: 100 },
+      animated: true,
     });
   };
 
@@ -109,25 +128,11 @@ export default function App() {
       },
       (location) => {
         // when location changes, change our state
-        console.log("LOCATION CHANGED: " + location.coords.latitude + ", " + location.coords.longitude);
         setUserLocation({
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         });
-
-        // send the location to the student
-        if (rideInfo.netid != "") {
-          // we are currently processing a ride
-          console.log("Sending location to student with netid: " + rideInfo.netid);
-          WebSocketService.send(
-            {
-              directive: "LOCATION",
-              id: netid as string,
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-            });
-        }
-    }
+      }
     );
   }
 
@@ -140,7 +145,6 @@ export default function App() {
       console.log("LOCATION message received:", message);
     }
   };
-  WebSocketService.addListener(handleLocation, "LOCATION");
 
   // need to accept a ride to send locations
   const sendAccept = () => {
@@ -155,7 +159,6 @@ export default function App() {
       console.log(rideInfo);
     }
   };
-  WebSocketService.addListener(handleAccept, "ACCEPT_RIDE");
 
   // bonus. since we accepted rides, we might as well complete them
   // currently there are no listeners on these routes
@@ -169,7 +172,7 @@ export default function App() {
     // reset the ride info
     // technically we should wait for a response from the server
     // but this is just for testing
-    setRideInfo({    
+    setRideInfo({
       response: "ACCEPT_RIDE",
       netid: "",
       location: "",
@@ -187,14 +190,14 @@ export default function App() {
     // reset the ride info
     // technically we should wait for a response from the server
     // but this is just for testing
-    setRideInfo({    
+    setRideInfo({
       response: "ACCEPT_RIDE",
       netid: "",
       location: "",
       destination: "",
       numRiders: 0,
       requestid: "",
-  });
+    });
   };
 
   return (
@@ -202,6 +205,7 @@ export default function App() {
       <SafeAreaProvider style={{ flex: 1 }} />
       <Header netid={netid as string} />
       <MapView
+        ref={mapRef}
         style={styles.map}
         initialRegion={{
           latitude:

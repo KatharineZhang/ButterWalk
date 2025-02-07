@@ -75,6 +75,7 @@ export type WebSocketResponse =
   | AcceptResponse
   | DriverAcceptResponse
   | CancelResponse
+  | CompleteResponse
   | LocationResponse
   | QueryResponse
   | ErrorResponse;
@@ -118,6 +119,12 @@ export type CancelResponse = {
   response: "CANCEL";
   info: { response: "CANCEL"; success: true }; // of type GeneralResponse
   otherNetid?: string;
+};
+
+export type CompleteResponse = {
+  response: "COMPLETE";
+  info: { response: "COMPLETE"; success: true }; // of type GeneralResponse
+  netids: { student: string; driver: string };
 };
 
 export type LocationResponse = {

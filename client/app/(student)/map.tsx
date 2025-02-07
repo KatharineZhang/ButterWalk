@@ -1,5 +1,5 @@
 // import React, { useState } from "react";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -22,13 +22,62 @@ export default function App() {
     latitude: number;
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
+  
   // the driver's location
   const [driverLocation, setDriverLocation] = useState<{
     latitude: number;
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
 
-  // get permission to accass location of if permission is granted, get the user's location
+  // used for map zooming
+  const mapRef = useRef<MapView>(null);
+
+  useEffect(() => {
+    // on the first render, get the user's location
+    // and set up state
+    WebSocketService.addListener(handleLocation, "LOCATION");
+    WebSocketService.addListener(handleCompleteOrCancel, "COMPLETE");
+    WebSocketService.addListener(handleCompleteOrCancel, "CANCEL");
+    fetchUserLocation();
+    watchLocation();
+  }, []);
+
+  useEffect(() => {
+    console.log(
+      "zoom to " +
+        userLocation.latitude +
+        ", " +
+        userLocation.longitude +
+        " and driver :" +
+        driverLocation.latitude +
+        ", " +
+        driverLocation.longitude
+    );
+    if (driverLocation.latitude !== 0 && driverLocation.longitude !== 0) {
+      // zoom to a combined region that fits both markers
+      // add marker on the driver's location
+      centerMapOnLocations([userLocation, driverLocation]);
+    } else {
+      // whenever userLocation changes, zoom into the new location
+      centerMapOnLocations([userLocation]);
+    }
+  }, [userLocation, driverLocation]);
+
+  /* FUNCTIONS */
+
+  // SHOW THE USER'S LOCATION
+  const fetchUserLocation = async () => {
+    const location = await getPermissions();
+    console.log(
+      "FETCHING LOCATION: " + location?.latitude + ", " + location?.longitude
+    );
+    setUserLocation({
+      latitude: location?.latitude ?? 0,
+      longitude: location?.longitude ?? 0,
+    });
+  };
+
+  // HELPER: GET PERMISSIONS FOR ACCESSING LOCATION
   const getPermissions = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
@@ -44,38 +93,49 @@ export default function App() {
       return;
     }
     const currentLocation = await Location.getCurrentPositionAsync({});
-    //print current user's location to console
-    //this worked when i had this function in the useEffect(), but that only got the
-    //location when the page re-rendered, so i need a different plan
-    console.log("Location: ");
-    console.log(currentLocation);
     return {
       latitude: currentLocation.coords.latitude,
       longitude: currentLocation.coords.longitude,
     };
   };
 
-  useEffect(() => {
-    // get and set our state to the location
-    const fetchuserLocation = async () => {
-      const location = await getPermissions();
-      if (location) {
+  const centerMapOnLocations = (
+    locations: { latitude: number; longitude: number }[]
+  ) => {
+    mapRef?.current?.fitToCoordinates(locations, {
+      edgePadding: { top: 100, right: 100, bottom: 50, left: 100 },
+      animated: true,
+    });
+  };
+
+  // WATCH POSITION
+  async function watchLocation() {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      console.log("Permission to access location was denied");
+      return;
+    }
+
+    await Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.High,
+        timeInterval: 1000, // Update every second
+        distanceInterval: 1, // Update every meter
+      },
+      (location) => {
+        // when location changes, change our state
         setUserLocation({
-          latitude:
-            location.latitude != 0 ? location.latitude : 47.65462693267042,
-          longitude:
-            location.longitude != 0 ? location.longitude : -122.30938853301136,
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
         });
       }
-    };
-    fetchuserLocation();
-  }, []);
+    );
+  }
 
   // WEBSOCKET PLUMBING
   // listen for any LOCATION messages from the server about the driver's location
   const handleLocation = (message: WebSocketResponse) => {
     if ("response" in message && message.response === "LOCATION") {
-      console.log("LOCATION message received:", message);
       // update the marker on the driver's location from
       // (message as LocationResponse).latitude and (message as LocationResponse).longitude
       const driverResp = message as LocationResponse;
@@ -85,7 +145,6 @@ export default function App() {
       });
     }
   };
-  WebSocketService.addListener(handleLocation, "LOCATION");
 
   const sendRequest = () => {
     WebSocketService.send({
@@ -97,6 +156,25 @@ export default function App() {
       numRiders: 1,
     });
   };
+  const sendCancel = () => {
+    WebSocketService.send({
+      directive: "CANCEL",
+      netid: netid as string,
+      role: "STUDENT",
+    });
+  };
+  const handleCompleteOrCancel = (message: WebSocketResponse) => {
+    if (
+      "response" in message &&
+      (message.response === "COMPLETE" || message.response === "CANCEL")
+    ) {
+      // reset the driver's location when the ride is done
+      setDriverLocation({
+        latitude: 0,
+        longitude: 0,
+      });
+    }
+  };
 
   return (
     //putting the map region on the screen
@@ -104,6 +182,7 @@ export default function App() {
       <SafeAreaProvider style={{ flex: 1 }} />
       <Header netid={netid as string} />
       <MapView
+        ref={mapRef}
         style={styles.map}
         initialRegion={{
           latitude:
@@ -118,24 +197,24 @@ export default function App() {
           longitudeDelta: 0.015,
         }}
       >
-        {/* show the users's location if they don't have default corrdinate values */}
+        {/* show the user's location if they don't have default coordinate values */}
+        <Marker
+          coordinate={{
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude,
+          }}
+          title={"userLocation"}
+        />
+        {/* show the driver's location if they don't have default coordinate values //TODO: FIX*/}
+        {driverLocation.latitude !== 0 && driverLocation.longitude !== 0 && (
           <Marker
-            coordinate={{
-              latitude: userLocation.latitude,
-              longitude: userLocation.longitude,
-            }}
-            title={"userLocation"}
-          />
-        {/* show the drivers's location if they don't have default corrdinate values */}
-        {/* {driverLocation.latitude !== 0 && driverLocation.longitude !== 0 && ( */}
-          <Marker style={{backgroundColor: "blue"}}
             coordinate={{
               latitude: driverLocation.latitude,
               longitude: driverLocation.longitude,
             }}
             title={"driverLocation"}
           />
-        {/* )} */}
+        )}
       </MapView>
       {/* Temporary footer for requestig rides*/}
       <View
@@ -155,6 +234,12 @@ export default function App() {
           style={{ backgroundColor: "#4B2E83", padding: 10, borderRadius: 5 }}
         >
           <Text style={{ color: "white" }}>Request Ride</Text>
+        </Pressable>
+        <Pressable
+          onPress={sendCancel}
+          style={{ backgroundColor: "#4B2E83", padding: 10, borderRadius: 5 }}
+        >
+          <Text style={{ color: "white" }}>Cancel</Text>
         </Pressable>
       </View>
     </View>
