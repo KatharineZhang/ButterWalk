@@ -56,19 +56,21 @@ export default function App() {
     if (rideInfo.netid != "") {
       // we are currently processing a ride
       // send the changed driver info to the student
-      // to test other location
+
+      // to test other location, uncomment this
       // WebSocketService.send({
       //   directive: "LOCATION",
       //   id: netid as string,
       //   latitude: 47.6599,
       //   longitude: -122.306,
       // });
+
       WebSocketService.send({
-          directive: "LOCATION",
-          id: netid as string,
-          latitude: userLocation.latitude,
-          longitude: userLocation.longitude,
-        });
+        directive: "LOCATION",
+        id: netid as string,
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+      });
     }
   }, [userLocation, rideInfo]);
 
