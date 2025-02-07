@@ -1,12 +1,11 @@
 // import React, { useState } from "react";
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import MapView, { Marker } from "react-native-maps";
-import MapViewDirections from "react-native-maps-directions";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Header from "@/components/Header";
 import { styles } from "@/assets/styles";
-import { Pressable, View, Text } from "react-native";
+import { View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
 import { Alert, Linking } from "react-native";
@@ -21,27 +20,27 @@ export default function App() {
   const [userLocation, setuserLocation] = useState<{
     latitude: number;
     longitude: number;
-  }>({latitude: 0, longitude: 0});
+  }>({ latitude: 0, longitude: 0 });
   const mapRef = useRef<MapView>(null);
 
   // SHOW THE USER'S LOCATION
   // get permission to accass location of if permission is granted, get the user's location
   const getPermissions = async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync();
+    const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
       console.log("Please grant location permission");
       Alert.alert(
         "Location Permission Required",
         "You have denied location access. Please enable it in settings.",
         [
-            { text: "Cancel", style: "cancel" },
-            { text: "Open Settings", onPress: () => Linking.openSettings() },
+          { text: "Cancel", style: "cancel" },
+          { text: "Open Settings", onPress: () => Linking.openSettings() },
         ]
-    );
-    return;
+      );
+      return;
     }
     const currentLocation = await Location.getCurrentPositionAsync({});
-    
+
     //print current user's location to console
     console.log("Location: ");
     console.log(currentLocation);
@@ -51,7 +50,6 @@ export default function App() {
       longitude: currentLocation.coords.longitude,
     };
   };
-
 
   useEffect(() => {
     // get and set our state to the location
@@ -64,27 +62,32 @@ export default function App() {
     };
     fetchuserLocation();
     watchLocation();
+    zoomIntoLocation();
   }, []);
 
   // Zoom into the user's current location HOW TO USE??
   const zoomIntoLocation = () => {
     mapRef?.current?.animateToRegion({
-      latitude: userLocation.latitude != 0? userLocation.latitude: 47.65462693267042,
-      longitude: userLocation.longitude != 0? userLocation.longitude: -122.30938853301136,
+      latitude:
+        userLocation.latitude != 0 ? userLocation.latitude : 47.65462693267042,
+      longitude:
+        userLocation.longitude != 0
+          ? userLocation.longitude
+          : -122.30938853301136,
       latitudeDelta: 0.0922,
       longitudeDelta: 0.0421,
-    })
-  }
+    });
+  };
 
   // WATCH POSITION
   async function watchLocation() {
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      console.log('Permission to access location was denied');
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      console.log("Permission to access location was denied");
       return;
     }
-  
-    let subscription = await Location.watchPositionAsync(
+
+    await Location.watchPositionAsync(
       {
         accuracy: Location.Accuracy.High,
         timeInterval: 1000, // Update every second
@@ -103,9 +106,9 @@ export default function App() {
 
   // MARK A SPECIFIC LOCTION OF THE STUDENT?
 
-  const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
-    ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
-    : "";
+  // const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
+  //   ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
+  //   : "";
 
   return (
     <View style={styles.mapContainer}>
@@ -114,8 +117,14 @@ export default function App() {
       <MapView
         style={styles.map}
         initialRegion={{
-          latitude: userLocation.latitude != 0? userLocation.latitude: 47.65462693267042,
-          longitude: userLocation.longitude != 0? userLocation.longitude: -122.30938853301136,
+          latitude:
+            userLocation.latitude != 0
+              ? userLocation.latitude
+              : 47.65462693267042,
+          longitude:
+            userLocation.longitude != 0
+              ? userLocation.longitude
+              : -122.30938853301136,
           latitudeDelta: 0.015,
           longitudeDelta: 0.015,
         }}
