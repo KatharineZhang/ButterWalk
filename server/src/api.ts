@@ -65,6 +65,7 @@ export type WebSocketMessage =
 // Response types
 export type WebSocketResponse =
   | GeneralResponse
+  | SignInResponse
   | RequestRideResponse
   | WaitTimeResponse
   | AcceptResponse
@@ -86,6 +87,12 @@ export type GeneralResponse = {
     | "ACCEPT_RIDE";
   success: true;
 };
+
+export type SignInResponse = {
+  response: "SIGNIN";
+  success: true;
+  alreadyExists: boolean;
+}
 
 export type RequestRideResponse = {
   response: "REQUEST_RIDE";
@@ -195,8 +202,8 @@ export type User = {
   netid: string;
   first_name: string;
   last_name: string;
-  phone_number: string;
-  student_number: string;
+  phone_number: string | null;
+  student_number: string | null;
   student_or_driver: "STUDENT" | "DRIVER";
 };
 

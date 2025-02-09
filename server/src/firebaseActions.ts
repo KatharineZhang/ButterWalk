@@ -42,7 +42,13 @@ export async function createUser(transaction: Transaction, user: User) {
   const docRef = doc(usersCollection, user.netid);
   const docSnap = await transaction.get(docRef);
   if(docSnap.exists()) {
-  return await transaction.set(docRef, user);
+    console.log("User already exists in the database");
+    return true;
+  } else {
+    console.log("User does NOT exists in the database");
+    await transaction.set(docRef, user);
+    return false;
+  }
 }
 
 // REQUEST RIDE - Add a ride request to the database

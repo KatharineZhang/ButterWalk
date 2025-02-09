@@ -13,6 +13,7 @@ import {
   RideRequest,
   Feedback,
   ProblematicUser,
+  SignInResponse as SignInResponse,
 } from "./api";
 import {
   acceptRideRequest,
@@ -50,11 +51,11 @@ export const signIn = async (
   first_name: string,
   last_name: string,
   student_or_driver: "STUDENT" | "DRIVER"
-): Promise<GeneralResponse | ErrorResponse> => {
+): Promise<SignInResponse | ErrorResponse> => {
   if (
     !netid ||
     !first_name ||
-    !!last_name
+    !last_name
   ) {
     return {
       response: "ERROR",
@@ -64,17 +65,17 @@ export const signIn = async (
   }
   // TODO: Email (and phone number?) validation
   try {
-    await runTransaction(db, async (transaction) => {
-      await createUser(transaction, {
+    return await runTransaction(db, async (transaction) => {
+      const alreadyExists = await createUser(transaction, {
         netid,
         first_name,
         last_name,
-        phone_number,
-        student_number,
+        phone_number: null,
+        student_number: null,
         student_or_driver,
       });
+      return { response: "SIGNIN", success: true, alreadyExists };
     });
-    return { response: "SIGNIN", success: true };
   } catch (e: unknown) {
     return {
       response: "ERROR",

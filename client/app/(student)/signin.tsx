@@ -16,6 +16,8 @@ import { Image } from "react-native";
 import * as WebBrowser from 'expo-web-browser';
 // need to 'npx expo install expo-web-browser expo-auth-session expo-crypto'
 import * as Google from "expo-auth-session/providers/google";
+import { WebSocketResponse, SignInResponse } from "../../../server/src/api";
+import WebSocketService from "@/services/WebSocketService";
 
 const DEBUG = false;
 
@@ -70,7 +72,20 @@ const Login = () => {
       netid = email.replace("@uw.edu", "");
 
       // 1. send this to the DB via websocket
-      // 2. get the response back
+      WebSocketService.send({directive: "SIGNIN",
+        netid,
+        first_name,
+        last_name,
+        phoneNum: "",
+        studentNum: "",
+        role: "STUDENT" });
+      // 2. get the response back (add listener)
+      const handleSigninMessage = (message: WebSocketResponse)  => {
+        if ("response" in message && message.response == "SIGNIN") {
+          const signinresp = message as SignInResponse;
+          //signinresp.alreadyExists
+        }
+      }
       // 3. if the account exists, redirect to the map page -> doesn't need to store data in DB
       // 4. if the account doesn't exist, redirect to the finish setting up account page
       
