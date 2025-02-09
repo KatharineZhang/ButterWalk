@@ -250,7 +250,7 @@ export default function App() {
           backgroundColor: "#D1AE49",
           alignItems: "center",
           justifyContent: "space-between",
-          gap: 10,
+          flexDirection: "row",
         }}
       >
         <Pressable

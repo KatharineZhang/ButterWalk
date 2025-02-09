@@ -257,6 +257,7 @@ export default function App() {
         }}
       >
         <Text>Ride Info: {JSON.stringify(rideInfo)}</Text>
+        <View style={{ flexDirection: "row", gap: 10 }}>
         <Pressable
           onPress={sendAccept}
           style={{ backgroundColor: "#4B2E83", padding: 10, borderRadius: 5 }}
@@ -275,6 +276,7 @@ export default function App() {
         >
           <Text style={{ color: "white" }}>Complete</Text>
         </Pressable>
+      </View>
       </View>
     </View>
   );
