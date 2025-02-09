@@ -17,6 +17,8 @@ import * as WebBrowser from 'expo-web-browser';
 // need to 'npx expo install expo-web-browser expo-auth-session expo-crypto'
 import * as Google from "expo-auth-session/providers/google";
 
+const DEBUG = false;
+
 const webClientId = '115222638597-9fsnarg3ujfemeb2vmtj5spscbj4ei8a.apps.googleusercontent.com';
 const iosClientId = '115222638597-uisr924s4l8ngmg467u1ipsh0jli9hfd.apps.googleusercontent.com';
 const androidClientId = '115222638597-45egn9a398joau1s6tmmd7qv6s68f47i.apps.googleusercontent.com';
@@ -26,6 +28,9 @@ WebBrowser.maybeCompleteAuthSession();
 
 const Login = () => {
   const [signedIn,setSignedIn] = useState(false);
+  const [errMsg, setErrMsg] = useState("");
+  const [accExist, setAccExist] = useState(false);
+  
   const config = {
     webClientId,
     iosClientId,
@@ -47,17 +52,35 @@ const Login = () => {
       const response = await fetch("https://www.googleapis.com/oauth2/v1/userinfo?alt=json", 
           {headers: {Authorization: `Bearer ${token}`}});
       
-          const userInfo = await response.json();
-          email = userInfo.email;
-          first_name = userInfo.given_name;
-          last_name = userInfo.family_name;
-          netid = email.replace("@uw.edu", "");
+      const userInfo = await response.json();
+      email = userInfo.email;
 
-          console.log("Email:", email);
-          console.log("First Name:", first_name);
-          console.log("Last Name:", last_name);
-          console.log("NetID:", netid);
-          console.log("user info", userInfo);
+      const UWregex = /@uw.edu$/;
+      if (!UWregex.test(email)) {
+        // alert("Please ensure your using your UW email");
+        setErrMsg("Please ensure your using your UW email");
+        setSignedIn(false);
+        return;
+      }
+
+      setSignedIn(true);
+
+      first_name = userInfo.given_name;
+      last_name = userInfo.family_name;
+      netid = email.replace("@uw.edu", "");
+
+      // 1. send this to the DB via websocket
+      // 2. get the response back
+      // 3. if the account exists, redirect to the map page -> doesn't need to store data in DB
+      // 4. if the account doesn't exist, redirect to the finish setting up account page
+      
+      if (DEBUG) {
+        console.log("Email:", email);
+        console.log("First Name:", first_name);
+        console.log("Last Name:", last_name);
+        console.log("NetID:", netid);
+        console.log("user info", userInfo);
+      } 
     } catch (error) {
       console.log("error fetching user info", error);
     }
@@ -68,8 +91,11 @@ const Login = () => {
       const {authentication} = response;
       const token = authentication?.accessToken;
       console.log("access token", token);
+      
       getUserProfile(token);
-      setSignedIn(true);
+    } else {
+      setErrMsg("Error signing in. Make sure you're using your UW email.");
+      console.log("error with response", response);
     }
   }
 
@@ -78,41 +104,39 @@ const Login = () => {
     handleToken();
   }, [response]);
 
-  if (signedIn) {
+  if (signedIn && accExist) {
     return (
       <Redirect
         href={{
           pathname: "/(student)/map",
           params: {
-            netid: email != "" ? email.replace("@uw.edu", "") : "dev-netID",
+            netid: netid != "" ? netid : "dev-netID",
           },
         }}
       />
     );
+  } else if (signedIn && !accExist) {
+      return (
+
+      );
   }
+
   return (
     <View style={styles.container}>
       <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
         <Text>Welcome Back!</Text>
 
         <TouchableOpacity onPress={() => promptAsync()}>
-          <Image source={require('../../assets/images/Glogo.png')}/>
+          <Image source={require("../../assets/images/Glogo.png")} />
           <Text>Sign in with UW Google</Text>
         </TouchableOpacity>
 
-        <Pressable
-          style={localStyles.button}
-          onPress={() => setSignedIn(true)}
-        >
+        <Pressable style={localStyles.button} onPress={() => setSignedIn(true)}>
           <Text style={localStyles.text}>Bypass Signin</Text>
         </Pressable>
 
-
-          
+        <Text style={{ color: "red" }}>{errMsg}</Text>
       </KeyboardAvoidingView>
-      <Link href="/(student)/create_acc">
-        <Text style={localStyles.link}>Don't have an account yet? <Text style={localStyles.linkText}>Create Account here!</Text></Text>
-      </Link>
     </View>
   );
 };

@@ -40,6 +40,8 @@ export async function createUser(transaction: Transaction, user: User) {
   // otherwise, add the user to the users table using transaction
   // use the net id of the user as the document id
   const docRef = doc(usersCollection, user.netid);
+  const docSnap = await transaction.get(docRef);
+  if(docSnap.exists()) {
   return await transaction.set(docRef, user);
 }
 

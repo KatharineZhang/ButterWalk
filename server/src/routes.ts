@@ -49,16 +49,12 @@ export const signIn = async (
   netid: string,
   first_name: string,
   last_name: string,
-  phone_number: string,
-  student_number: string,
   student_or_driver: "STUDENT" | "DRIVER"
 ): Promise<GeneralResponse | ErrorResponse> => {
   if (
-    !phone_number ||
     !netid ||
     !first_name ||
-    !!last_name ||
-    !student_number
+    !!last_name
   ) {
     return {
       response: "ERROR",

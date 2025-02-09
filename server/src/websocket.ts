@@ -58,8 +58,6 @@ export const handleWebSocketMessage = async (
         input.netid,
         input.first_name,
         input.last_name,
-        input.phoneNum,
-        input.studentNum,
         input.role
       );
       // send response back to client (the student)
