@@ -13,15 +13,28 @@ import {
   DriverAcceptResponse,
   WebSocketResponse,
 } from "../../../server/src/api";
+import { LocationNames, LocationService } from "@/services/LocationService";
 
 export default function App() {
+  // INITIAL WEB SOCKET SETUP
   // Extract netid from Redirect URL from signin page
   const { netid } = useLocalSearchParams();
   // Use netid to pair this WebSocket connection with a netid
   WebSocketService.connect(netid as string, "DRIVER");
 
+  // STATE VARIABLES
   // the drivers's location
   const [userLocation, setUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  }>({ latitude: 0, longitude: 0 });
+  // the pickup location
+  const [pickUpLocation, setPickUpLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  }>({ latitude: 0, longitude: 0 });
+  // destination location
+  const [dropOffLocation, setDropOffLocation] = useState<{
     latitude: number;
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
@@ -29,7 +42,7 @@ export default function App() {
   // used for map zooming
   const mapRef = useRef<MapView>(null);
 
-  // temporary state to manage the currently accepted ride,
+  // manage the currently accepted ride,
   const [rideInfo, setRideInfo] = React.useState<DriverAcceptResponse>({
     response: "ACCEPT_RIDE",
     netid: "",
@@ -39,31 +52,30 @@ export default function App() {
     requestid: "",
   });
 
+  // STATE HOOKS
   useEffect(() => {
     // on the first render, get the user's location
-    // and set up state
+    watchLocation();
+    // and set up listeners
     WebSocketService.addListener(handleLocation, "LOCATION");
     WebSocketService.addListener(handleAccept, "ACCEPT_RIDE");
-    fetchuserLocation();
-    watchLocation();
+    WebSocketService.addListener(handleCompleteOrCancel, "CANCEL");
+    WebSocketService.addListener(handleCompleteOrCancel, "COMPLETE");
   }, []);
 
+  // when any of the locations change, zoom into the new locations and send info to the server
   useEffect(() => {
-    // whenever userLocation changes, zoom into the new location
-    centerMapOnLocations([userLocation]);
-
-    // send the location to the student
     if (rideInfo.netid != "") {
       // we are currently processing a ride
+      // zoom to show the locations
+      centerMapOnLocations([userLocation, pickUpLocation, dropOffLocation]);
       // send the changed driver info to the student
-
-      // to test other location, uncomment this
-      // WebSocketService.send({
-      //   directive: "LOCATION",
-      //   id: netid as string,
-      //   latitude: 47.6599,
-      //   longitude: -122.306,
-      // });
+      WebSocketService.send({
+        directive: "LOCATION",
+        id: netid as string,
+        latitude: 47.6599,
+        longitude: -122.306,
+      });
 
       WebSocketService.send({
         directive: "LOCATION",
@@ -71,25 +83,16 @@ export default function App() {
         latitude: userLocation.latitude,
         longitude: userLocation.longitude,
       });
+    } else {
+      // if there is not active ride, follow the user
+      centerMapOnLocations([userLocation]);
     }
-  }, [userLocation, rideInfo]);
+  }, [userLocation, pickUpLocation, dropOffLocation, rideInfo]);
 
   /* FUNCTIONS */
 
-  // SHOW THE USER'S LOCATION
-  const fetchuserLocation = async () => {
-    const location = await getPermissions();
-    console.log(
-      "FETCHING LOCATION: " + location?.latitude + ", " + location?.longitude
-    );
-    setUserLocation({
-      latitude: location?.latitude ?? 0,
-      longitude: location?.longitude ?? 0,
-    });
-  };
-
-  // HELPER: GET PERMISSIONS FOR ACCESSING LOCATION
-  const getPermissions = async () => {
+  // FOLLOW THE USER'S LOCATION
+  async function watchLocation() {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
       console.log("Please grant location permission");
@@ -101,31 +104,6 @@ export default function App() {
           { text: "Open Settings", onPress: () => Linking.openSettings() },
         ]
       );
-      return;
-    }
-    const currentLocation = await Location.getCurrentPositionAsync({});
-
-    return {
-      latitude: currentLocation.coords.latitude,
-      longitude: currentLocation.coords.longitude,
-    };
-  };
-
-  // ZOOM INTO GIVEN LOCATIONS
-  const centerMapOnLocations = (
-    locations: { latitude: number; longitude: number }[]
-  ) => {
-    mapRef?.current?.fitToCoordinates(locations, {
-      edgePadding: { top: 100, right: 100, bottom: 50, left: 100 },
-      animated: true,
-    });
-  };
-
-  // WATCH POSITION
-  async function watchLocation() {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") {
-      console.log("Permission to access location was denied");
       return;
     }
 
@@ -145,6 +123,16 @@ export default function App() {
     );
   }
 
+  // ZOOM INTO GIVEN LOCATIONS
+  const centerMapOnLocations = (
+    locations: { latitude: number; longitude: number }[]
+  ) => {
+    mapRef?.current?.fitToCoordinates(locations, {
+      edgePadding: { top: 100, right: 100, bottom: 50, left: 100 },
+      animated: true,
+    });
+  };
+
   // TODO: MARK A SPECIFIC LOCTION OF THE STUDENT?
 
   // WEBSOCKET PLUMBING
@@ -155,6 +143,7 @@ export default function App() {
     }
   };
 
+  // Accept ride send and recieve messages
   // need to accept a ride to send locations
   const sendAccept = () => {
     WebSocketService.send({
@@ -164,51 +153,53 @@ export default function App() {
   };
   const handleAccept = (message: WebSocketResponse) => {
     if ("response" in message && message.response === "ACCEPT_RIDE") {
-      setRideInfo(message as DriverAcceptResponse); // TODO: this doesnt refresh the UI???
-      console.log(rideInfo);
+      const driverAccept = message as DriverAcceptResponse;
+      // update state
+      setRideInfo(driverAccept);
+      setPickUpLocation(LocationService.getLatAndLong(driverAccept.location as LocationNames));
+      setDropOffLocation(
+        LocationService.getLatAndLong(driverAccept.destination as LocationNames)
+      );
     }
   };
 
-  // bonus. since we accepted rides, we might as well complete them
-  // currently there are no listeners on these routes
-  // because we don't need then right now!
+  // Cancel / Complete Ride send and recieve 
   const sendCancel = () => {
     WebSocketService.send({
       directive: "CANCEL",
       netid: netid as string,
       role: "DRIVER",
     });
-    // reset the ride info
-    // technically we should wait for a response from the server
-    // but this is just for testing
-    setRideInfo({
-      response: "ACCEPT_RIDE",
-      netid: "",
-      location: "",
-      destination: "",
-      numRiders: 0,
-      requestid: "",
-    });
   };
-
   const sendComplete = () => {
     WebSocketService.send({
       directive: "COMPLETE",
       requestid: rideInfo.requestid,
     });
-    // reset the ride info
-    // technically we should wait for a response from the server
-    // but this is just for testing
-    setRideInfo({
-      response: "ACCEPT_RIDE",
-      netid: "",
-      location: "",
-      destination: "",
-      numRiders: 0,
-      requestid: "",
-    });
   };
 
+  // if the ride is completed or cancelled, reset the ride and our locations
+  const handleCompleteOrCancel = (message: WebSocketResponse) => {
+    if (
+      "response" in message &&
+      (message.response === "COMPLETE" || message.response === "CANCEL")
+    ) {
+      // reset the ride info
+      setRideInfo({
+        response: "ACCEPT_RIDE",
+        netid: "",
+        location: "",
+        destination: "",
+        numRiders: 0,
+        requestid: "",
+      });
+      // reset locations
+      setPickUpLocation({ latitude: 0, longitude: 0 });
+      setDropOffLocation({ latitude: 0, longitude: 0 });
+    }
+  };
+
+  // Map UI
   return (
     <View style={styles.mapContainer}>
       <SafeAreaProvider style={{ flex: 1 }} />
@@ -237,6 +228,20 @@ export default function App() {
           }}
           title={"userLocation"}
         />
+        <Marker
+          coordinate={{
+            latitude: pickUpLocation.latitude,
+            longitude: pickUpLocation.longitude,
+          }}
+          title={"pickUpLocation"}
+        />
+        <Marker
+          coordinate={{
+            latitude: dropOffLocation.latitude,
+            longitude: dropOffLocation.longitude,
+          }}
+          title={"dropOffLocation"}
+        />
       </MapView>
       {/* Temporary footer for accepting and completing rides*/}
       <View
@@ -251,7 +256,6 @@ export default function App() {
           gap: 10,
         }}
       >
-        {/* temporary buttons */}
         <Text>Ride Info: {JSON.stringify(rideInfo)}</Text>
         <Pressable
           onPress={sendAccept}
