@@ -33,7 +33,9 @@ export default function Onboarding() {
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current; //next slide must be 50% visible to change the current index
 
   return (
-    <SafeAreaView style={[styles.viewOnboardingPager, { alignItems: "center" }]}>
+    <SafeAreaView
+      style={[styles.viewOnboardingPager, { alignItems: "center" }]}
+    >
       <View style={{ flex: 3 }}>
         <FlatList
           data={pages}

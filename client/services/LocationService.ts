@@ -18,7 +18,7 @@ type LocationType = {
 export class LocationService {
   // keep track of all the locations we care about
   // TODO: putting this in api and importing it causes the "None of these files exist" error for some reason
-  // TODO: update locations when they are finalized
+  // TODO: Replace this with google maps place search autocomplete api
   public static Locations: LocationType[] = [
     { name: "HUB", latitude: 47.6553, longitude: -122.3035 },
     { name: "Alder Hall", latitude: 47.655731, longitude: -122.313911 },

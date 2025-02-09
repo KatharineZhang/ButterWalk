@@ -1,11 +1,11 @@
-// import React, { useState } from "react";
+/* eslint-disable @typescript-eslint/no-require-imports */
 import React, { useState, useEffect, useRef } from "react";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Header from "@/components/Header";
 import { styles } from "@/assets/styles";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
 import { Alert, Linking } from "react-native";
@@ -45,42 +45,88 @@ export default function App() {
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
 
+  // control where we want to zoom on the map
+  // in the format: [userLocation, driverLocation, pickUpLocation, dropOffLocation]
+  const [zoomOn, setZoomOn] = useState<
+    { latitude: number; longitude: number }[]
+  >([
+    { latitude: 0, longitude: 0 },
+    { latitude: 0, longitude: 0 },
+    { latitude: 0, longitude: 0 },
+    { latitude: 0, longitude: 0 },
+  ]);
+
   // used for map zooming
   const mapRef = useRef<MapView>(null);
 
   // STATE HOOKS
   useEffect(() => {
     // on the first render, get the user's location
-    watchLocation();
     // and set up listeners
+    watchLocation();
     WebSocketService.addListener(handleLocation, "LOCATION");
     WebSocketService.addListener(handleCompleteOrCancel, "COMPLETE");
     WebSocketService.addListener(handleCompleteOrCancel, "CANCEL");
+    WebSocketService.addListener(handleRequest, "REQUEST_RIDE");
   }, []);
 
   useEffect(() => {
-    if (
-      driverLocation.latitude !== 0 &&
-      driverLocation.longitude !== 0 
-    ) {
-      // if driver location has been set, we have an accepted ride
-      // assume that the pickup and dropoff locations have been set
-      // zoom to see all markers
-      centerMapOnLocations([
-        userLocation,
-        driverLocation,
-        pickUpLocation,
-        dropOffLocation,
-      ]);
-    } else if (pickUpLocation.latitude !== 0 && dropOffLocation.latitude !== 0) {
-      // we have requested a ride that hasn't been accepted
-      // zoom to see all markers
-      centerMapOnLocations([userLocation, pickUpLocation, dropOffLocation]);
-    } else {
-      // if nothing else, whenever userLocation changes, zoom into the new location
-      centerMapOnLocations([userLocation]);
+    // when any of our locations change, check if we need to zoom on them
+    // we only want to update the zoom if a drastic change was made (distance > 10),
+    // i.e. the driver, pickup and dropoff locations were set to valid values,
+    // or they where set back to invalid values (0,0)
+    // only update zoomOn in these cases to allow the user more flexibility to
+    // move the map without being forced into a zoomed view
+    const diff0 = calculateDistance(userLocation, zoomOn[0]);
+    const diff1 = calculateDistance(driverLocation, zoomOn[1]);
+    const diff2 = calculateDistance(pickUpLocation, zoomOn[2]);
+    const diff3 = calculateDistance(dropOffLocation, zoomOn[3]);
+
+    // check zoomOn index 0 aka userLocation
+    if (diff0 > 10) {
+      console.log("updating user location", userLocation);
+      setZoomOn((prevZoomOn) => {
+        const newZoomOn = [...prevZoomOn];
+        newZoomOn[0] = userLocation;
+        return newZoomOn;
+      });
+    }
+
+    // check zoomOn index 1 aka driverLocation
+    if (diff1 > 10) {
+      console.log("updating driver location", driverLocation);
+      setZoomOn((prevZoomOn) => {
+        const newZoomOn = [...prevZoomOn];
+        newZoomOn[1] = driverLocation;
+        return newZoomOn;
+      });
+    }
+
+    // check zoomOn index 2 aka pickUpLocation
+    if (diff2 > 10) {
+      console.log("updating pickup location", pickUpLocation);
+      setZoomOn((prevZoomOn) => {
+        const newZoomOn = [...prevZoomOn];
+        newZoomOn[2] = pickUpLocation;
+        return newZoomOn;
+      });
+    }
+
+    // check zoomOn index 3 aka dropOffLocation
+    if (diff3 > 10) {
+      console.log("updating dropoff location", dropOffLocation);
+      setZoomOn((prevZoomOn) => {
+        const newZoomOn = [...prevZoomOn];
+        newZoomOn[3] = dropOffLocation;
+        return newZoomOn;
+      });
     }
   }, [userLocation, driverLocation, pickUpLocation, dropOffLocation]);
+
+  useEffect(() => {
+    // when we change what we want to zoom on, zoom on it
+    centerMapOnLocations(zoomOn);
+  }, [zoomOn]);
 
   /* FUNCTIONS */
 
@@ -120,10 +166,26 @@ export default function App() {
   const centerMapOnLocations = (
     locations: { latitude: number; longitude: number }[]
   ) => {
+    // filter out any locations that are 0,0
+    locations = locations.filter(
+      (loc) => loc.latitude != 0 && loc.longitude != 0
+    );
+    console.log("ZOOMING TO LOCATIONS:", locations);
     mapRef?.current?.fitToCoordinates(locations, {
-      edgePadding: { top: 100, right: 100, bottom: 50, left: 100 },
+      edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
       animated: true,
     });
+  };
+
+  // HELPER FOR USE EFFECT: calculate the distance between two points to check if we should update the zoomOn state
+  const calculateDistance = (
+    point1: { latitude: number; longitude: number },
+    point2: { latitude: number; longitude: number }
+  ) => {
+    return Math.sqrt(
+      Math.pow(point1.latitude - point2.latitude, 2) +
+        Math.pow(point1.longitude - point2.longitude, 2)
+    );
   };
 
   // WEBSOCKET PLUMBING
@@ -141,6 +203,7 @@ export default function App() {
   };
 
   // send a request to the server for a ride
+  // TODO: Fix this for cases where there is already a ride requested, don't set the locations
   const sendRequest = () => {
     const req: WebSocketMessage = {
       directive: "REQUEST_RIDE",
@@ -152,9 +215,22 @@ export default function App() {
     };
     WebSocketService.send(req);
     // set the pickup and dropoff locations to what we request
-    setPickUpLocation(LocationService.getLatAndLong(req.location as LocationNames));
-    setDropOffLocation(LocationService.getLatAndLong(req.destination as LocationNames));
+    setPickUpLocation(
+      LocationService.getLatAndLong(req.location as LocationNames)
+    );
+    setDropOffLocation(
+      LocationService.getLatAndLong(req.destination as LocationNames)
+    );
   };
+  const handleRequest = (message: WebSocketResponse) => {
+    // since we already set the pickup and dropoff locations assuming the request went through,
+    // if it didn't go through, we should reset them
+    if ("response" in message && message.response === "ERROR" && "category" in message && message.category === "REQUEST_RIDE") {
+          // something went wrong, reset the locations
+        setPickUpLocation( { latitude: 0, longitude: 0 });
+        setDropOffLocation( { latitude: 0, longitude: 0 });
+    }
+  }
 
   // send a cancel message to the server
   const sendCancel = () => {
@@ -185,7 +261,6 @@ export default function App() {
         latitude: 0,
         longitude: 0,
       });
-
     }
   };
 
@@ -251,6 +326,7 @@ export default function App() {
           alignItems: "center",
           justifyContent: "space-between",
           flexDirection: "row",
+          gap: 10,
         }}
       >
         <Pressable
@@ -265,6 +341,13 @@ export default function App() {
         >
           <Text style={{ color: "white" }}>Cancel</Text>
         </Pressable>
+        {/* recenter button */}
+        <TouchableOpacity onPress={() => centerMapOnLocations(zoomOn)}>
+          <Image
+            source={require("@/assets/images/recenter.png")}
+            style={{ width: 50, height: 50 }}
+          />
+        </TouchableOpacity>
       </View>
     </View>
   );
