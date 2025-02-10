@@ -14,6 +14,7 @@ import {
   WebSocketMessage,
   WebSocketResponse,
 } from "../../../server/src/api";
+import MapViewDirections from "react-native-maps-directions";
 import { LocationNames, LocationService } from "@/services/LocationService";
 
 export default function App() {
@@ -44,6 +45,9 @@ export default function App() {
     latitude: number;
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
+  const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
+    ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
+    : "";
 
   // control where we want to zoom on the map
   // in the format: [userLocation, driverLocation, pickUpLocation, dropOffLocation]
@@ -225,12 +229,17 @@ export default function App() {
   const handleRequest = (message: WebSocketResponse) => {
     // since we already set the pickup and dropoff locations assuming the request went through,
     // if it didn't go through, we should reset them
-    if ("response" in message && message.response === "ERROR" && "category" in message && message.category === "REQUEST_RIDE") {
-          // something went wrong, reset the locations
-        setPickUpLocation( { latitude: 0, longitude: 0 });
-        setDropOffLocation( { latitude: 0, longitude: 0 });
+    if (
+      "response" in message &&
+      message.response === "ERROR" &&
+      "category" in message &&
+      message.category === "REQUEST_RIDE"
+    ) {
+      // something went wrong, reset the locations
+      setPickUpLocation({ latitude: 0, longitude: 0 });
+      setDropOffLocation({ latitude: 0, longitude: 0 });
     }
-  }
+  };
 
   // send a cancel message to the server
   const sendCancel = () => {
@@ -262,6 +271,17 @@ export default function App() {
         longitude: 0,
       });
     }
+  };
+
+  // GET DISTANCE AND ETA FROM GMAPS when directions are shown
+  const handleDirectionsReady = (result: {
+    distance: number;
+    duration: number;
+  }) => {
+    const distance = result.distance * 0.62137119; // Distance (km to mi)
+    const duration = result.duration; // Travel time (minutes)
+
+    console.log(`Distance: ${distance} mi, Travel time: ${duration} minutes`);
   };
 
   // Map UI
@@ -314,6 +334,19 @@ export default function App() {
           }}
           title={"dropOffLocation"}
         />
+          {/* show the directions between the pickup and dropoff locations if they are valid */}
+          {/* TODO: when these locations are (0,0) we get a gmaps error since it can't map between locations
+          in the atlantic. It's not really a problem. 
+          The other option would be the have these locations as a key to force rerender 
+          and then check if the locations are not 0 here, but then the rerender loses our wonderful zoom. */}
+            <MapViewDirections
+              origin={pickUpLocation}
+              destination={dropOffLocation}
+              apikey={GOOGLE_MAPS_APIKEY}
+              strokeWidth={3}
+              strokeColor="#D1AE49"
+              onReady={handleDirectionsReady}
+            />
       </MapView>
       {/* Temporary footer for requesting rides*/}
       <View
