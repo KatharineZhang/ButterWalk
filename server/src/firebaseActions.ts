@@ -11,7 +11,7 @@ import {
   Timestamp,
   Transaction,
   where,
-  WhereFilterOp,
+  WhereFilterOp
 } from "firebase/firestore";
 import { Feedback, ProblematicUser, RideRequest, User } from "./api";
 
@@ -26,6 +26,7 @@ const problematicUsersCollection = collection(db, "ProblematicUsers");
 const feedbackCollection = collection(db, "Feedback");
 
 // SIGN IN - Adds a user to the database if they are not problematic
+// this is a completely NEW USER
 export async function createUser(transaction: Transaction, user: User) {
   // check if the user is in the problematicUsers table with a blacklisted status
   const isProblematic = doc(db, "ProblematicUsers", user.netid);
@@ -47,6 +48,35 @@ export async function createUser(transaction: Transaction, user: User) {
   } else {
     console.log("User does NOT exists in the database");
     await transaction.set(docRef, user);
+    return false;
+  }
+}
+
+
+
+// FINISH ACCOUNT CREATION - add phone number and student num to the database
+// associated with the user's unique netid
+
+export async function finishCreatingUser(transaction: Transaction, netid: string, phone_number: string, student_number: string) {
+  // use the net id of the user as the document id
+  const docRef = doc(usersCollection, netid);
+  const docSnap = await transaction.get(docRef);
+  if(docSnap.exists()) {
+    console.log("User already exists in the database");
+
+    try {
+      await transaction.update(docRef, {
+        phone_number: phone_number,
+        student_number: student_number
+      });
+
+      return true;
+    } catch (error) {
+      console.log(`Error occured when updating user databse: ${error}`);
+      return false;
+    }
+  } else {
+    console.log("User does NOT exists in the database");
     return false;
   }
 }

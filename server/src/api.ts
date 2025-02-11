@@ -5,6 +5,7 @@ import { Timestamp } from "firebase/firestore";
 export type Command =
   | "CONNECT"
   | "SIGNIN"
+  | "FINISH_ACC"
   | "REQUEST_RIDE"
   | "ACCEPT_RIDE"
   | "CANCEL"
@@ -29,6 +30,13 @@ export type WebSocketMessage =
       studentNum: string;
       role: "STUDENT" | "DRIVER";
     }
+  | {
+      directive: "FINISH_ACC";
+      netid: string;
+      phoneNum: string;
+      studentNum: string;
+      role: "STUDENT" | "DRIVER";
+    } 
   | {
       directive: "REQUEST_RIDE";
       phoneNum: string;
@@ -79,6 +87,7 @@ export type GeneralResponse = {
   response:
     | "CONNECT"
     | "SIGNIN"
+    | "FINISH_ACC"
     | "CANCEL"
     | "COMPLETE"
     | "ADD_FEEDBACK"
@@ -150,7 +159,8 @@ export type ErrorResponse = {
     | "ACCEPT_RIDE"
     | "CANCEL"
     | "LOCATION"
-    | "QUERY";
+    | "QUERY"
+    | "FINISH_ACC";
 };
 
 // Server Types and Data Structures

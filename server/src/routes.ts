@@ -24,6 +24,7 @@ import {
   cancelRideRequest,
   completeRideRequest,
   createUser,
+  finishCreatingUser,
   getOtherNetId,
   queryFeedback,
   db,
@@ -84,6 +85,45 @@ export const signIn = async (
     };
   }
 };
+
+
+
+export const finishAccCreation = async (
+  netid: string,
+  phone_number: string,
+  student_num: string,
+  role: "STUDENT" | "DRIVER") : Promise<GeneralResponse | ErrorResponse> => {
+
+  if (
+    !netid ||
+    !phone_number ||
+    !student_num
+  ) {
+    return {
+      response: "ERROR",
+      error: "Missing or invalid finish account creation details.",
+      category: "FINISH_ACC",
+    };
+  }
+
+  // add values to database
+  try {
+    return await runTransaction(db, async (transaction) => {
+      const isSuccessful = await finishCreatingUser(transaction, netid, phone_number, student_num);
+      return { response: "FINISH_ACC", success: true};
+    });
+  } catch (e: unknown) {
+    return {
+      response: "ERROR",
+      error: `Error adding phone number or student number to database: ${(e as Error).message}.`,
+      category: "FINISH_ACC",
+    };
+  }
+
+
+}
+
+
 
 /* Adds a new ride request object to the queue using the parameters given. 
 Will add a new request to the database, populated with the fields passed in and a request status of 0.

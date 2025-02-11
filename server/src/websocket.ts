@@ -11,6 +11,7 @@ import {
   report,
   requestRide,
   signIn,
+  finishAccCreation,
   waitTime,
 } from "./routes";
 import {
@@ -62,6 +63,16 @@ export const handleWebSocketMessage = async (
       );
       // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
+      break;
+
+
+    case "FINISH_ACC":
+      resp = await finishAccCreation(
+        input.netid,
+        input.phoneNum,
+        input.studentNum,
+        input.role
+      );
       break;
 
     case "REQUEST_RIDE":
