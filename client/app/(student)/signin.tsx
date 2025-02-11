@@ -31,7 +31,6 @@ WebBrowser.maybeCompleteAuthSession();
 const Login = () => {
   const [signedIn,setSignedIn] = useState(false);
   const [errMsg, setErrMsg] = useState("");
-  const [accExist, setAccExist] = useState(false);
   
   const config = {
     webClientId,
@@ -83,19 +82,33 @@ const Login = () => {
       const handleSigninMessage = (message: WebSocketResponse)  => {
         if ("response" in message && message.response == "SIGNIN") {
           const signinresp = message as SignInResponse;
-          //signinresp.alreadyExists
+
+          if (signinresp.alreadyExists) {
+            return (
+              <Redirect
+                href={{
+                  pathname: "/(student)/map",
+                  params: {
+                    netid: netid != "" ? netid : "dev-netID",
+                  },
+                }}
+              />
+            );
+          } else {
+              return (
+                <Redirect
+                  href={{
+                    pathname: "/(student)/finish_acc",
+                    params: { netid: netid != "" ? netid : "dev-netID"}
+                  }}
+                />
+              );
+          }
         }
       }
-      // 3. if the account exists, redirect to the map page -> doesn't need to store data in DB
-      // 4. if the account doesn't exist, redirect to the finish setting up account page
       
-      if (DEBUG) {
-        console.log("Email:", email);
-        console.log("First Name:", first_name);
-        console.log("Last Name:", last_name);
-        console.log("NetID:", netid);
-        console.log("user info", userInfo);
-      } 
+      WebSocketService.addListener(handleSigninMessage, "SIGNIN");
+
     } catch (error) {
       console.log("error fetching user info", error);
     }
@@ -118,23 +131,6 @@ const Login = () => {
   useEffect(() => {
     handleToken();
   }, [response]);
-
-  if (signedIn && accExist) {
-    return (
-      <Redirect
-        href={{
-          pathname: "/(student)/map",
-          params: {
-            netid: netid != "" ? netid : "dev-netID",
-          },
-        }}
-      />
-    );
-  } else if (signedIn && !accExist) {
-      return (
-
-      );
-  }
 
   return (
     <View style={styles.container}>
