@@ -323,19 +323,14 @@ export default function App() {
           in the atlantic. It's not really a problem. 
           The other option would be the have these locations as a key to force rerender 
           and then check if the locations are not 0 here, but then the rerender loses our wonderful zoom. */}
-          {pickUpLocation.latitude !== 0 &&
-            pickUpLocation.longitude !== 0 &&
-            dropOffLocation.latitude !== 0 &&
-            dropOffLocation.longitude !== 0 && (
-              <MapViewDirections
-                origin={pickUpLocation}
-                destination={dropOffLocation}
-                apikey={GOOGLE_MAPS_APIKEY}
-                strokeWidth={3}
-                strokeColor="#D1AE49"
-                onReady={handleDirectionsReady}
-              />
-            )}
+          <MapViewDirections
+            origin={pickUpLocation}
+            destination={dropOffLocation}
+            apikey={GOOGLE_MAPS_APIKEY}
+            strokeWidth={3}
+            strokeColor="#D1AE49"
+            onReady={handleDirectionsReady}
+          />
         </MapView>
         {/* Temporary footer for accepting and completing rides*/}
         <View
