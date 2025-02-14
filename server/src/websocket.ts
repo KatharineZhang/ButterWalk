@@ -17,6 +17,7 @@ import {
 import {
   AcceptResponse,
   CancelResponse,
+  ConnectMessage,
   WebSocketMessage,
   WebSocketResponse,
 } from "./api";
@@ -41,15 +42,23 @@ export const handleWebSocketMessage = async (
     return;
   }
 
+  // TEMP FIX
+  let connectMessage: ConnectMessage;
+  
   switch (input.directive) {
     // call the correct function based on the directive
     case "CONNECT":
       // Connect the specific websocket to the netid specified in input
-      console.log(`WEBSOCKET: User ${input.netid} connected`);
+      
+      // TEMP FIX
+      // cast input to a message of the correct type
+      connectMessage = input as ConnectMessage;
+    
+      console.log(`WEBSOCKET: User ${connectMessage.netid} connected`);
       clients.map((client) => {
         if (client.websocketInstance == ws) {
-          client.netid = input.netid;
-          client.role = input.role;
+          client.netid = connectMessage.netid;
+          client.role = connectMessage.role;
         }
       });
       break;
