@@ -30,6 +30,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 const Login = () => {
   const [signedIn,setSignedIn] = useState(false);
+  const [accExists, setAccExists] = useState(false);
   const [errMsg, setErrMsg] = useState("");
   
   const config = {
@@ -87,26 +88,11 @@ const Login = () => {
 
           if (signinresp.alreadyExists) {
             console.log("redirecting to map");
-            return (
-              <Redirect
-                href={{
-                  pathname: "/(student)/map",
-                  params: {
-                    netid: netid != "" ? netid : "dev-netID",
-                  },
-                }}
-              />
-            );
+            setAccExists(true);
+            
           } else {
               console.log("redirecting to finish acc");
-              return (
-                <Redirect
-                  href={{
-                    pathname: "/(student)/finishAcc",
-                    params: { netid: netid != "" ? netid : "dev-netID"}
-                  }}
-                />
-              );
+              setAccExists(false); // redundant but I just want to make sure
           }
         }
       }
@@ -135,6 +121,33 @@ const Login = () => {
   useEffect(() => {
     handleToken();
   }, [response]);
+
+
+  if(signedIn) {
+    if(accExists) {
+      return (
+        <Redirect
+          href={{
+            pathname: "/(student)/map",
+            params: {
+              netid: netid != "" ? netid : "dev-netID",
+            },
+          }}
+        />
+      );
+    } else {
+      return (
+        <Redirect
+          href={{
+            pathname: "/(student)/finishAcc",
+            params: { netid: netid != "" ? netid : "dev-netID"}
+          }}
+        />
+      );
+    }
+  }
+
+  
 
   return (
     <View style={styles.container}>
