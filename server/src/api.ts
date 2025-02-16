@@ -70,6 +70,9 @@ export type WebSocketMessage =
       rating?: number;
     };
 
+  // TEMP FIX
+  export type ConnectMessage =  { directive: "CONNECT"; netid: string; role: "STUDENT" | "DRIVER" };
+
 // Response types
 export type WebSocketResponse =
   | GeneralResponse
