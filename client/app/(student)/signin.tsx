@@ -70,6 +70,8 @@ const Login = () => {
       last_name = userInfo.family_name;
       netid = email.replace("@uw.edu", "");
 
+      WebSocketService.connect(netid as string, "STUDENT");
+
       // 1. send this to the DB via websocket
       WebSocketService.send({directive: "SIGNIN",
         netid,
@@ -84,6 +86,7 @@ const Login = () => {
           const signinresp = message as SignInResponse;
 
           if (signinresp.alreadyExists) {
+            console.log("redirecting to map");
             return (
               <Redirect
                 href={{
@@ -95,10 +98,11 @@ const Login = () => {
               />
             );
           } else {
+              console.log("redirecting to finish acc");
               return (
                 <Redirect
                   href={{
-                    pathname: "/(student)/finish_acc",
+                    pathname: "/(student)/finishAcc",
                     params: { netid: netid != "" ? netid : "dev-netID"}
                   }}
                 />
