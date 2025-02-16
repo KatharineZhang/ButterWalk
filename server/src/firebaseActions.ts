@@ -42,11 +42,17 @@ export async function createUser(transaction: Transaction, user: User) {
   // use the net id of the user as the document id
   const docRef = doc(usersCollection, user.netid);
   const docSnap = await transaction.get(docRef);
-  if(docSnap.exists()) {
-    console.log("User already exists in the database");
-    return true;
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    if (data.phoneNum == null && data.studentNum == null) {
+      console.log("User exists but phoneNum and studentNum are NULL");
+      return false;
+    } else {
+      console.log("User already exists in the database");
+      return true;
+    }
   } else {
-    console.log("User does NOT exists in the database");
+    console.log("User does NOT exist in the database");
     await transaction.set(docRef, user);
     return false;
   }
