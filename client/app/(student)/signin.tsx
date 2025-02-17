@@ -2,8 +2,6 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Pressable,
   TouchableOpacity,
@@ -11,13 +9,15 @@ import {
 } from "react-native";
 import { useState, useEffect } from "react";
 import { styles } from "@/assets/styles";
-import { Redirect, Link } from "expo-router";
+import { Redirect } from "expo-router";
 // import dotenv from "dotenv";
 import * as WebBrowser from 'expo-web-browser';
 // need to 'npx expo install expo-web-browser expo-auth-session expo-crypto'
 import * as Google from "expo-auth-session/providers/google";
 import { WebSocketResponse, SignInResponse } from "../../../server/src/api";
 import WebSocketService from "@/services/WebSocketService";
+import logo from '../../assets/images/Glogo.png';
+import butterWalkLogo from '../../assets/images/butterWalkLogo.png';
 
 const DEBUG = false;
 // dotenv.config();
@@ -157,10 +157,10 @@ const Login = () => {
     <View style={styles.container}>
       <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
         <Text style={localStyles.text}>Husky ButterWalk</Text>
-        <Image style={localStyles.logo} source={require("../../assets/images/butterWalkLogo.png")} />
+        <Image style={localStyles.logo} source={butterWalkLogo} />
         <Text style={localStyles.text}> Sign in </Text>
         <TouchableOpacity style={localStyles.glogo} onPress={() => promptAsync()}>
-          <Image source={require("../../assets/images/Glogo.png")} />
+          <Image source={logo} />
           <Text>Sign in with UW Google</Text>
         </TouchableOpacity>
 
@@ -199,19 +199,22 @@ const localStyles = StyleSheet.create({
     width: 100,
     height: 100,
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
+    alignSelf: "center",
   },
   glogo: {
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
+    width: '100%',
   },
   text: {
-    fontSize: 16,
-    lineHeight: 21,
+    fontSize: 32,
+    lineHeight: 40,
     fontWeight: "bold",
     letterSpacing: 0.25,
-    color: "white",
+    color: "black",
     justifyContent: "flex-start",
+    fontFamily: "Encode Sans",
   },
   link: {
     fontSize: 14,

@@ -3,13 +3,12 @@ import {
   Text,
   StyleSheet,
   TextInput,
-  ActivityIndicator,
   Pressable,
 } from "react-native";
 import { useState } from "react";
 import { styles } from "@/assets/styles";
-import { Redirect, Link } from "expo-router";
-import { registerUser } from "../../services/firebaseEmailAuth";
+import { Redirect } from "expo-router";
+// import { registerUser } from "../../services/firebaseEmailAuth";
 
 import { WebSocketResponse, GeneralResponse } from "../../../server/src/api";
 import WebSocketService from "@/services/WebSocketService";
@@ -83,12 +82,12 @@ const  finishAcc = (netid: string) => {
 
   return (
     <View style={styles.container}>
-        <Text>Create Account</Text>
+        <Text style={localStyles.heading}>Create Account</Text>
        
         <Text style={localStyles.description}>Preferred Name</Text>
         <TextInput
           value={preferredName}
-          style={localStyles.input}
+          style={[localStyles.input, preferredName && localStyles.inputFocused]}
           placeholder="Preferred Name"
           placeholderTextColor={"#808080"}
           onChangeText={(text) => setPreferredName(text)}
@@ -98,7 +97,7 @@ const  finishAcc = (netid: string) => {
         <Text style={localStyles.description}>Student number ( ####### )</Text>
         <TextInput
           value={studentNum}
-          style={localStyles.input}
+          style={[localStyles.input, studentNum && localStyles.inputFocused]}
           placeholder="Student Number"
           placeholderTextColor={"#808080"}
           onChangeText={(text) => setStudentNum(text)}
@@ -108,7 +107,7 @@ const  finishAcc = (netid: string) => {
         <Text style={localStyles.description}>Phone number ( ### - ### - #### )</Text>
         <TextInput
           value={phoneNumber}
-          style={localStyles.input}
+          style={[localStyles.input, phoneNumber && localStyles.inputFocused]}
           placeholder="Phone Number"
           placeholderTextColor={"#808080"}
           onChangeText={(text) => setPhoneNumber(text)}
@@ -116,7 +115,7 @@ const  finishAcc = (netid: string) => {
         />        
         
         <Pressable style={localStyles.button} onPress={setValues}>
-          <Text style={localStyles.text}>Sign Up</Text>
+          <Text style={localStyles.button_text}>Finish Sign Up</Text>
         </Pressable>
         <Text>For easier dev testing (will be removed later) </Text>
         <Pressable
@@ -141,36 +140,56 @@ const  finishAcc = (netid: string) => {
         marginVertical: 4,
         borderRadius: 4,
         padding: 10,
-        backgroundColor: "#f9f9f9"
+        backgroundColor: "#f9f9f9",
+        textAlign: "left",
+        borderColor: "#ccc",
+      },
+      inputFocused: {
+        borderColor: "#4B2E83",
+      },
+      heading: {
+        fontSize: 32,
+        lineHeight: 40,
+        fontWeight: "bold",
+        letterSpacing: 0.25,
+        color: "black",
+        justifyContent: "flex-start",
+        fontFamily: "Encode Sans",
+        textAlign: "left",
       },
       button: {
         alignItems: "center",
         justifyContent: "center",
-        paddingVertical: 12,
-        paddingHorizontal: 32,
+        paddingVertical: 16,
+        paddingHorizontal: 24,
         borderRadius: 4,
         elevation: 3,
         backgroundColor: "#4B2E83",
+        alignSelf: "center",
       },
       text: {
         fontSize: 16,
         lineHeight: 21,
         fontWeight: "bold",
         letterSpacing: 0.25,
+        color: "black",
+        textAlign: "left",
+      },
+      button_text: {
+        fontSize: 16,
+        lineHeight: 21,
+        fontWeight: "bold",
+        letterSpacing: 0.25,
         color: "white",
+        fontFamily: "DM Sans",
+        textAlign: "center",
       },
       description: {
+        fontFamily: "Open Sans",
         fontSize: 14,
         lineHeight: 18,
         letterSpacing: 0.25,
         color: "black",
-      },
-      link: {
-        fontSize: 14,
-        color: "black",
-      },
-      linkText: {
-        color: "purple",
-        textDecorationLine: "underline",
-      },
+        textAlign: "left",
+      }
     });
