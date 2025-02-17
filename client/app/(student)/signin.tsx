@@ -7,12 +7,12 @@ import {
   KeyboardAvoidingView,
   Pressable,
   TouchableOpacity,
+  Image
 } from "react-native";
 import { useState, useEffect } from "react";
 import { styles } from "@/assets/styles";
 import { Redirect, Link } from "expo-router";
-
-import { Image } from "react-native";
+// import dotenv from "dotenv";
 import * as WebBrowser from 'expo-web-browser';
 // need to 'npx expo install expo-web-browser expo-auth-session expo-crypto'
 import * as Google from "expo-auth-session/providers/google";
@@ -20,11 +20,15 @@ import { WebSocketResponse, SignInResponse } from "../../../server/src/api";
 import WebSocketService from "@/services/WebSocketService";
 
 const DEBUG = false;
+// dotenv.config();
 
+// put this in env
+// const webClientId = process.env.WEB_CLIENT_ID;
+// const iosClientId = process.env.IOS_CLIENT_ID;
+// const androidClientId = process.env.ANDROID_CLIENT_ID;
 const webClientId = '115222638597-9fsnarg3ujfemeb2vmtj5spscbj4ei8a.apps.googleusercontent.com';
 const iosClientId = '115222638597-uisr924s4l8ngmg467u1ipsh0jli9hfd.apps.googleusercontent.com';
-const androidClientId = '115222638597-45egn9a398joau1s6tmmd7qv6s68f47i.apps.googleusercontent.com';
-
+const androidClientId = "115222638597-45egn9a398joau1s6tmmd7qv6s68f47i.apps.googleusercontent.com";
 WebBrowser.maybeCompleteAuthSession();
 
 
@@ -152,9 +156,10 @@ const Login = () => {
   return (
     <View style={styles.container}>
       <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
-        <Text>Welcome Back!</Text>
-
-        <TouchableOpacity onPress={() => promptAsync()}>
+        <Text style={localStyles.text}>Husky ButterWalk</Text>
+        <Image style={localStyles.logo} source={require("../../assets/images/butterWalkLogo.png")} />
+        <Text style={localStyles.text}> Sign in </Text>
+        <TouchableOpacity style={localStyles.glogo} onPress={() => promptAsync()}>
           <Image source={require("../../assets/images/Glogo.png")} />
           <Text>Sign in with UW Google</Text>
         </TouchableOpacity>
@@ -190,19 +195,29 @@ const localStyles = StyleSheet.create({
     elevation: 3,
     backgroundColor: "#4B2E83",
   },
+  logo: {
+    width: 100,
+    height: 100,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  glogo: {
+    alignItems: "center",
+    justifyContent: "center"
+  },
   text: {
     fontSize: 16,
     lineHeight: 21,
     fontWeight: "bold",
     letterSpacing: 0.25,
     color: "white",
+    justifyContent: "flex-start",
   },
   link: {
     fontSize: 14,
     color: "black",
   },
   linkText: {
-    color: "purple",
-    textDecorationLine: "underline",
+    color: "purple"
   },
 });

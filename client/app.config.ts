@@ -9,22 +9,22 @@ dotenv.config();
 // while also keeping them hidden on git
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "Husky BetterWalk",
-  slug: "husky-betterWalk",
+  name: "Husky ButterWalk",
+  slug: "husky-butterWalk",
   version: "1.0.0",
   orientation: "portrait",
-  icon: "./assets/images/betterWalkLogo.png",
+  icon: "./assets/images/butterWalkLogo.png",
   scheme: "myapp",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   splash: {
-    image: "./assets/images/betterWalkLogo.png",
+    image: "./assets/images/butterWalkLogo.png",
     resizeMode: "contain",
     backgroundColor: "#ffffff",
   },
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.betterwalk.betterwalk",
+    bundleIdentifier: "com.butterwalk.butterwalk",
     config: {
       googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY,
     },
@@ -34,10 +34,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     adaptiveIcon: {
-      foregroundImage: "./assets/images/betterWalkLogo.png",
+      foregroundImage: "./assets/images/butterWalkLogo.png",
       backgroundColor: "#ffffff",
     },
-    package: "com.betterwalk.betterwalk",
+    package: "com.butterwalk.butterwalk",
     config: {
       googleMaps: {
         apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY,
@@ -47,7 +47,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   web: {
     bundler: "metro",
     output: "static",
-    favicon: "./assets/images/betterWalkLogo.png",
+    favicon: "./assets/images/butterWalkLogo.png",
   },
   plugins: ["expo-router"],
   experiments: {

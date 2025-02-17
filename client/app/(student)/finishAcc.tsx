@@ -18,7 +18,8 @@ import WebSocketService from "@/services/WebSocketService";
 const  finishAcc = (netid: string) => {  
   const [phoneNumber, setPhoneNumber] = useState("");
   const [studentNum, setStudentNum] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [preferredName, setPreferredName] = useState("");
+  const [accFinished, setAccFinished] = useState(false);
   
 
   const setValues = async () => {
@@ -49,8 +50,8 @@ const  finishAcc = (netid: string) => {
     // 1. send this to the DB via websocket
     WebSocketService.send({directive: "FINISH_ACC",
       netid,
-      phoneNum: "",
-      studentNum: "",
+      phoneNum: phoneNumber,
+      studentNum: studentNum,
       role: "STUDENT"
     });
     // 2. get the response back (add listener)
@@ -59,38 +60,42 @@ const  finishAcc = (netid: string) => {
         const finishAccResp = message as GeneralResponse;
 
         if (finishAccResp.success) {
-          setLoading(true);
-          return (
-            <Redirect
-              href={{
-                pathname: "/(student)/map",
-                params: {
-                  netid: netid != "" ? netid : "dev-netID",
-                },
-              }}
-            />
-          );
+          setAccFinished(true);
         }
       }
     }
     WebSocketService.addListener(handleSigninMessage, "FINISH_ACC");
   }
 
+
+  if(accFinished) {
+    return (
+      <Redirect
+        href={{
+          pathname: "/(student)/map",
+          params: {
+            netid: netid != "" ? netid : "dev-netID",
+          },
+        }}
+      />
+    );
+  }
+
   return (
-    <View>
-        <Text>Welcome! Butter finish your account below!</Text>
+    <View style={styles.container}>
+        <Text>Create Account</Text>
        
-        <Text style={localStyles.description}>Enter your phone number ( ### - ### - #### ):</Text>
+        <Text style={localStyles.description}>Preferred Name</Text>
         <TextInput
-          value={phoneNumber}
+          value={preferredName}
           style={localStyles.input}
-          placeholder="Phone Number"
+          placeholder="Preferred Name"
           placeholderTextColor={"#808080"}
-          onChangeText={(text) => setPhoneNumber(text)}
+          onChangeText={(text) => setPreferredName(text)}
           autoCapitalize="none"
         />
 
-        <Text style={localStyles.description}>Enter your student number ( ####### ):</Text>
+        <Text style={localStyles.description}>Student number ( ####### )</Text>
         <TextInput
           value={studentNum}
           style={localStyles.input}
@@ -100,30 +105,28 @@ const  finishAcc = (netid: string) => {
           autoCapitalize="none"
         />
 
-        {loading ? (
-          <ActivityIndicator size="large" color="#0000ff" />
-        ) : (
-          <>
-            <Pressable style={localStyles.button} onPress={setValues}>
-              <Text style={localStyles.text}>Finish Account</Text>
-            </Pressable>
-            <Text>For easier dev testing (will be removed later) </Text>
-            <Pressable
-              style={localStyles.button}
-              onPress={() => 
-                <Redirect
-                href={{
-                  pathname: "/(student)/map",
-                  params: {
-                    netid: netid != "" ? netid : "dev-netID",
-                  },
-                }}
-              />}
-            >
-              <Text style={localStyles.text}>Bypass Signin</Text>
-            </Pressable>
-          </>
-        )}
+        <Text style={localStyles.description}>Phone number ( ### - ### - #### )</Text>
+        <TextInput
+          value={phoneNumber}
+          style={localStyles.input}
+          placeholder="Phone Number"
+          placeholderTextColor={"#808080"}
+          onChangeText={(text) => setPhoneNumber(text)}
+          autoCapitalize="none"
+        />        
+        
+        <Pressable style={localStyles.button} onPress={setValues}>
+          <Text style={localStyles.text}>Sign Up</Text>
+        </Pressable>
+        <Text>For easier dev testing (will be removed later) </Text>
+        <Pressable
+          style={localStyles.button}
+          onPress={() => setAccFinished(true)}
+        >
+          <Text style={localStyles.text}>Bypass Signin</Text>
+        </Pressable>
+        
+        
     </View>
     );
   };
