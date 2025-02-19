@@ -36,7 +36,7 @@ const Login = () => {
   const [signedIn,setSignedIn] = useState(false);
   const [accExists, setAccExists] = useState(false);
   const [errMsg, setErrMsg] = useState("");
-  const [netid, setNetid] = useState("");
+  const [netid, setNetid] = useState("hjpark00");
   
   const config = {
     webClientId,
@@ -60,6 +60,9 @@ const Login = () => {
       
       const userInfo = await response.json();
       email = userInfo.email;
+      first_name = userInfo.given_name;
+      last_name = userInfo.family_name;
+      setNetid(email.replace("@uw.edu", ""));
 
       const UWregex = /@uw.edu$/;
       if (!UWregex.test(email)) {
@@ -70,10 +73,6 @@ const Login = () => {
       }
 
       setSignedIn(true);
-
-      first_name = userInfo.given_name;
-      last_name = userInfo.family_name;
-      setNetid(email.replace("@uw.edu", ""));
       
       WebSocketService.connect(netid as string, "STUDENT");
 
@@ -143,19 +142,9 @@ const Login = () => {
       return (
         <Redirect
           href={{
-            pathname: "/(student)/finishAcc",
-            params: {
-              netid: String(netid)
-            }
+            pathname: `/(student)/finishAcc?netid=${netid}`
           }}
-        /> 
-
-      // <Redirect
-      //   href={{
-      //     pathname: "/(student)/finishAcc",
-      //     search: { netid: netid }  // Passing netid as a query parameter
-      //   }}
-      // />
+        />
       );
     }
   }

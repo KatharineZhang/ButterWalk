@@ -14,13 +14,13 @@ import { WebSocketResponse, FinishAccCreationResponse } from "../../../server/sr
 import WebSocketService from "@/services/WebSocketService";
 
 
-const  finishAcc = (netid: string) => {  
+const  finishAcc = () => {  
   const [phoneNumber, setPhoneNumber] = useState("");
   const [studentNum, setStudentNum] = useState("");
   const [preferredName, setPreferredName] = useState("");
   const [accFinished, setAccFinished] = useState(false);
   
-  // const { netid } = useLocalSearchParams<{ netid: string }>();
+  const { netid } = useLocalSearchParams<{ netid: string }>();
   console.log("finish acc netid: ", netid);
 
   const setValues = async () => {
