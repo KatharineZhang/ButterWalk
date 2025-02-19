@@ -64,6 +64,7 @@ export const handleWebSocketMessage = async (
       break;
 
     case "SIGNIN":
+      console.log("inswebsockets for signin");
       resp = await signIn(
         input.netid,
         input.first_name,

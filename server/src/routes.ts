@@ -66,6 +66,7 @@ export const signIn = async (
     };
   }
   // TODO: Email (and phone number?) validation
+  console.log("enters signIn");
   try {
     return await runTransaction(db, async (transaction) => {
       const alreadyExists = await createUser(transaction, {

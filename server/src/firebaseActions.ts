@@ -29,6 +29,7 @@ const feedbackCollection = collection(db, "Feedback");
 // this is a completely NEW USER
 export async function createUser(transaction: Transaction, user: User) {
   // check if the user is in the problematicUsers table with a blacklisted status
+  console.log("in createUser");
   const isProblematic = doc(db, "ProblematicUsers", user.netid);
   const problematicDoc = await getDoc(isProblematic);
   if (
@@ -40,6 +41,7 @@ export async function createUser(transaction: Transaction, user: User) {
 
   // otherwise, add the user to the users table using transaction
   // use the net id of the user as the document id
+  console.log("createUser netid: ", user.netid);
   const docRef = doc(usersCollection, user.netid);
   const docSnap = await transaction.get(docRef);
   if (docSnap.exists()) {
@@ -54,6 +56,12 @@ export async function createUser(transaction: Transaction, user: User) {
   } else {
     console.log("User does NOT exist in the database");
     await transaction.set(docRef, user);
+    // double check that value is added to the db
+    console.log("now checking user is added into DB");
+    const docRefcheck = doc(usersCollection, user.netid);
+    const data = await transaction.get(docRefcheck);
+    console.log(data);
+    
     return false;
   }
 }
@@ -65,6 +73,7 @@ export async function createUser(transaction: Transaction, user: User) {
 
 export async function finishCreatingUser(transaction: Transaction, netid: string, phone_number: string, student_number: string) {
   // use the net id of the user as the document id
+  console.log("finishCreatingUser: ", netid);
   const docRef = doc(usersCollection, netid);
   const docSnap = await transaction.get(docRef);
   if(docSnap.exists()) {
