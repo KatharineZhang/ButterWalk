@@ -77,6 +77,7 @@ export type WebSocketMessage =
 export type WebSocketResponse =
   | GeneralResponse
   | SignInResponse
+  | FinishAccCreationResponse
   | RequestRideResponse
   | WaitTimeResponse
   | AcceptResponse
@@ -104,6 +105,11 @@ export type SignInResponse = {
   response: "SIGNIN";
   success: true;
   alreadyExists: boolean;
+}
+
+export type FinishAccCreationResponse = {
+  response: "FINISH_ACC";
+  success: boolean;
 }
 
 export type RequestRideResponse = {

@@ -7,10 +7,10 @@ import {
 } from "react-native";
 import { useState } from "react";
 import { styles } from "@/assets/styles";
-import { Redirect } from "expo-router";
+import { Redirect, useLocalSearchParams } from "expo-router";
 // import { registerUser } from "../../services/firebaseEmailAuth";
 
-import { WebSocketResponse, GeneralResponse } from "../../../server/src/api";
+import { WebSocketResponse, FinishAccCreationResponse } from "../../../server/src/api";
 import WebSocketService from "@/services/WebSocketService";
 
 
@@ -20,15 +20,26 @@ const  finishAcc = (netid: string) => {
   const [preferredName, setPreferredName] = useState("");
   const [accFinished, setAccFinished] = useState(false);
   
+  // const { netid } = useLocalSearchParams<{ netid: string }>();
+  console.log("finish acc netid: ", netid);
 
   const setValues = async () => {
     
     setPhoneNumber(phoneNumber.trim());
     setStudentNum(studentNum.trim());
+    setPreferredName(preferredName.trim());
 
-    if ( !phoneNumber || !studentNum) {
+    if ( !phoneNumber || !studentNum || !preferredName) {
       alert("All fields are required");
       return;
+    }
+
+    const preferredNameRegex = /^[A-Za-z]+$/;
+    if (!preferredNameRegex.test(preferredName)) {
+      alert("Preferred name must be only english letters.")
+      return;
+    } else {
+      setPreferredName(preferredName.charAt(0).toUpperCase() + preferredName.slice(1).toLowerCase());
     }
 
     const phoneRegex = /^\d{3}-\d{3}-\d{4}$/;
@@ -54,16 +65,20 @@ const  finishAcc = (netid: string) => {
       role: "STUDENT"
     });
     // 2. get the response back (add listener)
-    const handleSigninMessage = (message: WebSocketResponse)  => {
+    const handleFinishAccMessage = (message: WebSocketResponse)  => {
       if ("response" in message && message.response == "FINISH_ACC") {
-        const finishAccResp = message as GeneralResponse;
+        const finishAccResp = message as FinishAccCreationResponse;
 
         if (finishAccResp.success) {
+          console.log("redirecting to map");
           setAccFinished(true);
+        } else {
+          setAccFinished(false);
+          console.log("Something wrong -- test");
         }
       }
     }
-    WebSocketService.addListener(handleSigninMessage, "FINISH_ACC");
+    WebSocketService.addListener(handleFinishAccMessage, "FINISH_ACC");
   }
 
 

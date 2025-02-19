@@ -82,6 +82,7 @@ export const handleWebSocketMessage = async (
         input.studentNum,
         input.role
       );
+      sendWebSocketMessage(ws, resp);
       break;
 
     case "REQUEST_RIDE":

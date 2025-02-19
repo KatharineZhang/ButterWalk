@@ -6,6 +6,7 @@ import {
   AcceptResponse,
   CancelResponse,
   GeneralResponse,
+  FinishAccCreationResponse,
   RequestRideResponse,
   WaitTimeResponse,
   LocationResponse,
@@ -92,7 +93,7 @@ export const finishAccCreation = async (
   netid: string,
   phone_number: string,
   student_num: string,
-  role: "STUDENT" | "DRIVER") : Promise<GeneralResponse | ErrorResponse> => {
+  role: "STUDENT" | "DRIVER") : Promise<FinishAccCreationResponse | ErrorResponse> => {
 
   if (
     !netid ||
@@ -110,7 +111,7 @@ export const finishAccCreation = async (
   try {
     return await runTransaction(db, async (transaction) => {
       const isSuccessful = await finishCreatingUser(transaction, netid, phone_number, student_num);
-      return { response: "FINISH_ACC", success: true};
+      return { response: "FINISH_ACC", success: isSuccessful };
     });
   } catch (e: unknown) {
     return {

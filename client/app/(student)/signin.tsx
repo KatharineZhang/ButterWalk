@@ -19,7 +19,7 @@ import WebSocketService from "@/services/WebSocketService";
 import logo from '../../assets/images/Glogo.png';
 import butterWalkLogo from '../../assets/images/butterWalkLogo.png';
 
-const DEBUG = false;
+const DEBUG = true;
 // dotenv.config();
 
 // put this in env
@@ -36,6 +36,7 @@ const Login = () => {
   const [signedIn,setSignedIn] = useState(false);
   const [accExists, setAccExists] = useState(false);
   const [errMsg, setErrMsg] = useState("");
+  const [netid, setNetid] = useState("");
   
   const config = {
     webClientId,
@@ -47,7 +48,6 @@ const Login = () => {
   let email = "";
   let first_name = "";
   let last_name = "";
-  let netid = "";
 
 
   const [request, response, promptAsync] = Google.useAuthRequest(config);
@@ -73,8 +73,8 @@ const Login = () => {
 
       first_name = userInfo.given_name;
       last_name = userInfo.family_name;
-      netid = email.replace("@uw.edu", "");
-
+      setNetid(email.replace("@uw.edu", ""));
+      
       WebSocketService.connect(netid as string, "STUDENT");
 
       // 1. send this to the DB via websocket
@@ -134,7 +134,7 @@ const Login = () => {
           href={{
             pathname: "/(student)/map",
             params: {
-              netid: netid != "" ? netid : "dev-netID",
+              netid: netid
             },
           }}
         />
@@ -144,9 +144,18 @@ const Login = () => {
         <Redirect
           href={{
             pathname: "/(student)/finishAcc",
-            params: { netid: netid != "" ? netid : "dev-netID"}
+            params: {
+              netid: String(netid)
+            }
           }}
-        />
+        /> 
+
+      // <Redirect
+      //   href={{
+      //     pathname: "/(student)/finishAcc",
+      //     search: { netid: netid }  // Passing netid as a query parameter
+      //   }}
+      // />
       );
     }
   }
