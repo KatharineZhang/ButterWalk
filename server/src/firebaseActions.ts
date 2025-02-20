@@ -56,12 +56,6 @@ export async function createUser(transaction: Transaction, user: User) {
   } else {
     console.log("User does NOT exist in the database");
     await transaction.set(docRef, user);
-    // double check that value is added to the db
-    console.log("now checking user is added into DB");
-    const docRefcheck = doc(usersCollection, user.netid);
-    const data = await transaction.get(docRefcheck);
-    console.log(data);
-    
     return false;
   }
 }

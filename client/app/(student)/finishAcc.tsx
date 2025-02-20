@@ -21,7 +21,6 @@ const  finishAcc = () => {
   const [accFinished, setAccFinished] = useState(false);
   
   const { netid } = useLocalSearchParams<{ netid: string }>();
-  console.log("finish acc netid: ", netid);
 
   const setValues = async () => {
     

@@ -37,19 +37,17 @@ const Login = () => {
   const [accExists, setAccExists] = useState(false);
   const [errMsg, setErrMsg] = useState("");
   const [netid, setNetid] = useState("hjpark00");
+  const [fname, setFName] = useState("");
+  const [lname, setLName] = useState("");
   
   const config = {
     webClientId,
     iosClientId,
     androidClientId
   }
-
-  // FIX THIS LATER!!! THIS ISN'T GOOD PRACTIFCE!!
+  
   let email = "";
-  let first_name = "";
-  let last_name = "";
-
-
+  
   const [request, response, promptAsync] = Google.useAuthRequest(config);
 
   const getUserProfile = async (token: any) => {
@@ -60,8 +58,8 @@ const Login = () => {
       
       const userInfo = await response.json();
       email = userInfo.email;
-      first_name = userInfo.given_name;
-      last_name = userInfo.family_name;
+      setFName(userInfo.given_name);
+      setLName(userInfo.family_name);
       setNetid(email.replace("@uw.edu", ""));
 
       const UWregex = /@uw.edu$/;
@@ -74,17 +72,7 @@ const Login = () => {
 
       setSignedIn(true);
       
-      WebSocketService.connect(netid as string, "STUDENT");
-
-      // 1. send this to the DB via websocket
-      WebSocketService.send({directive: "SIGNIN",
-        netid,
-        first_name,
-        last_name,
-        phoneNum: "",
-        studentNum: "",
-        role: "STUDENT" });
-      // 2. get the response back (add listener)
+      //2. get the response back (add listener)
       const handleSigninMessage = (message: WebSocketResponse)  => {
         if ("response" in message && message.response == "SIGNIN") {
           const signinresp = message as SignInResponse;
@@ -106,6 +94,14 @@ const Login = () => {
       console.log("error fetching user info", error);
     }
   }
+  
+  // when netid is set, try to connect that websocket to the netid
+  useEffect(() => {
+    if (netid !== "")    {
+      WebSocketService.connect(netid as string, "STUDENT");
+    }
+  }, [netid]);
+
 
   const handleToken = () => {
     if(response?.type === "success") {
@@ -127,6 +123,15 @@ const Login = () => {
 
 
   if(signedIn) {
+    console.log(netid, fname, lname);
+    WebSocketService.send({directive: "SIGNIN",
+      netid: netid,
+      first_name: fname,
+      last_name: lname,
+      phoneNum: "",
+      studentNum: "",
+      role: "STUDENT" });
+
     if(accExists) {
       return (
         <Redirect
