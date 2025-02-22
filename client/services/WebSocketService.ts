@@ -7,6 +7,8 @@ import {
 // the type of function (event handler) that will be called when a message of a certain type is received
 type WebSocketResponseHandler = (message: WebSocketResponse) => void;
 
+export type ConnectMessage = "Failed to Connect" | "Connected Successfully";
+
 // Abstracts the websocket details from the react native app
 class WebSocketService {
   private websocket: WebSocket | null = null;
@@ -19,12 +21,12 @@ class WebSocketService {
    * @param netid
    * @returns
    */
-  connect(netid: string, role: "STUDENT" | "DRIVER") {
+  connect(netid: string, role: "STUDENT" | "DRIVER"): Promise<ConnectMessage> {
     if (
       this.websocket != null &&
       this.websocket.readyState === WebSocket.OPEN
     ) {
-      return;
+      return Promise.resolve("Failed to Connect");
     }
 
     const IP_ADDRESS = process.env.EXPO_PUBLIC_IP_ADDRESS
@@ -32,19 +34,20 @@ class WebSocketService {
       : undefined;
     if (!IP_ADDRESS) {
       console.error("IP_ADDRESS not found in .env");
-      return;
+      return Promise.resolve("Failed to Connect");
     }
 
     this.websocket = new WebSocket(`ws://${IP_ADDRESS}:8080/api/`);
 
     if (this.websocket == null) {
       console.error("WEBSOCKET: Failed to create WebSocket");
-      return;
+      return Promise.resolve("Failed to Connect");
     }
 
     this.websocket.onopen = () => {
       console.log("WEBSOCKET: Connected to Websocket");
       this.send({ directive: "CONNECT", netid: netid, role: role });
+      return Promise.resolve("Connected Successfully");
     };
 
     this.websocket.onmessage = (event) => {
@@ -71,6 +74,9 @@ class WebSocketService {
     this.websocket.onerror = (error: Event) => {
       console.error(`WEBSOCKET: Error: ${(error as ErrorEvent).message}`);
     };
+
+    // catch any calls that didn't fal into any if statements
+    return Promise.resolve("Failed to Connect");
   }
 
   /**

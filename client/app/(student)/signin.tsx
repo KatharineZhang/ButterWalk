@@ -15,11 +15,13 @@ import * as WebBrowser from 'expo-web-browser';
 // need to 'npx expo install expo-web-browser expo-auth-session expo-crypto'
 import * as Google from "expo-auth-session/providers/google";
 import { WebSocketResponse, SignInResponse } from "../../../server/src/api";
-import WebSocketService from "@/services/WebSocketService";
-import logo from '../../assets/images/Glogo.png';
-import butterWalkLogo from '../../assets/images/butterWalkLogo.png';
+import WebSocketService, { ConnectMessage } from "@/services/WebSocketService";
+// @ts-expect-error the image does exists so get rid of the error
+import logo from '@/assets/images/Glogo.png';
+// @ts-expect-error the image does exists so get rid of the error
+import butterWalkLogo from '@/assets/images/butterWalkLogo.png';
 
-const DEBUG = true;
+// const DEBUG = true;
 // dotenv.config();
 
 // put this in env
@@ -48,9 +50,9 @@ const Login = () => {
   
   let email = "";
   
-  const [request, response, promptAsync] = Google.useAuthRequest(config);
+  const [response, promptAsync] = Google.useAuthRequest(config);
 
-  const getUserProfile = async (token: any) => {
+  const getUserProfile = async (token: string) => {
     if(!token) return;
     try {
       const response = await fetch("https://www.googleapis.com/oauth2/v1/userinfo?alt=json", 
@@ -97,9 +99,23 @@ const Login = () => {
   
   // when netid is set, try to connect that websocket to the netid
   useEffect(() => {
-    if (netid !== "")    {
-      WebSocketService.connect(netid as string, "STUDENT");
-    }
+    const connectWebSocket = async () => {
+      if (netid !== "") {
+        // await the connection before sending sign in route
+        const message: ConnectMessage = await WebSocketService.connect(netid as string, "STUDENT");
+        console.log(message);
+        if (message == "Connected Successfully") {
+          WebSocketService.send({directive: "SIGNIN",
+            netid: netid,
+            first_name: fname,
+            last_name: lname,
+            phoneNum: "",
+            studentNum: "",
+            role: "STUDENT" });
+        }
+      }
+    };
+    connectWebSocket();
   }, [netid]);
 
 
@@ -147,7 +163,10 @@ const Login = () => {
       return (
         <Redirect
           href={{
-            pathname: `/(student)/finishAcc?netid=${netid}`
+            pathname: `/(student)/finishAcc`,
+            params: {
+              netid: netid
+            },
           }}
         />
       );
