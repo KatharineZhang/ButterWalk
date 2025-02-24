@@ -21,12 +21,12 @@ class WebSocketService {
    * @param netid
    * @returns
    */
-  connect(netid: string, role: "STUDENT" | "DRIVER"): Promise<ConnectMessage> {
+  async connect(netid: string, role: "STUDENT" | "DRIVER"): Promise<ConnectMessage> {
     if (
       this.websocket != null &&
       this.websocket.readyState === WebSocket.OPEN
     ) {
-      return Promise.resolve("Failed to Connect");
+      return Promise.resolve("Connected Successfully");
     }
 
     const IP_ADDRESS = process.env.EXPO_PUBLIC_IP_ADDRESS
@@ -47,7 +47,6 @@ class WebSocketService {
     this.websocket.onopen = () => {
       console.log("WEBSOCKET: Connected to Websocket");
       this.send({ directive: "CONNECT", netid: netid, role: role });
-      return Promise.resolve("Connected Successfully");
     };
 
     this.websocket.onmessage = (event) => {
@@ -75,9 +74,33 @@ class WebSocketService {
       console.error(`WEBSOCKET: Error: ${(error as ErrorEvent).message}`);
     };
 
-    // catch any calls that didn't fal into any if statements
-    return Promise.resolve("Failed to Connect");
+    return await this.waitForOpenConnection(netid, role);
   }
+
+  /**
+   * Keep retrying (max 10 times) until connection has been made, with 200 ms gap in between each try
+   */
+  waitForOpenConnection = (netid: string, role: "STUDENT" | "DRIVER") => {
+    return new Promise<ConnectMessage>((resolve, reject) => {
+        const maxNumberOfAttempts = 10
+        const intervalTime = 200 //ms
+
+        let currentAttempt = 0
+        const interval = setInterval(() => {
+            if (currentAttempt > maxNumberOfAttempts - 1) {
+                clearInterval(interval)
+                reject("Failed to Connect")
+            } else if (this.websocket != null && this.websocket.readyState === this.websocket.OPEN) {
+              // we're connected!  
+              clearInterval(interval)
+              this.send({ directive: "CONNECT", netid: netid, role: role });
+                resolve("Connected Successfully");
+            }
+            console.log(`Trying to Connect, Try: ${currentAttempt}`);
+            currentAttempt++
+        }, intervalTime)
+    })
+}
 
   /**
    * Send a message to the websocket server
