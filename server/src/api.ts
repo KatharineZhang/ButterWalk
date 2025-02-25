@@ -219,11 +219,11 @@ export const rideReqQueue = new RideRequestQueue(); // rideRequests Queue
 // phone_num char(10), student_or_driver int); –- 0 for student, 1 for driver
 export type User = {
   netid: string;
-  first_name: string;
-  last_name: string;
-  phone_number: string | null;
-  student_number: string | null;
-  student_or_driver: "STUDENT" | "DRIVER";
+  firstName: string;
+  lastName: string;
+  phoneNumber: string | null;
+  studentNumber: string | null;
+  studentOrDriver: "STUDENT" | "DRIVER";
 };
 
 // CREATE TABLE Feedback (feedbackid int PRIMARY KEY, rating float, textFeedback text,

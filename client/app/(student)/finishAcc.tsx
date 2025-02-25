@@ -19,17 +19,17 @@ const finishAcc = () => {
   const { netid } = useLocalSearchParams<{ netid: string }>();
 
   const setValues = async () => {
-    setPhoneNumber(phoneNumber.trim());
-    setStudentNum(studentNum.trim());
-    setPreferredName(preferredName.trim());
+    const phoneNumberTemp = phoneNumber.trim();
+    const studentNumTemp = studentNum.trim();
+    const preferredNameTemp = preferredName.trim();
 
-    if (!phoneNumber || !studentNum || !preferredName) {
+    if (!phoneNumberTemp || !studentNumTemp || !preferredNameTemp) {
       alert("All fields are required");
       return;
     }
 
     const preferredNameRegex = /^[A-Za-z]+$/;
-    if (!preferredNameRegex.test(preferredName)) {
+    if (!preferredNameRegex.test(preferredNameTemp)) {
       alert("Preferred name must be only english letters.");
       return;
     } else {
@@ -40,16 +40,20 @@ const finishAcc = () => {
     }
 
     const phoneRegex = /^\d{3}-\d{3}-\d{4}$/;
-    if (!phoneRegex.test(phoneNumber)) {
+    if (!phoneRegex.test(phoneNumberTemp)) {
       alert("Phone number must be in the format ###-###-####");
       return;
     }
 
     const studentNumRegex = /^\d{7}$/;
-    if (!studentNumRegex.test(studentNum)) {
+    if (!studentNumRegex.test(studentNumTemp)) {
       alert("Student number must have 7 numbers");
       return;
     }
+
+    setPhoneNumber(phoneNumberTemp);
+    setStudentNum(studentNumTemp);
+    setPreferredName(preferredNameTemp);
 
     WebSocketService.connect(netid as string, "STUDENT");
 

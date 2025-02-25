@@ -50,14 +50,14 @@ directive: "SIGNIN", phoneNum: string, netID: string, name: string, studentNum: 
 - Returns a json object TO THE STUDENT in the form: { response: “SIGNIN”, success: true }. */
 export const signIn = async (
   netid: string,
-  first_name: string,
-  last_name: string,
-  student_or_driver: "STUDENT" | "DRIVER"
+  firstName: string,
+  lastName: string,
+  studentOrDriver: "STUDENT" | "DRIVER"
 ): Promise<SignInResponse | ErrorResponse> => {
   if (
     !netid ||
-    !first_name ||
-    !last_name
+    !firstName ||
+    !lastName
   ) {
     return {
       response: "ERROR",
@@ -71,11 +71,11 @@ export const signIn = async (
     return await runTransaction(db, async (transaction) => {
       const alreadyExists = await createUser(transaction, {
         netid,
-        first_name,
-        last_name,
-        phone_number: null,
-        student_number: null,
-        student_or_driver,
+        firstName,
+        lastName,
+        phoneNumber: null,
+        studentNumber: null,
+        studentOrDriver,
       });
       return { response: "SIGNIN", success: true, alreadyExists };
     });

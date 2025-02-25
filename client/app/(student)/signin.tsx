@@ -64,6 +64,7 @@ const Login = () => {
         setSignedIn(false);
         return;
       }
+      setSignedIn(true);
 
       setFName(userInfo.given_name);
       setLName(userInfo.family_name);
@@ -131,34 +132,8 @@ const Login = () => {
     handleToken();
   }, [response]);
 
-  if (accExists) {
-    return (
-      <Redirect
-        href={{
-          pathname: "/(student)/map",
-          params: {
-            netid: netid,
-          },
-        }}
-      />
-    );
-    console.log("ACC EXISTS");
-  } else if (accExists === false) {
-    console.log("ACC NO EXISTS");
-      return (
-        <Redirect
-          href={{
-            pathname: "/(student)/finishAcc",
-            params: {
-              netid: netid
-            },
-          }}
-        />
-      );
-  } // else: accExists == null
-
   return (
-    accExists && signedIn ? (
+    accExists == true && signedIn ? (
       <Redirect
         href={{
           pathname: "/(student)/map",
@@ -167,7 +142,7 @@ const Login = () => {
           },
         }}
       />
-    ) : !accExists && signedIn ? (
+    ) : accExists == false && signedIn ? (
       <Redirect
         href={{
           pathname: "/(student)/finishAcc",

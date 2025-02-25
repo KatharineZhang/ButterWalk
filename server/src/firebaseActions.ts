@@ -45,8 +45,9 @@ export async function createUser(transaction: Transaction, user: User) {
   const docRef = doc(usersCollection, user.netid);
   const docSnap = await transaction.get(docRef);
   if (docSnap.exists()) {
-    const data = docSnap.data();
-    if (data.phoneNum == null && data.studentNum == null) {
+    const data = docSnap.data() as User;
+    console.log(data);
+    if (data.phoneNumber === null && data.studentNumber === null) {
       console.log("User exists but phoneNum and studentNum are NULL");
       return false;
     } else {
@@ -65,7 +66,7 @@ export async function createUser(transaction: Transaction, user: User) {
 // FINISH ACCOUNT CREATION - add phone number and student num to the database
 // associated with the user's unique netid
 
-export async function finishCreatingUser(transaction: Transaction, netid: string, phone_number: string, student_number: string) {
+export async function finishCreatingUser(transaction: Transaction, netid: string, phoneNumber: string, studentNumber: string) {
   // use the net id of the user as the document id
   console.log("finishCreatingUser: ", netid);
   const docRef = doc(usersCollection, netid);
@@ -75,8 +76,8 @@ export async function finishCreatingUser(transaction: Transaction, netid: string
 
     try {
       await transaction.update(docRef, {
-        phone_number: phone_number,
-        student_number: student_number
+        phoneNumber,
+        studentNumber
       });
 
       return true;
