@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import * as Google from "expo-auth-session/providers/google";
 import {
   localRideRequest,
   rideReqQueue,
@@ -14,7 +15,8 @@ import {
   RideRequest,
   Feedback,
   ProblematicUser,
-  SignInResponse as SignInResponse,
+  SignInResponse,
+  GoogleResponse,
 } from "./api";
 import {
   acceptRideRequest,
@@ -32,12 +34,61 @@ import {
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { Mutex } from "async-mutex";
+import { AuthSessionResult } from "expo-auth-session";
 dotenv.config();
 
 // every time we access the queue and the database,
 // we want to lock the entire section to make both the database action
 // and the queue action combined into one atomic action to prevent data races
 const queueLock: Mutex = new Mutex();
+
+// TODO: ADD API COMMENT
+export const googleAuth = async (response: any): Promise<GoogleResponse> => {
+  return await handleToken(response);
+};
+
+const handleToken = async (
+  response: AuthSessionResult
+): Promise<GoogleResponse> => {
+  if (response?.type === "success") {
+    const { authentication } = response;
+    if (authentication == null) {
+      console.error("auth is null @106 routes.ts");
+    } else {
+      const token = authentication.accessToken;
+      console.log("access token", token);
+
+      return getUserProfile(token);
+    }
+  }
+  console.log("error with response", response);
+  return { message: "Error signing in: Make sure you're using your UW email." };
+};
+
+const getUserProfile = async (token: string): Promise<GoogleResponse> => {
+  if (!token) return { message: "Error signing in: No token" };
+  try {
+    const response = await fetch(
+      "https://www.googleapis.com/oauth2/v1/userinfo?alt=json",
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    const userInfo = await response.json();
+    const email = userInfo.email;
+
+    const UWregex = /@uw.edu$/;
+    if (!UWregex.test(email)) {
+      return {
+        message: "Error signing in: Please ensure your using your UW email",
+      };
+    }
+
+    return { message: "Google Signin Successful", userInfo };
+  } catch (error) {
+    console.log("error fetching user info", error);
+  }
+  return { message: "Error signing in: Error getting profile" };
+};
 
 /* Signs a specific student or driver into the app. Will check the users database for the specific id, 
 and if it is not there, will add a new user. If the user is in the table, we need to make sure this user 
@@ -54,19 +105,13 @@ export const signIn = async (
   lastName: string,
   studentOrDriver: "STUDENT" | "DRIVER"
 ): Promise<SignInResponse | ErrorResponse> => {
-  if (
-    !netid ||
-    !firstName ||
-    !lastName
-  ) {
+  if (!netid || !firstName || !lastName) {
     return {
       response: "ERROR",
       error: "Missing or invalid sign in details.",
       category: "SIGNIN",
     };
   }
-  // TODO: Email (and phone number?) validation
-  console.log("enters signIn");
   try {
     return await runTransaction(db, async (transaction) => {
       const alreadyExists = await createUser(transaction, {
@@ -77,7 +122,7 @@ export const signIn = async (
         studentNumber: null,
         studentOrDriver,
       });
-      return { response: "SIGNIN", success: true, alreadyExists };
+      return { response: "SIGNIN", success: true, alreadyExists, netid };
     });
   } catch (e: unknown) {
     return {
@@ -88,19 +133,14 @@ export const signIn = async (
   }
 };
 
-
-
+// TODO: ADD API COMMENT
 export const finishAccCreation = async (
   netid: string,
   phone_number: string,
   student_num: string,
-  role: "STUDENT" | "DRIVER") : Promise<FinishAccCreationResponse | ErrorResponse> => {
-
-  if (
-    !netid ||
-    !phone_number ||
-    !student_num
-  ) {
+  role: "STUDENT" | "DRIVER"
+): Promise<FinishAccCreationResponse | ErrorResponse> => {
+  if (!netid || !phone_number || !student_num) {
     return {
       response: "ERROR",
       error: "Missing or invalid finish account creation details.",
@@ -111,7 +151,12 @@ export const finishAccCreation = async (
   // add values to database
   try {
     return await runTransaction(db, async (transaction) => {
-      const isSuccessful = await finishCreatingUser(transaction, netid, phone_number, student_num);
+      const isSuccessful = await finishCreatingUser(
+        transaction,
+        netid,
+        phone_number,
+        student_num
+      );
       return { response: "FINISH_ACC", success: isSuccessful };
     });
   } catch (e: unknown) {
@@ -121,11 +166,7 @@ export const finishAccCreation = async (
       category: "FINISH_ACC",
     };
   }
-
-
-}
-
-
+};
 
 /* Adds a new ride request object to the queue using the parameters given. 
 Will add a new request to the database, populated with the fields passed in and a request status of 0.

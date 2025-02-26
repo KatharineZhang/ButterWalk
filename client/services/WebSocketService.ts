@@ -21,7 +21,7 @@ class WebSocketService {
    * @param netid
    * @returns
    */
-  async connect(netid: string, role: "STUDENT" | "DRIVER"): Promise<ConnectMessage> {
+  async connect(): Promise<ConnectMessage> {
     if (
       this.websocket != null &&
       this.websocket.readyState === WebSocket.OPEN
@@ -44,9 +44,18 @@ class WebSocketService {
       return Promise.resolve("Failed to Connect");
     }
 
+    this.startWebsocketListeners();
+
+    // return await this.waitForOpenConnection(netid, role);
+    return await this.waitForOpenConnection();
+  }
+
+  startWebsocketListeners = () => {
+    if (this.websocket == null) {
+      return;
+    }
     this.websocket.onopen = () => {
       console.log("WEBSOCKET: Connected to Websocket");
-      this.send({ directive: "CONNECT", netid: netid, role: role });
     };
 
     this.websocket.onmessage = (event) => {
@@ -73,34 +82,33 @@ class WebSocketService {
     this.websocket.onerror = (error: Event) => {
       console.error(`WEBSOCKET: Error: ${(error as ErrorEvent).message}`);
     };
-
-    return await this.waitForOpenConnection(netid, role);
-  }
+  };
 
   /**
    * Keep retrying (max 10 times) until connection has been made, with 200 ms gap in between each try
    */
-  waitForOpenConnection = (netid: string, role: "STUDENT" | "DRIVER") => {
+  waitForOpenConnection = () => {
     return new Promise<ConnectMessage>((resolve, reject) => {
-        const maxNumberOfAttempts = 10
-        const intervalTime = 200 //ms
+      const maxNumberOfAttempts = 10;
+      const intervalTime = 200; //ms
 
-        let currentAttempt = 0
-        const interval = setInterval(() => {
-            if (currentAttempt > maxNumberOfAttempts - 1) {
-                clearInterval(interval)
-                reject("Failed to Connect")
-            } else if (this.websocket != null && this.websocket.readyState === this.websocket.OPEN) {
-              // we're connected!  
-              clearInterval(interval)
-              this.send({ directive: "CONNECT", netid: netid, role: role });
-                resolve("Connected Successfully");
-            }
-            console.log(`Trying to Connect, Try: ${currentAttempt}`);
-            currentAttempt++
-        }, intervalTime)
-    })
-}
+      let currentAttempt = 0;
+      const interval = setInterval(() => {
+        if (currentAttempt > maxNumberOfAttempts - 1) {
+          clearInterval(interval);
+          reject("Failed to Connect");
+        } else if (
+          this.websocket != null &&
+          this.websocket.readyState === this.websocket.OPEN
+        ) {
+          // we're connected!
+          clearInterval(interval);
+          resolve("Connected Successfully");
+        }
+        currentAttempt++;
+      }, intervalTime);
+    });
+  };
 
   /**
    * Send a message to the websocket server

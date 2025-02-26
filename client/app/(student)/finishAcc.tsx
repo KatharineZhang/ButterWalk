@@ -55,13 +55,18 @@ const finishAcc = () => {
     setStudentNum(studentNumTemp);
     setPreferredName(preferredNameTemp);
 
-    WebSocketService.connect(netid as string, "STUDENT");
+    // WebSocketService.connect(netid as string, "STUDENT");
+    const msg = await WebSocketService.connect();
+    if (msg == "Failed to Connect") {
+      // failed to connect!!
+      console.log("FAILED TO CONNECT TO WS IN FINISHACC");
+    }
 
     // 1. send this to the DB via websocket
     WebSocketService.send({
       directive: "FINISH_ACC",
       netid,
-      phoneNum: phoneNumber,
+      phoneNum: phoneNumber, // TODO: ADD PREFERRED NAME
       studentNum: studentNum,
       role: "STUDENT",
     });
@@ -147,6 +152,7 @@ const finishAcc = () => {
 
 export default finishAcc;
 
+// TODO: MOVE THIS TO STYLES
 const localStyles = StyleSheet.create({
   input: {
     height: 50,

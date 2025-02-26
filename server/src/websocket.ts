@@ -13,6 +13,7 @@ import {
   signIn,
   finishAccCreation,
   waitTime,
+  googleAuth,
 } from "./routes";
 import {
   AcceptResponse,
@@ -20,6 +21,8 @@ import {
   ConnectMessage,
   WebSocketMessage,
   WebSocketResponse,
+  GoogleResponse,
+  ErrorResponse,
 } from "./api";
 
 export const handleWebSocketMessage = async (
@@ -42,39 +45,37 @@ export const handleWebSocketMessage = async (
     return;
   }
 
-  // TEMP FIX
-  let connectMessage: ConnectMessage;
-  
   switch (input.directive) {
-    // call the correct function based on the directive
-    case "CONNECT":
-      // Connect the specific websocket to the netid specified in input
-      
-      // TEMP FIX
-      // cast input to a message of the correct type
-      connectMessage = input as ConnectMessage;
-    
-      console.log(`WEBSOCKET: User ${connectMessage.netid} connected`);
-      clients.map((client) => {
-        if (client.websocketInstance == ws) {
-          client.netid = connectMessage.netid;
-          client.role = connectMessage.role;
-        }
-      });
-      break;
-
     case "SIGNIN":
-      console.log("inswebsockets for signin");
-      resp = await signIn(
-        input.netid,
-        input.first_name,
-        input.last_name,
-        input.role
-      );
+      // call google method
+      const authResp: GoogleResponse = await googleAuth(input.response);
+      if ("userInfo" in authResp) {
+        // successfull google signin!
+        const userInfo = authResp.userInfo;
+
+        // connect to webocket
+        const netid = userInfo.email.replace("@uw.edu", "");
+        connectWebsocketToNetid(ws, netid, input.role);
+
+        // call signin and set the response to whatever signin returned
+        resp = await signIn(
+          netid,
+          userInfo.given_name,
+          userInfo.family_name,
+          input.role
+        );
+      } else {
+        // authResp is GoogleResponse's error subtype
+        // return its error message the response
+        resp = {
+          response: "ERROR",
+          error: authResp.message,
+          category: "SIGNIN",
+        } as ErrorResponse;
+      }
       // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
       break;
-
 
     case "FINISH_ACC":
       resp = await finishAccCreation(
@@ -216,4 +217,17 @@ export const sendWebSocketMessage = (
   message: WebSocketResponse
 ): void => {
   ws.send(JSON.stringify(message));
+};
+
+export const connectWebsocketToNetid = (
+  ws: WebSocketServer,
+  netid: string,
+  role: "STUDENT" | "DRIVER"
+) => {
+  clients.map((client) => {
+    if (client.websocketInstance == ws) {
+      client.netid = netid;
+      client.role = role;
+    }
+  });
 };

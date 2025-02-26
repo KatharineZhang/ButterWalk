@@ -1,5 +1,6 @@
 // This is where all the server / database data structures will go
 import { Timestamp } from "firebase/firestore";
+import { AuthSessionResult } from "expo-auth-session";
 
 // Webhook commands
 export type Command =
@@ -23,11 +24,7 @@ export type WebSocketMessage =
   | { directive: "CONNECT"; netid: string; role: "STUDENT" | "DRIVER" }
   | {
       directive: "SIGNIN";
-      netid: string;
-      first_name: string;
-      last_name: string;
-      phoneNum: string;
-      studentNum: string;
+      response: AuthSessionResult | null;
       role: "STUDENT" | "DRIVER";
     }
   | {
@@ -36,7 +33,7 @@ export type WebSocketMessage =
       phoneNum: string;
       studentNum: string;
       role: "STUDENT" | "DRIVER";
-    } 
+    }
   | {
       directive: "REQUEST_RIDE";
       phoneNum: string;
@@ -70,8 +67,12 @@ export type WebSocketMessage =
       rating?: number;
     };
 
-  // TEMP FIX
-  export type ConnectMessage =  { directive: "CONNECT"; netid: string; role: "STUDENT" | "DRIVER" };
+// TEMP FIX
+export type ConnectMessage = {
+  directive: "CONNECT";
+  netid: string;
+  role: "STUDENT" | "DRIVER";
+};
 
 // Response types
 export type WebSocketResponse =
@@ -105,12 +106,13 @@ export type SignInResponse = {
   response: "SIGNIN";
   success: true;
   alreadyExists: boolean;
-}
+  netid: string;
+};
 
 export type FinishAccCreationResponse = {
   response: "FINISH_ACC";
   success: boolean;
-}
+};
 
 export type RequestRideResponse = {
   response: "REQUEST_RIDE";
@@ -170,6 +172,25 @@ export type ErrorResponse = {
     | "LOCATION"
     | "QUERY"
     | "FINISH_ACC";
+};
+
+// Google Authentication Response types 
+export type GoogleResponse =
+  | GoogleResponseSuccess
+  | { message: `Error signing in: ${string}` };
+export type GoogleResponseSuccess = {
+  message: "Google Signin Successful";
+  userInfo: GoogleUserInfo;
+};
+export type GoogleUserInfo = {
+  id: string;
+  email: string;
+  verified_email: boolean;
+  name: string;
+  given_name: string;
+  family_name: string;
+  picture: string;
+  locale: string;
 };
 
 // Server Types and Data Structures

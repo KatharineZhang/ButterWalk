@@ -11,7 +11,7 @@ import {
   Timestamp,
   Transaction,
   where,
-  WhereFilterOp
+  WhereFilterOp,
 } from "firebase/firestore";
 import { Feedback, ProblematicUser, RideRequest, User } from "./api";
 
@@ -61,23 +61,26 @@ export async function createUser(transaction: Transaction, user: User) {
   }
 }
 
-
-
 // FINISH ACCOUNT CREATION - add phone number and student num to the database
 // associated with the user's unique netid
 
-export async function finishCreatingUser(transaction: Transaction, netid: string, phoneNumber: string, studentNumber: string) {
+export async function finishCreatingUser(
+  transaction: Transaction,
+  netid: string,
+  phoneNumber: string,
+  studentNumber: string
+) {
   // use the net id of the user as the document id
   console.log("finishCreatingUser: ", netid);
   const docRef = doc(usersCollection, netid);
   const docSnap = await transaction.get(docRef);
-  if(docSnap.exists()) {
+  if (docSnap.exists()) {
     console.log("User already exists in the database");
 
     try {
       await transaction.update(docRef, {
         phoneNumber,
-        studentNumber
+        studentNumber,
       });
 
       return true;
