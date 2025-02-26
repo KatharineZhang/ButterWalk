@@ -29,7 +29,6 @@ const androidClientId = process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID;
 
 WebBrowser.maybeCompleteAuthSession();
 
-
 const Login = () => {
   const [signedIn,setSignedIn] = useState(false);
   const [accExists, setAccExists] = useState<boolean | null>(null);
