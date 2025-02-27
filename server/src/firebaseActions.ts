@@ -67,6 +67,7 @@ export async function createUser(transaction: Transaction, user: User) {
 export async function finishCreatingUser(
   transaction: Transaction,
   netid: string,
+  preferredName: string,
   phoneNumber: string,
   studentNumber: string
 ) {
@@ -79,6 +80,7 @@ export async function finishCreatingUser(
 
     try {
       await transaction.update(docRef, {
+        preferredName, // add new entry to document
         phoneNumber,
         studentNumber,
       });

@@ -88,6 +88,7 @@ export const handleWebSocketMessage = async (
     case "FINISH_ACC":
       resp = await finishAccCreation(
         input.netid,
+        input.preferredName,
         input.phoneNum,
         input.studentNum
       );

@@ -7,7 +7,9 @@ import {
 // the type of function (event handler) that will be called when a message of a certain type is received
 type WebSocketResponseHandler = (message: WebSocketResponse) => void;
 
-export type ConnectMessage = "Failed to Connect" | "Connected Successfully";
+export type WebsocketConnectMessage =
+  | "Failed to Connect"
+  | "Connected Successfully";
 
 // Abstracts the websocket details from the react native app
 class WebSocketService {
@@ -21,7 +23,7 @@ class WebSocketService {
    * @param netid
    * @returns
    */
-  async connect(): Promise<ConnectMessage> {
+  async connect(): Promise<WebsocketConnectMessage> {
     if (
       this.websocket != null &&
       this.websocket.readyState === WebSocket.OPEN
@@ -88,7 +90,7 @@ class WebSocketService {
    * Keep retrying (max 10 times) until connection has been made, with 200 ms gap in between each try
    */
   waitForOpenConnection = () => {
-    return new Promise<ConnectMessage>((resolve, reject) => {
+    return new Promise<WebsocketConnectMessage>((resolve, reject) => {
       const maxNumberOfAttempts = 10;
       const intervalTime = 200; //ms
 

@@ -11,7 +11,7 @@ import {
 import WebSocketService from "@/services/WebSocketService";
 
 const finishAcc = () => {
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneNum, setPhoneNum] = useState("");
   const [studentNum, setStudentNum] = useState("");
   const [preferredName, setPreferredName] = useState("");
   const [accFinished, setAccFinished] = useState(false);
@@ -19,7 +19,7 @@ const finishAcc = () => {
   const { netid } = useLocalSearchParams<{ netid: string }>();
 
   const setValues = async () => {
-    const phoneNumberTemp = phoneNumber.trim();
+    const phoneNumberTemp = phoneNum.trim();
     const studentNumTemp = studentNum.trim();
     const preferredNameTemp = preferredName.trim();
 
@@ -51,11 +51,10 @@ const finishAcc = () => {
       return;
     }
 
-    setPhoneNumber(phoneNumberTemp);
+    setPhoneNum(phoneNumberTemp);
     setStudentNum(studentNumTemp);
     setPreferredName(preferredNameTemp);
 
-    // WebSocketService.connect(netid as string, "STUDENT");
     const msg = await WebSocketService.connect();
     if (msg == "Failed to Connect") {
       // failed to connect!!
@@ -66,9 +65,9 @@ const finishAcc = () => {
     WebSocketService.send({
       directive: "FINISH_ACC",
       netid,
-      phoneNum: phoneNumber, // TODO: ADD PREFERRED NAME
-      studentNum: studentNum,
-      role: "STUDENT",
+      phoneNum,
+      studentNum,
+      preferredName
     });
     // 2. get the response back (add listener)
     const handleFinishAccMessage = (message: WebSocketResponse) => {
@@ -128,11 +127,11 @@ const finishAcc = () => {
         Phone number ( ### - ### - #### )
       </Text>
       <TextInput
-        value={phoneNumber}
-        style={[localStyles.input, phoneNumber && localStyles.inputFocused]}
+        value={phoneNum}
+        style={[localStyles.input, phoneNum && localStyles.inputFocused]}
         placeholder="Phone Number"
         placeholderTextColor={"#808080"}
-        onChangeText={(text) => setPhoneNumber(text)}
+        onChangeText={(text) => setPhoneNum(text)}
         autoCapitalize="none"
       />
 

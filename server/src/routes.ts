@@ -137,6 +137,7 @@ export const signIn = async (
 // TODO: ADD API COMMENT
 export const finishAccCreation = async (
   netid: string,
+  preferredName: string,
   phone_number: string,
   student_num: string
 ): Promise<FinishAccCreationResponse | ErrorResponse> => {
@@ -154,6 +155,7 @@ export const finishAccCreation = async (
       const isSuccessful = await finishCreatingUser(
         transaction,
         netid,
+        preferredName,
         phone_number,
         student_num
       );

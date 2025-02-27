@@ -5,7 +5,6 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import Header from "@/components/Header";
 import { styles } from "@/assets/styles";
 import { useLocalSearchParams } from "expo-router";
-import WebSocketService from "@/services/WebSocketService";
 
 // Home component with the <MapView> feature
 // Currently defaults u to some spot between edmonds and kingston bc i was trying to figure out the coords to have it default to UW
@@ -14,8 +13,6 @@ export default function App() {
   // Extract netid from Redirect URL from signin page
   const { netid } = useLocalSearchParams();
   // Use netid to pair this WebSocket connection with a netid
-  // WebSocketService.connect(netid as string, "STUDENT");
-  WebSocketService.connect();
 
   return (
     <View>

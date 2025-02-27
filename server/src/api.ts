@@ -30,6 +30,7 @@ export type WebSocketMessage =
   | {
       directive: "FINISH_ACC";
       netid: string;
+      preferredName: string;
       phoneNum: string;
       studentNum: string;
     }
@@ -244,6 +245,7 @@ export type User = {
   phoneNumber: string | null;
   studentNumber: string | null;
   studentOrDriver: "STUDENT" | "DRIVER";
+  preferredName?: string; // if the account has been finished, there will be a preferred name
 };
 
 // CREATE TABLE Feedback (feedbackid int PRIMARY KEY, rating float, textFeedback text,

@@ -9,7 +9,6 @@ import Header from "@/components/Header";
 import { styles } from "@/assets/styles";
 import { View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import WebSocketService from "@/services/WebSocketService";
 
 //right now the map shows but the console just has errors - i'm trying to get location
 //before i show the map so that I can route directions from their location
@@ -19,8 +18,6 @@ export default function App() {
   // Extract netid from Redirect URL from signin page
   const { netid } = useLocalSearchParams();
   // Use netid to pair this WebSocket connection with a netid
-  WebSocketService.connect();
-  // WebSocketService.connect(netid as string, "DRIVER");
 
   const [destination, setDestination] = useState<{
     latitude: number;
