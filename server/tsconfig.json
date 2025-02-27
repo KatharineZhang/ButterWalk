@@ -9,8 +9,4 @@
     "strict": true,
     "skipLibCheck": true,
   },
-  "include": [
-    "src/*"
-  ],
-  "extends": "expo/tsconfig.base"
 }

@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  StyleSheet,
   KeyboardAvoidingView,
   Pressable,
   TouchableOpacity,
@@ -11,10 +10,14 @@ import { useState, useEffect } from "react";
 import { styles } from "@/assets/styles";
 import { Redirect } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
+
 // need to 'npx expo install expo-web-browser expo-auth-session expo-crypto'
 import * as Google from "expo-auth-session/providers/google";
-import { WebSocketResponse, SignInResponse } from "../../../server/src/api";
+
+import { WebSocketResponse, SignInResponse, ErrorResponse } from "../../../server/src/api";
 import WebSocketService, { ConnectMessage } from "@/services/WebSocketService";
+
+// Images
 // @ts-expect-error the image does exists so get rid of the error
 import logo from "@/assets/images/Glogo.png";
 // @ts-expect-error the image does exists so get rid of the error
@@ -28,7 +31,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 const Login = () => {
   const [accExists, setAccExists] = useState<boolean | null>(null);
-  const [errMsg, setErrMsg] = useState(""); // Note: fix error msg display
+  const [errMsg, setErrMsg] = useState("");
   const [netid, setNetid] = useState("");
 
   const config = {
@@ -37,13 +40,16 @@ const Login = () => {
     androidClientId,
   };
 
+  // Request is needed to make google auth work without errors, 
+  // but is not explicitly used, hence the override
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [request, response, promptAsync] = Google.useAuthRequest(config);
 
   const handleSigninMessage = (message: WebSocketResponse) => {
     if ("response" in message && message.response == "SIGNIN") {
-      const signinresp = message as SignInResponse;
+      const signinResp = message as SignInResponse;
 
-      if (signinresp.alreadyExists) {
+      if (signinResp.alreadyExists) {
         console.log("redirecting to map");
         setAccExists(true);
       } else {
@@ -51,10 +57,13 @@ const Login = () => {
         setAccExists(false); // redundant but I just want to make sure
       }
 
-      setNetid(signinresp.netid);
+      setNetid(signinResp.netid);
     } else {
       // there was a signin related error
-      console.log(message);
+      const errorResp = message as ErrorResponse;
+
+      console.log(errorResp);
+      setErrMsg(errorResp.error);
     }
   };
   WebSocketService.addListener(handleSigninMessage, "SIGNIN");
@@ -67,7 +76,7 @@ const Login = () => {
         if (response) {
           WebSocketService.send({
             directive: "SIGNIN",
-            response: response,
+            response,
             role: "STUDENT",
           });
         }
@@ -99,11 +108,11 @@ const Login = () => {
   ) : (
     <View style={styles.container}>
       <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
-        <Text style={localStyles.text}>Husky ButterWalk</Text>
-        <Image style={localStyles.logo} source={butterWalkLogo} />
-        <Text style={localStyles.text}>Sign in</Text>
+        <Text style={styles.signInText}>Husky ButterWalk</Text>
+        <Image style={styles.signinLogo} source={butterWalkLogo} />
+        <Text style={styles.signInText}>Sign in</Text>
         <TouchableOpacity
-          style={localStyles.glogo}
+          style={styles.signInGoogleLogo}
           onPress={() => promptAsync()}
         >
           <Image source={logo} />
@@ -111,10 +120,10 @@ const Login = () => {
         </TouchableOpacity>
 
         <Pressable
-          style={localStyles.button}
+          style={styles.signInButton}
           onPress={() => setAccExists(false)}
         >
-          <Text style={localStyles.text}>Bypass Signin</Text>
+          <Text style={styles.signInText}>Bypass Signin</Text>
         </Pressable>
 
         <Text style={{ color: "red" }}>{errMsg}</Text>
@@ -123,54 +132,5 @@ const Login = () => {
   );
 };
 
-// MOVE THIS TO STYLES
 export default Login;
 
-const localStyles = StyleSheet.create({
-  input: {
-    height: 50,
-    width: 300,
-    borderWidth: 1,
-    marginVertical: 4,
-    borderRadius: 4,
-    padding: 10,
-    backgroundColor: "#f9f9f9",
-  },
-  button: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 4,
-    elevation: 3,
-    backgroundColor: "#4B2E83",
-  },
-  logo: {
-    width: 100,
-    height: 100,
-    alignItems: "center",
-    justifyContent: "center",
-    alignSelf: "center",
-  },
-  glogo: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-  },
-  text: {
-    fontSize: 32,
-    lineHeight: 40,
-    fontWeight: "bold",
-    letterSpacing: 0.25,
-    color: "black",
-    justifyContent: "flex-start",
-    fontFamily: "Encode Sans",
-  },
-  link: {
-    fontSize: 14,
-    color: "black",
-  },
-  linkText: {
-    color: "purple",
-  },
-});

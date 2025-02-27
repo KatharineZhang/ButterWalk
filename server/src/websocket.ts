@@ -18,7 +18,6 @@ import {
 import {
   AcceptResponse,
   CancelResponse,
-  ConnectMessage,
   WebSocketMessage,
   WebSocketResponse,
   GoogleResponse,
@@ -46,43 +45,51 @@ export const handleWebSocketMessage = async (
   }
 
   switch (input.directive) {
-    case "SIGNIN":
-      // call google method
-      const authResp: GoogleResponse = await googleAuth(input.response);
-      if ("userInfo" in authResp) {
-        // successfull google signin!
-        const userInfo = authResp.userInfo;
-
-        // connect to webocket
-        const netid = userInfo.email.replace("@uw.edu", "");
-        connectWebsocketToNetid(ws, netid, input.role);
-
-        // call signin and set the response to whatever signin returned
-        resp = await signIn(
-          netid,
-          userInfo.given_name,
-          userInfo.family_name,
-          input.role
-        );
-      } else {
-        // authResp is GoogleResponse's error subtype
-        // return its error message the response
+    case "SIGNIN": {
+      if (input.response == null) {
+        // early fail if the token is null
         resp = {
           response: "ERROR",
-          error: authResp.message,
+          error: "The passed in response token is null",
           category: "SIGNIN",
         } as ErrorResponse;
+      } else {
+        // call google auth method
+        const authResp: GoogleResponse = await googleAuth(input.response);
+        if ("userInfo" in authResp) {
+          // successfull google signin!
+          const userInfo = authResp.userInfo;
+
+          // connect to webocket
+          const netid = userInfo.email.replace("@uw.edu", "");
+          connectWebsocketToNetid(ws, netid, input.role);
+
+          // call signin and set the response to whatever signin returned
+          resp = await signIn(
+            netid,
+            userInfo.given_name,
+            userInfo.family_name,
+            input.role
+          );
+        } else {
+          // authResp is GoogleResponse's error subtype
+          // return its error message the response
+          resp = {
+            response: "ERROR",
+            error: authResp.message,
+            category: "SIGNIN",
+          } as ErrorResponse;
+        }
       }
       // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
       break;
-
+    }
     case "FINISH_ACC":
       resp = await finishAccCreation(
         input.netid,
         input.phoneNum,
-        input.studentNum,
-        input.role
+        input.studentNum
       );
       sendWebSocketMessage(ws, resp);
       break;

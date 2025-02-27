@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import * as Google from "expo-auth-session/providers/google";
+import { AuthSessionResult } from "expo-auth-session";
 import {
   localRideRequest,
   rideReqQueue,
@@ -34,7 +34,6 @@ import {
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { Mutex } from "async-mutex";
-import { AuthSessionResult } from "expo-auth-session";
 dotenv.config();
 
 // every time we access the queue and the database,
@@ -43,7 +42,9 @@ dotenv.config();
 const queueLock: Mutex = new Mutex();
 
 // TODO: ADD API COMMENT
-export const googleAuth = async (response: any): Promise<GoogleResponse> => {
+export const googleAuth = async (
+  response: AuthSessionResult
+): Promise<GoogleResponse> => {
   return await handleToken(response);
 };
 
@@ -137,8 +138,7 @@ export const signIn = async (
 export const finishAccCreation = async (
   netid: string,
   phone_number: string,
-  student_num: string,
-  role: "STUDENT" | "DRIVER"
+  student_num: string
 ): Promise<FinishAccCreationResponse | ErrorResponse> => {
   if (!netid || !phone_number || !student_num) {
     return {

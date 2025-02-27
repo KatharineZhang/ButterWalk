@@ -24,7 +24,7 @@ export type WebSocketMessage =
   | { directive: "CONNECT"; netid: string; role: "STUDENT" | "DRIVER" }
   | {
       directive: "SIGNIN";
-      response: AuthSessionResult | null;
+      response: AuthSessionResult;
       role: "STUDENT" | "DRIVER";
     }
   | {
@@ -32,7 +32,6 @@ export type WebSocketMessage =
       netid: string;
       phoneNum: string;
       studentNum: string;
-      role: "STUDENT" | "DRIVER";
     }
   | {
       directive: "REQUEST_RIDE";
@@ -174,7 +173,7 @@ export type ErrorResponse = {
     | "FINISH_ACC";
 };
 
-// Google Authentication Response types 
+// Google Authentication Response types
 export type GoogleResponse =
   | GoogleResponseSuccess
   | { message: `Error signing in: ${string}` };
