@@ -1,4 +1,4 @@
-import { StyleSheet, useWindowDimensions } from "react-native";
+import { StyleSheet } from "react-native";
 
 //More random styling things that I think i copied from chatgpt....
 export const styles = StyleSheet.create({
@@ -8,6 +8,11 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     display: "flex",
   },
+  scrollContainer: {
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  }, 
   largeText: {
     fontSize: 25,
   },
@@ -99,5 +104,35 @@ export const styles = StyleSheet.create({
   },
   mapContainer: {
     flex: 1
-  }
+  },
+  signInText: {
+    fontSize: 32,
+    lineHeight: 40,
+    fontWeight: "bold",
+    letterSpacing: 0.25,
+    color: "black",
+    justifyContent: "flex-start",
+    fontFamily: "Encode Sans",
+  },
+  signinLogo: {
+    width: 100,
+    height: 100,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+  },
+  signInGoogleLogo: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+  },
+  signInButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 4,
+    elevation: 3,
+    backgroundColor: "#4B2E83",
+  },
 });
