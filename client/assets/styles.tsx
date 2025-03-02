@@ -98,6 +98,6 @@ export const styles = StyleSheet.create({
     height: "100%",
   },
   mapContainer: {
-    flex: 1
-  }
+    flex: 1,
+  },
 });

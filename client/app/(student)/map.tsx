@@ -9,8 +9,7 @@ import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
 import BottomDrawer from "@/components/BottomDrawer";
 
-// file changes to test ride request form! 
-
+// file changes to test ride request form!
 
 // Home component with the <MapView> feature
 // Currently defaults u to some spot between edmonds and kingston bc i was trying to figure out the coords to have it default to UW
@@ -47,10 +46,10 @@ export default function App() {
 // added this so that map and drawer would show up on screen
 const styles = StyleSheet.create({
   mapContainer: {
-    flex: 1, 
+    flex: 1,
   },
   drawerContainer: {
-    ...StyleSheet.absoluteFillObject, 
-    justifyContent: "flex-end", 
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "flex-end",
   },
 });
