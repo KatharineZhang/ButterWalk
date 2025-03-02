@@ -1,17 +1,18 @@
-//import WebSocketService from "@/services/WebSocketService";
-//import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
 import { useLocalSearchParams } from "expo-router";
 import React, { useState, useEffect } from "react";
-import { View, Button, Text, Pressable, StyleSheet, Animated } from "react-native";
+import { View, Text, Pressable, StyleSheet, Animated } from "react-native";
 import { WebSocketResponse } from "../../server/src/api";
-import  Autocomplete from 'react-native-autocomplete-input';
-import { Ionicons } from '@expo/vector-icons';
+import Autocomplete from "react-native-autocomplete-input";
+import { Ionicons } from "@expo/vector-icons";
 import { TextInput } from "react-native-gesture-handler";
 import { Image } from "react-native";
+import AutocompleteInput from "./AutocompleteInput";
 
-
-
+// Ride Request Form which sends request to server and gets response back,
+// fuzzy search for location and desination which uses autocomplete,
+// animation for rider icons, and a cancel button to cancel ride request
+// This is a beefy component!
 
 export default function RideRequestForm() {
   // Extract netid from Redirect URL from signin page
@@ -29,30 +30,30 @@ export default function RideRequestForm() {
   const [rideConfirmed, setRideConfirmed] = useState(false);
 
   /* server stuff */
-  // This function will be called whenever the server sends a message 
+  // This function will be called whenever the server sends a message
   const handleMessage = (message: WebSocketResponse) => {
     setMessage(JSON.stringify(message));
-    //console.log(message);
-  }
+  };
   // Add the listener to the WebSocketService
   WebSocketService.addListener(handleMessage, "REQUEST_RIDE");
 
   // Send form information to server
   const handleSend = () => {
-    WebSocketService.send({ 
-      directive: "REQUEST_RIDE", 
-      phoneNum, 
-      netid: Array.isArray(netid) ? netid[0] : netid,
-      location, 
-      destination, 
-      numRiders });
+    WebSocketService.send({
+      directive: "REQUEST_RIDE",
+      phoneNum,
+      netid: Array.isArray(netid) ? netid[0] : netid, // weird stuff to avoide typescript error
+      location,
+      destination,
+      numRiders,
+    });
 
-      setRideConfirmed(true);
-  }
+    setRideConfirmed(true);
+  };
 
   // flip from cancel ride to form view
   const handleCancelRide = () => {
-    setRideConfirmed(false); 
+    setRideConfirmed(false);
   };
 
   /* Autocomplete search bar stuff */
@@ -66,49 +67,31 @@ export default function RideRequestForm() {
 
   // data from figma
   const data = [
-    'Alder Hall',
-    'Communications Building',
-    'Flagpole',
-    'HUB',
-    'Meany',
-    'IMA',
-    'Okanogan',
-    'UW Tower',
+    "Alder Hall",
+    "Communications Building",
+    "Flagpole",
+    "HUB",
+    "Meany",
+    "IMA",
+    "Okanogan",
+    "UW Tower",
   ];
 
-  // Filtered data for location
-  const filteredLocationData = data.filter((item) =>
-    item.toLowerCase().includes(locationQuery.toLowerCase())
-  );
-
-  // Filtered data for destination
-  const filteredDestinationData = data.filter((item) =>
-    item.toLowerCase().includes(destinationQuery.toLowerCase())
-  );
-
-  // simplify code below
-  // Handle location query text change
-  const handleLocationChangeText = (text: string) => {
-    setLocationQuery(text);
-    setLocationHideResults(false); 
+  /* Fuzzy search stuffs */
+  const handleSetLocation = (value: string) => {
+    if (value === destination) {
+      alert("Pickup location and destination cannot be the same!");
+      return;
+    }
+    setLocation(value);
   };
 
-  // Handle destination query text change
-  const handleDestinationChangeText = (text: string) => {
-    setDestinationQuery(text);
-    setDestinationHideResults(false);
-  };
-
-  // Handle location input submission (press Enter)
-  const handleLocationSubmitEditing = () => {
-    setLocationHideResults(true);
-    //console.log(locationQuery);
-  };
-
-  // Handle destination input submission (press Enter)
-  const handleDestinationSubmitEditing = () => {
-    setDestinationHideResults(true); 
-    //console.log(destinationQuery);
+  const handleSetDestination = (value: string) => {
+    if (value === location) {
+      alert("Pickup location and destination cannot be the same!");
+      return;
+    }
+    setDestination(value);
   };
 
   /* Animation stuffs */
@@ -125,7 +108,7 @@ export default function RideRequestForm() {
 
   // Handle increase/decrease of riders
   const handleIncreaseRiders = () => {
-    if (numRiders < 4) { 
+    if (numRiders < 4) {
       setNumRiders(numRiders + 1);
       animateRiders();
     }
@@ -138,127 +121,95 @@ export default function RideRequestForm() {
   };
 
   return (
-<View style={styles.formContainer}>
-  {rideConfirmed ? (
-    <View>
-      <Pressable onPress={handleCancelRide} style={styles.sendBttn}>
-        <Text>Cancel Ride</Text>
-      </Pressable>
-    </View>
-  ) : (
-    <>
-      <Text style={styles.header}>Request a Ride</Text>
-      <View>
-        <View style={styles.autocompleteContainer}>
-          <Autocomplete 
-            inputContainerStyle={styles.inputContainer}
-            data={filteredLocationData}
-            value={locationQuery}
-            onChangeText={handleLocationChangeText}
-            onSubmitEditing={handleLocationSubmitEditing}
-            hideResults={locationHideResults}
-            placeholder="Pick Up Location"
-            placeholderTextColor="#888"
-            flatListProps={{
-              keyExtractor: (_, idx) => idx.toString(),
-              renderItem: ({ item }) => (
-                <Pressable
-                  onPress={() => {
-                    setLocationQuery(item);
-                    setLocationHideResults(true);
-                    setLocation(item);
-                  }}
-                  style={styles.dropdownItem}
-                >
-                  <Text>{item}</Text>
-                </Pressable>
-              ),
-            }}
-          />
+    <View style={styles.formContainer}>
+      {/* Show Ride Request Form, or cancel ride button */}
+      {rideConfirmed ? (
+        <View>
+          <Pressable onPress={handleCancelRide} style={styles.sendBttn}>
+            <Text style={styles.cancelText}>Cancel Ride</Text>
+          </Pressable>
         </View>
-
-        <View style={styles.autocompleteContainer2}>
-          <Autocomplete 
-            inputContainerStyle={styles.inputContainer}
-            data={filteredDestinationData}
-            value={destinationQuery}
-            onChangeText={handleDestinationChangeText}
-            onSubmitEditing={handleDestinationSubmitEditing}
-            hideResults={destinationHideResults}
-            placeholder="Drop Off Location"
-            flatListProps={{
-              keyExtractor: (_, idx) => idx.toString(),
-              renderItem: ({ item }) => (
-                <Pressable
-                  onPress={() => {
-                    setDestinationQuery(item);
-                    setDestinationHideResults(true);
-                    setDestination(item);
-                  }}
-                  style={styles.dropdownItem}
-                >
-                  <Text>{item}</Text>
-                </Pressable>
-              ),
-            }}
-          />
-        </View>
-      </View>
-
-      <View style={styles.animationContainer}>
-        <View style={styles.riderContainer}>
-          <View style={styles.iconRow}>
-            {/* Minus Button also handls changes to numRiders state*/}
-            <Pressable onPress={handleDecreaseRiders} style={styles.button}>
-              <Ionicons name="remove" size={32} color="purple" />
-            </Pressable>
-
-            {/* Rider Icons with verlapping effect seen in figma */}
-            <View style={styles.riderIconsContainer}>
-              {Array.from({ length: numRiders }).map((_, index) => (
-                <Animated.View 
-                  key={index} 
-                  style={[styles.riderIcon, { left: index * -10 }]} // Adjust overlap
-                >
-                  <Image
-                    source={require("../assets/images/rider-icon.png")}
-                    style={styles.riderImage}
-                    resizeMode="contain"
-                  />
-                </Animated.View>
-              ))}
+      ) : (
+        <>
+          <Text style={styles.header}>Request a Ride</Text>
+          <View>
+            <View style={{ zIndex: 2 }}>
+              <AutocompleteInput
+                query={locationQuery}
+                setQuery={setLocationQuery}
+                setSelection={handleSetLocation}
+                placeholder="Pick Up Location"
+                data={data}
+              />
             </View>
 
-            {/* handles the numRiders state */}
-            <Pressable onPress={handleIncreaseRiders} style={styles.button}>
-              <Ionicons name="add" size={32} color="purple" />
-            </Pressable>
+            <View style={{ zIndex: 1 }}>
+              <AutocompleteInput
+                query={destinationQuery}
+                setQuery={setDestinationQuery}
+                setSelection={handleSetDestination}
+                placeholder="Drop Off Location"
+                data={data}
+              />
+            </View>
           </View>
 
-          <Text style={styles.riderCount}>{numRiders} passenger(s)</Text>
-        </View>
-      </View>
-      
-      <Text style={styles.info}>
-        If the wait is too long, check out the NightRide shuttle! The service is available 6:30 p.m. – 2 a.m. daily except University Holidays. Extended service runs until 3:30 a.m. the week before and the week of finals.
-      </Text>
-      
-      {/*I am keeping the phone number field in for now so that it well send to websocket correctly*/}
-      <TextInput 
-        style={styles.phoneOption}
-        placeholder="Phone Number"
-        placeholderTextColor="#888"
-        onChangeText={setPhoneNum}
-        value={phoneNum}
-      />
-      
-      <Pressable onPress={handleSend}>
-        <Text style={styles.sendBttn}>Confirm Ride</Text>
-      </Pressable>
-    </>
-  )}
-</View>  
+          <View style={styles.animationContainer}>
+            <View style={styles.riderContainer}>
+              <View style={styles.iconRow}>
+                {/* Minus Button also handls changes to numRiders state*/}
+                <Pressable onPress={handleDecreaseRiders} style={styles.button}>
+                  <Ionicons name="remove" size={32} color="#4B2E83" />
+                </Pressable>
 
+                {/* Rider Icons with verlapping effect seen in figma */}
+                <View style={styles.riderIconsContainer}>
+                  {Array.from({ length: numRiders }).map((_, index) => (
+                    <Animated.View
+                      key={index}
+                      style={[styles.riderIcon, { left: index * -10 }]} // Adjust overlap
+                    >
+                      <Image
+                        source={require("../assets/images/rider-icon.png")}
+                        style={styles.riderImage}
+                        resizeMode="contain"
+                      />
+                    </Animated.View>
+                  ))}
+                </View>
+
+                {/* handles the numRiders state */}
+                <Pressable onPress={handleIncreaseRiders} style={styles.button}>
+                  <Ionicons name="add" size={32} color="#4B2E83" />
+                </Pressable>
+              </View>
+
+              <Text style={styles.riderCount}>{numRiders} passenger(s)</Text>
+            </View>
+          </View>
+
+          <Text style={styles.info}>
+            If the wait is too long, check out the NightRide shuttle! The
+            service is available 6:30 p.m. – 2 a.m. daily except University
+            Holidays. Extended service runs until 3:30 a.m. the week before and
+            the week of finals.
+          </Text>
+
+          {/*I am keeping the phone number field in for now so that it well send to websocket correctly*/}
+          <TextInput
+            style={styles.phoneOption}
+            placeholder="Phone Number"
+            placeholderTextColor="#888"
+            onChangeText={setPhoneNum}
+            value={phoneNum}
+          />
+
+          <Pressable onPress={handleSend}>
+            <Text style={styles.sendBttn}>Confirm Ride</Text>
+          </Pressable>
+        </>
+      )}
+    </View>
   );
 }
 
@@ -267,20 +218,20 @@ const styles = StyleSheet.create({
     padding: 15,
     width: "100%",
   },
-  header : {
-    fontSize: 20, 
+  header: {
+    fontSize: 20,
     fontWeight: "bold",
     textAlign: "left",
     marginBottom: 30,
   },
   inputContainer: {
-    borderRadius: 8, 
+    borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderColor: "#4B2E83", 
-    borderWidth: 2, 
-    backgroundColor: "white", 
-    overflow: "hidden"
+    borderColor: "#4B2E83",
+    borderWidth: 2,
+    backgroundColor: "white",
+    overflow: "hidden",
   },
   autocompleteContainer: {
     position: "relative",
@@ -308,7 +259,7 @@ const styles = StyleSheet.create({
   },
   sendBttn: {
     position: "relative",
-    marginTop: '20%',
+    marginTop: "20%",
     paddingVertical: 16,
     paddingHorizontal: 24,
     backgroundColor: "#4B2E83",
@@ -354,19 +305,19 @@ const styles = StyleSheet.create({
   },
   riderCount: {
     fontSize: 18,
-    marginTop: 0, 
+    marginTop: 0,
     marginBottom: 8,
     marginLeft: 5,
   },
   riderIconsContainer: {
     flexDirection: "row",
     position: "relative",
-    height: 50, 
+    height: 50,
     marginRight: 20,
   },
   riderIcon: {
     position: "absolute",
-    opacity: 1, 
+    opacity: 1,
   },
   riderImage: {
     width: 32, // Adjust based on your design
@@ -380,11 +331,10 @@ const styles = StyleSheet.create({
     lineHeight: 16.34,
     fontFamily: "Open Sans",
     marginBottom: 40,
-
   },
-
-})
-
-
-// fuzzy search, autocomplete search bar, css styling, drawer slide up from bottom
-// number of passengers UI, people incrementing decrementing with plus or minus
+  cancelText: {
+    fontSize: 18,
+    color: "white",
+    textAlign: "center",
+  },
+});
