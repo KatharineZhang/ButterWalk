@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import React, { useState, useEffect, useRef } from "react";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Polygon, Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Header from "@/components/Header";
@@ -16,6 +16,7 @@ import {
 } from "../../../server/src/api";
 import MapViewDirections from "react-native-maps-directions";
 import { LocationNames, LocationService } from "@/services/LocationService";
+import customMarkerImage from '../(student)/test_marker.jpeg';
 
 export default function App() {
   // INITIAL WEB SOCKET SETUP
@@ -284,6 +285,15 @@ export default function App() {
     console.log(`Distance: ${distance} mi, Travel time: ${duration} minutes`);
   };
 
+  const polygonCoordinates = [
+    { latitude: 47.666588, longitude: -122.311439 },
+    { latitude: 47.667353, longitude: -122.316263 },
+    { latitude: 47.652854, longitude: -122.316942 },
+    { latitude: 47.648566, longitude: -122.304858 },
+    { latitude: 47.660993, longitude: -122.301405 },
+    { latitude: 47.661138, longitude: -122.311331 },
+  ];
+
   // Map UI
   return (
     //putting the map region on the screen
@@ -306,12 +316,18 @@ export default function App() {
           longitudeDelta: 0.015,
         }}
       >
+       <Polygon
+          coordinates={polygonCoordinates}
+          strokeColor="rgba(128, 0, 128, 0.5)" // Light purple color
+          fillColor="rgba(128, 0, 128, 0.2)" // Light purple transparent color
+        />
         <Marker
           coordinate={{
             latitude: userLocation.latitude,
             longitude: userLocation.longitude,
           }}
           title={"userLocation"}
+          image={customMarkerImage}
         />
         <Marker
           coordinate={{
@@ -319,6 +335,7 @@ export default function App() {
             longitude: driverLocation.longitude,
           }}
           title={"driverLocation"}
+          image={customMarkerImage}
         />
         <Marker
           coordinate={{
@@ -326,6 +343,7 @@ export default function App() {
             longitude: pickUpLocation.longitude,
           }}
           title={"pickUpLocation"}
+          
         />
         <Marker
           coordinate={{
