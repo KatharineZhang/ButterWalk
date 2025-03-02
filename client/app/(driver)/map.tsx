@@ -303,7 +303,12 @@ export default function App() {
               longitude: userLocation.longitude,
             }}
             title={"userLocation"}
-          />
+          >
+            <Image
+              source={require("../../assets/images/car-pindrop.png")}
+              style={{ height: 60, width: 45 }}
+            />
+          </Marker>
           <Marker
             coordinate={{
               latitude: pickUpLocation.latitude,

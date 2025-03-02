@@ -16,7 +16,6 @@ import {
 } from "../../../server/src/api";
 import MapViewDirections from "react-native-maps-directions";
 import { LocationNames, LocationService } from "@/services/LocationService";
-import customMarkerImage from '../(student)/test_marker.jpeg';
 
 export default function App() {
   // INITIAL WEB SOCKET SETUP
@@ -316,7 +315,7 @@ export default function App() {
           longitudeDelta: 0.015,
         }}
       >
-       <Polygon
+        <Polygon
           coordinates={polygonCoordinates}
           strokeColor="rgba(128, 0, 128, 0.5)" // Light purple color
           fillColor="rgba(128, 0, 128, 0.2)" // Light purple transparent color
@@ -327,23 +326,30 @@ export default function App() {
             longitude: userLocation.longitude,
           }}
           title={"userLocation"}
-          image={customMarkerImage}
-        />
+        >
+          <Image
+            source={require("../../assets/images/person-pindrop.webp")}
+            style={{ height: 50, width: 35 }}
+          />
+        </Marker>
         <Marker
           coordinate={{
             latitude: driverLocation.latitude,
             longitude: driverLocation.longitude,
           }}
           title={"driverLocation"}
-          image={customMarkerImage}
-        />
+        >
+          <Image
+            source={require("../../assets/images/car-pindrop.png")}
+            style={{ height: 60, width: 45 }}
+          />
+        </Marker>
         <Marker
           coordinate={{
             latitude: pickUpLocation.latitude,
             longitude: pickUpLocation.longitude,
           }}
           title={"pickUpLocation"}
-          
         />
         <Marker
           coordinate={{
@@ -352,19 +358,19 @@ export default function App() {
           }}
           title={"dropOffLocation"}
         />
-          {/* show the directions between the pickup and dropoff locations if they are valid */}
-          {/* TODO: when these locations are (0,0) we get a gmaps error since it can't map between locations
+        {/* show the directions between the pickup and dropoff locations if they are valid */}
+        {/* TODO: when these locations are (0,0) we get a gmaps error since it can't map between locations
           in the atlantic. It's not really a problem. 
           The other option would be the have these locations as a key to force rerender 
           and then check if the locations are not 0 here, but then the rerender loses our wonderful zoom. */}
-            <MapViewDirections
-              origin={pickUpLocation}
-              destination={dropOffLocation}
-              apikey={GOOGLE_MAPS_APIKEY}
-              strokeWidth={3}
-              strokeColor="#D1AE49"
-              onReady={handleDirectionsReady}
-            />
+        <MapViewDirections
+          origin={pickUpLocation}
+          destination={dropOffLocation}
+          apikey={GOOGLE_MAPS_APIKEY}
+          strokeWidth={3}
+          strokeColor="#D1AE49"
+          onReady={handleDirectionsReady}
+        />
       </MapView>
       {/* Temporary footer for requesting rides*/}
       <View
