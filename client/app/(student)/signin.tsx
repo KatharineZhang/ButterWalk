@@ -11,7 +11,8 @@ import { styles } from "@/assets/styles";
 import { Redirect } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 
-// need to 'npx expo install expo-web-browser expo-auth-session expo-crypto'
+// need to 'npx expo install expo-web-browser expo-auth-session expo-crypto' ON MAC
+// or 'npm i expo-auth-session@~6.0.3' on windows
 import * as Google from "expo-auth-session/providers/google";
 
 import { WebSocketResponse, SignInResponse, ErrorResponse } from "../../../server/src/api";
