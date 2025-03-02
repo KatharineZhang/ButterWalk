@@ -33,7 +33,9 @@ export default function Onboarding() {
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current; //next slide must be 50% visible to change the current index
 
   return (
-    <SafeAreaView style={[styles.viewPager, { alignItems: "center" }]}>
+    <SafeAreaView
+      style={[styles.viewOnboardingPager, { alignItems: "center" }]}
+    >
       <View style={{ flex: 3 }}>
         <FlatList
           data={pages}
@@ -54,9 +56,9 @@ export default function Onboarding() {
         />
       </View>
       <Paginator data={pages} scrollX={scrollX}></Paginator>
-      <View style={styles.footerButtonContainer}>
+      <View style={styles.onboardingFooterButtonContainer}>
         <Link href={"/driverOrstudent"} asChild>
-          <Pressable style={styles.footerButton}>
+          <Pressable style={styles.onboardingFooterButton}>
             <Text style={{ color: "#fff", fontSize: 16 }}>
               {currentIndex === pages.length - 1 ? "Sign In" : "Skip"}
             </Text>

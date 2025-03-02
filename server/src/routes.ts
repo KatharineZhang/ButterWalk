@@ -13,6 +13,7 @@ import {
   RideRequest,
   Feedback,
   ProblematicUser,
+  CompleteResponse,
 } from "./api";
 import {
   acceptRideRequest,
@@ -207,7 +208,7 @@ any accepted rides under that driverId. Then we will change any active (status: 
 request to canceled (status: -1). We’re assuming that there will never be a case in the 
 database where the activity status is 0 and the ride request has a driver id connected to that ride request.
 
-In the case that a request has a status of 1, we want to notify the corresponding driver or student. 
+* In the case that a request has a status of 1, we want to notify the corresponding driver or student. *
 This is done by returning their netid under otherNetId.
 
 - Takes in a json object in the form: { directive: "CANCEL", netid: string }.
@@ -238,14 +239,13 @@ export const cancelRide = async (
 
   try {
     return await runTransaction(db, async (transaction) => {
-      const driverid = await cancelRideRequest(transaction, netid, role);
-      if (driverid && netid != driverid) {
-        // since drivers can also cancel rides, it makes no sense to notify
-        // the person who canceled AND the driver of the request because they are the same person
+      const otherid = await cancelRideRequest(transaction, netid, role);
+      if (otherid) {
+        // if we have an accepted ride, we have annetid of the opposite user
         return {
           response: "CANCEL",
           info: { response: "CANCEL", success: true },
-          otherNetid: driverid,
+          otherNetid: otherid,
         };
       }
       // no driver specified in this pending request case!
@@ -273,10 +273,11 @@ export const cancelRide = async (
 
 - On error, returns the json object in the form: 
 { response: “ERROR”, success: false, error: string, category: “COMPLETE” }.
-- Returns a json object TO THE DRIVER in the format: { response: “COMPLETE”, success: true } */
+- Returns a json object TO THE DRIVER in the format: { response: “COMPLETE”, success: true }
+- Returns a json object TO THE STUDENT in the format: { response: “COMPLETE”, success: true } */
 export const completeRide = async (
   requestid: string
-): Promise<GeneralResponse | ErrorResponse> => {
+): Promise<CompleteResponse | ErrorResponse> => {
   if (!requestid) {
     return {
       response: "ERROR",
@@ -288,8 +289,12 @@ export const completeRide = async (
   // if there is an error, return { success: false, error: 'Error completing ride request.'};
   try {
     return await runTransaction(db, async (transaction) => {
-      await completeRideRequest(transaction, requestid);
-      return { response: "COMPLETE", success: true };
+      const netids = await completeRideRequest(transaction, requestid);
+      return {
+        response: "COMPLETE",
+        info: { response: "COMPLETE", success: true },
+        netids: netids,
+      };
     });
   } catch (e) {
     // if there is an error, return { success: false, error: 'Error completing ride request.'};
@@ -506,7 +511,8 @@ export const location = async (
   try {
     return await runTransaction(db, async () => {
       // we can't use transactions to query so hopefully this is fine
-      otherNetId = await getOtherNetId(id);
+      otherNetId = await getOtherNetId(id); // get the location of the user
+      // pass the location information to the opposite user
       return { response: "LOCATION", netid: otherNetId, latitude, longitude };
     });
   } catch (e) {
@@ -516,8 +522,6 @@ export const location = async (
       category: "LOCATION",
     };
   }
-  // TODO: get the location of the user
-  // pass the location information to the opposite user
 };
 
 /* We need to get some basic stats about our current feedback table back to the client. 

@@ -54,7 +54,12 @@ export type WebSocketMessage =
       pickupLocation?: [latitude: number, longitude: number];
       driverLocation?: [latitude: number, longitude: number];
     }
-  | { directive: "LOCATION"; id: string; latitude: number; longitude: number }
+  | {
+      directive: "LOCATION";
+      id: string; // the netid of the student or driver
+      latitude: number;
+      longitude: number;
+    }
   | {
       directive: "QUERY";
       rideOrApp?: "RIDE" | "APP"; // if rideOrApp is undefined, the default is to query both feebcack types
@@ -70,6 +75,7 @@ export type WebSocketResponse =
   | AcceptResponse
   | DriverAcceptResponse
   | CancelResponse
+  | CompleteResponse
   | LocationResponse
   | QueryResponse
   | ErrorResponse;
@@ -113,6 +119,12 @@ export type CancelResponse = {
   response: "CANCEL";
   info: { response: "CANCEL"; success: true }; // of type GeneralResponse
   otherNetid?: string;
+};
+
+export type CompleteResponse = {
+  response: "COMPLETE";
+  info: { response: "COMPLETE"; success: true }; // of type GeneralResponse
+  netids: { student: string; driver: string };
 };
 
 export type LocationResponse = {

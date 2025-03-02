@@ -111,27 +111,29 @@ export async function cancelRideRequest(
   // transaction doesn't support querying docs
   const docs = await getDocs(queryRequests);
 
-  let driverid: string | null = null;
-  docs.forEach(async (doc) => {
+  let otherid: string | null = null;
+  for (const doc of docs.docs) {
     // change any active (based on status) request to canceleD
     const data = doc.data() as RideRequest;
 
     // only cancel requests that are not completed
     if (data.status != "REQUESTED" && data.status != "ACCEPTED") {
-      throw new Error(
-        "Cannot cancel a ride that is not 'requested' or 'accepted'"
-      );
+      continue;
     }
 
     if (data.status == "ACCEPTED") {
       // if a request was accepted, notify the corresponding driver
-      driverid = data.driverid;
+      if (role == "STUDENT") {
+        otherid = data.driverid;
+      } else {
+        otherid = data.netid;
+      }
     }
 
     await transaction.update(doc.ref, { status: "CANCELLED" });
-  });
+  }
 
-  return driverid; // return the driver id if there was a ride request that was accepted
+  return otherid; // return the driver id if there was a ride request that was accepted
 }
 
 // COMPLETE RIDE - Update a ride request to completed
@@ -143,13 +145,22 @@ export async function completeRideRequest(
   const docSnap = await transaction.get(docRef);
   if (docSnap.exists() && docSnap.data().status != "ACCEPTED") {
     throw new Error(
-      "Only can complete a ride that is 'accepted' not " + docSnap.data().status
+      "Only can complete a ride that is 'ACCEPTED' not " + docSnap.data().status
     );
   }
+
+  const data = docSnap.data();
+  if (!data) {
+    throw new Error("Document data is undefined");
+  }
+  const netids = { student: data.netid, driver: data.driverid };
+
   transaction.update(docRef, {
     completedAt: Timestamp.now(),
     status: "COMPLETED",
   });
+
+  return netids;
 }
 
 // ADD FEEDBACK - Add feedback to the database
@@ -221,7 +232,7 @@ export async function getOtherNetId(netid: string): Promise<string> {
       throw new Error("Student ID is null");
     }
   }
-  throw new Error("No accepted ride request found with user" + netid);
+  throw new Error("No accepted ride request found with user " + netid);
 }
 
 // QUERY - Get all ride requests based on parameters

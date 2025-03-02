@@ -1,4 +1,4 @@
-import { StyleSheet, useWindowDimensions } from "react-native";
+import { StyleSheet } from "react-native";
 
 //More random styling things that I think i copied from chatgpt....
 export const styles = StyleSheet.create({
@@ -38,30 +38,22 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 3,
   },
-  page: {
-    justifyContent: "center",
-    alignItems: "center",
-    margin: 20,
-  },
-  viewPager: {
+  viewOnboardingPager: {
     width: "100%",
     height: "90%",
   },
-  footerButtonContainer: {
+  onboardingFooterButtonContainer: {
     position: "absolute",
     bottom: 5,
-    left: 290,
-    width: 80,
-    borderRadius: 4,
+    right : 20,
     elevation: 3,
-    backgroundColor: "#4B2E83",
     opacity: 0.9,
   },
-  footerButton: {
+  onboardingFooterButton: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 2,
+    paddingVertical: 10,
+    paddingHorizontal: 25,
     borderRadius: 4,
     elevation: 3,
     backgroundColor: "#4B2E83",
@@ -75,12 +67,15 @@ export const styles = StyleSheet.create({
     backgroundColor: "#4B2E83",
   },
   header: {
+    position: "absolute",
+    top: 1,
     height: "15%",
     width: "100%",
     paddingTop: 40,
     backgroundColor: "#D1AE49",
     flexDirection: "row",
     alignItems: "center",
+    zIndex:1
   },
   image: {
     flex: 0.7,

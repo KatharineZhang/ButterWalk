@@ -54,7 +54,7 @@ const Login = () => {
         href={{
           pathname: "/(student)/map",
           params: {
-            netid: email != "" ? email.replace("@uw.edu", "") : "dev-netID",
+            netid: email != "" ? email.replace("@uw.edu", "") : "student-netID",
           },
         }}
       />
