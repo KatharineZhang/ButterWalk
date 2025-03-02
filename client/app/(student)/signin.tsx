@@ -15,7 +15,7 @@ import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
 
 import { WebSocketResponse, SignInResponse, ErrorResponse } from "../../../server/src/api";
-import WebSocketService, { ConnectMessage } from "@/services/WebSocketService";
+import WebSocketService, { WebsocketConnectMessage } from "@/services/WebSocketService";
 
 // Images
 // @ts-expect-error the image does exists so get rid of the error
@@ -71,7 +71,7 @@ const Login = () => {
   useEffect(() => {
     const connectWebSocket = async () => {
       // call our new route
-      const msg: ConnectMessage = await WebSocketService.connect();
+      const msg: WebsocketConnectMessage = await WebSocketService.connect();
       if (msg == "Connected Successfully") {
         if (response) {
           WebSocketService.send({

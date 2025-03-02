@@ -9,6 +9,7 @@ import Header from "@/components/Header";
 import { styles } from "@/assets/styles";
 import { View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
+import WebSocketService, {WebsocketConnectMessage} from "@/services/WebSocketService";
 
 //right now the map shows but the console just has errors - i'm trying to get location
 //before i show the map so that I can route directions from their location
@@ -53,6 +54,20 @@ export default function App() {
     };
     fetchDestination();
   }, []);
+
+  // TODO: MOVE CONNECTION TO THE SIGNIN.TSX WHEN THAT IS IMPLEMENTED 
+  useEffect(() => {
+    const connectWebSocket = async () => {
+      const msg: WebsocketConnectMessage = await WebSocketService.connect();
+      if (msg == "Connected Successfully") {
+        console.log("connected");
+      } else {
+        console.log("failed to connect!!!");
+      }
+    };
+    connectWebSocket();
+  }, []);
+
   //}, []);
   //fake destination from back when i was just trying to get the directions to work
   //const destination = {latitude: 37.771707, longitude: -122.4053769};
