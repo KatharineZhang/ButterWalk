@@ -48,7 +48,7 @@ const Login = () => {
         href={{
           pathname: "/(driver)/map",
           params: {
-            netid: netid != "" ? netid.replace("@uw.edu", "") : "dev-netID",
+            netid: netid != "" ? netid.replace("@uw.edu", "") : "driver-netID",
           },
         }}
       />

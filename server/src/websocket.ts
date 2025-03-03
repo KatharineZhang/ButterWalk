@@ -16,6 +16,7 @@ import {
 import {
   AcceptResponse,
   CancelResponse,
+  CompleteResponse,
   WebSocketMessage,
   WebSocketResponse,
 } from "./api";
@@ -87,10 +88,7 @@ export const handleWebSocketMessage = async (
         sendWebSocketMessage(ws, acceptResponse.driver);
 
         // send response back to corresponding client (the student)
-        sendMessageToNetidnetid(
-          acceptResponse.driver.netid,
-          acceptResponse.student
-        );
+        sendMessageToNetid(acceptResponse.driver.netid, acceptResponse.student);
       } else {
         // the ErrorResponse case, send only to driver
         sendWebSocketMessage(ws, resp);
@@ -107,10 +105,7 @@ export const handleWebSocketMessage = async (
         if (cancelResponse.otherNetid) {
           // send response back to opposite client (the driver usually)
           // this could be the student if the driver cancels after a 5 minute wait
-          sendMessageToNetidnetid(
-            cancelResponse.otherNetid,
-            cancelResponse.info
-          );
+          sendMessageToNetid(cancelResponse.otherNetid, cancelResponse.info);
         }
       } else {
         // the ErrorResponse case, send only to original client
@@ -122,6 +117,21 @@ export const handleWebSocketMessage = async (
       resp = await completeRide(input.requestid);
       // send response back to client (the driver)
       sendWebSocketMessage(ws, resp);
+      if ("response" in resp && resp.response === "COMPLETE") {
+        const completeResponse = resp as CompleteResponse;
+        // send message to both the student and driver
+        sendMessageToNetid(
+          completeResponse.netids.student,
+          completeResponse.info
+        );
+        sendMessageToNetid(
+          completeResponse.netids.driver,
+          completeResponse.info
+        );
+      } else {
+        // the ErrorResponse case, send only to original client
+        sendWebSocketMessage(ws, resp);
+      }
       break;
 
     case "ADD_FEEDBACK":
@@ -156,7 +166,7 @@ export const handleWebSocketMessage = async (
       resp = await location(input.id, input.latitude, input.longitude);
       if ("netid" in resp) {
         // send response to opposite client
-        sendMessageToNetidnetid(resp.netid as string, resp);
+        sendMessageToNetid(resp.netid as string, resp);
       } else {
         // send ErrorResponse back to original client
         sendWebSocketMessage(ws, resp);
@@ -178,7 +188,7 @@ export const handleWebSocketMessage = async (
 // == Helper functions ==
 
 // Send message to a specific netid
-export const sendMessageToNetidnetid = (
+export const sendMessageToNetid = (
   netid: string,
   message: WebSocketResponse
 ): void => {
