@@ -9,7 +9,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "jest --watchAll",
-    "lint": "eslint app/**/*.{ts,tsx} components/**/*.{ts,tsx} services/**/*.{ts,tsx}",
+    "lint": "eslint app/**/*.tsx components/**/*.tsx services/**/*.ts",
     "lint-fix": "eslint app/**/*.{ts,tsx} components/**/*.{ts,tsx} services/**/*.{ts,tsx} --fix",
     "prettier-fix": "prettier --write 'app/**/*.{ts,tsx}' 'components/**/*.{ts,tsx}' 'services/**/*.{ts,tsx}'"
   },
