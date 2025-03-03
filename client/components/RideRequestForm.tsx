@@ -52,18 +52,23 @@ export default function RideRequestForm() {
   };
 
   // flip from cancel ride to form view
-  const handleCancelRide = () => {
+  const sendCancel = () => {
+    WebSocketService.send({
+      directive: "CANCEL",
+      netid: netid as string,
+      role: "STUDENT",
+    });
     setRideConfirmed(false);
   };
 
   /* Autocomplete search bar stuff */
   // Autocomplete for Location (this code needs to be simplified)
   const [locationQuery, setLocationQuery] = useState(""); // Location query
-  const [locationHideResults, setLocationHideResults] = useState(true); // Location hideResults
+  //const [locationHideResults, setLocationHideResults] = useState(true);
 
   // Autocomplete for Destination
   const [destinationQuery, setDestinationQuery] = useState(""); // Destination query
-  const [destinationHideResults, setDestinationHideResults] = useState(true);
+  // const [destinationHideResults, setDestinationHideResults] = useState(true);
 
   // data from figma
   const data = [
@@ -125,7 +130,7 @@ export default function RideRequestForm() {
       {/* Show Ride Request Form, or cancel ride button */}
       {rideConfirmed ? (
         <View>
-          <Pressable onPress={handleCancelRide} style={styles.sendBttn}>
+          <Pressable onPress={sendCancel} style={styles.sendBttn}>
             <Text style={styles.cancelText}>Cancel Ride</Text>
           </Pressable>
         </View>

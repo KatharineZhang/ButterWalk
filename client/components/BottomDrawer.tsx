@@ -3,7 +3,6 @@ import { Text, StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import RideRequestForm from "./RideRequestForm";
-import { PaperProvider } from "react-native-paper";
 
 const BottomDrawer = () => {
   const bottomSheetRef = useRef<BottomSheet>(null);
