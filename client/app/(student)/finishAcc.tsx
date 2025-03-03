@@ -101,115 +101,52 @@ const finishAcc = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={localStyles.heading}>Create Account</Text>
+      <Text style={styles.heading}>Create Account</Text>
 
-      <Text style={localStyles.description}>Preferred Name</Text>
+      <Text style={styles.description}>Preferred Name</Text>
       <TextInput
         value={preferredName}
-        style={[localStyles.input, preferredName && localStyles.inputFocused]}
+        style={[styles.input, preferredName && styles.inputFocused]}
         placeholder="Preferred Name"
         placeholderTextColor={"#808080"}
         onChangeText={(text) => setPreferredName(text)}
         autoCapitalize="none"
       />
 
-      <Text style={localStyles.description}>Student number ( ####### )</Text>
+      <Text style={styles.description}>Student number ( ####### )</Text>
       <TextInput
         value={studentNum}
-        style={[localStyles.input, studentNum && localStyles.inputFocused]}
+        style={[styles.input, studentNum && styles.inputFocused]}
         placeholder="Student Number"
         placeholderTextColor={"#808080"}
         onChangeText={(text) => setStudentNum(text)}
         autoCapitalize="none"
       />
 
-      <Text style={localStyles.description}>
+      <Text style={styles.description}>
         Phone number ( ### - ### - #### )
       </Text>
       <TextInput
         value={phoneNum}
-        style={[localStyles.input, phoneNum && localStyles.inputFocused]}
+        style={[styles.input, phoneNum && styles.inputFocused]}
         placeholder="Phone Number"
         placeholderTextColor={"#808080"}
         onChangeText={(text) => setPhoneNum(text)}
         autoCapitalize="none"
       />
 
-      <Pressable style={localStyles.button} onPress={setValues}>
-        <Text style={localStyles.button_text}>Finish Sign Up</Text>
+      <Pressable style={styles.button} onPress={setValues}>
+        <Text style={styles.button_text}>Finish Sign Up</Text>
       </Pressable>
       <Text>For easier dev testing (will be removed later) </Text>
       <Pressable
-        style={localStyles.button}
+        style={styles.button}
         onPress={() => setAccFinished(true)}
       >
-        <Text style={localStyles.text}>Bypass Signin</Text>
+        <Text style={styles.text}>Bypass Signin</Text>
       </Pressable>
     </View>
   );
 };
 
 export default finishAcc;
-
-// TODO: MOVE THIS TO STYLES
-const localStyles = StyleSheet.create({
-  input: {
-    height: 50,
-    width: 300,
-    borderWidth: 1,
-    marginVertical: 4,
-    borderRadius: 4,
-    padding: 10,
-    backgroundColor: "#f9f9f9",
-    textAlign: "left",
-    borderColor: "#ccc",
-  },
-  inputFocused: {
-    borderColor: "#4B2E83",
-  },
-  heading: {
-    fontSize: 32,
-    lineHeight: 40,
-    fontWeight: "bold",
-    letterSpacing: 0.25,
-    color: "black",
-    justifyContent: "flex-start",
-    fontFamily: "Encode Sans",
-    textAlign: "left",
-  },
-  button: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 4,
-    elevation: 3,
-    backgroundColor: "#4B2E83",
-    alignSelf: "center",
-  },
-  text: {
-    fontSize: 16,
-    lineHeight: 21,
-    fontWeight: "bold",
-    letterSpacing: 0.25,
-    color: "black",
-    textAlign: "left",
-  },
-  button_text: {
-    fontSize: 16,
-    lineHeight: 21,
-    fontWeight: "bold",
-    letterSpacing: 0.25,
-    color: "white",
-    fontFamily: "DM Sans",
-    textAlign: "center",
-  },
-  description: {
-    fontFamily: "Open Sans",
-    fontSize: 14,
-    lineHeight: 18,
-    letterSpacing: 0.25,
-    color: "black",
-    textAlign: "left",
-  },
-});
