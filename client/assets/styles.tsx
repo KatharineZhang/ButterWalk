@@ -4,9 +4,9 @@ import { StyleSheet } from "react-native";
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    display: "flex",
+    position: "relative",
+    width: "100%",
+    height: "100%",
   },
   largeText: {
     fontSize: 25,
@@ -45,7 +45,7 @@ export const styles = StyleSheet.create({
   onboardingFooterButtonContainer: {
     position: "absolute",
     bottom: 5,
-    right : 20,
+    right: 20,
     elevation: 3,
     opacity: 0.9,
   },
@@ -75,7 +75,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "#D1AE49",
     flexDirection: "row",
     alignItems: "center",
-    zIndex:1
+    zIndex: 1,
   },
   image: {
     flex: 0.7,
@@ -91,8 +91,23 @@ export const styles = StyleSheet.create({
   map: {
     width: "100%",
     height: "100%",
+    position: "absolute",
+    top: 0,
+    left: 0,
   },
   mapContainer: {
-    flex: 1
-  }
+    flex: 1,
+  },
+  overlayContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  recenterButton: {
+    position: "absolute",
+    right: 16,
+    bottom: 100,
+    zIndex: 1,
+  },
 });

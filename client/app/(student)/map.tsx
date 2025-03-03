@@ -4,18 +4,17 @@ import MapView, { Polygon, Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Header from "@/components/Header";
-import { styles } from "@/assets/styles";
-import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
+
+import { View, TouchableOpacity, Image } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
+import BottomDrawer from "@/components/BottomDrawer";
+
+// file changes to test ride request form!
 import { Alert, Linking } from "react-native";
-import {
-  LocationResponse,
-  WebSocketMessage,
-  WebSocketResponse,
-} from "../../../server/src/api";
+import { LocationResponse, WebSocketResponse } from "../../../server/src/api";
 import MapViewDirections from "react-native-maps-directions";
-import { LocationNames, LocationService } from "@/services/LocationService";
+import { styles } from "@/assets/styles";
 
 export default function App() {
   // INITIAL WEB SOCKET SETUP
@@ -206,26 +205,6 @@ export default function App() {
     }
   };
 
-  // send a request to the server for a ride
-  // TODO: Fix this for cases where there is already a ride requested, don't set the locations
-  const sendRequest = () => {
-    const req: WebSocketMessage = {
-      directive: "REQUEST_RIDE",
-      phoneNum: "hi",
-      netid: netid as string,
-      location: "IMA",
-      destination: "HUB",
-      numRiders: 1,
-    };
-    WebSocketService.send(req);
-    // set the pickup and dropoff locations to what we request
-    setPickUpLocation(
-      LocationService.getLatAndLong(req.location as LocationNames)
-    );
-    setDropOffLocation(
-      LocationService.getLatAndLong(req.destination as LocationNames)
-    );
-  };
   const handleRequest = (message: WebSocketResponse) => {
     // since we already set the pickup and dropoff locations assuming the request went through,
     // if it didn't go through, we should reset them
@@ -239,15 +218,6 @@ export default function App() {
       setPickUpLocation({ latitude: 0, longitude: 0 });
       setDropOffLocation({ latitude: 0, longitude: 0 });
     }
-  };
-
-  // send a cancel message to the server
-  const sendCancel = () => {
-    WebSocketService.send({
-      directive: "CANCEL",
-      netid: netid as string,
-      role: "STUDENT",
-    });
   };
 
   // handle the case when the ride is completed or cancelled
@@ -295,8 +265,7 @@ export default function App() {
 
   // Map UI
   return (
-    //putting the map region on the screen
-    <View>
+    <View style={styles.container}>
       <SafeAreaProvider style={{ flex: 1 }} />
       <Header netid={netid as string} />
       <MapView
@@ -372,40 +341,18 @@ export default function App() {
           onReady={handleDirectionsReady}
         />
       </MapView>
-      {/* Temporary footer for requesting rides*/}
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          width: "100%",
-          padding: 20,
-          backgroundColor: "#D1AE49",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexDirection: "row",
-          gap: 10,
-        }}
+
+      <TouchableOpacity
+        style={styles.recenterButton}
+        onPress={() => centerMapOnLocations(zoomOn)}
       >
-        <Pressable
-          onPress={sendRequest}
-          style={{ backgroundColor: "#4B2E83", padding: 10, borderRadius: 5 }}
-        >
-          <Text style={{ color: "white" }}>Request Ride</Text>
-        </Pressable>
-        <Pressable
-          onPress={sendCancel}
-          style={{ backgroundColor: "#4B2E83", padding: 10, borderRadius: 5 }}
-        >
-          <Text style={{ color: "white" }}>Cancel</Text>
-        </Pressable>
-        {/* recenter button */}
-        <TouchableOpacity onPress={() => centerMapOnLocations(zoomOn)}>
-          <Image
-            source={require("@/assets/images/recenter.png")}
-            style={{ width: 50, height: 50 }}
-          />
-        </TouchableOpacity>
-      </View>
+        <Image
+          source={require("@/assets/images/recenter.png")}
+          style={{ width: 50, height: 50 }}
+        />
+      </TouchableOpacity>
+
+      <BottomDrawer />
     </View>
   );
 }
