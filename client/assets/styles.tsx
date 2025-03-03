@@ -101,14 +101,23 @@ export const styles = StyleSheet.create({
   mapContainer: {
     flex: 1
   },
-  signInText: {
-    fontSize: 32,
-    lineHeight: 40,
-    fontWeight: "bold",
-    letterSpacing: 0.25,
+  appNameText: {
+    fontSize: 40,
+    lineHeight: 50,
+    fontWeight: "700",
+    letterSpacing: 0,
     color: "black",
-    justifyContent: "flex-start",
+    textAlign: "center",
     fontFamily: "Encode Sans",
+  },
+  signInText: {
+    fontSize: 28,
+    lineHeight: 35,
+    fontWeight: 700,
+    letterSpacing: 0,
+    color: "black",
+    fontFamily: "Encode Sans",
+    marginLeft: 10,
   },
   signinLogo: {
     width: 100,
@@ -116,11 +125,14 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "center",
+    margin: 30,
   },
   signInGoogleLogo: {
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
+    marginTop: 15,
+    marginLeft: 10,
   },
   signInButton: {
     alignItems: "center",
@@ -131,9 +143,14 @@ export const styles = StyleSheet.create({
     elevation: 3,
     backgroundColor: "#4B2E83",
   },
+  formContainer: {
+    alignSelf: "flex-start",
+    marginLeft: 15,
+    width: 345,
+  },
   input: {
     height: 50,
-    width: 300,
+    width: 345,
     borderWidth: 1,
     marginVertical: 4,
     borderRadius: 4,
@@ -146,14 +163,17 @@ export const styles = StyleSheet.create({
     borderColor: "#4B2E83",
   },
   heading: {
-    fontSize: 32,
-    lineHeight: 40,
+    fontSize: 28,
+    lineHeight: 35,
     fontWeight: "bold",
     letterSpacing: 0.25,
     color: "black",
     justifyContent: "flex-start",
     fontFamily: "Encode Sans",
     textAlign: "left",
+    alignSelf: "flex-start",
+    marginLeft: 15,
+    marginBottom: 30,
   },
   text: {
     fontSize: 16,
@@ -162,6 +182,18 @@ export const styles = StyleSheet.create({
     letterSpacing: 0.25,
     color: "black",
     textAlign: "left",
+  },
+  button_finishAcc: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 4,
+    elevation: 3,
+    backgroundColor: "#4B2E83",
+    alignSelf: "center",
+    width: 345,
+    marginTop: 10,
   },
   button_text: {
     fontSize: 16,
@@ -175,9 +207,11 @@ export const styles = StyleSheet.create({
   description: {
     fontFamily: "Open Sans",
     fontSize: 14,
+    fontWeight: 600,
     lineHeight: 18,
     letterSpacing: 0.25,
     color: "black",
     textAlign: "left",
+    marginTop: 10,
   },
 });

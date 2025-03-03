@@ -109,7 +109,7 @@ const Login = () => {
   ) : (
     <View style={styles.container}>
       <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
-        <Text style={styles.signInText}>Husky ButterWalk</Text>
+        <Text style={styles.appNameText}>Husky ButterWalk</Text>
         <Image style={styles.signinLogo} source={butterWalkLogo} />
         <Text style={styles.signInText}>Sign in</Text>
         <TouchableOpacity
