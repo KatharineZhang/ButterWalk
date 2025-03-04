@@ -408,9 +408,8 @@ export default function App() {
             style={{ width: 50, height: 50 }}
           />
         </TouchableOpacity>
-        {/* faq button */}
-        <TouchableOpacity
-          onPress={() => setModalVisible(true)}>
+        {/* faq button TODO: MOVE TO RIDE REQUEST FORM */}
+        <TouchableOpacity onPress={() => setModalVisible(true)}>
           <Image
             source={require("@/assets/images/faq-button.png")}
             style={{ width: 20, height: 20 }}
