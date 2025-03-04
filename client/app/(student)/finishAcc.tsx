@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, Pressable } from "react-native";
+import { View, Text, TextInput, Pressable } from "react-native";
 import { useState } from "react";
 import { styles } from "@/assets/styles";
 import { Redirect, useLocalSearchParams } from "expo-router";
@@ -103,40 +103,42 @@ const finishAcc = () => {
     <View style={styles.container}>
       <Text style={styles.heading}>Create Account</Text>
 
-      <Text style={styles.description}>Preferred Name</Text>
-      <TextInput
-        value={preferredName}
-        style={[styles.input, preferredName && styles.inputFocused]}
-        placeholder="Preferred Name"
-        placeholderTextColor={"#808080"}
-        onChangeText={(text) => setPreferredName(text)}
-        autoCapitalize="none"
-      />
+      <View style={styles.formContainer}>
+        <Text style={styles.description}>Preferred Name</Text>
+        <TextInput
+          value={preferredName}
+          style={[styles.input, preferredName && styles.inputFocused]}
+          placeholder="Preferred Name"
+          placeholderTextColor={"#808080"}
+          onChangeText={(text) => setPreferredName(text)}
+          autoCapitalize="none"
+        />
 
-      <Text style={styles.description}>Student number ( ####### )</Text>
-      <TextInput
-        value={studentNum}
-        style={[styles.input, studentNum && styles.inputFocused]}
-        placeholder="Student Number"
-        placeholderTextColor={"#808080"}
-        onChangeText={(text) => setStudentNum(text)}
-        autoCapitalize="none"
-      />
+        <Text style={styles.description}>Student ID Number</Text>
+        <TextInput
+          value={studentNum}
+          style={[styles.input, studentNum && styles.inputFocused]}
+          placeholder="Student Number"
+          placeholderTextColor={"#808080"}
+          onChangeText={(text) => setStudentNum(text)}
+          autoCapitalize="none"
+        />
 
-      <Text style={styles.description}>
-        Phone number ( ### - ### - #### )
-      </Text>
-      <TextInput
-        value={phoneNum}
-        style={[styles.input, phoneNum && styles.inputFocused]}
-        placeholder="Phone Number"
-        placeholderTextColor={"#808080"}
-        onChangeText={(text) => setPhoneNum(text)}
-        autoCapitalize="none"
-      />
+        <Text style={styles.description}>
+          Phone Number
+        </Text>
+        <TextInput
+          value={phoneNum}
+          style={[styles.input, phoneNum && styles.inputFocused]}
+          placeholder="Phone Number"
+          placeholderTextColor={"#808080"}
+          onChangeText={(text) => setPhoneNum(text)}
+          autoCapitalize="none"
+        />
+      </View>
 
-      <Pressable style={styles.button} onPress={setValues}>
-        <Text style={styles.button_text}>Finish Sign Up</Text>
+      <Pressable style={styles.button_finishAcc} onPress={setValues}>
+        <Text style={styles.button_text}>Sign Up</Text>
       </Pressable>
       <Text>For easier dev testing (will be removed later) </Text>
       <Pressable
