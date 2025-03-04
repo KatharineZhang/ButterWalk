@@ -94,5 +94,91 @@ export const styles = StyleSheet.create({
   },
   mapContainer: {
     flex: 1
+  },
+  modalCenteredView: {
+    flex: 1,
+    //  backgroundColor: 'rgba(0, 0, 0, 0.5)', // looks kind or weird when the background is dark
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalModalView: {
+    margin: 20,
+    backgroundColor: "#E4E2F0",
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    width: "100%",
+    height: "100%",
+    position: "absolute",
+    bottom: -100,
+  },
+  modalCloseButton: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+  },
+  faqHeader: {
+    fontSize: 25,
+    fontWeight: "bold",
+    textAlign: "left",
+  },
+  faqSubtitle: {
+    paddingVertical: 5,
+    fontSize: 20,
+  },
+  accordianPadding: {
+    paddingVertical: 5,
+  },
+  accordianContainer: {
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignContent: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFF",
+  },
+  accordianHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    backgroundColor: "#FFF",
+    borderRadius: 5,
+  },
+  accordianHeaderText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    textTransform: "capitalize",
+    color: "#4B2E83",
+  },
+  accordianContentContainer: {
+    marginTop: 15,
+    paddingHorizontal: 20,
+    width: "95%",
+    overflow: "scroll",
+  },
+  accordianContentText: {
+    color: "#4B2E83",
+  },
+  accordianPlusMinus: {
+    width: 20,
+    height: 20,
+  },
+  accordianImage: {
+    width: 280,
+    height: 280,
+    borderWidth: 1,
+    borderRadius: 16,
+  },
+  accordianLink: {
+    color: "#8E632A",
+    textDecorationLine: "underline",
+    fontWeight: "bold",
   }
 });
