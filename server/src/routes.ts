@@ -422,65 +422,151 @@ export const blacklist = async (
   }
 };
 
-/* A specific user needs to know when approximately the driver will accept their ride.
+/*
+A specific user needs to know when approximately the driver will arrive.
 
-Once the request has been accepted, we will start calling GetUserLocation from 
-BOTH the student and driver to display those locations on the map. This means that 
-we can tell if a request has been accepted based on if we have the location information of 
-the opposite user. We will use that information in this route (accepted or not) to calculate the wait time. 
-In the case that the request is not yet accepted, none of the optional fields 
-(pickupLocation and driverLocation) will be passed in. 
+If the user has not yet indicated on a specific ride they want to take,
+requestid, requestedRide, and driverLocation will not be passed in. In this case,
+we will estimate the time it takes for the driver to arrive as the current number of requests in the queue * 15 minutes.
+In this case, rideDuration will be -1 since there is no ride to calculate the duration of!
 
-Wait time will be the requestid’s position in the local server queue * 15 minutes.
-If the user’s request has been accepted, both pickupLocation and driverLocation will be passed in. 
-Wait time will be the ETA of the corresponding driverid to the user’s pick up location. 
-We do this by calculating the ETA from driverLocation to pickupLocation.
+If the user is experimenting with ride requests or 
+they are about to request a ride and are being shown a confirmation screen,
+they will pass in only the requestedRide while requestid and driverLocation will not be passed in.
+In this case, the rideDurations is calculated as the Google Maps eta from pickup to dropoff location.
+The driverETA, since there is no driver yet or a request in the queue, is 
+still the current number of requests in the queue * 15 minutes.
 
-- Takes in: { directive: "WAIT_TIME”, requestid: string, pickupLocation?: 
-    [ latitude: number, longitude: number ], driverLocation?: [ latitude: number, longitude: number ] }
+If the user has already requested a ride and it is waiting in the queue, 
+they will pass in the requestid and requestedRide while driverLocation will not be passed in.
+In this case, the rideDuration is calculated as the Google Maps eta from pickup to dropoff location.
+The driverETA is calculated as the position of the request in the queue * 15 minutes.
 
-    - On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: “WAIT_TIME” }.
-- Returns a json object TO THE STUDENT in the format: { response: “WAIT_TIME”, waitTime: bigint //in minutes }	
+If the user has requested a ride and it has been accepted, they will have access to 
+the driverLocation. In this case, they will pass in all three fields.
+In this case, the rideDuration is calculated as the Google Maps eta from pickup to dropoff location.
+The driverETA is calculated as the Google Maps eta from driverLocation to pickupLocation.
+
+- Takes in: { directive: "WAIT_TIME”,  requestedRide?: {
+    pickupLocation: [latitude: number, longitude: number];
+    dropOffLocation: [latitude: number, longitude: number];},
+    requestid?: string, driverLocation?: [latitude: number, longitude: number] }
+- On error, returns the json object in the form:
+    { response: “ERROR”, success: false, error: string, category: “WAIT_TIME” }.
+- Returns a json object TO THE STUDENT in the format:
+    { response: “WAIT_TIME”, rideDuration: number //in minutes, driverETA: number //in minutes }
  */
-export const waitTime = (
-  requestid: string,
-  pickupLocation?: [latitude: number, longitude: number],
-  driverLocation?: [latitude: number, longitude: number]
-): WaitTimeResponse | ErrorResponse => {
-  if (!requestid) {
-    return {
-      response: "ERROR",
-      error: "Missing required fields.",
-      category: "WAIT_TIME",
-    };
+export const waitTime = async (
+  requestedRide?: {
+    pickupLocation: { latitude: number; longitude: number };
+    dropOffLocation: { latitude: number; longitude: number };
+  },
+  requestid?: string,
+  driverLocation?: { latitude: number; longitude: number }
+): Promise<WaitTimeResponse | ErrorResponse> => {
+  let rideDuration = -1;
+  let driverETA = -1;
+
+  // FIND THE RIDE DURATION (PICKUP TO DROPOFF)
+  if (requestedRide) {
+    const resp = await getDuration(
+      requestedRide.pickupLocation,
+      requestedRide.dropOffLocation
+    );
+    if (typeof resp === "number") {
+      rideDuration = resp;
+    } else {
+      // error response
+      return resp;
+    }
   }
-  let ETA = 0;
-  // if the request has been accepted, both pickupLocation and driverLocation will be passed in
-  // calculate the ETA from driverLocation to pickupLocation
-  if (pickupLocation && driverLocation) {
-    // TODO: calculate the ETA from driverLocation to pickupLocation
-    ETA = 100; // dummy value
-  } else {
-    queueLock.acquire();
-    // else if the request has not been accepted,
-    // wait time will be the requestid’s position in the local server queue * 15 minutes
+
+  // FIND THE DRIVER'S ETA TO THE STUDENT
+  queueLock.acquire();
+  if (!requestid) {
+    // if there is no concrete request in the queue, return the queue length * 15 minutes
+    const queueLength = rideReqQueue.get().length;
+    // TODO: WHAT TO RETURN IF FIRST IN LINE, CURRENTLY 1
+    driverETA = queueLength * 15 + 1;
+  } else if (requestid && !driverLocation) {
+    // if there is a requestid, then there is a requested ride,
+    // if there is also no driverLocation,
+    // return corresponding queue index * 15
     const index = rideReqQueue
       .get()
       .findIndex((request) => request.requestid === requestid);
-    console.log(index);
     if (index === -1) {
+      // the requestid was not in the queue
       queueLock.release();
       return {
         response: "ERROR",
-        error: "Request not found in the queue.",
+        error: `Could not find requestid ${requestid} in the queue.`,
         category: "WAIT_TIME",
       };
     }
-    // eliminate 0 based indexing
-    ETA = (index + 1) * 15;
+    // index 0 is the next person in line and
+    // will have a wait time of 15 minutes and so on
+    driverETA = (index + 1) * 15;
+  } else if (requestedRide && driverLocation) {
+    // if there is requested ride and driverLoc (and maybe request id),
+    // we can calculate the ETA from driverLoc to pickupLoc
+    const resp = await getDuration(
+      driverLocation,
+      requestedRide.pickupLocation
+    );
+    if (typeof resp === "number") {
+      driverETA = resp;
+    } else {
+      // error response
+      return resp;
+    }
   }
+
   queueLock.release();
-  return { response: "WAIT_TIME", waitTime: ETA };
+  return { response: "WAIT_TIME", rideDuration, driverETA };
+};
+
+/**
+ * HELPER FUNCTION FOR WAIT_TIME TO GET THE DURATION FROM GOOGLE MAPS API
+ *
+ * @param origin
+ * @param destination
+ * @returns the drive time in minutes or an error response
+ */
+const getDuration = async (
+  origin: { latitude: number; longitude: number },
+  destination: { latitude: number; longitude: number }
+): Promise<ErrorResponse | number> => {
+  try {
+    const etaURL =
+      `https://maps.googleapis.com/maps/api/distancematrix/json?` +
+      `origins=${origin.latitude},${origin.longitude}` +
+      `&destinations=${destination.latitude},${destination.longitude}` +
+      `&key=${process.env.GOOGLE_MAPS_APIKEY}&mode=driving&units=imperial`;
+    const response = await fetch(etaURL);
+    const data = await response.json();
+
+    if (data.rows[0].elements[0].status === "OK") {
+      const distance = data.rows[0].elements[0].distance.value; // in meters
+      const duration = data.rows[0].elements[0].duration.value; // in seconds
+
+      console.log(`driverETA: Distance: ${distance}`);
+      console.log(`driverETA: Duration: ${duration}`);
+      return Math.ceil(duration / 60); // convert to minutes
+    } else {
+      return {
+        response: "ERROR",
+        error: `Error fetching distance: ${data.rows[0].elements[0].status}`,
+        category: "WAIT_TIME",
+      };
+    }
+  } catch (error: unknown) {
+    return {
+      response: "ERROR",
+      error: `Error fetching distance: ${(error as Error).message}`,
+      category: "WAIT_TIME",
+    };
+  }
 };
 
 /* We need to know where either the student or driver is at any given time to update map ui. 

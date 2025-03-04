@@ -153,8 +153,8 @@ export const handleWebSocketMessage = async (
 
     case "WAIT_TIME":
       resp = await waitTime(
+        input.requestedRide,
         input.requestid,
-        input.pickupLocation,
         input.driverLocation
       );
       // send response back to client (the student)

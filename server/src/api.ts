@@ -50,9 +50,12 @@ export type WebSocketMessage =
   | { directive: "BLACKLIST"; netid: string }
   | {
       directive: "WAIT_TIME";
-      requestid: string;
-      pickupLocation?: [latitude: number, longitude: number];
-      driverLocation?: [latitude: number, longitude: number];
+      requestedRide?: {
+        pickupLocation: { latitude: number; longitude: number };
+        dropOffLocation: { latitude: number; longitude: number };
+      };
+      requestid?: string;
+      driverLocation?: { latitude: number; longitude: number };
     }
   | {
       directive: "LOCATION";
@@ -98,7 +101,11 @@ export type RequestRideResponse = {
   requestid: string;
 };
 
-export type WaitTimeResponse = { response: "WAIT_TIME"; waitTime: number };
+export type WaitTimeResponse = {
+  response: "WAIT_TIME";
+  rideDuration: number;
+  driverETA: number;
+};
 
 export type AcceptResponse = {
   response: "ACCEPT_RIDE";
