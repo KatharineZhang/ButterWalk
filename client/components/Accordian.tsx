@@ -33,12 +33,11 @@ export default function Accordion({
 }: AccordionProps) {
   const [open, setOpen] = useState(false);
   const [animation] = useState(new Animated.Value(0));
-
-  const numLines = content.split(" ").length;
+  const [contentHeight, setContentHeight] = useState(0);
 
   const heightInterpolation = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, image ? (numLines / 2.6) * 10 + 300 : (numLines / 3) * 10],
+    outputRange: [0, contentHeight],
   });
 
   const toggleOpen = () => {
@@ -84,15 +83,20 @@ export default function Accordion({
           ]}
         >
           <ScrollView>
+            {/* get the height of the component when it's rendered */}
+            <View onLayout={(event) => setContentHeight(event.nativeEvent.layout.height)}>
             <Text style={styles.accordianContentText}>{content}</Text>
-            <View style={{ height: 10 }} />
+            {/* Only show this part if there is an image */}
+            {image && <View style={{ height: 10 }} />}
             {image && <Image style={styles.accordianImage} source={image} />}
-            <View style={{ height: 20 }} />
+            {/* Only show this part if there is an link */}
+            {link &&<View style={{ height: 20 }} />}
             {link && (
               <Link href={link}>
                 <Text style={styles.accordianLink}>{linkText}</Text>
               </Link>
             )}
+            </View>
           </ScrollView>
         </Animated.View>
       </View>
