@@ -127,16 +127,18 @@ export const styles = StyleSheet.create({
     alignSelf: "center",
     margin: 30,
   },
-  signInGoogleLogo: {
+  signInGoogleContainer: {
     flexDirection: "row",
     margin: 10,    
-    paddingVertical: 5,
-    paddingHorizontal: 20,
+    padding: 22,
     borderRadius: 10,
-    borderWidth: 1,
+    borderColor: "#C1C1C1",
+    borderWidth: 2,
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
   },
+  signInGoogleLogo: {
+    position: "absolute", left:15, width: 30, height: 30},
   signInButton: {
     alignItems: "center",
     justifyContent: "center",

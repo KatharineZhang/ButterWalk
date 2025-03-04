@@ -115,10 +115,10 @@ const Login = () => {
         <View style={{height: 20}}></View>
 
         <TouchableOpacity
-          style={styles.signInGoogleLogo}
+          style={styles.signInGoogleContainer}
           onPress={() => promptAsync()}
         >
-          <Image style={{width: 60, height: 60}} source={logo} />
+          <Image style={styles.signInGoogleLogo} source={logo} />
           <Text style={{fontWeight: "bold", fontSize: 17}}>Sign in with UW Email</Text>
         </TouchableOpacity>
         <Text style={{ color: "red" }}>{errMsg}</Text>
