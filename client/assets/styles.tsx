@@ -150,11 +150,11 @@ export const styles = StyleSheet.create({
     alignSelf: "flex-start",
     justifyContent: "center",
     marginLeft: 21,
-    width: 345,
+    width: 335,
   },
   input: {
     height: 50,
-    width: 345,
+    width: 335,
     borderWidth: 1,
     marginVertical: 4,
     borderRadius: 10,
@@ -176,7 +176,7 @@ export const styles = StyleSheet.create({
     fontFamily: "Encode Sans",
     textAlign: "left",
     alignSelf: "flex-start",
-    marginLeft: 15,
+    marginLeft: 23,
     marginBottom: 30,
   },
   text: {
@@ -196,8 +196,9 @@ export const styles = StyleSheet.create({
     elevation: 3,
     backgroundColor: "#4B2E83",
     alignSelf: "center",
-    width: 345,
+    width: 335,
     marginTop: 10,
+    marginLeft: 5,
   },
   button_text: {
     fontSize: 16,
@@ -217,5 +218,6 @@ export const styles = StyleSheet.create({
     color: "black",
     textAlign: "left",
     marginTop: 10,
+    marginLeft: 3,
   },
 });
