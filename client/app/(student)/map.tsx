@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from "react";
 import MapView, { Polygon, Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import Header from "@/components/Header";
 import { styles } from "@/assets/styles";
 import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
 import { useLocalSearchParams } from "expo-router";
@@ -17,6 +16,7 @@ import {
 import MapViewDirections from "react-native-maps-directions";
 import { LocationNames, LocationService } from "@/services/LocationService";
 import FAQ from "./faq";
+import Profile from "./profile";
 
 export default function App() {
   // INITIAL WEB SOCKET SETUP
@@ -50,7 +50,9 @@ export default function App() {
     ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
     : "";
   // FAQ State
-  const [modalVisible, setModalVisible] = useState(false);
+  const [FAQVisible, setFAQVisible] = useState(false);
+  // Profile State
+  const [profileVisible, setProfileVisible] = useState(false);
 
   // control where we want to zoom on the map
   // in the format: [userLocation, driverLocation, pickUpLocation, dropOffLocation]
@@ -301,7 +303,6 @@ export default function App() {
     //putting the map region on the screen
     <View>
       <SafeAreaProvider style={{ flex: 1 }} />
-      <Header netid={netid as string} />
       <MapView
         ref={mapRef}
         style={styles.map}
@@ -375,6 +376,24 @@ export default function App() {
           onReady={handleDirectionsReady}
         />
       </MapView>
+      {/* profile button TEMPORARY? */}
+      <View
+        style={{
+          position: "absolute",
+          paddingVertical: 50,
+          paddingHorizontal: 20,
+          width: "100%",
+          height: "100%",
+        }}
+      >
+        <TouchableOpacity onPress={() => setProfileVisible(true)}>
+          <Image
+            source={require("@/assets/images/profile.png")}
+            style={{ width: 35, height: 35, zIndex: 1 }}
+          />
+        </TouchableOpacity>
+      </View>
+
       {/* Temporary footer for requesting rides*/}
       <View
         style={{
@@ -408,15 +427,24 @@ export default function App() {
             style={{ width: 50, height: 50 }}
           />
         </TouchableOpacity>
+
         {/* faq button TODO: MOVE TO RIDE REQUEST FORM */}
-        <TouchableOpacity onPress={() => setModalVisible(true)}>
+        <TouchableOpacity onPress={() => setFAQVisible(true)}>
           <Image
             source={require("@/assets/images/faq-button.png")}
             style={{ width: 20, height: 20 }}
           />
         </TouchableOpacity>
+
         {/* faq pop-up modal */}
-        <FAQ isVisible={modalVisible} onClose={() => setModalVisible(false)} />
+        <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
+
+        {/* profile pop-up modal */}
+        <Profile
+          isVisible={profileVisible}
+          onClose={() => setProfileVisible(false)}
+          netid={netid as string}
+        />
       </View>
     </View>
   );
