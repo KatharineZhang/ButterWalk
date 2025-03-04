@@ -95,13 +95,13 @@ export const styles = StyleSheet.create({
   mapContainer: {
     flex: 1
   },
-  faqCenteredView: {
+  modalCenteredView: {
     flex: 1,
     //  backgroundColor: 'rgba(0, 0, 0, 0.5)', // looks kind or weird when the background is dark
     justifyContent: "center",
     alignItems: "center",
   },
-  faqModalView: {
+  modalModalView: {
     margin: 20,
     backgroundColor: "#E4E2F0",
     borderRadius: 20,
@@ -119,7 +119,7 @@ export const styles = StyleSheet.create({
     position: "absolute",
     bottom: -100,
   },
-  faqButton: {
+  modalCloseButton: {
     borderRadius: 20,
     padding: 10,
     elevation: 2,

@@ -19,17 +19,17 @@ function PopUpModal({ isVisible, onClose, content }: PopUpModalProps) {
       visible={isVisible}
       onRequestClose={onClose}
     >
-      <View style={styles.faqCenteredView}>
-        <View style={styles.faqModalView}>
+      <View style={styles.modalCenteredView}>
+        <View style={styles.modalModalView}>
           <TouchableOpacity
             style={[
-              styles.faqButton,
+              styles.modalCloseButton,
               { position: "absolute", right: 10, top: 10, zIndex: 1 },
             ]}
             onPress={onClose}
           >
             <Image
-              source={require("@/assets/images/faq-close.png")}
+              source={require("@/assets/images/modal-close.png")}
               style={{ width: 40, height: 40 }}
             />
           </TouchableOpacity>
