@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { styles } from "@/assets/styles";
-import Accordian, { AccordianProps } from "@/components/Accordian";
+import Accordion, { AccordionProps } from "@/components/Accordian";
 import {
   Text,
   ScrollView,
@@ -47,7 +47,7 @@ function FAQ({ isVisible, onClose }: FAQProps) {
         <View style={{ height: 10 }} />
 
         {faqContent.map((faq, index) => (
-          <Accordian
+          <Accordion
             key={index}
             title={faq.title}
             content={faq.content}
@@ -65,7 +65,7 @@ function FAQ({ isVisible, onClose }: FAQProps) {
 }
 
 // Sample FAQ data
-const faqContent: AccordianProps[] = [
+const faqContent: AccordionProps[] = [
   {
     title: "Where is the zone of operation?",
     content:

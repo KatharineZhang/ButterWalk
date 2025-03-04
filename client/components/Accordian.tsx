@@ -16,7 +16,7 @@ import {
 
 // The accordian component is a collapsible view that displays a title and content
 // it also supports external links (and the text to click on to follow that link) and images
-export interface AccordianProps {
+export interface AccordionProps {
   title: string;
   content: string;
   image?: ImageSourcePropType;
@@ -24,13 +24,13 @@ export interface AccordianProps {
   linkText?: string;
 }
 
-export default function Accordian({
+export default function Accordion({
   title,
   content,
   image,
   link,
   linkText,
-}: AccordianProps) {
+}: AccordionProps) {
   const [open, setOpen] = useState(false);
   const [animation] = useState(new Animated.Value(0));
 
