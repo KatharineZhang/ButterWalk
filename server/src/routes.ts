@@ -42,7 +42,7 @@ dotenv.config();
 // and the queue action combined into one atomic action to prevent data races
 const queueLock: Mutex = new Mutex();
 
-// TODO: ADD API COMMENT
+// performs the google auth and returns the user profile information
 export const googleAuth = async (
   response: AuthSessionResult
 ): Promise<GoogleResponse> => {
@@ -67,6 +67,23 @@ const handleToken = async (
   return { message: "Error signing in: Make sure you're using your UW email." };
 };
 
+// gets the user profile information using the token from google auth
+// returns us the user info if the user is a UW student and signin is successful
+//     as a JSON object in the form: 
+//    { message: "Google Signin Successful", userInfo: {
+    //   "sub": string,
+    //   "name": string,
+    //   "given_name": string,
+    //   "family_name": string,
+    //   "profile": string,
+    //   "picture": string,
+    //   "email": string,
+    //   "email_verified": boolean,
+    //   "locale": string,
+    //   "hd": string
+    // }
+  // }
+// returns an error message if the user is not a UW student and therefore signin is unsuccessful
 const getUserProfile = async (token: string): Promise<GoogleResponse> => {
   if (!token) return { message: "Error signing in: No token" };
   try {
@@ -135,7 +152,16 @@ export const signIn = async (
   }
 };
 
-// TODO: ADD API COMMENT
+// Finishes the account for the user by adding the phone number and student number to the database
+// returns a success message if the account creation is successful and a boolean value of true if the account already exists
+//     as a JSON object in the form: { response: "FINISH_ACC", success: boolean }
+// returns an error message if the account creation is unsuccessful
+//     as a JSON object in the form:
+    // return {
+    //       response: "ERROR",
+    //       error: string,
+    //       category: "FINISH_ACC",
+    //     };
 export const finishAccCreation = async (
   netid: string,
   preferredName: string,
