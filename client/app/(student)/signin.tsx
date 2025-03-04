@@ -20,7 +20,7 @@ import WebSocketService, { WebsocketConnectMessage } from "@/services/WebSocketS
 
 // Images
 // @ts-expect-error the image does exists so get rid of the error
-import logo from "@/assets/images/Glogo.png";
+import logo from "@/assets/images/GoogleG.png";
 // @ts-expect-error the image does exists so get rid of the error
 import butterWalkLogo from "@/assets/images/butterWalkLogo.png";
 
@@ -112,14 +112,19 @@ const Login = () => {
         <Text style={styles.appNameText}>Husky ButterWalk</Text>
         <Image style={styles.signinLogo} source={butterWalkLogo} />
         <Text style={styles.signInText}>Sign in</Text>
+        <View style={{height: 20}}></View>
+
         <TouchableOpacity
           style={styles.signInGoogleLogo}
           onPress={() => promptAsync()}
         >
-          <Image source={logo} />
-          <Text>Sign in with UW Google</Text>
+          <Image style={{width: 60, height: 60}} source={logo} />
+          <Text style={{fontWeight: "bold", fontSize: 17}}>Sign in with UW Email</Text>
         </TouchableOpacity>
+        <Text style={{ color: "red" }}>{errMsg}</Text>
 
+        {/* TEMPORARY Bypass Signin Button */}
+        <View style={{height: 20}}></View>
         <Pressable
           style={styles.signInButton}
           onPress={() => {setAccExists(false); setNetid('student-netid');}}
@@ -127,7 +132,6 @@ const Login = () => {
           <Text style={styles.signInText}>Bypass Signin</Text>
         </Pressable>
 
-        <Text style={{ color: "red" }}>{errMsg}</Text>
       </KeyboardAvoidingView>
     </View>
   );

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, Pressable } from "react-native";
+import { View, Text, TextInput, Pressable } from "react-native";
 import { useState } from "react";
 import { styles } from "@/assets/styles";
 import { Redirect, useLocalSearchParams } from "expo-router";
