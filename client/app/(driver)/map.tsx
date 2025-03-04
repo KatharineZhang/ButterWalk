@@ -8,7 +8,7 @@ import Header from "@/components/Header";
 import { styles } from "@/assets/styles";
 import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import WebSocketService from "@/services/WebSocketService";
+import WebSocketService, {WebsocketConnectMessage} from "@/services/WebSocketService";
 import { Alert, Linking } from "react-native";
 import {
   DriverAcceptResponse,
@@ -17,11 +17,8 @@ import {
 import { LocationNames, LocationService } from "@/services/LocationService";
 
 export default function App() {
-  // INITIAL WEB SOCKET SETUP
   // Extract netid from Redirect URL from signin page
   const { netid } = useLocalSearchParams();
-  // Use netid to pair this WebSocket connection with a netid
-  WebSocketService.connect(netid as string, "DRIVER");
 
   // STATE VARIABLES
   // the drivers's location
@@ -39,6 +36,7 @@ export default function App() {
     latitude: number;
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
+
   const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
     ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
     : "";
@@ -68,6 +66,17 @@ export default function App() {
 
   // STATE HOOKS
   useEffect(() => {
+  // TODO: MOVE CONNECTION TO THE SIGNIN.TSX WHEN THAT IS IMPLEMENTED 
+    // await connection from websocket
+    const connectWebSocket = async () => {
+      const msg: WebsocketConnectMessage = await WebSocketService.connect();
+      if (msg == "Connected Successfully") {
+        console.log("connected");
+      } else {
+        console.log("failed to connect!!!");
+      }
+    };
+    connectWebSocket();
     // on the first render, get the user's location
     // and set up listeners
     watchLocation();

@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import { AuthSessionResult } from "expo-auth-session";
 import {
   localRideRequest,
   rideReqQueue,
@@ -6,6 +7,7 @@ import {
   AcceptResponse,
   CancelResponse,
   GeneralResponse,
+  FinishAccCreationResponse,
   RequestRideResponse,
   WaitTimeResponse,
   LocationResponse,
@@ -14,6 +16,8 @@ import {
   Feedback,
   ProblematicUser,
   CompleteResponse,
+  SignInResponse,
+  GoogleResponse,
 } from "./api";
 import {
   acceptRideRequest,
@@ -24,6 +28,7 @@ import {
   cancelRideRequest,
   completeRideRequest,
   createUser,
+  finishCreatingUser,
   getOtherNetId,
   queryFeedback,
   db,
@@ -37,6 +42,56 @@ dotenv.config();
 // and the queue action combined into one atomic action to prevent data races
 const queueLock: Mutex = new Mutex();
 
+// TODO: ADD API COMMENT
+export const googleAuth = async (
+  response: AuthSessionResult
+): Promise<GoogleResponse> => {
+  return await handleToken(response);
+};
+
+const handleToken = async (
+  response: AuthSessionResult
+): Promise<GoogleResponse> => {
+  if (response?.type === "success") {
+    const { authentication } = response;
+    if (authentication == null) {
+      console.error("auth is null @106 routes.ts");
+    } else {
+      const token = authentication.accessToken;
+      console.log("access token", token);
+
+      return getUserProfile(token);
+    }
+  }
+  console.log("error with response", response);
+  return { message: "Error signing in: Make sure you're using your UW email." };
+};
+
+const getUserProfile = async (token: string): Promise<GoogleResponse> => {
+  if (!token) return { message: "Error signing in: No token" };
+  try {
+    const response = await fetch(
+      "https://www.googleapis.com/oauth2/v1/userinfo?alt=json",
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    const userInfo = await response.json();
+    const email = userInfo.email;
+
+    const UWregex = /@uw.edu$/;
+    if (!UWregex.test(email)) {
+      return {
+        message: "Error signing in: Please ensure your using your UW email",
+      };
+    }
+
+    return { message: "Google Signin Successful", userInfo };
+  } catch (error) {
+    console.log("error fetching user info", error);
+  }
+  return { message: "Error signing in: Error getting profile" };
+};
+
 /* Signs a specific student or driver into the app. Will check the users database for the specific id, 
 and if it is not there, will add a new user. If the user is in the table, we need to make sure this user 
 is not in the ProblematicUsers table with a blacklisted field of 1 before we return success : true.
@@ -48,43 +103,70 @@ directive: "SIGNIN", phoneNum: string, netID: string, name: string, studentNum: 
 - Returns a json object TO THE STUDENT in the form: { response: “SIGNIN”, success: true }. */
 export const signIn = async (
   netid: string,
-  first_name: string,
-  last_name: string,
-  phone_number: string,
-  student_number: string,
-  student_or_driver: "STUDENT" | "DRIVER"
-): Promise<GeneralResponse | ErrorResponse> => {
-  if (
-    !phone_number ||
-    !netid ||
-    !first_name ||
-    !!last_name ||
-    !student_number
-  ) {
+  firstName: string,
+  lastName: string,
+  studentOrDriver: "STUDENT" | "DRIVER"
+): Promise<SignInResponse | ErrorResponse> => {
+  if (!netid || !firstName || !lastName) {
     return {
       response: "ERROR",
       error: "Missing or invalid sign in details.",
       category: "SIGNIN",
     };
   }
-  // TODO: Email (and phone number?) validation
   try {
-    await runTransaction(db, async (transaction) => {
-      await createUser(transaction, {
+    return await runTransaction(db, async (transaction) => {
+      const alreadyExists = await createUser(transaction, {
         netid,
-        first_name,
-        last_name,
-        phone_number,
-        student_number,
-        student_or_driver,
+        firstName,
+        lastName,
+        phoneNumber: null,
+        studentNumber: null,
+        studentOrDriver,
       });
+      return { response: "SIGNIN", success: true, alreadyExists, netid };
     });
-    return { response: "SIGNIN", success: true };
   } catch (e: unknown) {
     return {
       response: "ERROR",
       error: `Error adding user to database: ${(e as Error).message}.`,
       category: "SIGNIN",
+    };
+  }
+};
+
+// TODO: ADD API COMMENT
+export const finishAccCreation = async (
+  netid: string,
+  preferredName: string,
+  phone_number: string,
+  student_num: string
+): Promise<FinishAccCreationResponse | ErrorResponse> => {
+  if (!netid || !phone_number || !student_num) {
+    return {
+      response: "ERROR",
+      error: "Missing or invalid finish account creation details.",
+      category: "FINISH_ACC",
+    };
+  }
+
+  // add values to database
+  try {
+    return await runTransaction(db, async (transaction) => {
+      const isSuccessful = await finishCreatingUser(
+        transaction,
+        netid,
+        preferredName,
+        phone_number,
+        student_num
+      );
+      return { response: "FINISH_ACC", success: isSuccessful };
+    });
+  } catch (e: unknown) {
+    return {
+      response: "ERROR",
+      error: `Error adding phone number or student number to database: ${(e as Error).message}.`,
+      category: "FINISH_ACC",
     };
   }
 };
