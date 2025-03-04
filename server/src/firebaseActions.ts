@@ -63,7 +63,7 @@ export async function createUser(transaction: Transaction, user: User) {
 
 // FINISH ACCOUNT CREATION - add phone number and student num to the database
 // associated with the user's unique netid
-
+// returns true if the user was updated, false if the user was not found
 export async function finishCreatingUser(
   transaction: Transaction,
   netid: string,
