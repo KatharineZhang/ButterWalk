@@ -1,14 +1,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { styles } from "@/assets/styles";
 import Accordion, { AccordionProps } from "@/components/Accordian";
-import {
-  Text,
-  ScrollView,
-  View,
-  Modal,
-  TouchableOpacity,
-  Image,
-} from "react-native";
+import PopUpModal from "@/components/PopUpModal";
+import { Text, ScrollView, View } from "react-native";
 
 // FAQ component that displays a list of frequently asked questions
 // takes in props on if the faq modal should be shown and a function to close the modal
@@ -19,49 +13,28 @@ interface FAQProps {
 }
 
 function FAQ({ isVisible, onClose }: FAQProps) {
-  return (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={isVisible}
-      onRequestClose={onClose}
-    >
-      <View style={styles.faqCenteredView}>
-        <View style={styles.faqModalView}>
-          <TouchableOpacity
-        style={[
-          styles.faqButton,
-          { position: "absolute", right: 10, top: 10, zIndex: 1 },
-        ]}
-        onPress={onClose}
-          >
-        <Image
-          source={require("@/assets/images/faq-close.png")}
-          style={{ width: 40, height: 40 }}
-        />
-          </TouchableOpacity>
-          <ScrollView>
-        <View style={{ height: 60 }} />
-        <Text style={styles.faqHeader}>Husky ButterWalk FAQ</Text>
-        <Text style={styles.faqSubtitle}>University of Washington</Text>
-        <View style={{ height: 10 }} />
+  // the stuff that goes in the modal
+  const qandA: JSX.Element = (
+    <ScrollView>
+      <View style={{ height: 60 }} />
+      <Text style={styles.faqHeader}>Husky ButterWalk FAQ</Text>
+      <Text style={styles.faqSubtitle}>University of Washington</Text>
+      <View style={{ height: 10 }} />
 
-        {faqContent.map((faq, index) => (
-          <Accordion
-            key={index}
-            title={faq.title}
-            content={faq.content}
-            image={faq.image}
-            link={faq.link}
-            linkText={faq.linkText}
-          />
-        ))}
-        <View style={{ height: 100 }} />
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
+      {faqContent.map((faq, index) => (
+        <Accordion
+          key={index}
+          title={faq.title}
+          content={faq.content}
+          image={faq.image}
+          link={faq.link}
+          linkText={faq.linkText}
+        />
+      ))}
+      <View style={{ height: 100 }} />
+    </ScrollView>
   );
+  return <PopUpModal isVisible={isVisible} onClose={onClose} content={qandA} />;
 }
 
 // Sample FAQ data

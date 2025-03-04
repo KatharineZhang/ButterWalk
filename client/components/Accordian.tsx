@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import { styles } from '@/assets/styles';
-import { Link } from 'expo-router';
-import * as Router from 'expo-router';
+import { styles } from "@/assets/styles";
+import { Link } from "expo-router";
+import * as Router from "expo-router";
 
 import { useState } from "react";
 import {
@@ -38,7 +38,7 @@ export default function Accordion({
 
   const heightInterpolation = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, image? (numLines / 2.6) * 10 + 300 : (numLines / 3) * 10],
+    outputRange: [0, image ? (numLines / 2.6) * 10 + 300 : (numLines / 3) * 10],
   });
 
   const toggleOpen = () => {
@@ -84,15 +84,15 @@ export default function Accordion({
           ]}
         >
           <ScrollView>
-          <Text style={styles.accordianContentText}>{content}</Text>
-          <View style={{ height: 10 }} />
-          {image && <Image style={styles.accordianImage} source={image} />}
-          <View style={{ height: 20 }} />
-          {link && (
-            <Link href={link}>
-              <Text style={styles.accordianLink}>{linkText}</Text>
-            </Link>
-          )}
+            <Text style={styles.accordianContentText}>{content}</Text>
+            <View style={{ height: 10 }} />
+            {image && <Image style={styles.accordianImage} source={image} />}
+            <View style={{ height: 20 }} />
+            {link && (
+              <Link href={link}>
+                <Text style={styles.accordianLink}>{linkText}</Text>
+              </Link>
+            )}
           </ScrollView>
         </Animated.View>
       </View>
