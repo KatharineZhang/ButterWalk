@@ -152,7 +152,7 @@ export const styles = StyleSheet.create({
     borderRadius: 5,
   },
   accordianHeaderText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "bold",
     textTransform: "capitalize",
     color: "#4B2E83",
