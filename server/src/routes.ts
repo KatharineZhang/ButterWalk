@@ -14,6 +14,8 @@ import {
   Feedback,
   ProblematicUser,
   CompleteResponse,
+  ProfileResponse,
+  User,
 } from "./api";
 import {
   acceptRideRequest,
@@ -27,6 +29,7 @@ import {
   getOtherNetId,
   queryFeedback,
   db,
+  getProfile,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { Mutex } from "async-mutex";
@@ -48,19 +51,13 @@ directive: "SIGNIN", phoneNum: string, netID: string, name: string, studentNum: 
 - Returns a json object TO THE STUDENT in the form: { response: “SIGNIN”, success: true }. */
 export const signIn = async (
   netid: string,
-  first_name: string,
-  last_name: string,
-  phone_number: string,
-  student_number: string,
-  student_or_driver: "STUDENT" | "DRIVER"
+  firstName: string,
+  lastName: string,
+  phoneNumber: string,
+  studentNumber: string,
+  studentOrDriver: "STUDENT" | "DRIVER"
 ): Promise<GeneralResponse | ErrorResponse> => {
-  if (
-    !phone_number ||
-    !netid ||
-    !first_name ||
-    !!last_name ||
-    !student_number
-  ) {
+  if (!phoneNumber || !netid || !firstName || !!lastName || !studentNumber) {
     return {
       response: "ERROR",
       error: "Missing or invalid sign in details.",
@@ -72,11 +69,11 @@ export const signIn = async (
     await runTransaction(db, async (transaction) => {
       await createUser(transaction, {
         netid,
-        first_name,
-        last_name,
-        phone_number,
-        student_number,
-        student_or_driver,
+        firstName,
+        lastName,
+        phoneNumber,
+        studentNumber,
+        studentOrDriver,
       });
     });
     return { response: "SIGNIN", success: true };
@@ -637,6 +634,26 @@ export const query = async (
       response: "ERROR",
       error: `Error querying feedback: ${e}`,
       category: "QUERY",
+    };
+  }
+};
+
+export const profile = async (
+  netid: string
+): Promise<ProfileResponse | ErrorResponse> => {
+  // get the user's profile information
+  // if there is an error, return { success: false, error: 'Error getting profile.'};
+  try {
+    return await runTransaction(db, async (transaction) => {
+      // get the user's profile information
+      const user: User = await getProfile(transaction, netid);
+      return { response: "PROFILE", user };
+    });
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error getting profile: ${e}`,
+      category: "PROFILE",
     };
   }
 };
