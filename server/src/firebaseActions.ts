@@ -279,3 +279,15 @@ export async function queryFeedback(
   const docs = await getDocs(queriedFeedbacks);
   return docs.docs.map((doc) => doc.data() as Feedback);
 }
+
+export async function getProfile(
+  transaction: Transaction,
+  netid: string
+): Promise<User> {
+  const docRef = doc(usersCollection, netid);
+  const docSnap = await transaction.get(docRef);
+  if (!docSnap.exists()) {
+    throw new Error(`User with netid: ${netid} does not exist`);
+  }
+  return docSnap.data() as User;
+}

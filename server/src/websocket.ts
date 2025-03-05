@@ -7,6 +7,7 @@ import {
   cancelRide,
   completeRide,
   location,
+  profile,
   query,
   report,
   requestRide,
@@ -153,8 +154,8 @@ export const handleWebSocketMessage = async (
 
     case "WAIT_TIME":
       resp = await waitTime(
+        input.requestedRide,
         input.requestid,
-        input.pickupLocation,
         input.driverLocation
       );
       // send response back to client (the student)
@@ -175,6 +176,12 @@ export const handleWebSocketMessage = async (
     case "QUERY":
       resp = await query(input.rideOrApp, input.date, input.rating);
       // send response back to client (the driver)
+      sendWebSocketMessage(ws, resp);
+      break;
+
+    case "PROFILE":
+      resp = await profile(input.netid);
+      // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
       break;
 

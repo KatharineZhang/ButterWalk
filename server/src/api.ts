@@ -15,6 +15,7 @@ export type Command =
   | "WAIT_TIME"
   | "LOCATION"
   | "QUERY"
+  | "PROFILE"
   | "ERROR";
 
 // Input types
@@ -50,9 +51,12 @@ export type WebSocketMessage =
   | { directive: "BLACKLIST"; netid: string }
   | {
       directive: "WAIT_TIME";
-      requestid: string;
-      pickupLocation?: [latitude: number, longitude: number];
-      driverLocation?: [latitude: number, longitude: number];
+      requestedRide?: {
+        pickupLocation: { latitude: number; longitude: number };
+        dropOffLocation: { latitude: number; longitude: number };
+      };
+      requestid?: string;
+      driverLocation?: { latitude: number; longitude: number };
     }
   | {
       directive: "LOCATION";
@@ -65,7 +69,8 @@ export type WebSocketMessage =
       rideOrApp?: "RIDE" | "APP"; // if rideOrApp is undefined, the default is to query both feebcack types
       date?: { start: Date; end: Date };
       rating?: number;
-    };
+    }
+  | { directive: "PROFILE"; netid: string };
 
 // Response types
 export type WebSocketResponse =
@@ -78,6 +83,7 @@ export type WebSocketResponse =
   | CompleteResponse
   | LocationResponse
   | QueryResponse
+  | ProfileResponse
   | ErrorResponse;
 
 export type GeneralResponse = {
@@ -98,7 +104,11 @@ export type RequestRideResponse = {
   requestid: string;
 };
 
-export type WaitTimeResponse = { response: "WAIT_TIME"; waitTime: number };
+export type WaitTimeResponse = {
+  response: "WAIT_TIME";
+  rideDuration: number;
+  driverETA: number;
+};
 
 export type AcceptResponse = {
   response: "ACCEPT_RIDE";
@@ -140,22 +150,15 @@ export type QueryResponse = {
   feedback: Feedback[];
 };
 
+export type ProfileResponse = {
+  response: "PROFILE";
+  user: User;
+};
+
 export type ErrorResponse = {
   response: "ERROR";
   error: string;
-  category:
-    | "CONNECT"
-    | "SIGNIN"
-    | "COMPLETE"
-    | "ADD_FEEDBACK"
-    | "REPORT"
-    | "BLACKLIST"
-    | "WAIT_TIME"
-    | "REQUEST_RIDE"
-    | "ACCEPT_RIDE"
-    | "CANCEL"
-    | "LOCATION"
-    | "QUERY";
+  category: Command;
 };
 
 // Server Types and Data Structures
@@ -205,11 +208,12 @@ export const rideReqQueue = new RideRequestQueue(); // rideRequests Queue
 // phone_num char(10), student_or_driver int); –- 0 for student, 1 for driver
 export type User = {
   netid: string;
-  first_name: string;
-  last_name: string;
-  phone_number: string;
-  student_number: string;
-  student_or_driver: "STUDENT" | "DRIVER";
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  studentNumber: string;
+  studentOrDriver: "STUDENT" | "DRIVER";
+  preferredName?: string;
 };
 
 // CREATE TABLE Feedback (feedbackid int PRIMARY KEY, rating float, textFeedback text,
