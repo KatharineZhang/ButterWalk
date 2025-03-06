@@ -1,7 +1,6 @@
-import { View, Text, } from "react-native";
+import { View, Text } from "react-native";
 import { Stack } from "expo-router";
 
-// currently not in use due to bugs
 export default function LoadingPage() {
   return (
     <>
@@ -14,7 +13,7 @@ export default function LoadingPage() {
           alignItems: "center",
         }}
       >
-        <Text style={{ marginBottom: 20 }}>Loading...</Text>
+        <Text>Loading...</Text>
       </View>
     </>
   );

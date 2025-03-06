@@ -10,7 +10,7 @@ import {
 interface OnboardingItemProps {
   item: {
     id: string;
-    color: string;
+    title: string;
     image: ImageSourcePropType;
   };
 }
@@ -18,19 +18,27 @@ interface OnboardingItemProps {
 export default function OnboardingItem({ item }: OnboardingItemProps) {
   const { width } = useWindowDimensions();
   return (
-    <View
-      style={[styles.container, { width }, { backgroundColor: item.color }]}
-    >
+    <View style={[styles.container, { width }]}>
       <Image
         source={item.image}
         style={{
-          flex: 0.4,
+          flex: 0.7,
           justifyContent: "center",
-          marginBottom: "70%",
           width,
           resizeMode: "contain",
         }}
       />
+      <View style={{ flex: 0.3, alignContent: "center", margin: 20 }}>
+        <Text
+          style={{
+            fontSize: 28,
+            textAlign: "center",
+            marginBottom: 10,
+          }}
+        >
+          {item.title}
+        </Text>
+      </View>
     </View>
   );
 }

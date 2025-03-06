@@ -2,12 +2,15 @@ import WebSocketService from "@/services/WebSocketService";
 import { useLocalSearchParams } from "expo-router";
 import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, StyleSheet, Animated } from "react-native";
-import { WebSocketResponse } from "../../server/src/api";
+import { CancelResponse, WebSocketResponse } from "../../server/src/api";
 import Autocomplete from "react-native-autocomplete-input";
 import { Ionicons } from "@expo/vector-icons";
-import { TextInput } from "react-native-gesture-handler";
 import { Image } from "react-native";
 import AutocompleteInput from "./AutocompleteInput";
+import { LocationNames } from "../services/LocationService";
+import LoadingPage from "./LoadingPage";
+import { router } from "expo-router";
+import { styles } from "../assets/styles";
 
 // Ride Request Form which sends request to server and gets response back,
 // fuzzy search for location and desination which uses autocomplete,
@@ -22,7 +25,6 @@ export default function RideRequestForm() {
   WebSocketService.connect(netid as string, "STUDENT");
 
   // user input states
-  const [phoneNum, setPhoneNum] = useState("");
   const [location, setLocation] = useState("");
   const [destination, setDestination] = useState("");
   const [numRiders, setNumRiders] = useState(1);
@@ -31,24 +33,51 @@ export default function RideRequestForm() {
 
   /* server stuff */
   // This function will be called whenever the server sends a message
+  // if we get a response, set isLoading to false and rideConfirmed to true
   const handleMessage = (message: WebSocketResponse) => {
     setMessage(JSON.stringify(message));
+    setRideConfirmed(true);
+    router.back();
   };
-  // Add the listener to the WebSocketService
-  WebSocketService.addListener(handleMessage, "REQUEST_RIDE");
+
+  // Add a new message handler specifically for cancel responses
+  const handleCancelMessage = (message: WebSocketResponse) => {
+    if ("info" in message && message.response === "CANCEL") {
+      setRideConfirmed(false);
+      router.back();
+    } else {
+      alert("Failed to cancel ride. Please try again.");
+    }
+  };
+
+  // Add the cancel listener to WebSocketService
+  useEffect(() => {
+    WebSocketService.addListener(handleMessage, "REQUEST_RIDE");
+    WebSocketService.addListener(handleCancelMessage, "CANCEL");
+
+    // Cleanup listeners on unmount
+    return () => {
+      WebSocketService.removeListener(handleMessage, "REQUEST_RIDE");
+      WebSocketService.removeListener(handleCancelMessage, "CANCEL");
+    };
+  }, []);
 
   // Send form information to server
   const handleSend = () => {
+    router.push("/loading");
     WebSocketService.send({
       directive: "REQUEST_RIDE",
-      phoneNum,
+      phoneNum: "111-111-1111", // TODO: GET PHONE NUMBER HERE SOMEHOW
       netid: Array.isArray(netid) ? netid[0] : netid, // weird stuff to avoide typescript error
       location,
       destination,
       numRiders,
     });
 
-    setRideConfirmed(true);
+    // when server sends back a response, set rideConfirmed to true
+    if (message !== "") {
+      setRideConfirmed(true);
+    }
   };
 
   // flip from cancel ride to form view
@@ -70,15 +99,15 @@ export default function RideRequestForm() {
   const [destinationQuery, setDestinationQuery] = useState(""); // Destination query
   // const [destinationHideResults, setDestinationHideResults] = useState(true);
 
-  // data from figma
-  const data = [
-    "Alder Hall",
-    "Communications Building",
-    "Flagpole",
+  // data from LocationService.ts
+  const data: LocationNames[] = [
     "HUB",
-    "Meany",
+    "Alder Hall",
+    "Communication Building",
+    "Flagpole",
+    "Meany Hall",
     "IMA",
-    "Okanogan",
+    "Okanogan Lane",
     "UW Tower",
   ];
 
@@ -127,16 +156,16 @@ export default function RideRequestForm() {
 
   return (
     <View style={styles.formContainer}>
-      {/* Show Ride Request Form, or cancel ride button */}
+      {/* Show Ride Request Form, or loading page, orcancel ride button */}
       {rideConfirmed ? (
         <View>
-          <Pressable onPress={sendCancel} style={styles.sendBttn}>
+          <Pressable onPress={sendCancel} style={styles.sendButton}>
             <Text style={styles.cancelText}>Cancel Ride</Text>
           </Pressable>
         </View>
       ) : (
         <>
-          <Text style={styles.header}>Request a Ride</Text>
+          <Text style={styles.formHeader}>Request a Ride</Text>
           <View>
             <View style={{ zIndex: 2 }}>
               <AutocompleteInput
@@ -163,7 +192,10 @@ export default function RideRequestForm() {
             <View style={styles.riderContainer}>
               <View style={styles.iconRow}>
                 {/* Minus Button also handls changes to numRiders state*/}
-                <Pressable onPress={handleDecreaseRiders} style={styles.button}>
+                <Pressable
+                  onPress={handleDecreaseRiders}
+                  style={styles.clearButton}
+                >
                   <Ionicons name="remove" size={32} color="#4B2E83" />
                 </Pressable>
 
@@ -183,8 +215,11 @@ export default function RideRequestForm() {
                   ))}
                 </View>
 
-                {/* handles the numRiders state */}
-                <Pressable onPress={handleIncreaseRiders} style={styles.button}>
+                {/* handles the numRiders state, increases numRiders by 1 */}
+                <Pressable
+                  onPress={handleIncreaseRiders}
+                  style={styles.clearButton}
+                >
                   <Ionicons name="add" size={32} color="#4B2E83" />
                 </Pressable>
               </View>
@@ -193,153 +228,19 @@ export default function RideRequestForm() {
             </View>
           </View>
 
-          <Text style={styles.info}>
+          <Text style={styles.infoText}>
             If the wait is too long, check out the NightRide shuttle! The
             service is available 6:30 p.m. – 2 a.m. daily except University
             Holidays. Extended service runs until 3:30 a.m. the week before and
             the week of finals.
           </Text>
 
-          {/*I am keeping the phone number field in for now so that it well send to websocket correctly*/}
-          <TextInput
-            style={styles.phoneOption}
-            placeholder="Phone Number"
-            placeholderTextColor="#888"
-            onChangeText={setPhoneNum}
-            value={phoneNum}
-          />
-
-          <Pressable onPress={handleSend}>
-            <Text style={styles.sendBttn}>Confirm Ride</Text>
+          {/* waits for getting a response back from server to show cancel button */}
+          <Pressable onPress={handleSend} style={styles.sendButton}>
+            <Text style={styles.buttonLabel}>Confirm Ride</Text>
           </Pressable>
         </>
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  formContainer: {
-    padding: 15,
-    width: "100%",
-  },
-  header: {
-    fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "left",
-    marginBottom: 30,
-  },
-  inputContainer: {
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderColor: "#4B2E83",
-    borderWidth: 2,
-    backgroundColor: "white",
-    overflow: "hidden",
-  },
-  autocompleteContainer: {
-    position: "relative",
-    zIndex: 100,
-    paddingBottom: 10,
-  },
-  autocompleteContainer2: {
-    position: "relative",
-    zIndex: 1,
-    paddingBottom: 10,
-  },
-  dropdownItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-    position: "relative",
-  },
-  phoneOption: {
-    height: 38,
-    borderColor: "#B0B0B0",
-    borderWidth: 1,
-    color: "black",
-    padding: 5,
-    marginBottom: 10,
-  },
-  sendBttn: {
-    position: "relative",
-    marginTop: "20%",
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    backgroundColor: "#4B2E83",
-    borderRadius: 8,
-    textAlign: "center",
-    padding: 10,
-    color: "white",
-    fontSize: 16,
-  },
-  animationContainer: {
-    marginTop: 4,
-    marginBottom: 4,
-    borderWidth: 1,
-    borderRadius: 16,
-    borderColor: "Black/Black 3",
-    paddingVertical: 12,
-    paddingHorizontal: 40,
-  },
-  riderContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginVertical: 10,
-  },
-  iconRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: "100%",
-  },
-  riderControls: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center", // Centers horizontally
-    marginVertical: 10,
-  },
-  riderCountContainer: {
-    minWidth: 50, // Ensures consistent spacing
-    alignItems: "center",
-  },
-
-  button: {
-    padding: 10,
-  },
-  riderCount: {
-    fontSize: 18,
-    marginTop: 0,
-    marginBottom: 8,
-    marginLeft: 5,
-  },
-  riderIconsContainer: {
-    flexDirection: "row",
-    position: "relative",
-    height: 50,
-    marginRight: 20,
-  },
-  riderIcon: {
-    position: "absolute",
-    opacity: 1,
-  },
-  riderImage: {
-    width: 32, // Adjust based on your design
-    height: 32,
-    resizeMode: "contain",
-  },
-  info: {
-    fontSize: 12,
-    color: "#4B4C4F",
-    fontWeight: 400,
-    lineHeight: 16.34,
-    fontFamily: "Open Sans",
-    marginBottom: 40,
-  },
-  cancelText: {
-    fontSize: 18,
-    color: "white",
-    textAlign: "center",
-  },
-});

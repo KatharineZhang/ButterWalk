@@ -225,25 +225,65 @@ export const styles = StyleSheet.create({
   },
   modalCenteredView: {
     flex: 1,
-    //  backgroundColor: 'rgba(0, 0, 0, 0.5)', // looks kind or weird when the background is dark
-    justifyContent: "center",
-    alignItems: "center",
   },
-  modalModalView: {
-    margin: 20,
-    backgroundColor: "#E4E2F0",
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+
+  // Ride Request Form styles
+  formContainer: {
+    padding: 15,
     width: "100%",
-    height: "100%",
+  },
+  formHeader: {
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "left",
+    marginBottom: 30,
+  },
+  sendButton: {
+    position: "relative",
+    marginTop: "20%",
+    backgroundColor: "#4B2E83",
+    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    textAlign: "center",
+    color: "white",
+    fontSize: 16,
+  },
+  clearButton: {
+    padding: 10,
+  },
+  animationContainer: {
+    marginVertical: 4,
+    borderWidth: 1,
+    borderRadius: 16,
+    borderColor: "Black/Black 3",
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+  },
+  riderContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 10,
+  },
+  iconRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  riderCount: {
+    fontSize: 18,
+    marginTop: 0,
+    marginBottom: 8,
+    marginLeft: 5,
+  },
+  riderIconsContainer: {
+    flexDirection: "row",
+    position: "relative",
+    height: 50,
+    marginRight: 20,
+  },
+  riderIcon: {
     position: "absolute",
     bottom: -100,
   },

@@ -69,21 +69,23 @@ const styles = StyleSheet.create({
   autocompleteContainer: {
     position: "relative",
     zIndex: 100,
-    paddingBottom: 10,
+    paddingBottom: 16,
   },
   inputContainer: {
     borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     borderColor: "#4B2E83",
     borderWidth: 2,
     backgroundColor: "white",
     overflow: "hidden",
+    height: 60,
   },
   dropdownItem: {
-    padding: 10,
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
+    fontSize: 16,
   },
 });
 
