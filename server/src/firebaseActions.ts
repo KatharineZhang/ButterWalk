@@ -280,6 +280,7 @@ export async function queryFeedback(
   return docs.docs.map((doc) => doc.data() as Feedback);
 }
 
+// PROFILE - Get a user's profile
 export async function getProfile(
   transaction: Transaction,
   netid: string

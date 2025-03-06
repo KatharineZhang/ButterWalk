@@ -638,6 +638,10 @@ export const query = async (
   }
 };
 
+/* Get user information based on the netid
+- Takes in: { directive: "PROFILE", netid: string }
+- On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: PROFILE }.
+- Returns a json object TO THE DRIVER in the format: { response: PROFILE, user: User } */
 export const profile = async (
   netid: string
 ): Promise<ProfileResponse | ErrorResponse> => {
