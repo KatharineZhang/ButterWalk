@@ -1,10 +1,13 @@
 import React, { useCallback, useMemo, useRef } from "react";
-import { Text, StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import RideRequestForm from "./RideRequestForm";
 
-const BottomDrawer = () => {
+interface BottomDrawerProps {
+  children: React.ReactNode;
+}
+
+const BottomDrawer: React.FC<BottomDrawerProps> = ({ children }) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   // Snap points define how high the drawer can be
@@ -14,7 +17,6 @@ const BottomDrawer = () => {
     console.log("Sheet moved to index:", index);
   }, []);
 
-  // TODO: When keyboard is clicked, expand the drawer
   return (
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.bottomSheetContainer}>
@@ -27,7 +29,7 @@ const BottomDrawer = () => {
           style={styles.bottomSheet}
         >
           <BottomSheetView style={styles.contentContainer}>
-            <RideRequestForm />
+            {children}
           </BottomSheetView>
         </BottomSheet>
       </View>
@@ -42,6 +44,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 15,
     width: "100%",
+    backgroundColor: "white",
   },
 });
 

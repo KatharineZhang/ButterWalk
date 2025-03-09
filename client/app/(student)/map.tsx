@@ -7,6 +7,10 @@ import { styles } from "@/assets/styles";
 import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
+import BottomDrawer from "@/components/BottomDrawer";
+import RideRequestForm from "@/components/RideRequestForm";
+
+// file changes to test ride request form!
 import { Alert, Linking } from "react-native";
 import { LocationResponse, WebSocketResponse } from "../../../server/src/api";
 import MapViewDirections from "react-native-maps-directions";
@@ -396,6 +400,7 @@ export default function App() {
           />
         </TouchableOpacity>
 
+      <RideRequestForm />
         {/* faq button TODO: MOVE TO RIDE REQUEST FORM */}
         <TouchableOpacity onPress={() => setFAQVisible(true)}>
           <Image

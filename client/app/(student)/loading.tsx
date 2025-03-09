@@ -1,5 +1,6 @@
-import { View, Text } from "react-native";
-import { Stack } from "expo-router";
+import { View, Text, Pressable } from "react-native";
+import { Stack, useLocalSearchParams, router } from "expo-router";
+import { styles } from "@/assets/styles";
 
 export default function LoadingPage() {
   return (
@@ -13,7 +14,7 @@ export default function LoadingPage() {
           alignItems: "center",
         }}
       >
-        <Text>Loading...</Text>
+        <Text style={{ marginBottom: 20 }}>Loading...</Text>
       </View>
     </>
   );
