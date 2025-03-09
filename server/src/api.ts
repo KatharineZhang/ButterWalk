@@ -17,6 +17,7 @@ export type Command =
   | "WAIT_TIME"
   | "LOCATION"
   | "QUERY"
+  | "PROFILE"
   | "ERROR";
 
 // Input types
@@ -55,9 +56,12 @@ export type WebSocketMessage =
   | { directive: "BLACKLIST"; netid: string }
   | {
       directive: "WAIT_TIME";
-      requestid: string;
-      pickupLocation?: [latitude: number, longitude: number];
-      driverLocation?: [latitude: number, longitude: number];
+      requestedRide?: {
+        pickupLocation: { latitude: number; longitude: number };
+        dropOffLocation: { latitude: number; longitude: number };
+      };
+      requestid?: string;
+      driverLocation?: { latitude: number; longitude: number };
     }
   | {
       directive: "LOCATION";
@@ -70,7 +74,8 @@ export type WebSocketMessage =
       rideOrApp?: "RIDE" | "APP"; // if rideOrApp is undefined, the default is to query both feebcack types
       date?: { start: Date; end: Date };
       rating?: number;
-    };
+    }
+  | { directive: "PROFILE"; netid: string };
 
 // TEMP FIX
 export type ConnectMessage = {
@@ -92,6 +97,7 @@ export type WebSocketResponse =
   | CompleteResponse
   | LocationResponse
   | QueryResponse
+  | ProfileResponse
   | ErrorResponse;
 
 export type GeneralResponse = {
@@ -125,7 +131,11 @@ export type RequestRideResponse = {
   requestid: string;
 };
 
-export type WaitTimeResponse = { response: "WAIT_TIME"; waitTime: number };
+export type WaitTimeResponse = {
+  response: "WAIT_TIME";
+  rideDuration: number;
+  driverETA: number;
+};
 
 export type AcceptResponse = {
   response: "ACCEPT_RIDE";
@@ -167,6 +177,11 @@ export type QueryResponse = {
   feedback: Feedback[];
 };
 
+export type ProfileResponse = {
+  response: "PROFILE";
+  user: User;
+};
+
 export type ErrorResponse = {
   response: "ERROR";
   error: string;
@@ -203,6 +218,7 @@ export type GoogleUserInfo = {
   family_name: string;
   picture: string;
   locale: string;
+  category: Command;
 };
 
 // Server Types and Data Structures
