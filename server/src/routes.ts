@@ -142,6 +142,7 @@ export const signIn = async (
         lastName,
         phoneNumber: null,
         studentNumber: null,
+        studentOrDriver
       });
       return { response: "SIGNIN", success: true, alreadyExists, netid };
     });
@@ -751,26 +752,26 @@ export const query = async (
   }
 };
 
-/* Get user information based on the netid
-- Takes in: { directive: "PROFILE", netid: string }
-- On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: PROFILE }.
-- Returns a json object TO THE DRIVER in the format: { response: PROFILE, user: User } */
-export const profile = async (
-  netid: string
-): Promise<ProfileResponse | ErrorResponse> => {
-  // get the user's profile information
-  // if there is an error, return { success: false, error: 'Error getting profile.'};
-  try {
-    return await runTransaction(db, async (transaction) => {
-      // get the user's profile information
-      const user: User = await getProfile(transaction, netid);
-      return { response: "PROFILE", user };
-    });
-  } catch (e) {
-    return {
-      response: "ERROR",
-      error: `Error getting profile: ${e}`,
-      category: "PROFILE",
-    };
-  }
-};
+// /* Get user information based on the netid
+// - Takes in: { directive: "PROFILE", netid: string }
+// - On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: PROFILE }.
+// - Returns a json object TO THE DRIVER in the format: { response: PROFILE, user: User } */
+// export const profile = async (
+//   netid: string
+// ): Promise<ProfileResponse | ErrorResponse> => {
+//   // get the user's profile information
+//   // if there is an error, return { success: false, error: 'Error getting profile.'};
+//   try {
+//     return await runTransaction(db, async (transaction) => {
+//       // get the user's profile information
+//       const user: User = await getProfile(transaction, netid);
+//       return { response: "PROFILE", user };
+//     });
+//   } catch (e) {
+//     return {
+//       response: "ERROR",
+//       error: `Error getting profile: ${e}`,
+//       category: "PROFILE",
+//     };
+//   }
+// };
