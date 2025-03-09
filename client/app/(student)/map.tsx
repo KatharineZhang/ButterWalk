@@ -7,7 +7,6 @@ import { styles } from "@/assets/styles";
 import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
-import BottomDrawer from "@/components/BottomDrawer";
 import RideRequestForm from "@/components/RideRequestForm";
 
 // file changes to test ride request form!

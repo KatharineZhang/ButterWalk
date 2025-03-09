@@ -1,7 +1,7 @@
-import { View, Text, Pressable } from "react-native";
-import { Stack, useLocalSearchParams, router } from "expo-router";
-import { styles } from "@/assets/styles";
+import { View, Text, } from "react-native";
+import { Stack } from "expo-router";
 
+// currently not in use due to bugs
 export default function LoadingPage() {
   return (
     <>
