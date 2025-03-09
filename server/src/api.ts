@@ -198,7 +198,8 @@ export type ErrorResponse = {
     | "CANCEL"
     | "LOCATION"
     | "QUERY"
-    | "FINISH_ACC";
+    | "FINISH_ACC"
+    | "PROFILE";
 };
 
 // Google Authentication Response types

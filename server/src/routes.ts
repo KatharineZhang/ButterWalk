@@ -18,8 +18,8 @@ import {
   CompleteResponse,
   SignInResponse,
   GoogleResponse,
-  //ProfileResponse,
-  //User,
+  ProfileResponse,
+  User,
 } from "./api";
 import {
   acceptRideRequest,
@@ -34,7 +34,7 @@ import {
   getOtherNetId,
   queryFeedback,
   db,
-  //getProfile,
+  getProfile,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { Mutex } from "async-mutex";
@@ -756,22 +756,22 @@ export const query = async (
 // - Takes in: { directive: "PROFILE", netid: string }
 // - On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: PROFILE }.
 // - Returns a json object TO THE DRIVER in the format: { response: PROFILE, user: User } */
-// export const profile = async (
-//   netid: string
-// ): Promise<ProfileResponse | ErrorResponse> => {
-//   // get the user's profile information
-//   // if there is an error, return { success: false, error: 'Error getting profile.'};
-//   try {
-//     return await runTransaction(db, async (transaction) => {
-//       // get the user's profile information
-//       const user: User = await getProfile(transaction, netid);
-//       return { response: "PROFILE", user };
-//     });
-//   } catch (e) {
-//     return {
-//       response: "ERROR",
-//       error: `Error getting profile: ${e}`,
-//       category: "PROFILE",
-//     };
-//   }
-// };
+export const profile = async (
+  netid: string
+): Promise<ProfileResponse | ErrorResponse> => {
+  // get the user's profile information
+  // if there is an error, return { success: false, error: 'Error getting profile.'};
+  try {
+    return await runTransaction(db, async (transaction) => {
+      // get the user's profile information
+      const user: User = await getProfile(transaction, netid);
+      return { response: "PROFILE", user };
+    });
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error getting profile: ${e}`,
+      category: "PROFILE",
+    };
+  }
+};
