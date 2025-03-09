@@ -1,100 +1,137 @@
 import {
   View,
   Text,
-  StyleSheet,
-  TextInput,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Pressable,
+  TouchableOpacity,
+  Image,
 } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { styles } from "@/assets/styles";
 import { Redirect } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
+
+// need to 'npx expo install expo-web-browser expo-auth-session expo-crypto' ON MAC
+// or 'npm i expo-auth-session@~6.0.3' on windows
+import * as Google from "expo-auth-session/providers/google";
+
+import { WebSocketResponse, SignInResponse, ErrorResponse } from "../../../server/src/api";
+import WebSocketService, { WebsocketConnectMessage } from "@/services/WebSocketService";
+
+// Images
+// @ts-expect-error the image does exists so get rid of the error
+import logo from "@/assets/images/GoogleG.png";
+// @ts-expect-error the image does exists so get rid of the error
+import butterWalkLogo from "@/assets/images/butterWalkLogo.png";
+
+const webClientId = process.env.EXPO_PUBLIC_WEB_CLIENT_ID;
+const iosClientId = process.env.EXPO_PUBLIC_IOS_CLIENT_ID;
+const androidClientId = process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID;
+
+WebBrowser.maybeCompleteAuthSession();
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [signedIn, setSignedIn] = useState(false);
+  const [accExists, setAccExists] = useState<boolean | null>(null);
+  const [errMsg, setErrMsg] = useState("");
+  const [netid, setNetid] = useState("");
 
-  const signIn = async () => {
-    setLoading(true);
-    setEmail(email.trim());
-    setPhoneNumber(phoneNumber.trim());
-
-    if (!email || !phoneNumber) {
-      alert("Email and phone number are required");
-      setLoading(false);
-
-      return;
-    }
-
-    const UWregex = /@uw.edu$/;
-    if (!UWregex.test(email)) {
-      alert("Enter a valid UW email");
-      setLoading(false);
-      return;
-    }
-
-    const phoneRegex = /^\d{3}-\d{3}-\d{4}$/;
-    if (!phoneRegex.test(phoneNumber)) {
-      alert("Phone number must be in the format ###-###-####");
-      setLoading(false);
-
-      return;
-    }
-
-    setSignedIn(true);
-    setLoading(false);
+  const config = {
+    webClientId,
+    iosClientId,
+    androidClientId,
   };
 
-  if (signedIn) {
-    return (
-      <Redirect
-        href={{
-          pathname: "/(student)/map",
-          params: {
-            netid: email != "" ? email.replace("@uw.edu", "") : "student-netID",
-          },
-        }}
-      />
-    );
-  }
-  return (
+  // Request is needed to make google auth work without errors, 
+  // but is not explicitly used, hence the override
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [request, response, promptAsync] = Google.useAuthRequest(config);
+
+  const handleSigninMessage = (message: WebSocketResponse) => {
+    if ("response" in message && message.response == "SIGNIN") {
+      const signinResp = message as SignInResponse;
+
+      if (signinResp.alreadyExists) {
+        console.log("redirecting to map");
+        setAccExists(true);
+      } else {
+        console.log("redirecting to finish acc");
+        setAccExists(false); // redundant but I just want to make sure
+      }
+
+      setNetid(signinResp.netid);
+    } else {
+      // there was a signin related error
+      const errorResp = message as ErrorResponse;
+
+      console.log(errorResp);
+      setErrMsg(errorResp.error);
+    }
+  };
+  WebSocketService.addListener(handleSigninMessage, "SIGNIN");
+
+  useEffect(() => {
+    const connectWebSocket = async () => {
+      // call our new route
+      const msg: WebsocketConnectMessage = await WebSocketService.connect();
+      if (msg == "Connected Successfully") {
+        if (response) {
+          WebSocketService.send({
+            directive: "SIGNIN",
+            response,
+            role: "STUDENT",
+          });
+        }
+      } else {
+        console.log("failed to connect!!!");
+      }
+    };
+    connectWebSocket();
+  }, [response]);
+
+  return accExists == true && netid ? (
+    <Redirect
+      href={{
+        pathname: "/(student)/map",
+        params: {
+          netid: netid,
+        },
+      }}
+    />
+  ) : accExists == false && netid ? (
+    <Redirect
+      href={{
+        pathname: "/(student)/finishAcc",
+        params: {
+          netid: netid,
+        },
+      }}
+    />
+  ) : (
     <View style={styles.container}>
       <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
-        <Text>Welcome Back!</Text>
-        <TextInput
-          value={email}
-          style={localStyles.input}
-          placeholder="UW Email"
-          placeholderTextColor={"#808080"}
-          onChangeText={(text) => setEmail(text)}
-          autoCapitalize="none"
-        />
-        <TextInput
-          value={phoneNumber}
-          style={localStyles.input}
-          placeholder="Phone Number ( ### - ### - #### )"
-          placeholderTextColor={"#808080"}
-          onChangeText={(text) => setPhoneNumber(text)}
-        />
-        {loading ? (
-          <ActivityIndicator size="large" color="#0000ff" />
-        ) : (
-          <>
-            <Pressable style={localStyles.button} onPress={signIn}>
-              <Text style={localStyles.text}>Log In</Text>
-            </Pressable>
-            <Text>For easier dev testing (will be removed later) </Text>
-            <Pressable
-              style={localStyles.button}
-              onPress={() => setSignedIn(true)}
-            >
-              <Text style={localStyles.text}>Bypass Signin</Text>
-            </Pressable>
-          </>
-        )}
+        <Text style={styles.appNameText}>Husky ButterWalk</Text>
+        <Image style={styles.signinLogo} source={butterWalkLogo} />
+        <Text style={styles.signInText}>Sign in</Text>
+        <View style={{height: 20}}></View>
+
+        <TouchableOpacity
+          style={styles.signInGoogleContainer}
+          onPress={() => promptAsync()}
+        >
+          <Image style={styles.signInGoogleLogo} source={logo} />
+          <Text style={{fontWeight: "bold", fontSize: 17}}>Sign in with UW Email</Text>
+        </TouchableOpacity>
+        <Text style={{ color: "red" }}>{errMsg}</Text>
+
+        {/* TEMPORARY Bypass Signin Button */}
+        <View style={{height: 20}}></View>
+        <Pressable
+          style={styles.signInButton}
+          onPress={() => {setAccExists(false); setNetid('student-netid');}}
+        >
+          <Text style={styles.signInText}>Bypass Signin</Text>
+        </Pressable>
+
       </KeyboardAvoidingView>
     </View>
   );
@@ -102,30 +139,3 @@ const Login = () => {
 
 export default Login;
 
-const localStyles = StyleSheet.create({
-  input: {
-    height: 50,
-    width: 300,
-    borderWidth: 1,
-    marginVertical: 4,
-    borderRadius: 4,
-    padding: 10,
-    backgroundColor: "#f9f9f9",
-  },
-  button: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 4,
-    elevation: 3,
-    backgroundColor: "#4B2E83",
-  },
-  text: {
-    fontSize: 16,
-    lineHeight: 21,
-    fontWeight: "bold",
-    letterSpacing: 0.25,
-    color: "white",
-  },
-});

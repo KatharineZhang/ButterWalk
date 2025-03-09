@@ -7,6 +7,10 @@ import {
 // the type of function (event handler) that will be called when a message of a certain type is received
 type WebSocketResponseHandler = (message: WebSocketResponse) => void;
 
+export type WebsocketConnectMessage =
+  | "Failed to Connect"
+  | "Connected Successfully";
+
 // Abstracts the websocket details from the react native app
 class WebSocketService {
   private websocket: WebSocket | null = null;
@@ -19,12 +23,12 @@ class WebSocketService {
    * @param netid
    * @returns
    */
-  connect(netid: string, role: "STUDENT" | "DRIVER") {
+  async connect(): Promise<WebsocketConnectMessage> {
     if (
       this.websocket != null &&
       this.websocket.readyState === WebSocket.OPEN
     ) {
-      return;
+      return Promise.resolve("Connected Successfully");
     }
 
     const IP_ADDRESS = process.env.EXPO_PUBLIC_IP_ADDRESS
@@ -32,19 +36,28 @@ class WebSocketService {
       : undefined;
     if (!IP_ADDRESS) {
       console.error("IP_ADDRESS not found in .env");
-      return;
+      return Promise.resolve("Failed to Connect");
     }
 
     this.websocket = new WebSocket(`ws://${IP_ADDRESS}:8080/api/`);
 
     if (this.websocket == null) {
       console.error("WEBSOCKET: Failed to create WebSocket");
-      return;
+      return Promise.resolve("Failed to Connect");
     }
 
+    this.startWebsocketListeners();
+
+    // return await this.waitForOpenConnection(netid, role);
+    return await this.waitForOpenConnection();
+  }
+
+  startWebsocketListeners = () => {
+    if (this.websocket == null) {
+      return;
+    }
     this.websocket.onopen = () => {
       console.log("WEBSOCKET: Connected to Websocket");
-      this.send({ directive: "CONNECT", netid: netid, role: role });
     };
 
     this.websocket.onmessage = (event) => {
@@ -71,7 +84,33 @@ class WebSocketService {
     this.websocket.onerror = (error: Event) => {
       console.error(`WEBSOCKET: Error: ${(error as ErrorEvent).message}`);
     };
-  }
+  };
+
+  /**
+   * Keep retrying (max 10 times) until connection has been made, with 200 ms gap in between each try
+   */
+  waitForOpenConnection = () => {
+    return new Promise<WebsocketConnectMessage>((resolve, reject) => {
+      const maxNumberOfAttempts = 10;
+      const intervalTime = 200; //ms
+
+      let currentAttempt = 0;
+      const interval = setInterval(() => {
+        if (currentAttempt > maxNumberOfAttempts - 1) {
+          clearInterval(interval);
+          reject("Failed to Connect");
+        } else if (
+          this.websocket != null &&
+          this.websocket.readyState === this.websocket.OPEN
+        ) {
+          // we're connected!
+          clearInterval(interval);
+          resolve("Connected Successfully");
+        }
+        currentAttempt++;
+      }, intervalTime);
+    });
+  };
 
   /**
    * Send a message to the websocket server
