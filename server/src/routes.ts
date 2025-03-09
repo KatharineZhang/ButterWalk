@@ -18,8 +18,8 @@ import {
   CompleteResponse,
   SignInResponse,
   GoogleResponse,
-  ProfileResponse,
-  User,
+  //ProfileResponse,
+  //User,
 } from "./api";
 import {
   acceptRideRequest,
@@ -34,7 +34,7 @@ import {
   getOtherNetId,
   queryFeedback,
   db,
-  getProfile,
+  //getProfile,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { Mutex } from "async-mutex";
