@@ -18,8 +18,8 @@ import {
   CompleteResponse,
   SignInResponse,
   GoogleResponse,
-  //ProfileResponse,
-  //User,
+  ProfileResponse,
+  User,
 } from "./api";
 import {
   acceptRideRequest,
@@ -34,6 +34,7 @@ import {
   getOtherNetId,
   queryFeedback,
   db,
+  getProfile,
   //getProfile,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
@@ -72,20 +73,20 @@ const handleToken = async (
 
 // gets the user profile information using the token from google auth
 // returns us the user info if the user is a UW student and signin is successful
-//     as a JSON object in the form: 
+//     as a JSON object in the form:
 //    { message: "Google Signin Successful", userInfo: {
-    //   "sub": string,
-    //   "name": string,
-    //   "given_name": string,
-    //   "family_name": string,
-    //   "profile": string,
-    //   "picture": string,
-    //   "email": string,
-    //   "email_verified": boolean,
-    //   "locale": string,
-    //   "hd": string
-    // }
-  // }
+//   "sub": string,
+//   "name": string,
+//   "given_name": string,
+//   "family_name": string,
+//   "profile": string,
+//   "picture": string,
+//   "email": string,
+//   "email_verified": boolean,
+//   "locale": string,
+//   "hd": string
+// }
+// }
 // returns an error message if the user is not a UW student and therefore signin is unsuccessful
 const getUserProfile = async (token: string): Promise<GoogleResponse> => {
   if (!token) return { message: "Error signing in: No token" };
@@ -142,7 +143,7 @@ export const signIn = async (
         lastName,
         phoneNumber: null,
         studentNumber: null,
-        studentOrDriver
+        studentOrDriver,
       });
       return { response: "SIGNIN", success: true, alreadyExists, netid };
     });
@@ -160,11 +161,11 @@ export const signIn = async (
 //     as a JSON object in the form: { response: "FINISH_ACC", success: boolean }
 // returns an error message if the account creation is unsuccessful
 //     as a JSON object in the form:
-    // return {
-    //       response: "ERROR",
-    //       error: string,
-    //       category: "FINISH_ACC",
-    //     };
+// return {
+//       response: "ERROR",
+//       error: string,
+//       category: "FINISH_ACC",
+//     };
 export const finishAccCreation = async (
   netid: string,
   preferredName: string,
@@ -752,26 +753,26 @@ export const query = async (
   }
 };
 
-// /* Get user information based on the netid
-// - Takes in: { directive: "PROFILE", netid: string }
-// - On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: PROFILE }.
-// - Returns a json object TO THE DRIVER in the format: { response: PROFILE, user: User } */
-// export const profile = async (
-//   netid: string
-// ): Promise<ProfileResponse | ErrorResponse> => {
-//   // get the user's profile information
-//   // if there is an error, return { success: false, error: 'Error getting profile.'};
-//   try {
-//     return await runTransaction(db, async (transaction) => {
-//       // get the user's profile information
-//       const user: User = await getProfile(transaction, netid);
-//       return { response: "PROFILE", user };
-//     });
-//   } catch (e) {
-//     return {
-//       response: "ERROR",
-//       error: `Error getting profile: ${e}`,
-//       category: "PROFILE",
-//     };
-//   }
-// };
+/* Get user information based on the netid
+- Takes in: { directive: "PROFILE", netid: string }
+- On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: PROFILE }.
+- Returns a json object TO THE DRIVER in the format: { response: PROFILE, user: User } */
+export const profile = async (
+  netid: string
+): Promise<ProfileResponse | ErrorResponse> => {
+  // get the user's profile information
+  // if there is an error, return { success: false, error: 'Error getting profile.'};
+  try {
+    return await runTransaction(db, async (transaction) => {
+      // get the user's profile information
+      const user: User = await getProfile(transaction, netid);
+      return { response: "PROFILE", user };
+    });
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error getting profile: ${e}`,
+      category: "PROFILE",
+    };
+  }
+};
