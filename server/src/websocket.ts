@@ -7,7 +7,6 @@ import {
   cancelRide,
   completeRide,
   location,
-  profile,
   query,
   report,
   requestRide,
@@ -15,6 +14,7 @@ import {
   finishAccCreation,
   waitTime,
   googleAuth,
+  profile,
 } from "./routes";
 import {
   AcceptResponse,
