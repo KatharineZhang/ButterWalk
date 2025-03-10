@@ -8,6 +8,7 @@ import WebSocketService from "@/services/WebSocketService";
 import {
   LocationResponse,
   User,
+  WaitTimeResponse,
   WebSocketResponse,
 } from "../../../server/src/api";
 import RideConfirmComp from "@/components/RideConfirmComp";
@@ -85,6 +86,9 @@ export default function HomePage() {
   const [user, setUser] = useState<User>({} as User);
 
   /* CONFIRM RIDE STATE AND METHODS */
+  const [rideDuration, setRideDuration] = useState(0);
+  const [driverETA, setDriverETA] = useState(0);
+
   const closeConfirmRide = () => {
     setWhichComponent("rideReq");
   };
@@ -118,10 +122,26 @@ export default function HomePage() {
     WebSocketService.addListener(handleAccept, "ACCEPT_RIDE");
     WebSocketService.addListener(handleCompleteOrCancel, "CANCEL");
     WebSocketService.addListener(handleCompleteOrCancel, "COMPLETE");
+    WebSocketService.addListener(handleWaitTime, "WAIT_TIME");
 
     // get the user's profile on first render
     sendProfile();
   }, []);
+
+  
+  useEffect(() => {
+    // when we are trying to show confirm ride component, get the ride duration and driver ETA
+    if (whichComponent == "confirmRide") {
+      // get the ride duration and driver ETA
+      WebSocketService.send({
+        directive: "WAIT_TIME",
+        requestedRide: {
+          pickupLocation: pickUpLocation,
+          dropOffLocation,
+        }
+      });
+    }
+  }, [whichComponent]);
 
   /* WEBSOCKET HANDLERS */
   // WEBSOCKET -- PROFILE
@@ -204,6 +224,17 @@ export default function HomePage() {
     }
   };
 
+  // WEBSOCKET -- WAIT TIME
+  const handleWaitTime = (message: WebSocketResponse) => {
+      if ("response" in message && message.response === "WAIT_TIME") {
+        const waitTimeresp = message as WaitTimeResponse;
+        setRideDuration(waitTimeresp.rideDuration as number);
+        setDriverETA(waitTimeresp.driverETA as number);
+      } else {
+        console.log("Wait time response error: ", message);
+      }
+    };
+
   return (
     <View>
       {/* map component */}
@@ -212,6 +243,7 @@ export default function HomePage() {
         dropOffLocation={dropOffLocation}
         driverLocation={driverLocation}
         userLocationChanged={userLocationChanged}
+        rideDuration={rideDuration}
       />
       {/* profile pop-up modal */}
       <Profile
@@ -256,6 +288,7 @@ export default function HomePage() {
             <RideConfirmComp
               pickUpLoc={pickUpLocationName}
               dropOffLoc={dropOffLocationName}
+              driverETA={driverETA}
               isVisible={true}
               onClose={closeConfirmRide}
               onConfirm={requestRide}
