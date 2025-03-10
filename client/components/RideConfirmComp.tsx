@@ -60,7 +60,7 @@ const RideConfirmComp: React.FC<RideConfirmCompProps> = ({
   const handleWaitTime = (message: WebSocketResponse) => {
     if ("response" in message && message.response === "WAIT_TIME") {
       const waitTimeresp = message as WaitTimeResponse;
-      setWaitTime(waitTimeresp.rideDuration as number);
+      setWaitTime(waitTimeresp.driverETA as number);
     } else {
       console.log("Wait time response error: ", message);
     }
