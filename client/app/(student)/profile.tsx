@@ -30,7 +30,9 @@ function Profile({ isVisible, onClose, user }: ProfileProps) {
       <Text style={styles.faqSubtitle}>Given Name: {user.firstName}</Text>
       <Text style={styles.faqSubtitle}>Last Name: {user.lastName}</Text>
       <Text style={styles.faqSubtitle}>Phone Number: {user.phoneNumber}</Text>
-      <Text style={styles.faqSubtitle}>Student Number: {user.studentNumber}</Text>
+      <Text style={styles.faqSubtitle}>
+        Student Number: {user.studentNumber}
+      </Text>
       <Text style={styles.faqSubtitle}>Role: {user.studentOrDriver}</Text>
       <Pressable style={styles.button} onPress={() => setSignedIn(false)}>
         <Text style={{ color: "#FFFffF", fontSize: 16 }}>Sign Out</Text>

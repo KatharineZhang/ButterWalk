@@ -5,8 +5,6 @@ import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { styles } from "@/assets/styles";
 import { View, Image, Alert, Linking } from "react-native";
-import { useLocalSearchParams } from "expo-router";
-import WebSocketService from "@/services/WebSocketService";
 import MapViewDirections from "react-native-maps-directions";
 
 interface MapProps {
@@ -28,11 +26,6 @@ export default function Map({
   dropOffLocation,
   userLocationChanged,
 }: MapProps) {
-  // INITIAL WEB SOCKET SETUP
-  // Extract netid from Redirect URL from signin page
-  const { netid } = useLocalSearchParams();
-  // Use netid to pair this WebSocket connection with a netid
-
   // STATE VARIABLES
   // the student's location
   const [userLocation, setUserLocation] = useState<{

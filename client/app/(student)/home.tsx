@@ -10,12 +10,12 @@ import {
   User,
   WebSocketResponse,
 } from "../../../server/src/api";
+import RideConfirmComp from "@/components/RideConfirmComp";
+import { LocationNames } from "@/services/LocationService";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
   const { netid } = useLocalSearchParams<{ netid: string }>();
-  // TODO: remove this once auth is merged
-  WebSocketService.connect(netid as string, "STUDENT");
 
   const [rideStatus, setRideStatus] = useState<
     | "NONE"
@@ -69,6 +69,12 @@ export default function HomePage() {
     latitude: number;
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
+  const [pickUpLocationName, setPickUpLocationName] = useState<LocationNames>(
+    "" as LocationNames
+  );
+  const [dropOffLocationName, setDropOffLocationName] = useState<LocationNames>(
+    "" as LocationNames
+  );
 
   const rideRequested = () => {
     setWhichComponent("confirmRide");
@@ -79,15 +85,15 @@ export default function HomePage() {
   const [user, setUser] = useState<User>({} as User);
 
   /* CONFIRM RIDE STATE AND METHODS */
-  const [numberPassengers, setNumberPassengers] = useState(1);
+  const closeConfirmRide = () => {
+    setWhichComponent("rideReq");
+  };
 
   const requestRide = async (requestedPassengers: number) => {
-    // set # of passengers
-    setNumberPassengers(requestedPassengers);
     // send the ride request to the server
     WebSocketService.send({
       directive: "REQUEST_RIDE",
-      phoneNum: user.phoneNumber,
+      phoneNum: user.phoneNumber as string,
       netid,
       location: "location",
       destination: "destination",
@@ -207,15 +213,6 @@ export default function HomePage() {
         driverLocation={driverLocation}
         userLocationChanged={userLocationChanged}
       />
-      {/* ride request drawer HIBA */}
-      {/* Example: <RideRequestDrawer
-        setPickUpLocation={setPickUpLocation}
-        setDropOffLocation={setDropOffLocation}
-        setRideRequested={setRideRequested}
-        setRideConfirmed={setRideConfirmed}
-        netid={netid}
-      /> */}
-
       {/* profile pop-up modal */}
       <Profile
         isVisible={profileVisible}
@@ -245,19 +242,24 @@ export default function HomePage() {
         whichComponent === "rideReq" ? (
           <View>
             {/* ride request component */}
-            {/* Example: <RideRequest
-            requestRide={requestRide}
-            setNumberPassengers={setNumberPassengers}
-          /> */}
+            {/* Example: <RideRequestDrawer
+        setPickUpLocation={setPickUpLocation}
+        setDropOffLocation={setDropOffLocation}
+        setRideRequested={setRideRequested}
+        setRideConfirmed={setRideConfirmed}
+        netid={netid}
+      /> */}
           </View>
         ) : whichComponent === "confirmRide" ? (
           <View>
             {/* confirm ride component */}
-            {/* Example: <ConfirmRide
-            pickUpLocation={pickUpLocation}
-            dropOffLocation={dropOffLocation}
-            rideConfirmed={rideConfirmed}
-          /> */}
+            <RideConfirmComp
+              pickUpLoc={pickUpLocationName}
+              dropOffLoc={dropOffLocationName}
+              isVisible={true}
+              onClose={closeConfirmRide}
+              onConfirm={requestRide}
+            />
           </View>
         ) : whichComponent === "Loading" ? (
           <View>
