@@ -198,6 +198,7 @@ export type ErrorResponse = {
     | "CANCEL"
     | "LOCATION"
     | "QUERY"
+    | "PROFILE"
     | "FINISH_ACC";
 };
 

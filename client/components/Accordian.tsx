@@ -84,18 +84,22 @@ export default function Accordion({
         >
           <ScrollView>
             {/* get the height of the component when it's rendered */}
-            <View onLayout={(event) => setContentHeight(event.nativeEvent.layout.height)}>
-            <Text style={styles.accordianContentText}>{content}</Text>
-            {/* Only show this part if there is an image */}
-            {image && <View style={{ height: 10 }} />}
-            {image && <Image style={styles.accordianImage} source={image} />}
-            {/* Only show this part if there is an link */}
-            {link &&<View style={{ height: 20 }} />}
-            {link && (
-              <Link href={link}>
-                <Text style={styles.accordianLink}>{linkText}</Text>
-              </Link>
-            )}
+            <View
+              onLayout={(event) =>
+                setContentHeight(event.nativeEvent.layout.height)
+              }
+            >
+              <Text style={styles.accordianContentText}>{content}</Text>
+              {/* Only show this part if there is an image */}
+              {image && <View style={{ height: 10 }} />}
+              {image && <Image style={styles.accordianImage} source={image} />}
+              {/* Only show this part if there is an link */}
+              {link && <View style={{ height: 20 }} />}
+              {link && (
+                <Link href={link}>
+                  <Text style={styles.accordianLink}>{linkText}</Text>
+                </Link>
+              )}
             </View>
           </ScrollView>
         </Animated.View>

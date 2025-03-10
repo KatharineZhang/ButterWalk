@@ -67,7 +67,7 @@ const finishAcc = () => {
       netid,
       phoneNum,
       studentNum,
-      preferredName
+      preferredName,
     });
     // 2. get the response back (add listener)
     const handleFinishAccMessage = (message: WebSocketResponse) => {
@@ -124,9 +124,7 @@ const finishAcc = () => {
           autoCapitalize="none"
         />
 
-        <Text style={styles.description}>
-          Phone Number
-        </Text>
+        <Text style={styles.description}>Phone Number</Text>
         <TextInput
           value={phoneNum}
           style={[styles.input, phoneNum && styles.inputFocused]}
@@ -141,10 +139,7 @@ const finishAcc = () => {
         <Text style={styles.button_text}>Sign Up</Text>
       </Pressable>
       <Text>For easier dev testing (will be removed later) </Text>
-      <Pressable
-        style={styles.button}
-        onPress={() => setAccFinished(true)}
-      >
+      <Pressable style={styles.button} onPress={() => setAccFinished(true)}>
         <Text style={styles.text}>Bypass Signin</Text>
       </Pressable>
     </View>
