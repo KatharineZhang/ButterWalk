@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { styles } from "@/assets/styles";
-import { LocationNames, LocationService } from "@/services/LocationService";
-import WebSocketService from "@/services/WebSocketService";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Image,
@@ -13,11 +11,11 @@ import {
   TouchableOpacity,
   Animated,
 } from "react-native";
-import { WaitTimeResponse, WebSocketResponse } from "../../server/src/api";
 
 interface RideConfirmCompProps {
   pickUpLoc: string;
   dropOffLoc: string;
+  driverETA: number;
   isVisible: boolean;
   onClose: () => void; // callback function for when the user closes modal
   onConfirm: (numPassengers: number) => void; // callback function for when the user confirms ride
@@ -26,45 +24,12 @@ interface RideConfirmCompProps {
 const RideConfirmComp: React.FC<RideConfirmCompProps> = ({
   pickUpLoc,
   dropOffLoc,
+  driverETA,
   isVisible,
   onClose,
   onConfirm,
 }) => {
   const [numPassengers, setNumPassengers] = React.useState(1);
-  const [waitTime, setWaitTime] = React.useState(0);
-
-  useEffect(() => {
-    WebSocketService.addListener(handleWaitTime, "WAIT_TIME");
-  }, []);
-
-  useEffect(() => {
-    if (isVisible) {
-      getWaitTime(); // call wait time when modal is visible
-    }
-  }, [isVisible]);
-  const getWaitTime = () => {
-    WebSocketService.send({
-      directive: "WAIT_TIME",
-      // get the lat and long of the pickup and dropoff locations
-      requestedRide: {
-        pickupLocation: LocationService.getLatAndLong(
-          pickUpLoc as LocationNames
-        ),
-        dropOffLocation: LocationService.getLatAndLong(
-          dropOffLoc as LocationNames
-        ),
-      },
-    });
-  };
-
-  const handleWaitTime = (message: WebSocketResponse) => {
-    if ("response" in message && message.response === "WAIT_TIME") {
-      const waitTimeresp = message as WaitTimeResponse;
-      setWaitTime(waitTimeresp.driverETA as number);
-    } else {
-      console.log("Wait time response error: ", message);
-    }
-  };
 
   // animation functions
   const fadeAnim = useState(new Animated.Value(0))[0];
@@ -133,7 +98,7 @@ const RideConfirmComp: React.FC<RideConfirmCompProps> = ({
             />
             <View style={{ width: 15 }} />
             <Text style={styles.waitTimeText}>
-              Estimated Wait Time: {waitTime} minutes
+              Estimated Wait Time: {driverETA} minutes
             </Text>
           </View>
           <View style={{ height: 10 }} />
