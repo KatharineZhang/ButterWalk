@@ -308,5 +308,126 @@ export const styles = StyleSheet.create({
     color: "#8E632A",
     textDecorationLine: "underline",
     fontWeight: "bold",
-  }
+  },
+  // bottome modal styles
+  bottomModalView: {
+    alignItems: "center",
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    width: "100%",
+    height: "60%",
+    position: "absolute",
+    bottom: -100,
+  },
+  bottomModalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  waitTimeText: {
+    fontSize: 16,
+    marginBottom: 8,
+    fontStyle: "italic",
+  },
+  locationContainer: {
+    padding: 15,
+    marginBottom: 10,
+    borderRadius: 10,
+    width: "100%",
+    backgroundColor: "#EEEEEE",
+    alignContent: "center",
+    flexDirection: "row",
+  },
+  locationImage: {
+    position: "absolute",
+    left: 25,
+    bottom: 15,
+    width: 20,
+    height: 20,
+  },
+  locationTextContainer: {
+    paddingLeft: 80,
+  },
+  bottomModalButtonContainer: {
+    justifyContent: "center",
+    width: "100%",
+  },
+  bottomModalButton: {
+    padding: 20,
+    borderRadius: 10,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  confirmButton: {
+    backgroundColor: "#4B2E83",
+  },
+  cancelButton: {
+    backgroundColor: "red",
+  },
+  buttonText: {
+    color: "white",
+    fontSize: 18,
+  },
+  // number of riders stuff
+  animationContainer: {
+    marginBottom: 10,
+    borderWidth: 1,
+    borderRadius: 16,
+    borderColor: "Black/Black 3",
+    paddingVertical: 3,
+    paddingHorizontal: 20,
+  },
+  riderContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  riderControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center", // Centers horizontally
+    marginVertical: 10,
+  },
+  riderCountContainer: {
+    minWidth: 50, // Ensures consistent spacing
+    alignItems: "center",
+  },
+  riderCount: {
+    fontSize: 18,
+    marginTop: 0,
+    marginBottom: 8,
+    marginLeft: 5,
+  },
+  riderIconsContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    height: 50,
+    marginRight: 20,
+  },
+  riderIcon: {
+    opacity: 1,
+  },
+  riderImage: {
+    width: 32, // Adjust based on your design
+    height: 32,
+    resizeMode: "contain",
+  },
 });

@@ -15,8 +15,14 @@ import * as WebBrowser from "expo-web-browser";
 // or 'npm i expo-auth-session@~6.0.3' on windows
 import * as Google from "expo-auth-session/providers/google";
 
-import { WebSocketResponse, SignInResponse, ErrorResponse } from "../../../server/src/api";
-import WebSocketService, { WebsocketConnectMessage } from "@/services/WebSocketService";
+import {
+  WebSocketResponse,
+  SignInResponse,
+  ErrorResponse,
+} from "../../../server/src/api";
+import WebSocketService, {
+  WebsocketConnectMessage,
+} from "@/services/WebSocketService";
 
 // Images
 // @ts-expect-error the image does exists so get rid of the error
@@ -41,7 +47,7 @@ const Login = () => {
     androidClientId,
   };
 
-  // Request is needed to make google auth work without errors, 
+  // Request is needed to make google auth work without errors,
   // but is not explicitly used, hence the override
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [request, response, promptAsync] = Google.useAuthRequest(config);
@@ -112,30 +118,33 @@ const Login = () => {
         <Text style={styles.appNameText}>Husky ButterWalk</Text>
         <Image style={styles.signinLogo} source={butterWalkLogo} />
         <Text style={styles.signInText}>Sign in</Text>
-        <View style={{height: 20}}></View>
+        <View style={{ height: 20 }}></View>
 
         <TouchableOpacity
           style={styles.signInGoogleContainer}
           onPress={() => promptAsync()}
         >
           <Image style={styles.signInGoogleLogo} source={logo} />
-          <Text style={{fontWeight: "bold", fontSize: 17}}>Sign in with UW Email</Text>
+          <Text style={{ fontWeight: "bold", fontSize: 17 }}>
+            Sign in with UW Email
+          </Text>
         </TouchableOpacity>
         <Text style={{ color: "red" }}>{errMsg}</Text>
 
         {/* TEMPORARY Bypass Signin Button */}
-        <View style={{height: 20}}></View>
+        <View style={{ height: 20 }}></View>
         <Pressable
           style={styles.signInButton}
-          onPress={() => {setAccExists(false); setNetid('student-netid');}}
+          onPress={() => {
+            setAccExists(false);
+            setNetid("student-netid");
+          }}
         >
           <Text style={styles.signInText}>Bypass Signin</Text>
         </Pressable>
-
       </KeyboardAvoidingView>
     </View>
   );
 };
 
 export default Login;
-

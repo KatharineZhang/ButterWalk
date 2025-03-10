@@ -8,7 +8,9 @@ import Header from "@/components/Header";
 import { styles } from "@/assets/styles";
 import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import WebSocketService, {WebsocketConnectMessage} from "@/services/WebSocketService";
+import WebSocketService, {
+  WebsocketConnectMessage,
+} from "@/services/WebSocketService";
 import { Alert, Linking } from "react-native";
 import {
   DriverAcceptResponse,
@@ -66,7 +68,7 @@ export default function App() {
 
   // STATE HOOKS
   useEffect(() => {
-  // TODO: MOVE CONNECTION TO THE SIGNIN.TSX WHEN THAT IS IMPLEMENTED 
+    // TODO: MOVE CONNECTION TO THE SIGNIN.TSX WHEN THAT IS IMPLEMENTED
     // await connection from websocket
     const connectWebSocket = async () => {
       const msg: WebsocketConnectMessage = await WebSocketService.connect();
