@@ -1,5 +1,5 @@
 // This is where we will directly interact with the firestore database
-import app from "./firebaseConfig";
+import { app } from "./firebaseConfig";
 import {
   collection,
   doc,
@@ -26,8 +26,10 @@ const problematicUsersCollection = collection(db, "ProblematicUsers");
 const feedbackCollection = collection(db, "Feedback");
 
 // SIGN IN - Adds a user to the database if they are not problematic
+// this is a completely NEW USER
 export async function createUser(transaction: Transaction, user: User) {
   // check if the user is in the problematicUsers table with a blacklisted status
+  console.log("in createUser");
   const isProblematic = doc(db, "ProblematicUsers", user.netid);
   const problematicDoc = await getDoc(isProblematic);
   if (
@@ -39,8 +41,59 @@ export async function createUser(transaction: Transaction, user: User) {
 
   // otherwise, add the user to the users table using transaction
   // use the net id of the user as the document id
+  console.log("createUser netid: ", user.netid);
   const docRef = doc(usersCollection, user.netid);
-  return await transaction.set(docRef, user);
+  const docSnap = await transaction.get(docRef);
+  if (docSnap.exists()) {
+    const data = docSnap.data() as User;
+    console.log(data);
+    if (data.phoneNumber === null && data.studentNumber === null) {
+      console.log("User exists but phoneNum and studentNum are NULL");
+      return false;
+    } else {
+      console.log("User already exists in the database");
+      return true;
+    }
+  } else {
+    console.log("User does NOT exist in the database");
+    await transaction.set(docRef, user);
+    return false;
+  }
+}
+
+// FINISH ACCOUNT CREATION - add phone number and student num to the database
+// associated with the user's unique netid
+// returns true if the user was updated, false if the user was not found
+export async function finishCreatingUser(
+  transaction: Transaction,
+  netid: string,
+  preferredName: string,
+  phoneNumber: string,
+  studentNumber: string
+) {
+  // use the net id of the user as the document id
+  console.log("finishCreatingUser: ", netid);
+  const docRef = doc(usersCollection, netid);
+  const docSnap = await transaction.get(docRef);
+  if (docSnap.exists()) {
+    console.log("User already exists in the database");
+
+    try {
+      await transaction.update(docRef, {
+        preferredName, // add new entry to document
+        phoneNumber,
+        studentNumber,
+      });
+
+      return true;
+    } catch (error) {
+      console.log(`Error occured when updating user databse: ${error}`);
+      return false;
+    }
+  } else {
+    console.log("User does NOT exists in the database");
+    return false;
+  }
 }
 
 // REQUEST RIDE - Add a ride request to the database
@@ -280,6 +333,7 @@ export async function queryFeedback(
   return docs.docs.map((doc) => doc.data() as Feedback);
 }
 
+// PROFILE - Get a user's profile
 export async function getProfile(
   transaction: Transaction,
   netid: string

@@ -12,7 +12,9 @@ import {
   report,
   requestRide,
   signIn,
+  finishAccCreation,
   waitTime,
+  googleAuth,
 } from "./routes";
 import {
   AcceptResponse,
@@ -20,6 +22,8 @@ import {
   CompleteResponse,
   WebSocketMessage,
   WebSocketResponse,
+  GoogleResponse,
+  ErrorResponse,
 } from "./api";
 
 export const handleWebSocketMessage = async (
@@ -43,28 +47,53 @@ export const handleWebSocketMessage = async (
   }
 
   switch (input.directive) {
-    // call the correct function based on the directive
-    case "CONNECT":
-      // Connect the specific websocket to the netid specified in input
-      console.log(`WEBSOCKET: User ${input.netid} connected`);
-      clients.map((client) => {
-        if (client.websocketInstance == ws) {
-          client.netid = input.netid;
-          client.role = input.role;
-        }
-      });
-      break;
+    case "SIGNIN": {
+      if (input.response == null) {
+        // early fail if the token is null
+        resp = {
+          response: "ERROR",
+          error: "The passed in response token is null",
+          category: "SIGNIN",
+        } as ErrorResponse;
+      } else {
+        // call google auth method
+        const authResp: GoogleResponse = await googleAuth(input.response);
+        if ("userInfo" in authResp) {
+          // successfull google signin!
+          const userInfo = authResp.userInfo;
 
-    case "SIGNIN":
-      resp = await signIn(
-        input.netid,
-        input.first_name,
-        input.last_name,
-        input.phoneNum,
-        input.studentNum,
-        input.role
-      );
+          // connect to webocket
+          const netid = userInfo.email.replace("@uw.edu", "");
+          connectWebsocketToNetid(ws, netid, input.role);
+
+          // call signin and set the response to whatever signin returned
+          resp = await signIn(
+            netid,
+            userInfo.given_name,
+            userInfo.family_name,
+            input.role
+          );
+        } else {
+          // authResp is GoogleResponse's error subtype
+          // return its error message the response
+          resp = {
+            response: "ERROR",
+            error: authResp.message,
+            category: "SIGNIN",
+          } as ErrorResponse;
+        }
+      }
       // send response back to client (the student)
+      sendWebSocketMessage(ws, resp);
+      break;
+    }
+    case "FINISH_ACC":
+      resp = await finishAccCreation(
+        input.netid,
+        input.preferredName,
+        input.phoneNum,
+        input.studentNum
+      );
       sendWebSocketMessage(ws, resp);
       break;
 
@@ -213,4 +242,17 @@ export const sendWebSocketMessage = (
   message: WebSocketResponse
 ): void => {
   ws.send(JSON.stringify(message));
+};
+
+export const connectWebsocketToNetid = (
+  ws: WebSocketServer,
+  netid: string,
+  role: "STUDENT" | "DRIVER"
+) => {
+  clients.map((client) => {
+    if (client.websocketInstance == ws) {
+      client.netid = netid;
+      client.role = role;
+    }
+  });
 };

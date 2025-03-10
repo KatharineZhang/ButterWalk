@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import { AuthSessionResult } from "expo-auth-session";
 import {
   localRideRequest,
   rideReqQueue,
@@ -6,6 +7,7 @@ import {
   AcceptResponse,
   CancelResponse,
   GeneralResponse,
+  FinishAccCreationResponse,
   RequestRideResponse,
   WaitTimeResponse,
   LocationResponse,
@@ -14,8 +16,10 @@ import {
   Feedback,
   ProblematicUser,
   CompleteResponse,
-  ProfileResponse,
-  User,
+  SignInResponse,
+  GoogleResponse,
+  //ProfileResponse,
+  //User,
 } from "./api";
 import {
   acceptRideRequest,
@@ -26,10 +30,11 @@ import {
   cancelRideRequest,
   completeRideRequest,
   createUser,
+  finishCreatingUser,
   getOtherNetId,
   queryFeedback,
   db,
-  getProfile,
+  //getProfile,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { Mutex } from "async-mutex";
@@ -39,6 +44,73 @@ dotenv.config();
 // we want to lock the entire section to make both the database action
 // and the queue action combined into one atomic action to prevent data races
 const queueLock: Mutex = new Mutex();
+
+// performs the google auth and returns the user profile information
+export const googleAuth = async (
+  response: AuthSessionResult
+): Promise<GoogleResponse> => {
+  return await handleToken(response);
+};
+
+const handleToken = async (
+  response: AuthSessionResult
+): Promise<GoogleResponse> => {
+  if (response?.type === "success") {
+    const { authentication } = response;
+    if (authentication == null) {
+      console.error("auth is null @106 routes.ts");
+    } else {
+      const token = authentication.accessToken;
+      console.log("access token", token);
+
+      return getUserProfile(token);
+    }
+  }
+  console.log("error with response", response);
+  return { message: "Error signing in: Make sure you're using your UW email." };
+};
+
+// gets the user profile information using the token from google auth
+// returns us the user info if the user is a UW student and signin is successful
+//     as a JSON object in the form: 
+//    { message: "Google Signin Successful", userInfo: {
+    //   "sub": string,
+    //   "name": string,
+    //   "given_name": string,
+    //   "family_name": string,
+    //   "profile": string,
+    //   "picture": string,
+    //   "email": string,
+    //   "email_verified": boolean,
+    //   "locale": string,
+    //   "hd": string
+    // }
+  // }
+// returns an error message if the user is not a UW student and therefore signin is unsuccessful
+const getUserProfile = async (token: string): Promise<GoogleResponse> => {
+  if (!token) return { message: "Error signing in: No token" };
+  try {
+    const response = await fetch(
+      "https://www.googleapis.com/oauth2/v1/userinfo?alt=json",
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    const userInfo = await response.json();
+    const email = userInfo.email;
+
+    const UWregex = /@uw.edu$/;
+    if (!UWregex.test(email)) {
+      return {
+        message: "Error signing in: Please ensure your using your UW email",
+      };
+    }
+
+    return { message: "Google Signin Successful", userInfo };
+  } catch (error) {
+    console.log("error fetching user info", error);
+  }
+  return { message: "Error signing in: Error getting profile" };
+};
 
 /* Signs a specific student or driver into the app. Will check the users database for the specific id, 
 and if it is not there, will add a new user. If the user is in the table, we need to make sure this user 
@@ -53,35 +125,77 @@ export const signIn = async (
   netid: string,
   firstName: string,
   lastName: string,
-  phoneNumber: string,
-  studentNumber: string,
   studentOrDriver: "STUDENT" | "DRIVER"
-): Promise<GeneralResponse | ErrorResponse> => {
-  if (!phoneNumber || !netid || !firstName || !!lastName || !studentNumber) {
+): Promise<SignInResponse | ErrorResponse> => {
+  if (!netid || !firstName || !lastName) {
     return {
       response: "ERROR",
       error: "Missing or invalid sign in details.",
       category: "SIGNIN",
     };
   }
-  // TODO: Email (and phone number?) validation
   try {
-    await runTransaction(db, async (transaction) => {
-      await createUser(transaction, {
+    return await runTransaction(db, async (transaction) => {
+      const alreadyExists = await createUser(transaction, {
         netid,
         firstName,
         lastName,
-        phoneNumber,
-        studentNumber,
-        studentOrDriver,
+        phoneNumber: null,
+        studentNumber: null,
+        studentOrDriver
       });
+      return { response: "SIGNIN", success: true, alreadyExists, netid };
     });
-    return { response: "SIGNIN", success: true };
   } catch (e: unknown) {
     return {
       response: "ERROR",
       error: `Error adding user to database: ${(e as Error).message}.`,
       category: "SIGNIN",
+    };
+  }
+};
+
+// Finishes the account for the user by adding the phone number and student number to the database
+// returns a success message if the account creation is successful and a boolean value of true if the account already exists
+//     as a JSON object in the form: { response: "FINISH_ACC", success: boolean }
+// returns an error message if the account creation is unsuccessful
+//     as a JSON object in the form:
+    // return {
+    //       response: "ERROR",
+    //       error: string,
+    //       category: "FINISH_ACC",
+    //     };
+export const finishAccCreation = async (
+  netid: string,
+  preferredName: string,
+  phone_number: string,
+  student_num: string
+): Promise<FinishAccCreationResponse | ErrorResponse> => {
+  if (!netid || !phone_number || !student_num) {
+    return {
+      response: "ERROR",
+      error: "Missing or invalid finish account creation details.",
+      category: "FINISH_ACC",
+    };
+  }
+
+  // add values to database
+  try {
+    return await runTransaction(db, async (transaction) => {
+      const isSuccessful = await finishCreatingUser(
+        transaction,
+        netid,
+        preferredName,
+        phone_number,
+        student_num
+      );
+      return { response: "FINISH_ACC", success: isSuccessful };
+    });
+  } catch (e: unknown) {
+    return {
+      response: "ERROR",
+      error: `Error adding phone number or student number to database: ${(e as Error).message}.`,
+      category: "FINISH_ACC",
     };
   }
 };
@@ -638,22 +752,26 @@ export const query = async (
   }
 };
 
-export const profile = async (
-  netid: string
-): Promise<ProfileResponse | ErrorResponse> => {
-  // get the user's profile information
-  // if there is an error, return { success: false, error: 'Error getting profile.'};
-  try {
-    return await runTransaction(db, async (transaction) => {
-      // get the user's profile information
-      const user: User = await getProfile(transaction, netid);
-      return { response: "PROFILE", user };
-    });
-  } catch (e) {
-    return {
-      response: "ERROR",
-      error: `Error getting profile: ${e}`,
-      category: "PROFILE",
-    };
-  }
-};
+// /* Get user information based on the netid
+// - Takes in: { directive: "PROFILE", netid: string }
+// - On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: PROFILE }.
+// - Returns a json object TO THE DRIVER in the format: { response: PROFILE, user: User } */
+// export const profile = async (
+//   netid: string
+// ): Promise<ProfileResponse | ErrorResponse> => {
+//   // get the user's profile information
+//   // if there is an error, return { success: false, error: 'Error getting profile.'};
+//   try {
+//     return await runTransaction(db, async (transaction) => {
+//       // get the user's profile information
+//       const user: User = await getProfile(transaction, netid);
+//       return { response: "PROFILE", user };
+//     });
+//   } catch (e) {
+//     return {
+//       response: "ERROR",
+//       error: `Error getting profile: ${e}`,
+//       category: "PROFILE",
+//     };
+//   }
+// };

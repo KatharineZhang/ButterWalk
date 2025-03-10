@@ -1,10 +1,12 @@
 // This is where all the server / database data structures will go
 import { Timestamp } from "firebase/firestore";
+import { AuthSessionResult } from "expo-auth-session";
 
 // Webhook commands
 export type Command =
   | "CONNECT"
   | "SIGNIN"
+  | "FINISH_ACC"
   | "REQUEST_RIDE"
   | "ACCEPT_RIDE"
   | "CANCEL"
@@ -23,12 +25,15 @@ export type WebSocketMessage =
   | { directive: "CONNECT"; netid: string; role: "STUDENT" | "DRIVER" }
   | {
       directive: "SIGNIN";
+      response: AuthSessionResult;
+      role: "STUDENT" | "DRIVER";
+    }
+  | {
+      directive: "FINISH_ACC";
       netid: string;
-      first_name: string;
-      last_name: string;
+      preferredName: string;
       phoneNum: string;
       studentNum: string;
-      role: "STUDENT" | "DRIVER";
     }
   | {
       directive: "REQUEST_RIDE";
@@ -72,9 +77,18 @@ export type WebSocketMessage =
     }
   | { directive: "PROFILE"; netid: string };
 
+// TEMP FIX
+export type ConnectMessage = {
+  directive: "CONNECT";
+  netid: string;
+  role: "STUDENT" | "DRIVER";
+};
+
 // Response types
 export type WebSocketResponse =
   | GeneralResponse
+  | SignInResponse
+  | FinishAccCreationResponse
   | RequestRideResponse
   | WaitTimeResponse
   | AcceptResponse
@@ -90,6 +104,7 @@ export type GeneralResponse = {
   response:
     | "CONNECT"
     | "SIGNIN"
+    | "FINISH_ACC"
     | "CANCEL"
     | "COMPLETE"
     | "ADD_FEEDBACK"
@@ -97,6 +112,18 @@ export type GeneralResponse = {
     | "BLACKLIST"
     | "ACCEPT_RIDE";
   success: true;
+};
+
+export type SignInResponse = {
+  response: "SIGNIN";
+  success: true;
+  alreadyExists: boolean;
+  netid: string;
+};
+
+export type FinishAccCreationResponse = {
+  response: "FINISH_ACC";
+  success: boolean;
 };
 
 export type RequestRideResponse = {
@@ -158,6 +185,39 @@ export type ProfileResponse = {
 export type ErrorResponse = {
   response: "ERROR";
   error: string;
+  category:
+    | "CONNECT"
+    | "SIGNIN"
+    | "COMPLETE"
+    | "ADD_FEEDBACK"
+    | "REPORT"
+    | "BLACKLIST"
+    | "WAIT_TIME"
+    | "REQUEST_RIDE"
+    | "ACCEPT_RIDE"
+    | "CANCEL"
+    | "LOCATION"
+    | "QUERY"
+    | "FINISH_ACC";
+};
+
+// Google Authentication Response types
+export type GoogleResponse =
+  | GoogleResponseSuccess
+  | { message: `Error signing in: ${string}` };
+export type GoogleResponseSuccess = {
+  message: "Google Signin Successful";
+  userInfo: GoogleUserInfo;
+};
+export type GoogleUserInfo = {
+  id: string;
+  email: string;
+  verified_email: boolean;
+  name: string;
+  given_name: string;
+  family_name: string;
+  picture: string;
+  locale: string;
   category: Command;
 };
 
@@ -210,10 +270,10 @@ export type User = {
   netid: string;
   firstName: string;
   lastName: string;
-  phoneNumber: string;
-  studentNumber: string;
+  phoneNumber: string | null;
+  studentNumber: string | null;
   studentOrDriver: "STUDENT" | "DRIVER";
-  preferredName?: string;
+  preferredName?: string; // if the account has been finished, there will be a preferred name
 };
 
 // CREATE TABLE Feedback (feedbackid int PRIMARY KEY, rating float, textFeedback text,

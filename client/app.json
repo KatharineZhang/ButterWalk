@@ -1,45 +1,59 @@
 {
   "expo": {
-    "name": "Husky BetterWalk",
-    "slug": "husky-betterWalk",
+    "name": "Husky ButterWalk",
+    "slug": "husky-butterWalk",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/betterWalkLogo.png",
+    "icon": "./assets/images/butterWalkLogo.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/betterWalkLogo.png",
+      "image": "./assets/images/butterWalkLogo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.betterwalk.betterwalk",
+      "bundleIdentifier": "com.butterwalk.butterwalk",
       "config": {
-        "googleMapsApiKey": "see app.config.ts" 
+        "googleMapsApiKey": "AIzaSyAi4GiqY4FUMk7CQWB0MxNQIGWOsr_laBw"
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/betterWalkLogo.png",
+        "foregroundImage": "./assets/images/butterWalkLogo.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.betterwalk.betterwalk",
+      "package": "com.butterwalk.butterwalk",
       "config": {
         "googleMaps": {
-        "apiKey": "see app.config.ts"
+          "apiKey": "see app.config.ts"
         }
       }
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/betterWalkLogo.png"
+      "favicon": "./assets/images/butterWalkLogo.png"
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router"
+    ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "24a5e20c-9f0d-4a09-9f2d-49ae53b470e5"
+      },
+      "scheme": "butterWalk"
     }
   }
 }
