@@ -19,11 +19,7 @@ function PopUpModal({ isVisible, onClose, content }: PopUpModalProps) {
       visible={isVisible}
       onRequestClose={onClose}
     >
-      <TouchableOpacity
-        style={styles.modalCenteredView}
-        activeOpacity={1}
-        onPressOut={onClose} // close modal when user clicks outside of it
-      >
+      <TouchableOpacity style={styles.modalCenteredView} activeOpacity={1}>
         <View style={styles.modalModalView}>
           {/* Close Button */}
           <TouchableOpacity

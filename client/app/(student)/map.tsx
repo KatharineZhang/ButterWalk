@@ -33,8 +33,6 @@ export default function Map({
   const { netid } = useLocalSearchParams();
   // Use netid to pair this WebSocket connection with a netid
 
-  WebSocketService.connect(netid as string, "STUDENT");
-
   // STATE VARIABLES
   // the student's location
   const [userLocation, setUserLocation] = useState<{

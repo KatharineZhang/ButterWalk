@@ -20,8 +20,6 @@ import {
   GoogleResponse,
   ProfileResponse,
   User,
-  //ProfileResponse,
-  //User,
 } from "./api";
 import {
   acceptRideRequest,
