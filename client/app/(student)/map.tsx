@@ -4,7 +4,7 @@ import MapView, { Polygon, Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { styles } from "@/assets/styles";
-import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
+import { View, TouchableOpacity, Image } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
 import RideRequestForm from "@/components/RideRequestForm";
@@ -13,9 +13,9 @@ import RideRequestForm from "@/components/RideRequestForm";
 import { Alert, Linking } from "react-native";
 import { LocationResponse, WebSocketResponse } from "../../../server/src/api";
 import MapViewDirections from "react-native-maps-directions";
-import { LocationNames, LocationService } from "@/services/LocationService";
-import FAQ from "./faq";
-import Profile from "./profile";
+// import { LocationNames, LocationService } from "@/services/LocationService";
+// import FAQ from "./faq";
+// import Profile from "./profile";
 
 export default function App() {
   // INITIAL WEB SOCKET SETUP
@@ -50,9 +50,9 @@ export default function App() {
     ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
     : "";
   // FAQ State
-  const [FAQVisible, setFAQVisible] = useState(false);
+  // const [FAQVisible, setFAQVisible] = useState(false);
   // Profile State
-  const [profileVisible, setProfileVisible] = useState(false);
+  // const [profileVisible, setProfileVisible] = useState(false);
 
   // control where we want to zoom on the map
   // in the format: [userLocation, driverLocation, pickUpLocation, dropOffLocation]

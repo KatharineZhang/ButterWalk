@@ -227,6 +227,7 @@ export default function RideRequestForm() {
                 <Text style={styles.riderCount}>{numRiders} passenger(s)</Text>
               </View>
             </View>
+            
 
             {/* Information Text */}
             <Text style={styles.infoText}>
