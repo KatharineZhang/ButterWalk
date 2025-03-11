@@ -26,7 +26,6 @@ const BottomDrawer: React.FC<BottomDrawerProps> = ({ children }) => {
           onChange={handleSheetChanges}
           enablePanDownToClose={false}
           index={0}
-          style={styles.bottomSheet}
         >
           <BottomSheetView style={styles.contentContainer}>
             {children}
@@ -40,6 +39,13 @@ const BottomDrawer: React.FC<BottomDrawerProps> = ({ children }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  bottomSheetContainer: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    position: "absolute",
+    bottom: 0,
   },
   contentContainer: {
     padding: 15,

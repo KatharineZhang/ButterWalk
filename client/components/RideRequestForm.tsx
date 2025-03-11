@@ -30,7 +30,7 @@ export default function RideRequestForm() {
   const [message, setMessage] = useState("");
 
   // true if ride request is accepted by server
-  const [accepted, setAccepted] = useState(false); 
+  const [accepted, setAccepted] = useState(false);
 
   /* SERVER STUFF START */
 
@@ -41,11 +41,12 @@ export default function RideRequestForm() {
     // Ride will only accepted if we get a successful response from server
     if ("response" in message && message.response === "REQUEST_RIDE") {
       setMessage(JSON.stringify(message));
+      console.log(message);
       setAccepted(true);
     }
   };
-   // send ride request to server
-   const handleSend = () => {
+  // send ride request to server
+  const handleSend = () => {
     WebSocketService.send({
       directive: "REQUEST_RIDE",
       phoneNum: "111-111-1111", // TODO: GET PHONE NUMBER HERE SOMEHOW
@@ -56,9 +57,8 @@ export default function RideRequestForm() {
     });
   };
 
-  // This function will be called whenever the server sends a message for CANCEL RIDE 
+  // This function will be called whenever the server sends a message for CANCEL RIDE
   const handleCancelMessage = (message: WebSocketResponse) => {
-
     // If cancellation was successful (server gave correct response), set accepted to false
     if ("response" in message && message.response === "CANCEL") {
       // debugging statement: console.log("Received cancel message from server:", message);
@@ -76,7 +76,6 @@ export default function RideRequestForm() {
     });
   };
 
-
   // add listeners for REQUEST_RIDE and CANCEL to call handle functions
   useEffect(() => {
     WebSocketService.addListener(handleMessage, "REQUEST_RIDE");
@@ -89,7 +88,6 @@ export default function RideRequestForm() {
   }, []);
 
   /* SERVER STUFF ENDS HERE */
-
 
   /* FUZZY SEARCH BAR STUFF */
 
@@ -160,8 +158,8 @@ export default function RideRequestForm() {
         {accepted ? (
           <>
             <Text style={styles.formHeader}>Ride Request Accepted</Text>
-            <Pressable onPress={sendCancel} style={styles.button}>
-              <Text>Cancel Ride</Text>
+            <Pressable onPress={sendCancel} style={styles.sendButton}>
+              <Text style={styles.buttonLabel}>Cancel Ride</Text>
             </Pressable>
           </>
         ) : (

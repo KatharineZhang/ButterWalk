@@ -364,8 +364,13 @@ export default function App() {
           />
         </TouchableOpacity>
       </View>
+      <View style={{ position: "absolute", width: "100%", height: "100%" }}>
+        <RideRequestForm />
+      </View>
+      
 
       {/* Temporary footer for requesting rides*/}
+      {/*
       <View
         style={{
           position: "absolute",
@@ -379,45 +384,59 @@ export default function App() {
           gap: 10,
         }}
       >
+      */}
+      {/*
         <Pressable
           onPress={sendRequest}
           style={{ backgroundColor: "#4B2E83", padding: 10, borderRadius: 5 }}
         >
-          <Text style={{ color: "white" }}>Request Ride</Text>
+      */}
+      {/* <Text style={{ color: "white" }}>Request Ride</Text> */}
+      {/*}
         </Pressable>
         <Pressable
           onPress={sendCancel}
           style={{ backgroundColor: "#4B2E83", padding: 10, borderRadius: 5 }}
         >
+        /*}
+        /
           <Text style={{ color: "white" }}>Cancel</Text>
         </Pressable>
         {/* recenter button */}
+      {/*
         <TouchableOpacity onPress={() => centerMapOnLocations(zoomOn)}>
           <Image
             source={require("@/assets/images/recenter.png")}
             style={{ width: 50, height: 50 }}
           />
         </TouchableOpacity>
+    */}
 
-      <RideRequestForm />
-        {/* faq button TODO: MOVE TO RIDE REQUEST FORM */}
+      {/* faq button TODO: MOVE TO RIDE REQUEST FORM */}
+      {/*}
         <TouchableOpacity onPress={() => setFAQVisible(true)}>
           <Image
             source={require("@/assets/images/faq-button.png")}
             style={{ width: 20, height: 20 }}
           />
         </TouchableOpacity>
+    */}
 
-        {/* faq pop-up modal */}
+      {/* faq pop-up modal */}
+      {/*
         <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
+  */}
 
-        {/* profile pop-up modal */}
+      {/* profile pop-up modal */}
+
+      {/*
         <Profile
           isVisible={profileVisible}
           onClose={() => setProfileVisible(false)}
           netid={netid as string}
         />
-      </View>
+*/}
+      {/* </View> */}
     </View>
   );
 }
