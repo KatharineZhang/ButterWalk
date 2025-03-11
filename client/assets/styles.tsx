@@ -311,3 +311,72 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
   }
 });
+
+
+export const loadingPageCompStyles = StyleSheet.create({
+  rootContainer: {
+    flex: 1,
+    width: 393,
+    height: 852,
+    paddingBottom: 802,
+    flexDirection: "column",
+    alignItems: "center",
+  },
+  pickUpContainer: {
+    flex: 1,
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: 2,
+  },
+  dropOffContainer: {
+    flex: 1,
+    flexDirection: "column",
+    alignItems: "flex-end",
+    gap: 2,
+  },
+  locationMainTextTypography: {
+    color: "white",
+    textAlign: "center",
+    fontSize: 12,
+    fontFamily: "Open Sans",
+    fontWeight: "700",
+  },
+  locationSubTextTypography: {
+    color: "white",
+    fontSize: 12,
+    fontFamily: "Open Sans",
+    fontWeight: "400",
+  },
+  middleDisplayContainer: {
+    flex: 1,
+    width: 393,
+    height: 802,
+    padding: 40,
+    paddingHorizontal: 16,
+    flexDirection: "column",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  mainTextContainer: {
+    alignSelf: "stretch",
+  },
+  mainTextTypography: {
+    color: "#FFF",
+    textAlign: "center",
+    fontFamily: "Encode Sans",
+    fontSize: 28,
+    fontWeight: "700",
+    lineHeight: 28,
+  },
+  subtextContainer: {
+    alignSelf: "stretch",
+  },
+  subtextTypography: {
+    color: "#FFF",
+    textAlign: "center",
+    fontFamily: "Open Sans",
+    fontSize: 16,
+    fontWeight: "400",
+    lineHeight: 16,
+  },
+});
