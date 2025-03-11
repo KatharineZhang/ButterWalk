@@ -137,7 +137,7 @@ const Login = () => {
           style={styles.signInButton}
           onPress={() => {
             setAccExists(false);
-            setNetid("student-netid");
+            setNetid("student-netID");
           }}
         >
           <Text style={styles.signInText}>Bypass Signin</Text>

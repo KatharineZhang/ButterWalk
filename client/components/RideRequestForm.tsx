@@ -9,7 +9,7 @@ import {
   Animated,
   TouchableOpacity,
 } from "react-native";
-import { WebSocketResponse } from "../../server/src/api";
+import { ErrorResponse, WebSocketResponse } from "../../server/src/api";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
 import AutocompleteInput from "./AutocompleteInput";
@@ -33,6 +33,7 @@ export default function RideRequestForm() {
   const [location, setLocation] = useState("");
   const [destination, setDestination] = useState("");
   const [numRiders, setNumRiders] = useState(1);
+  const [message, setMessage] = useState("");
 
   // FAQ State
   const [FAQVisible, setFAQVisible] = useState(false);
@@ -44,16 +45,22 @@ export default function RideRequestForm() {
 
   // This function will be called whenever the server sends a message for REQUEST_RIDE
   const handleMessage = (message: WebSocketResponse) => {
-    // debugging statement: console.log("Received message from server:", message);
-
     // Ride will only accepted if we get a successful response from server
     if ("response" in message && message.response === "REQUEST_RIDE") {
       console.log(message);
       setAccepted(true);
+      setMessage(""); // clear error message
+    } else {
+      // something went wrong
+      setMessage((message as ErrorResponse).error);
     }
   };
   // send ride request to server
   const handleSend = () => {
+    if (location == "" || destination == "") {
+      setMessage("Please specify a pickup and dropoff location!");
+      return;
+    }
     WebSocketService.send({
       directive: "REQUEST_RIDE",
       phoneNum: "111-111-1111", // TODO: GET PHONE NUMBER HERE SOMEHOW
@@ -68,7 +75,6 @@ export default function RideRequestForm() {
   const handleCancelMessage = (message: WebSocketResponse) => {
     // If cancellation was successful (server gave correct response), set accepted to false
     if ("response" in message && message.response === "CANCEL") {
-      // debugging statement: console.log("Received cancel message from server:", message);
       setAccepted(false);
     } else {
       alert("Failed to cancel ride. Please try again.");
@@ -87,7 +93,6 @@ export default function RideRequestForm() {
   useEffect(() => {
     WebSocketService.addListener(handleMessage, "REQUEST_RIDE");
     WebSocketService.addListener(handleCancelMessage, "CANCEL");
-    // debugging statement: console.log("Updated accepted status:", accepted);
     return () => {
       WebSocketService.removeListener(handleMessage, "REQUEST_RIDE");
       WebSocketService.removeListener(handleCancelMessage, "CANCEL");
@@ -242,6 +247,8 @@ export default function RideRequestForm() {
               Holidays. Extended service runs until 3:30 a.m. the week before
               and the week of finals.
             </Text>
+
+            <Text style={{ color: "red" }}>{message}</Text>
 
             {/* Confirm Ride Button */}
             <Pressable onPress={handleSend} style={styles.sendButton}>
