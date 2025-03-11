@@ -98,6 +98,7 @@ export const handleWebSocketMessage = async (
       break;
 
     case "REQUEST_RIDE":
+      console.log("Recieved request ride message");
       resp = await requestRide(
         input.phoneNum,
         input.netid,

@@ -17,6 +17,7 @@ import {
   WebSocketResponse,
 } from "../../../server/src/api";
 import { LocationNames, LocationService } from "@/services/LocationService";
+import RideRequestForm from "@/components/RideRequestForm";
 
 export default function App() {
   // Extract netid from Redirect URL from signin page
@@ -295,14 +296,8 @@ export default function App() {
           ref={mapRef}
           style={styles.map}
           initialRegion={{
-            latitude:
-              userLocation.latitude != 0
-                ? userLocation.latitude
-                : 47.65462693267042,
-            longitude:
-              userLocation.longitude != 0
-                ? userLocation.longitude
-                : -122.30938853301136,
+            latitude: userLocation.latitude || 47.65462693267042,
+            longitude: userLocation.longitude || -122.30938853301136,
             latitudeDelta: 0.015,
             longitudeDelta: 0.015,
           }}
@@ -403,6 +398,11 @@ export default function App() {
           </View>
         </View>
       </SafeAreaProvider>
+
+      {/* Overlay the RideRequestForm on top of the map */}
+      <View style={styles.formOverlay}>
+        <RideRequestForm />
+      </View>
     </View>
   );
 }

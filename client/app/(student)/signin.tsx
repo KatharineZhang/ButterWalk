@@ -7,7 +7,7 @@ import {
   Image,
 } from "react-native";
 import { useState, useEffect } from "react";
-import { styles } from "@/assets/styles";
+import { styles } from "../../assets/styles";
 import { Redirect } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 
@@ -22,7 +22,7 @@ import {
 } from "../../../server/src/api";
 import WebSocketService, {
   WebsocketConnectMessage,
-} from "@/services/WebSocketService";
+} from "../../services/WebSocketService";
 
 // Images
 // @ts-expect-error the image does exists so get rid of the error
@@ -137,7 +137,7 @@ const Login = () => {
           style={styles.signInButton}
           onPress={() => {
             setAccExists(false);
-            setNetid("student-netid");
+            setNetid("student-netID");
           }}
         >
           <Text style={styles.signInText}>Bypass Signin</Text>
