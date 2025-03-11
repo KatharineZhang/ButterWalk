@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, Pressable, StyleSheet, Modal } from "react-native";
+import { View, Text } from "react-native";
+import { loadingPageCompStyles } from "../assets/styles";
 
 interface loadingPageCompProps {
     pickUpLoc: string;
@@ -15,8 +16,12 @@ const loadingPageComp: React.FC<loadingPageCompProps> = ({pickUpLoc, dropOffLoc}
             <Text>Dropoff</Text>
             <Text>{dropOffLoc}</Text>
 
-            <Text>Requesting a Ride</Text>
-            <Text>This could take a few minutes. Do NOT exit out of the HUSKY ButterWalk App.</Text>
+            <View style={loadingPageCompStyles.mainTextContainer}>
+                <Text style={loadingPageCompStyles.mainTextTypography}>Requesting a Ride</Text>
+            </View>
+            <View style={loadingPageCompStyles.subtextContainer}>
+                <Text style={loadingPageCompStyles.subtextTypography}>This could take a few minutes. Do NOT exit out of the app.</Text>
+            </View>
         </View>
     );
 };

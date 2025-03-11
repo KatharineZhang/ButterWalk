@@ -1,6 +1,7 @@
 import { StyleSheet } from "react-native";
 
-//More random styling things that I think i copied from chatgpt....
+//This is absolutely a MESS and we need to fix it.
+// naming conventions are all over the place
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
