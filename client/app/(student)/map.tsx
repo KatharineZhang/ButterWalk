@@ -4,19 +4,18 @@ import MapView, { Polygon, Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { styles } from "@/assets/styles";
-import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
+import { View, TouchableOpacity, Image } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
+import RideRequestForm from "@/components/RideRequestForm";
+
+// file changes to test ride request form!
 import { Alert, Linking } from "react-native";
-import {
-  LocationResponse,
-  WebSocketMessage,
-  WebSocketResponse,
-} from "../../../server/src/api";
+import { LocationResponse, WebSocketResponse } from "../../../server/src/api";
 import MapViewDirections from "react-native-maps-directions";
-import { LocationNames, LocationService } from "@/services/LocationService";
-import FAQ from "./faq";
-import Profile from "./profile";
+// import { LocationNames, LocationService } from "@/services/LocationService";
+// import FAQ from "./faq";
+// import Profile from "./profile";
 
 export default function App() {
   // INITIAL WEB SOCKET SETUP
@@ -51,9 +50,9 @@ export default function App() {
     ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
     : "";
   // FAQ State
-  const [FAQVisible, setFAQVisible] = useState(false);
+  // const [FAQVisible, setFAQVisible] = useState(false);
   // Profile State
-  const [profileVisible, setProfileVisible] = useState(false);
+  // const [profileVisible, setProfileVisible] = useState(false);
 
   // control where we want to zoom on the map
   // in the format: [userLocation, driverLocation, pickUpLocation, dropOffLocation]
@@ -212,26 +211,6 @@ export default function App() {
     }
   };
 
-  // send a request to the server for a ride
-  // TODO: Fix this for cases where there is already a ride requested, don't set the locations
-  const sendRequest = () => {
-    const req: WebSocketMessage = {
-      directive: "REQUEST_RIDE",
-      phoneNum: "hi",
-      netid: netid as string,
-      location: "IMA",
-      destination: "HUB",
-      numRiders: 1,
-    };
-    WebSocketService.send(req);
-    // set the pickup and dropoff locations to what we request
-    setPickUpLocation(
-      LocationService.getLatAndLong(req.location as LocationNames)
-    );
-    setDropOffLocation(
-      LocationService.getLatAndLong(req.destination as LocationNames)
-    );
-  };
   const handleRequest = (message: WebSocketResponse) => {
     // since we already set the pickup and dropoff locations assuming the request went through,
     // if it didn't go through, we should reset them
@@ -245,15 +224,6 @@ export default function App() {
       setPickUpLocation({ latitude: 0, longitude: 0 });
       setDropOffLocation({ latitude: 0, longitude: 0 });
     }
-  };
-
-  // send a cancel message to the server
-  const sendCancel = () => {
-    WebSocketService.send({
-      directive: "CANCEL",
-      netid: netid as string,
-      role: "STUDENT",
-    });
   };
 
   // handle the case when the ride is completed or cancelled
@@ -394,8 +364,13 @@ export default function App() {
           />
         </TouchableOpacity>
       </View>
+      <View style={{ position: "absolute", width: "100%", height: "100%" }}>
+        <RideRequestForm />
+      </View>
+      
 
       {/* Temporary footer for requesting rides*/}
+      {/*
       <View
         style={{
           position: "absolute",
@@ -409,44 +384,59 @@ export default function App() {
           gap: 10,
         }}
       >
+      */}
+      {/*
         <Pressable
           onPress={sendRequest}
           style={{ backgroundColor: "#4B2E83", padding: 10, borderRadius: 5 }}
         >
-          <Text style={{ color: "white" }}>Request Ride</Text>
+      */}
+      {/* <Text style={{ color: "white" }}>Request Ride</Text> */}
+      {/*}
         </Pressable>
         <Pressable
           onPress={sendCancel}
           style={{ backgroundColor: "#4B2E83", padding: 10, borderRadius: 5 }}
         >
+        /*}
+        /
           <Text style={{ color: "white" }}>Cancel</Text>
         </Pressable>
         {/* recenter button */}
+      {/*
         <TouchableOpacity onPress={() => centerMapOnLocations(zoomOn)}>
           <Image
             source={require("@/assets/images/recenter.png")}
             style={{ width: 50, height: 50 }}
           />
         </TouchableOpacity>
+    */}
 
-        {/* faq button TODO: MOVE TO RIDE REQUEST FORM */}
+      {/* faq button TODO: MOVE TO RIDE REQUEST FORM */}
+      {/*}
         <TouchableOpacity onPress={() => setFAQVisible(true)}>
           <Image
             source={require("@/assets/images/faq-button.png")}
             style={{ width: 20, height: 20 }}
           />
         </TouchableOpacity>
+    */}
 
-        {/* faq pop-up modal */}
+      {/* faq pop-up modal */}
+      {/*
         <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
+  */}
 
-        {/* profile pop-up modal */}
+      {/* profile pop-up modal */}
+
+      {/*
         <Profile
           isVisible={profileVisible}
           onClose={() => setProfileVisible(false)}
           netid={netid as string}
         />
-      </View>
+*/}
+      {/* </View> */}
     </View>
   );
 }
