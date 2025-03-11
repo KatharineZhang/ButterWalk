@@ -25,15 +25,14 @@ function Profile({ isVisible, onClose, netid }: ProfileProps) {
 
   useEffect(() => {
     // if the profile is being shown and the user object is empty, get the profile
-    if (isVisible && Object.keys(user).length === 0){
+    if (isVisible && Object.keys(user).length === 0) {
       getProfile();
     }
   }, [isVisible]);
 
-  
   const getProfile = async () => {
     WebSocketService.send({ directive: "PROFILE", netid });
-  }
+  };
 
   const handleProfileResponse = (message: WebSocketResponse) => {
     if (message.response === "PROFILE") {
@@ -43,18 +42,24 @@ function Profile({ isVisible, onClose, netid }: ProfileProps) {
       // something went wrong
       console.log("Profile response error: ", message);
     }
-  }
+  };
 
   // the stuff that goes in the modal
   const info: JSX.Element = (
     <View>
       <View style={{ height: 60 }} />
       <Text style={styles.faqHeader}>{netid}</Text>
-      {user.preferredName && <Text style={styles.faqSubtitle}>Preferred Name: {user.preferredName}</Text>}
+      {user.preferredName && (
+        <Text style={styles.faqSubtitle}>
+          Preferred Name: {user.preferredName}
+        </Text>
+      )}
       <Text style={styles.faqSubtitle}>Given Name: {user.firstName}</Text>
       <Text style={styles.faqSubtitle}>Last Name: {user.lastName}</Text>
       <Text style={styles.faqSubtitle}>Phone Number: {user.phoneNumber}</Text>
-      <Text style={styles.faqSubtitle}>Student Number: {user.studentNumber}</Text>
+      <Text style={styles.faqSubtitle}>
+        Student Number: {user.studentNumber}
+      </Text>
       <Text style={styles.faqSubtitle}>Role: {user.studentOrDriver}</Text>
       <Pressable style={styles.button} onPress={() => setSignedIn(false)}>
         <Text style={{ color: "#FFFffF", fontSize: 16 }}>Sign Out</Text>

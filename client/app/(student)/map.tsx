@@ -15,14 +15,11 @@ import { LocationResponse, WebSocketResponse } from "../../../server/src/api";
 import MapViewDirections from "react-native-maps-directions";
 import Profile from "./profile";
 // import { LocationNames, LocationService } from "@/services/LocationService";
-// import FAQ from "./faq";
 
 export default function App() {
   // INITIAL WEB SOCKET SETUP
   // Extract netid from Redirect URL from signin page
   const { netid } = useLocalSearchParams();
-  // Use netid to pair this WebSocket connection with a netid
-
 
   // STATE VARIABLES
   // the student's location
@@ -48,8 +45,7 @@ export default function App() {
   const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
     ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
     : "";
-  // FAQ State
-  // const [FAQVisible, setFAQVisible] = useState(false);
+
   // Profile State
   const [profileVisible, setProfileVisible] = useState(false);
 
@@ -366,22 +362,6 @@ export default function App() {
       <View style={{ position: "absolute", width: "100%", height: "100%" }}>
         <RideRequestForm />
       </View>
-      
-
-      {/* faq button TODO: MOVE TO RIDE REQUEST FORM */}
-      {/*}
-        <TouchableOpacity onPress={() => setFAQVisible(true)}>
-          <Image
-            source={require("@/assets/images/faq-button.png")}
-            style={{ width: 20, height: 20 }}
-          />
-        </TouchableOpacity>
-    */}
-
-      {/* faq pop-up modal */}
-      {/*
-        <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
-  */}
 
       {/* profile pop-up modal */}
         <Profile

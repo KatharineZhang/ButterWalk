@@ -1,15 +1,22 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import WebSocketService from "@/services/WebSocketService";
 import { useLocalSearchParams } from "expo-router";
 import React, { useState, useEffect } from "react";
-import { View, Text, Pressable, Animated } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  Animated,
+  TouchableOpacity,
+} from "react-native";
 import { WebSocketResponse } from "../../server/src/api";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
 import AutocompleteInput from "./AutocompleteInput";
 import { LocationNames } from "../services/LocationService";
-import { router } from "expo-router";
 import { styles } from "../assets/styles";
 import BottomDrawer from "./BottomDrawer";
+import FAQ from "@/app/(student)/faq";
 
 // What's in this component:
 // Ride Request Form which sends request to server and gets response back,
@@ -21,13 +28,14 @@ import BottomDrawer from "./BottomDrawer";
 export default function RideRequestForm() {
   // connect to websocket
   const { netid } = useLocalSearchParams();
-  WebSocketService.connect(netid as string, "STUDENT");
 
   // user input states for form
   const [location, setLocation] = useState("");
   const [destination, setDestination] = useState("");
   const [numRiders, setNumRiders] = useState(1);
-  const [message, setMessage] = useState("");
+
+  // FAQ State
+  const [FAQVisible, setFAQVisible] = useState(false);
 
   // true if ride request is accepted by server
   const [accepted, setAccepted] = useState(false);
@@ -40,7 +48,6 @@ export default function RideRequestForm() {
 
     // Ride will only accepted if we get a successful response from server
     if ("response" in message && message.response === "REQUEST_RIDE") {
-      setMessage(JSON.stringify(message));
       console.log(message);
       setAccepted(true);
     }
@@ -227,7 +234,6 @@ export default function RideRequestForm() {
                 <Text style={styles.riderCount}>{numRiders} passenger(s)</Text>
               </View>
             </View>
-            
 
             {/* Information Text */}
             <Text style={styles.infoText}>
@@ -241,6 +247,17 @@ export default function RideRequestForm() {
             <Pressable onPress={handleSend} style={styles.sendButton}>
               <Text style={styles.buttonLabel}>Confirm Ride</Text>
             </Pressable>
+            
+            {/* faq button */}
+            <TouchableOpacity style={{position: "absolute", right: 10, top: 0}} onPress={() => setFAQVisible(true)}>
+              <Image
+                source={require("@/assets/images/faq-button.png")}
+                style={{ width: 20, height: 20 }}
+              />
+            </TouchableOpacity>
+
+            {/* faq pop-up modal */}
+            <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
           </View>
         )}
       </View>
