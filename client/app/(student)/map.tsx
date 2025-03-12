@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import MapView, { Polygon, Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -22,9 +22,9 @@ interface MapProps {
 // Simple renders the points passing in through the props
 // and keeps track of the user's location
 export default function Map({
-  driverLocation,
-  pickUpLocation,
-  dropOffLocation,
+  driverLocation = { latitude: 0, longitude: 0 },
+  pickUpLocation = { latitude: 0, longitude: 0 },
+  dropOffLocation = { latitude: 0, longitude: 0 },
   // rideDuration, // show the ride duration on the route
   userLocationChanged,
 }: MapProps) {
@@ -34,6 +34,16 @@ export default function Map({
     latitude: number;
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
+
+  // in the format: [userLocation, driverLocation, pickUpLocation, dropOffLocation]
+  const [zoomOn, setZoomOn] = useState<
+    { latitude: number; longitude: number }[]
+  >([
+    { latitude: 0, longitude: 0 },
+    { latitude: 0, longitude: 0 },
+    { latitude: 0, longitude: 0 },
+    { latitude: 0, longitude: 0 },
+  ]);
 
   const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
     ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
@@ -57,12 +67,65 @@ export default function Map({
     // on the first render, get the user's location
     // and set up listeners
     watchLocation();
-    // zoom into the non (0,0) locations
-    centerMapOnLocations(calculateZoomOn());
   }, []);
 
-  /* FUNCTIONS */
+  useEffect(() => {
+    // when any of our locations change, check if we need to zoom on them
+    // this is mainly because our user, pickup and dropoff locations set all the time (to the same values)
+    // but we don't necessarily want to zoom in on those location unless they are actually different
+    if (calculateDistance(userLocation, zoomOn[0]) > 10) {
+      console.log("updating user location", userLocation);
+      setZoomOn((prevZoomOn) => {
+        const newZoomOn = [...prevZoomOn];
+        newZoomOn[0] = userLocation;
+        return newZoomOn;
+      });
+    }
+    // check zoomOn index 1 aka driverLocation
+    if (calculateDistance(driverLocation, zoomOn[1]) > 10) {
+      console.log("updating driver location", driverLocation);
+      setZoomOn((prevZoomOn) => {
+        const newZoomOn = [...prevZoomOn];
+        newZoomOn[1] = driverLocation;
+        return newZoomOn;
+      });
+    }
+    // check zoomOn index 2 aka pickUpLocation
+    if (calculateDistance(pickUpLocation, zoomOn[2]) > 10) {
+      console.log("updating pickup location", pickUpLocation);
+      setZoomOn((prevZoomOn) => {
+        const newZoomOn = [...prevZoomOn];
+        newZoomOn[2] = pickUpLocation;
+        return newZoomOn;
+      });
+    }
+    // check zoomOn index 3 aka dropOffLocation
+    if (calculateDistance(dropOffLocation, zoomOn[3]) > 10) {
+      console.log("updating dropoff location", dropOffLocation);
+      setZoomOn((prevZoomOn) => {
+        const newZoomOn = [...prevZoomOn];
+        newZoomOn[3] = dropOffLocation;
+        return newZoomOn;
+      });
+    }
+  }, [userLocation, driverLocation, pickUpLocation, dropOffLocation]);
 
+  useEffect(() => {
+    // when we change what we want to zoom on, zoom on it
+    centerMapOnLocations(zoomOn);
+  }, [zoomOn]);
+
+  /* FUNCTIONS */
+  // HELPER FOR USE EFFECT: calculate the distance between two points to check if we should update the zoomOn state
+  const calculateDistance = (
+    point1: { latitude: number; longitude: number },
+    point2: { latitude: number; longitude: number }
+  ) => {
+    return Math.sqrt(
+      Math.pow(point1.latitude - point2.latitude, 2) +
+        Math.pow(point1.longitude - point2.longitude, 2)
+    );
+  };
   // FOLLOW THE USER'S LOCATION
   async function watchLocation() {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -113,21 +176,6 @@ export default function Map({
       edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
       animated: true,
     });
-  };
-
-  // CALCULATE WHAT TO ZOOM ON
-  const calculateZoomOn = () => {
-    const locations = [userLocation];
-    if (pickUpLocation.latitude != 0 && pickUpLocation.longitude != 0) {
-      locations.push(pickUpLocation);
-    }
-    if (dropOffLocation.latitude != 0 && dropOffLocation.longitude != 0) {
-      locations.push(dropOffLocation);
-    }
-    if (driverLocation.latitude != 0 && driverLocation.longitude != 0) {
-      locations.push(driverLocation);
-    }
-    return locations;
   };
 
   // GET DISTANCE AND ETA FROM GMAPS when directions are shown

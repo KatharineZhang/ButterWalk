@@ -26,7 +26,7 @@ const AutoCompleteInput: React.FC<AutoCompleteInputProps> = ({
       // if the "Set location on map" is in data,
       // we always want to show this option regardless of the query
       item.toLowerCase().includes(query.toLowerCase()) ||
-      query === "Set location on map"
+      item === "Set location on map"
   );
 
   return (

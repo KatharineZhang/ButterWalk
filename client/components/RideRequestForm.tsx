@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import WebSocketService from "@/services/WebSocketService";
-import { useLocalSearchParams } from "expo-router";
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   View,
   Text,
@@ -9,14 +7,14 @@ import {
   Animated,
   TouchableOpacity,
 } from "react-native";
-import { ErrorResponse, WebSocketResponse } from "../../server/src/api";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
 import AutocompleteInput from "./AutocompleteInput";
-import {LocationName,} from "../services/LocationService";
+import { LocationName } from "../services/LocationService";
 import { styles } from "../assets/styles";
 import BottomDrawer from "./BottomDrawer";
 import FAQ from "@/app/(student)/faq";
+import PopUpModal from "./PopUpModal";
 
 type RideRequestFormProps = {
   pickUpLocationChanged: (location: ValidLocationType) => void;
@@ -26,7 +24,9 @@ type RideRequestFormProps = {
 };
 
 // the type of locations we can send to homepage
-export type ValidLocationType = LocationName | `{latitude: ${number}, longitude: ${number}`;
+export type ValidLocationType =
+  | LocationName
+  | `{latitude: ${number}, longitude: ${number}`;
 // the type of locations we can show in the dropdown
 export type DropDownType = LocationName | "Set location on map";
 
@@ -43,9 +43,6 @@ export default function RideRequestForm({
   userLocation,
   rideRequested,
 }: RideRequestFormProps) {
-  // connect to websocket
-  const { netid } = useLocalSearchParams();
-
   // user input states for form
   const [location, setLocation] = useState("");
   const [destination, setDestination] = useState("");
@@ -59,69 +56,14 @@ export default function RideRequestForm({
   const [confirmationModalVisible, setConfirmationModalVisible] =
     useState(false);
 
-  // true if ride request is accepted by server
-  const [accepted, setAccepted] = useState(false);
-
-  /* SERVER STUFF START */
-
-  // This function will be called whenever the server sends a message for REQUEST_RIDE
-  const handleMessage = (message: WebSocketResponse) => {
-    // Ride will only accepted if we get a successful response from server
-    if ("response" in message && message.response === "REQUEST_RIDE") {
-      console.log(message);
-      setAccepted(true);
-      setMessage(""); // clear error message
-    } else {
-      // something went wrong
-      setMessage((message as ErrorResponse).error);
-    }
-  };
-  // send ride request to server
+  // the request button was clicked
   const handleSend = () => {
     if (location == "" || destination == "") {
       setMessage("Please specify a pickup and dropoff location!");
       return;
     }
     rideRequested();
-    // WebSocketService.send({
-    //   directive: "REQUEST_RIDE",
-    //   phoneNum: "111-111-1111", // TODO: GET PHONE NUMBER HERE SOMEHOW
-    //   netid: Array.isArray(netid) ? netid[0] : netid,
-    //   location,
-    //   destination,
-    //   numRiders,
-    // });
   };
-
-  // This function will be called whenever the server sends a message for CANCEL RIDE
-  const handleCancelMessage = (message: WebSocketResponse) => {
-    // If cancellation was successful (server gave correct response), set accepted to false
-    if ("response" in message && message.response === "CANCEL") {
-      setAccepted(false);
-    } else {
-      alert("Failed to cancel ride. Please try again.");
-    }
-  };
-  // Send cancel request to server
-  const sendCancel = () => {
-    WebSocketService.send({
-      directive: "CANCEL",
-      netid: netid as string,
-      role: "STUDENT",
-    });
-  };
-
-  // add listeners for REQUEST_RIDE and CANCEL to call handle functions
-  useEffect(() => {
-    WebSocketService.addListener(handleMessage, "REQUEST_RIDE");
-    WebSocketService.addListener(handleCancelMessage, "CANCEL");
-    return () => {
-      WebSocketService.removeListener(handleMessage, "REQUEST_RIDE");
-      WebSocketService.removeListener(handleCancelMessage, "CANCEL");
-    };
-  }, []);
-
-  /* SERVER STUFF ENDS HERE */
 
   /* FUZZY SEARCH BAR STUFF */
 
@@ -131,7 +73,7 @@ export default function RideRequestForm({
 
   // data from LocationService.ts
 
-  const data:  DropDownType[] = [
+  const data: DropDownType[] = [
     "Set location on map",
     "HUB",
     "Alder Hall",
@@ -149,13 +91,12 @@ export default function RideRequestForm({
       alert("Pickup location and destination cannot be the same!");
       return;
     }
-    setLocation(value);
-    if (location === "Set location on map") {
-      // TODO: SHOW CONFIRM MODAL
-      setLocation(JSON.stringify(userLocation)); // TODO: what should be put in the server in this case?
-      pickUpLocationChanged(JSON.stringify(userLocation) as `{latitude: ${number}, longitude: ${number}`);
+    if (value === "Set location on map") {
+      console.log("here");
+      setConfirmationModalVisible(true);
     } else {
       // we clicked a normal location
+      setLocation(value);
       pickUpLocationChanged(value as LocationName);
     }
   };
@@ -165,12 +106,25 @@ export default function RideRequestForm({
       alert("Pickup location and destination cannot be the same!");
       return;
     }
-    if (location === "Set location on map") {
-      console.log("Something went wrong! can't set destination to user location");
+    if (value === "Set location on map") {
+      console.log(
+        "Something went wrong! can't set destination to user location"
+      );
       return;
     }
     setDestination(value);
     dropOffLocationChanged(value as LocationName);
+  };
+
+  const confirmPickUpLocation = () => {
+    console.log("RIDE REQ USER LOC:" + JSON.stringify(userLocation));
+    setLocation(JSON.stringify(userLocation));
+    pickUpLocationChanged(
+      JSON.stringify(
+        userLocation
+      ) as `{latitude: ${number}, longitude: ${number}`
+    );
+    setConfirmationModalVisible(false);
   };
 
   /* FUZZY SEARCH BAR STUFF ENDS HERE */
@@ -202,17 +156,9 @@ export default function RideRequestForm({
   };
 
   return (
-    <BottomDrawer>
-      <View style={styles.formContainer}>
-        {/* If ride is accepted show cancel button, else show ride request form */}
-        {accepted ? (
-          <>
-            <Text style={styles.formHeader}>Ride Request Accepted</Text>
-            <Pressable onPress={sendCancel} style={styles.sendButton}>
-              <Text style={styles.buttonLabel}>Cancel Ride</Text>
-            </Pressable>
-          </>
-        ) : (
+    <View style={{ flex: 1 }}>
+      <BottomDrawer modalVisible={confirmationModalVisible}>
+        <View style={styles.formContainer}>
           <View>
             <Text style={styles.formHeader}>Request a Ride</Text>
             <View>
@@ -306,9 +252,31 @@ export default function RideRequestForm({
 
             {/* faq pop-up modal */}
             <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
+
+            {/* confirmation modal*/}
+            <PopUpModal
+              type="half"
+              isVisible={confirmationModalVisible}
+              onClose={() => setConfirmationModalVisible(false)}
+              content={
+                <View style={{ padding: 20 }}>
+                  <Text style={styles.formHeader}>Confirm Pickup Location</Text>
+                  <Text style={styles.description}>
+                    Are you sure you want to set your pickup location to your
+                    current location?
+                  </Text>
+                  <Pressable
+                    onPress={confirmPickUpLocation}
+                    style={styles.sendButton}
+                  >
+                    <Text style={styles.buttonLabel}>Confirm</Text>
+                  </Pressable>
+                </View>
+              }
+            />
           </View>
-        )}
-      </View>
-    </BottomDrawer>
+        </View>
+      </BottomDrawer>
+    </View>
   );
 }

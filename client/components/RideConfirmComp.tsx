@@ -2,7 +2,14 @@
 import { styles } from "@/assets/styles";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useState } from "react";
-import { View, Image, Text, Pressable, Animated, TouchableOpacity } from "react-native";
+import {
+  View,
+  Image,
+  Text,
+  Pressable,
+  Animated,
+  TouchableOpacity,
+} from "react-native";
 
 interface RideConfirmCompProps {
   pickUpLoc: string;
@@ -12,13 +19,13 @@ interface RideConfirmCompProps {
   onConfirm: (numPassengers: number) => void; // callback function for when the user confirms ride
 }
 
-const RideConfirmComp: React.FC<RideConfirmCompProps> = ({
+export default function RideConfirmComp({
   pickUpLoc,
   dropOffLoc,
   driverETA,
   onClose,
   onConfirm,
-}) => {
+}: RideConfirmCompProps) {
   const [numPassengers, setNumPassengers] = React.useState(1);
 
   // animation functions
@@ -54,7 +61,7 @@ const RideConfirmComp: React.FC<RideConfirmCompProps> = ({
         position: "absolute",
         bottom: -10,
         width: "100%",
-        height: "55%",
+        height: "57%",
         padding: 10,
       }}
     >
@@ -84,7 +91,7 @@ const RideConfirmComp: React.FC<RideConfirmCompProps> = ({
         />
         <View style={{ width: 15 }} />
         <Text style={styles.waitTimeText}>
-          Estimated Wait Time: {driverETA} minutes
+          Estimated Wait Time: {driverETA > 0 ? driverETA : "< 1"} minute(s)
         </Text>
       </View>
       <View style={{ height: 10 }} />
@@ -172,6 +179,4 @@ const RideConfirmComp: React.FC<RideConfirmCompProps> = ({
       </View>
     </View>
   );
-};
-
-export default RideConfirmComp;
+}

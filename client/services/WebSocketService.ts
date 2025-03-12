@@ -8,7 +8,7 @@ import {
 type WebSocketResponseHandler = (message: WebSocketResponse) => void;
 
 export type WebsocketConnectMessage =
-  | `Failed to Connect: ${string}`
+  | `Failed to Connect`
   | "Connected Successfully";
 
 // Abstracts the websocket details from the react native app
@@ -36,14 +36,14 @@ class WebSocketService {
       : undefined;
     if (!IP_ADDRESS) {
       console.error("IP_ADDRESS not found in .env");
-      return Promise.resolve("Failed to Connect: IP_ADDRESS not found in .env");
+      return Promise.resolve("Failed to Connect");
     }
 
     this.websocket = new WebSocket(`ws://${IP_ADDRESS}:8080/api/`);
 
     if (this.websocket == null) {
       console.error("WEBSOCKET: Failed to create WebSocket");
-      return Promise.resolve("Failed to Connect: Failed to create WebSocket");
+      return Promise.resolve("Failed to Connect");
     }
 
     this.startWebsocketListeners();

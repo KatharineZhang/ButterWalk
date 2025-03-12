@@ -12,8 +12,11 @@ import {
   WebSocketResponse,
 } from "../../../server/src/api";
 import RideConfirmComp from "@/components/RideConfirmComp";
-import RideRequestForm, { ValidLocationType } from "@/components/RideRequestForm";
+import RideRequestForm, {
+  ValidLocationType,
+} from "@/components/RideRequestForm";
 import { LocationName, LocationService } from "@/services/LocationService";
+import WaitingForRide from "@/components/WaitingForRide";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -71,13 +74,12 @@ export default function HomePage() {
     latitude: number;
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
-  const [pickUpLocationName, setPickUpLocationName] = useState<ValidLocationType>(
-    "" as ValidLocationType
-  );
-  const [dropOffLocationName, setDropOffLocationName] = useState<ValidLocationType>(
-    "" as ValidLocationType
-  );
+  const [pickUpLocationName, setPickUpLocationName] =
+    useState<ValidLocationType>("" as ValidLocationType);
+  const [dropOffLocationName, setDropOffLocationName] =
+    useState<ValidLocationType>("" as ValidLocationType);
 
+  // user clicked on request ride button on ride request form
   const rideRequested = () => {
     setWhichComponent("confirmRide");
   };
@@ -92,6 +94,18 @@ export default function HomePage() {
 
   const closeConfirmRide = () => {
     setWhichComponent("rideReq");
+
+    // reset all locations
+    setPickUpLocation({
+      latitude: 0,
+      longitude: 0,
+    });
+    setDropOffLocation({
+      latitude: 0,
+      longitude: 0,
+    });
+    setPickUpLocationName("" as ValidLocationType);
+    setDropOffLocationName("" as ValidLocationType);
   };
 
   const requestRide = async (requestedPassengers: number) => {
@@ -145,14 +159,23 @@ export default function HomePage() {
 
   // figure out coordinates from picku and dropoff locations
   useEffect(() => {
-    if (pickUpLocationName.search("{latitude: ") !== -1) {
+    console.log(pickUpLocationName, dropOffLocationName);
+    if (pickUpLocationName.search('{"latitude":') !== -1) {
       // we were given user coordinates not a location name
+      console.log("Pickup location is coordinates");
       setPickUpLocation(JSON.parse(pickUpLocationName));
     } else {
       // get the coordinates of the pickup location
-      setPickUpLocation(LocationService.getLatAndLong(pickUpLocationName as LocationName));
+      setPickUpLocation(
+        LocationService.getLatAndLong(pickUpLocationName as LocationName)
+      );
+    }
+
+    if (dropOffLocationName != ("" as ValidLocationType)) {
       // get the coordinates of the dropoff location
-      setDropOffLocation(LocationService.getLatAndLong(dropOffLocationName as LocationName));
+      setDropOffLocation(
+        LocationService.getLatAndLong(dropOffLocationName as LocationName)
+      );
     }
   }, [pickUpLocationName, dropOffLocationName]);
 
@@ -215,6 +238,7 @@ export default function HomePage() {
   // WEBSOCKET -- REQUEST RIDE
   const handleRequestRide = (message: WebSocketResponse) => {
     if ("response" in message && message.response === "REQUEST_RIDE") {
+      console.log("here");
       // set the ride status to requested
       setRideStatus("REQUESTED");
       // set the component to show to waiting for ride
@@ -294,13 +318,12 @@ export default function HomePage() {
             />
           </View>
         ) : whichComponent === "confirmRide" ? (
-          <View>
+          <View style={{ position: "absolute", width: "100%", height: "100%" }}>
             {/* confirm ride component */}
             <RideConfirmComp
               pickUpLoc={pickUpLocationName}
               dropOffLoc={dropOffLocationName}
               driverETA={driverETA}
-              isVisible={true}
               onClose={closeConfirmRide}
               onConfirm={requestRide}
             />
@@ -315,9 +338,9 @@ export default function HomePage() {
             /> */}
           </View>
         ) : whichComponent === "waitForRide" ? (
-          <View>
+          <View style={{ position: "absolute", width: "100%", height: "100%" }}>
             {/* waiting for ride component */}
-            {/* Example: <WaitingForRide cancelRide={cancelRide} /> */}
+            <WaitingForRide driverETA={driverETA} onCancel={cancelRide} />
           </View>
         ) : whichComponent === "driverOnWay" ? (
           <View>
