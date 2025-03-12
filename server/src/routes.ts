@@ -598,8 +598,7 @@ export const waitTime = async (
   if (!requestid) {
     // if there is no concrete request in the queue, return the queue length * 15 minutes
     const queueLength = rideReqQueue.get().length;
-    // TODO: WHAT TO RETURN IF FIRST IN LINE, CURRENTLY 1
-    driverETA = queueLength * 15 + 1;
+    driverETA = queueLength * 15;
   } else if (requestid && !driverLocation) {
     // if there is a requestid, then there is a requested ride,
     // if there is also no driverLocation,
