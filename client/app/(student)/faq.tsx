@@ -34,7 +34,14 @@ function FAQ({ isVisible, onClose }: FAQProps) {
       <View style={{ height: 100 }} />
     </ScrollView>
   );
-  return <PopUpModal isVisible={isVisible} onClose={onClose} content={qandA} />;
+  return (
+    <PopUpModal
+      isVisible={isVisible}
+      onClose={onClose}
+      type="full"
+      content={qandA}
+    />
+  );
 }
 
 // FAQ data

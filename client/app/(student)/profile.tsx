@@ -50,7 +50,14 @@ function Profile({ isVisible, onClose, user }: ProfileProps) {
       />
     );
   }
-  return <PopUpModal isVisible={isVisible} onClose={onClose} content={info} />;
+  return (
+    <PopUpModal
+      isVisible={isVisible}
+      onClose={onClose}
+      type="full"
+      content={info}
+    />
+  );
 }
 
 export default Profile;

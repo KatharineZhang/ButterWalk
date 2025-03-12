@@ -234,10 +234,7 @@ export const styles = StyleSheet.create({
     marginTop: 10,
     marginLeft: 3,
   },
-  modalCenteredView: {
-    flex: 1,
-  },
-  modalModalView: {
+  fullModalView: {
     backgroundColor: "#E4E2F0",
     borderRadius: 20,
     padding: 20,
@@ -323,11 +320,10 @@ export const styles = StyleSheet.create({
   riderIconsContainer: {
     flexDirection: "row",
     position: "relative",
+    justifyContent: "center",
     height: 50,
-    marginRight: 20,
   },
   riderIcon: {
-    position: "absolute",
     opacity: 1,
   },
   riderControls: {
@@ -421,7 +417,6 @@ export const styles = StyleSheet.create({
   // bottom modal styles
   bottomModalView: {
     alignItems: "center",
-    margin: 20,
     backgroundColor: "white",
     borderRadius: 20,
     padding: 20,
@@ -434,7 +429,7 @@ export const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
     width: "100%",
-    height: "60%",
+    height: "70%",
     position: "absolute",
     bottom: -100,
   },
@@ -469,6 +464,7 @@ export const styles = StyleSheet.create({
     paddingLeft: 80,
   },
   bottomModalButtonContainer: {
+    paddingVertical: 10,
     justifyContent: "center",
     width: "100%",
   },
