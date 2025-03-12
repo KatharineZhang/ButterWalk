@@ -37,7 +37,6 @@ function Profile({ isVisible, onClose, netid }: ProfileProps) {
   const handleProfileResponse = (message: WebSocketResponse) => {
     if (message.response === "PROFILE") {
       setUser(message.user as User);
-      console.log(user);
     } else {
       // something went wrong
       console.log("Profile response error: ", message);

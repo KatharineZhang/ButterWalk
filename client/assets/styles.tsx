@@ -12,7 +12,7 @@ export const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
-  }, 
+  },
   largeText: {
     fontSize: 25,
   },
@@ -51,7 +51,7 @@ export const styles = StyleSheet.create({
   onboardingFooterButtonContainer: {
     position: "absolute",
     bottom: 5,
-    right : 20,
+    right: 20,
     elevation: 3,
     opacity: 0.9,
   },
@@ -81,7 +81,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "#D1AE49",
     flexDirection: "row",
     alignItems: "center",
-    zIndex:1
+    zIndex: 1,
   },
   image: {
     flex: 0.7,
@@ -99,7 +99,8 @@ export const styles = StyleSheet.create({
     height: "100%",
   },
   mapContainer: {
-    flex: 1
+    flex: 1,
+    position: "relative",
   },
 
   appNameText: {
@@ -130,7 +131,7 @@ export const styles = StyleSheet.create({
   },
   signInGoogleContainer: {
     flexDirection: "row",
-    margin: 10,    
+    margin: 10,
     padding: 22,
     borderRadius: 10,
     borderColor: "#C1C1C1",
@@ -139,7 +140,11 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
   },
   signInGoogleLogo: {
-    position: "absolute", left:15, width: 30, height: 30},
+    position: "absolute",
+    left: 15,
+    width: 30,
+    height: 30,
+  },
   signInButton: {
     alignItems: "center",
     justifyContent: "center",
@@ -149,12 +154,18 @@ export const styles = StyleSheet.create({
     elevation: 3,
     backgroundColor: "#4B2E83",
   },
+
+  /*
   formContainer: {
     alignSelf: "flex-start",
     justifyContent: "center",
     marginLeft: 21,
     width: 335,
+    zIndex: 100,
+    flex: 1,
+    display: "flex",
   },
+*/
   input: {
     height: 50,
     width: 335,
@@ -225,12 +236,8 @@ export const styles = StyleSheet.create({
   },
   modalCenteredView: {
     flex: 1,
-    //  backgroundColor: 'rgba(0, 0, 0, 0.5)', // looks kind or weird when the background is dark
-    justifyContent: "center",
-    alignItems: "center",
   },
   modalModalView: {
-    margin: 20,
     backgroundColor: "#E4E2F0",
     borderRadius: 20,
     padding: 20,
@@ -246,6 +253,82 @@ export const styles = StyleSheet.create({
     height: "100%",
     position: "absolute",
     bottom: -100,
+  },
+
+  // Ride Request Form styles
+
+  formContainer: {
+    padding: 15,
+    width: "100%",
+  },
+  infoText:{
+    fontSize: 12,
+    color: "#4B4C4F",
+    fontWeight: 400,
+    lineHeight: 16.34,
+    fontFamily: "Open Sans",
+    marginBottom: 40,
+  },
+  riderImage: {
+    width: 32, 
+    height: 32,
+    resizeMode: "contain",
+  },
+  formHeader: {
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "left",
+    marginBottom: 30,
+  },
+  sendButton: {
+    position: "relative",
+    marginTop: "20%",
+    backgroundColor: "#4B2E83",
+    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    textAlign: "center",
+    color: "white",
+    fontSize: 16,
+    padding: 10,
+  },
+  clearButton: {
+    padding: 10,
+  },
+  animationContainer: {
+    marginVertical: 4,
+    borderWidth: 1,
+    borderRadius: 16,
+    borderColor: "Black/Black 3",
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+  },
+  riderContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 10,
+  },
+  iconRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  riderCount: {
+    fontSize: 18,
+    marginTop: 0,
+    marginBottom: 8,
+    marginLeft: 5,
+  },
+  riderIconsContainer: {
+    flexDirection: "row",
+    position: "relative",
+    height: 50,
+    marginRight: 20,
+  },
+  riderIcon: {
+    position: "absolute",
+    opacity: 1,
   },
   modalCloseButton: {
     borderRadius: 20,
@@ -308,6 +391,23 @@ export const styles = StyleSheet.create({
     color: "#8E632A",
     textDecorationLine: "underline",
     fontWeight: "bold",
+  },
+  bottomSheetContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  formOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    elevation: 5,
+  },
   },
   // bottome modal styles
   bottomModalView: {
