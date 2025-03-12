@@ -12,7 +12,8 @@ import {
   WebSocketResponse,
 } from "../../../server/src/api";
 import RideConfirmComp from "@/components/RideConfirmComp";
-import { LocationNames } from "@/services/LocationService";
+import RideRequestForm, { ValidLocationType } from "@/components/RideRequestForm";
+import { LocationName, LocationService } from "@/services/LocationService";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -70,11 +71,11 @@ export default function HomePage() {
     latitude: number;
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
-  const [pickUpLocationName, setPickUpLocationName] = useState<LocationNames>(
-    "" as LocationNames
+  const [pickUpLocationName, setPickUpLocationName] = useState<ValidLocationType>(
+    "" as ValidLocationType
   );
-  const [dropOffLocationName, setDropOffLocationName] = useState<LocationNames>(
-    "" as LocationNames
+  const [dropOffLocationName, setDropOffLocationName] = useState<ValidLocationType>(
+    "" as ValidLocationType
   );
 
   const rideRequested = () => {
@@ -128,7 +129,6 @@ export default function HomePage() {
     sendProfile();
   }, []);
 
-  
   useEffect(() => {
     // when we are trying to show confirm ride component, get the ride duration and driver ETA
     if (whichComponent == "confirmRide") {
@@ -138,10 +138,23 @@ export default function HomePage() {
         requestedRide: {
           pickupLocation: pickUpLocation,
           dropOffLocation,
-        }
+        },
       });
     }
   }, [whichComponent]);
+
+  // figure out coordinates from picku and dropoff locations
+  useEffect(() => {
+    if (pickUpLocationName.search("{latitude: ") !== -1) {
+      // we were given user coordinates not a location name
+      setPickUpLocation(JSON.parse(pickUpLocationName));
+    } else {
+      // get the coordinates of the pickup location
+      setPickUpLocation(LocationService.getLatAndLong(pickUpLocationName as LocationName));
+      // get the coordinates of the dropoff location
+      setDropOffLocation(LocationService.getLatAndLong(dropOffLocationName as LocationName));
+    }
+  }, [pickUpLocationName, dropOffLocationName]);
 
   /* WEBSOCKET HANDLERS */
   // WEBSOCKET -- PROFILE
@@ -226,14 +239,14 @@ export default function HomePage() {
 
   // WEBSOCKET -- WAIT TIME
   const handleWaitTime = (message: WebSocketResponse) => {
-      if ("response" in message && message.response === "WAIT_TIME") {
-        const waitTimeresp = message as WaitTimeResponse;
-        setRideDuration(waitTimeresp.rideDuration as number);
-        setDriverETA(waitTimeresp.driverETA as number);
-      } else {
-        console.log("Wait time response error: ", message);
-      }
-    };
+    if ("response" in message && message.response === "WAIT_TIME") {
+      const waitTimeresp = message as WaitTimeResponse;
+      setRideDuration(waitTimeresp.rideDuration as number);
+      setDriverETA(waitTimeresp.driverETA as number);
+    } else {
+      console.log("Wait time response error: ", message);
+    }
+  };
 
   return (
     <View>
@@ -272,15 +285,13 @@ export default function HomePage() {
       {/* Figure out which component to render */}
       {
         whichComponent === "rideReq" ? (
-          <View>
-            {/* ride request component */}
-            {/* Example: <RideRequestDrawer
-        setPickUpLocation={setPickUpLocation}
-        setDropOffLocation={setDropOffLocation}
-        setRideRequested={setRideRequested}
-        setRideConfirmed={setRideConfirmed}
-        netid={netid}
-      /> */}
+          <View style={{ position: "absolute", width: "100%", height: "100%" }}>
+            <RideRequestForm
+              pickUpLocationChanged={setPickUpLocationName}
+              dropOffLocationChanged={setDropOffLocationName}
+              userLocation={userLocation}
+              rideRequested={rideRequested}
+            />
           </View>
         ) : whichComponent === "confirmRide" ? (
           <View>

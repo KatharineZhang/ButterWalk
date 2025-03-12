@@ -16,8 +16,7 @@ import {
   DriverAcceptResponse,
   WebSocketResponse,
 } from "../../../server/src/api";
-import { LocationNames, LocationService } from "@/services/LocationService";
-import RideRequestForm from "@/components/RideRequestForm";
+import { LocationName, LocationService } from "@/services/LocationService";
 
 export default function App() {
   // Extract netid from Redirect URL from signin page
@@ -231,11 +230,11 @@ export default function App() {
       setRideInfo(driverAccept);
       setPickUpLocation(
         // get coordinates from location names
-        LocationService.getLatAndLong(driverAccept.location as LocationNames)
+        LocationService.getLatAndLong(driverAccept.location as LocationName)
       );
       setDropOffLocation(
         // get coordinates from location names
-        LocationService.getLatAndLong(driverAccept.destination as LocationNames)
+        LocationService.getLatAndLong(driverAccept.destination as LocationName)
       );
     }
   };
@@ -398,11 +397,6 @@ export default function App() {
           </View>
         </View>
       </SafeAreaProvider>
-
-      {/* Overlay the RideRequestForm on top of the map */}
-      <View style={styles.formOverlay}>
-        <RideRequestForm />
-      </View>
     </View>
   );
 }

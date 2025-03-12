@@ -1,4 +1,4 @@
-export type LocationNames =
+export type LocationName =
   | "HUB"
   | "Alder Hall"
   | "Communication Building"
@@ -10,7 +10,7 @@ export type LocationNames =
 
 type LocationType = {
   // currently these are the locations we support
-  name: LocationNames;
+  name: LocationName;
   latitude: number;
   longitude: number;
 };
@@ -61,7 +61,7 @@ export class LocationService {
    * @param location
    * @returns coordinates of the location in the form {latitude: number, longitude: number}
    */
-  static getLatAndLong(location: LocationNames): {
+  static getLatAndLong(location: LocationName): {
     latitude: number;
     longitude: number;
   } {

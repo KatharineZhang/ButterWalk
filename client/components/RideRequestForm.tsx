@@ -13,10 +13,22 @@ import { ErrorResponse, WebSocketResponse } from "../../server/src/api";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
 import AutocompleteInput from "./AutocompleteInput";
-import { LocationNames } from "../services/LocationService";
+import {LocationName,} from "../services/LocationService";
 import { styles } from "../assets/styles";
 import BottomDrawer from "./BottomDrawer";
 import FAQ from "@/app/(student)/faq";
+
+type RideRequestFormProps = {
+  pickUpLocationChanged: (location: ValidLocationType) => void;
+  dropOffLocationChanged: (location: ValidLocationType) => void;
+  userLocation: { latitude: number; longitude: number };
+  rideRequested: () => void;
+};
+
+// the type of locations we can send to homepage
+export type ValidLocationType = LocationName | `{latitude: ${number}, longitude: ${number}`;
+// the type of locations we can show in the dropdown
+export type DropDownType = LocationName | "Set location on map";
 
 // What's in this component:
 // Ride Request Form which sends request to server and gets response back,
@@ -25,7 +37,12 @@ import FAQ from "@/app/(student)/faq";
 // animation for rider icons,
 // This is a beefy component!
 
-export default function RideRequestForm() {
+export default function RideRequestForm({
+  pickUpLocationChanged,
+  dropOffLocationChanged,
+  userLocation,
+  rideRequested,
+}: RideRequestFormProps) {
   // connect to websocket
   const { netid } = useLocalSearchParams();
 
@@ -37,6 +54,10 @@ export default function RideRequestForm() {
 
   // FAQ State
   const [FAQVisible, setFAQVisible] = useState(false);
+
+  // Confirmation Modal
+  const [confirmationModalVisible, setConfirmationModalVisible] =
+    useState(false);
 
   // true if ride request is accepted by server
   const [accepted, setAccepted] = useState(false);
@@ -61,14 +82,15 @@ export default function RideRequestForm() {
       setMessage("Please specify a pickup and dropoff location!");
       return;
     }
-    WebSocketService.send({
-      directive: "REQUEST_RIDE",
-      phoneNum: "111-111-1111", // TODO: GET PHONE NUMBER HERE SOMEHOW
-      netid: Array.isArray(netid) ? netid[0] : netid,
-      location,
-      destination,
-      numRiders,
-    });
+    rideRequested();
+    // WebSocketService.send({
+    //   directive: "REQUEST_RIDE",
+    //   phoneNum: "111-111-1111", // TODO: GET PHONE NUMBER HERE SOMEHOW
+    //   netid: Array.isArray(netid) ? netid[0] : netid,
+    //   location,
+    //   destination,
+    //   numRiders,
+    // });
   };
 
   // This function will be called whenever the server sends a message for CANCEL RIDE
@@ -108,7 +130,9 @@ export default function RideRequestForm() {
   const [destinationQuery, setDestinationQuery] = useState(""); // Destination query
 
   // data from LocationService.ts
-  const data: LocationNames[] = [
+
+  const data:  DropDownType[] = [
+    "Set location on map",
     "HUB",
     "Alder Hall",
     "Communication Building",
@@ -120,19 +144,33 @@ export default function RideRequestForm() {
   ];
 
   // check that does not allow location and destination to be the same
-  const handleSetLocation = (value: string) => {
+  const handleSetLocation = (value: DropDownType) => {
     if (value === destination) {
       alert("Pickup location and destination cannot be the same!");
       return;
     }
     setLocation(value);
+    if (location === "Set location on map") {
+      // TODO: SHOW CONFIRM MODAL
+      setLocation(JSON.stringify(userLocation)); // TODO: what should be put in the server in this case?
+      pickUpLocationChanged(JSON.stringify(userLocation) as `{latitude: ${number}, longitude: ${number}`);
+    } else {
+      // we clicked a normal location
+      pickUpLocationChanged(value as LocationName);
+    }
   };
-  const handleSetDestination = (value: string) => {
+
+  const handleSetDestination = (value: DropDownType) => {
     if (value === location) {
       alert("Pickup location and destination cannot be the same!");
       return;
     }
+    if (location === "Set location on map") {
+      console.log("Something went wrong! can't set destination to user location");
+      return;
+    }
     setDestination(value);
+    dropOffLocationChanged(value as LocationName);
   };
 
   /* FUZZY SEARCH BAR STUFF ENDS HERE */
@@ -194,7 +232,8 @@ export default function RideRequestForm() {
                   setQuery={setDestinationQuery}
                   setSelection={handleSetDestination}
                   placeholder="Drop Off Location"
-                  data={data}
+                  // can't set the user location as a destination
+                  data={data.filter((item) => item !== "Set location on map")}
                 />
               </View>
             </View>
@@ -204,39 +243,38 @@ export default function RideRequestForm() {
               <View style={styles.riderContainer}>
                 <View style={styles.iconRow}>
                   {/* Decrease Riders */}
-                  <Pressable
-                    onPress={handleDecreaseRiders}
-                    style={styles.clearButton}
-                  >
+                  <Pressable onPress={handleDecreaseRiders}>
                     <Ionicons name="remove" size={32} color="#4B2E83" />
                   </Pressable>
 
-                  {/* Rider Icons */}
-                  <View style={styles.riderIconsContainer}>
-                    {Array.from({ length: numRiders }).map((_, index) => (
-                      <Animated.View
-                        key={index}
-                        style={[styles.riderIcon, { left: index * -10 }]} // Adjust overlap
-                      >
-                        <Image
-                          source={require("../assets/images/rider-icon.png")}
-                          style={styles.riderImage}
-                          resizeMode="contain"
-                        />
-                      </Animated.View>
-                    ))}
+                  {/* Rider Icons with verlapping effect seen in figma */}
+                  <View style={{ justifyContent: "center" }}>
+                    <View style={styles.riderIconsContainer}>
+                      {Array.from({ length: numRiders }).map((_, index) => (
+                        <Animated.View
+                          key={index}
+                          style={[
+                            styles.riderIcon,
+                            { marginLeft: index === 0 ? 0 : -20 },
+                          ]} // Adjust overlap
+                        >
+                          <Image
+                            source={require("../assets/images/rider-icon.png")}
+                            style={styles.riderImage}
+                            resizeMode="contain"
+                          />
+                        </Animated.View>
+                      ))}
+                    </View>
+                    <Text style={styles.riderCount}>
+                      {numRiders} passenger(s)
+                    </Text>
                   </View>
-
                   {/* Increase Riders */}
-                  <Pressable
-                    onPress={handleIncreaseRiders}
-                    style={styles.clearButton}
-                  >
+                  <Pressable onPress={handleIncreaseRiders}>
                     <Ionicons name="add" size={32} color="#4B2E83" />
                   </Pressable>
                 </View>
-
-                <Text style={styles.riderCount}>{numRiders} passenger(s)</Text>
               </View>
             </View>
 
@@ -254,9 +292,12 @@ export default function RideRequestForm() {
             <Pressable onPress={handleSend} style={styles.sendButton}>
               <Text style={styles.buttonLabel}>Confirm Ride</Text>
             </Pressable>
-            
+
             {/* faq button */}
-            <TouchableOpacity style={{position: "absolute", right: 10, top: 0}} onPress={() => setFAQVisible(true)}>
+            <TouchableOpacity
+              style={{ position: "absolute", right: 10, top: 0 }}
+              onPress={() => setFAQVisible(true)}
+            >
               <Image
                 source={require("@/assets/images/faq-button.png")}
                 style={{ width: 20, height: 20 }}

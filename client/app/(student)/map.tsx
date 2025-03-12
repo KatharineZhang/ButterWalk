@@ -6,7 +6,6 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { styles } from "@/assets/styles";
 import { View, Image, Alert, Linking } from "react-native";
 import MapViewDirections from "react-native-maps-directions";
-import RideRequestForm from "@/components/RideRequestForm";
 
 interface MapProps {
   pickUpLocation: { latitude: number; longitude: number };
@@ -220,9 +219,6 @@ export default function Map({
           onReady={handleDirectionsReady}
         />
       </MapView>
-      <View style={{ position: "absolute", width: "100%", height: "100%" }}>
-        <RideRequestForm />
-      </View>
     </View>
   );
 }
