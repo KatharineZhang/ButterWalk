@@ -14,7 +14,6 @@ import { Alert, Linking } from "react-native";
 import { LocationResponse, WebSocketResponse } from "../../../server/src/api";
 import MapViewDirections from "react-native-maps-directions";
 import Profile from "./profile";
-// import { LocationNames, LocationService } from "@/services/LocationService";
 
 export default function App() {
   // INITIAL WEB SOCKET SETUP
@@ -364,12 +363,11 @@ export default function App() {
       </View>
 
       {/* profile pop-up modal */}
-        <Profile
-          isVisible={profileVisible}
-          onClose={() => setProfileVisible(false)}
-          netid={netid as string}
-        />
-
+      <Profile
+        isVisible={profileVisible}
+        onClose={() => setProfileVisible(false)}
+        netid={netid as string}
+      />
     </View>
   );
 }

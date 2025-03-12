@@ -234,10 +234,7 @@ export const styles = StyleSheet.create({
     marginTop: 10,
     marginLeft: 3,
   },
-  modalCenteredView: {
-    flex: 1,
-  },
-  modalModalView: {
+  fullModalView: {
     backgroundColor: "#E4E2F0",
     borderRadius: 20,
     padding: 20,
@@ -323,12 +320,21 @@ export const styles = StyleSheet.create({
   riderIconsContainer: {
     flexDirection: "row",
     position: "relative",
+    justifyContent: "center",
     height: 50,
-    marginRight: 20,
   },
   riderIcon: {
-    position: "absolute",
     opacity: 1,
+  },
+  riderControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center", // Centers horizontally
+    marginVertical: 10,
+  },
+  riderCountContainer: {
+    minWidth: 50, // Ensures consistent spacing
+    alignItems: "center",
   },
   modalCloseButton: {
     borderRadius: 20,
@@ -408,11 +414,9 @@ export const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     elevation: 5,
   },
-  },
-  // bottome modal styles
+  // bottom modal styles
   bottomModalView: {
     alignItems: "center",
-    margin: 20,
     backgroundColor: "white",
     borderRadius: 20,
     padding: 20,
@@ -425,7 +429,7 @@ export const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
     width: "100%",
-    height: "60%",
+    height: "70%",
     position: "absolute",
     bottom: -100,
   },
@@ -460,6 +464,7 @@ export const styles = StyleSheet.create({
     paddingLeft: 80,
   },
   bottomModalButtonContainer: {
+    paddingVertical: 10,
     justifyContent: "center",
     width: "100%",
   },
@@ -479,55 +484,5 @@ export const styles = StyleSheet.create({
   buttonText: {
     color: "white",
     fontSize: 18,
-  },
-  // number of riders stuff
-  animationContainer: {
-    marginBottom: 10,
-    borderWidth: 1,
-    borderRadius: 16,
-    borderColor: "Black/Black 3",
-    paddingVertical: 3,
-    paddingHorizontal: 20,
-  },
-  riderContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: "100%",
-  },
-  riderControls: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center", // Centers horizontally
-    marginVertical: 10,
-  },
-  riderCountContainer: {
-    minWidth: 50, // Ensures consistent spacing
-    alignItems: "center",
-  },
-  riderCount: {
-    fontSize: 18,
-    marginTop: 0,
-    marginBottom: 8,
-    marginLeft: 5,
-  },
-  riderIconsContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    height: 50,
-    marginRight: 20,
-  },
-  riderIcon: {
-    opacity: 1,
-  },
-  riderImage: {
-    width: 32, // Adjust based on your design
-    height: 32,
-    resizeMode: "contain",
   },
 });

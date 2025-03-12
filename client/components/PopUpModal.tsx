@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { styles } from "@/assets/styles";
-import { View, Modal, TouchableOpacity, Image } from "react-native";
+import { View, Modal, ScrollView, TouchableOpacity, Image } from "react-native";
 
 // the component that displays a list of frequently asked questions
 // takes in props on if the modal should be shown and a function to close the modal
@@ -9,9 +9,10 @@ interface PopUpModalProps {
   isVisible: boolean;
   onClose: () => void;
   content: JSX.Element;
+  type: "full" | "half";
 }
 
-function PopUpModal({ isVisible, onClose, content }: PopUpModalProps) {
+function PopUpModal({ isVisible, onClose, content, type }: PopUpModalProps) {
   return (
     <Modal
       animationType="slide"
@@ -19,25 +20,25 @@ function PopUpModal({ isVisible, onClose, content }: PopUpModalProps) {
       visible={isVisible}
       onRequestClose={onClose}
     >
-      <TouchableOpacity style={styles.modalCenteredView} activeOpacity={1}>
-        <View style={styles.modalModalView}>
-          {/* Close Button */}
-          <TouchableOpacity
-            style={[
-              styles.modalCloseButton,
-              { position: "absolute", right: 10, top: 10, zIndex: 1 },
-            ]}
-            onPress={onClose}
-          >
-            <Image
-              source={require("@/assets/images/modal-close.png")}
-              style={{ width: 40, height: 40 }}
-            />
-          </TouchableOpacity>
-          {/* Whatever is inside the modal */}
-          {content}
-        </View>
-      </TouchableOpacity>
+      <View
+        style={type === "full" ? styles.fullModalView : styles.bottomModalView}
+      >
+        {/* Close Button */}
+        <TouchableOpacity
+          style={[
+            styles.modalCloseButton,
+            { position: "absolute", right: 10, top: 10, zIndex: 1 },
+          ]}
+          onPress={onClose}
+        >
+          <Image
+            source={require("@/assets/images/modal-close.png")}
+            style={{ width: 40, height: 40 }}
+          />
+        </TouchableOpacity>
+        {/* Whatever is inside the modal */}
+        <ScrollView>{content}</ScrollView>
+      </View>
     </Modal>
   );
 }

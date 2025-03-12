@@ -254,9 +254,12 @@ export default function RideRequestForm() {
             <Pressable onPress={handleSend} style={styles.sendButton}>
               <Text style={styles.buttonLabel}>Confirm Ride</Text>
             </Pressable>
-            
+
             {/* faq button */}
-            <TouchableOpacity style={{position: "absolute", right: 10, top: 0}} onPress={() => setFAQVisible(true)}>
+            <TouchableOpacity
+              style={{ position: "absolute", right: 10, top: 0 }}
+              onPress={() => setFAQVisible(true)}
+            >
               <Image
                 source={require("@/assets/images/faq-button.png")}
                 style={{ width: 20, height: 20 }}
