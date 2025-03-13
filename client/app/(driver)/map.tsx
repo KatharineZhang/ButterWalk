@@ -8,13 +8,16 @@ import Header from "@/components/Header";
 import { styles } from "@/assets/styles";
 import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import WebSocketService, {WebsocketConnectMessage} from "@/services/WebSocketService";
+import WebSocketService, {
+  WebsocketConnectMessage,
+} from "@/services/WebSocketService";
 import { Alert, Linking } from "react-native";
 import {
   DriverAcceptResponse,
   WebSocketResponse,
 } from "../../../server/src/api";
 import { LocationNames, LocationService } from "@/services/LocationService";
+import RideRequestForm from "@/components/RideRequestForm";
 
 export default function App() {
   // Extract netid from Redirect URL from signin page
@@ -66,7 +69,7 @@ export default function App() {
 
   // STATE HOOKS
   useEffect(() => {
-  // TODO: MOVE CONNECTION TO THE SIGNIN.TSX WHEN THAT IS IMPLEMENTED 
+    // TODO: MOVE CONNECTION TO THE SIGNIN.TSX WHEN THAT IS IMPLEMENTED
     // await connection from websocket
     const connectWebSocket = async () => {
       const msg: WebsocketConnectMessage = await WebSocketService.connect();
@@ -293,14 +296,8 @@ export default function App() {
           ref={mapRef}
           style={styles.map}
           initialRegion={{
-            latitude:
-              userLocation.latitude != 0
-                ? userLocation.latitude
-                : 47.65462693267042,
-            longitude:
-              userLocation.longitude != 0
-                ? userLocation.longitude
-                : -122.30938853301136,
+            latitude: userLocation.latitude || 47.65462693267042,
+            longitude: userLocation.longitude || -122.30938853301136,
             latitudeDelta: 0.015,
             longitudeDelta: 0.015,
           }}
@@ -401,6 +398,11 @@ export default function App() {
           </View>
         </View>
       </SafeAreaProvider>
+
+      {/* Overlay the RideRequestForm on top of the map */}
+      <View style={styles.formOverlay}>
+        <RideRequestForm />
+      </View>
     </View>
   );
 }
