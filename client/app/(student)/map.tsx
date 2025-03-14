@@ -364,12 +364,11 @@ export default function App() {
       </View>
 
       {/* profile pop-up modal */}
-        <Profile
-          isVisible={profileVisible}
-          onClose={() => setProfileVisible(false)}
-          netid={netid as string}
-        />
-
+      <Profile
+        isVisible={profileVisible}
+        onClose={() => setProfileVisible(false)}
+        netid={netid as string}
+      />
     </View>
   );
 }

@@ -415,23 +415,16 @@ export const styles = StyleSheet.create({
 export const loadingPageCompStyles = StyleSheet.create({
   rootContainer: {
     flex: 1,
-    width: 393,
-    height: 852,
-    paddingBottom: 802,
+    backgroundColor: "#4B2E83",
     flexDirection: "column",
     alignItems: "center",
+    width: "100%",
   },
   pickUpContainer: {
-    flex: 1,
-    flexDirection: "column",
-    alignItems: "flex-start",
-    gap: 2,
+    backgroundColor: "#000000",
   },
   dropOffContainer: {
-    flex: 1,
-    flexDirection: "column",
-    alignItems: "flex-end",
-    gap: 2,
+backgroundColor: "#000000"
   },
   locationMainTextTypography: {
     color: "white",
@@ -447,17 +440,12 @@ export const loadingPageCompStyles = StyleSheet.create({
     fontWeight: "400",
   },
   middleDisplayContainer: {
-    flex: 1,
-    width: 393,
-    height: 802,
+    backgroundColor: "#000000",
     padding: 40,
-    paddingHorizontal: 16,
-    flexDirection: "column",
-    justifyContent: "space-between",
+    marginTop: 150,
     alignItems: "center",
-  },
-  mainTextContainer: {
-    alignSelf: "stretch",
+    height: 150,
+    justifyContent: "space-between"
   },
   mainTextTypography: {
     color: "#FFF",
@@ -466,9 +454,6 @@ export const loadingPageCompStyles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "700",
     lineHeight: 28,
-  },
-  subtextContainer: {
-    alignSelf: "stretch",
   },
   subtextTypography: {
     color: "#FFF",
