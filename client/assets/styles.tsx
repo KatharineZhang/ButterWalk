@@ -234,10 +234,7 @@ export const styles = StyleSheet.create({
     marginTop: 10,
     marginLeft: 3,
   },
-  modalCenteredView: {
-    flex: 1,
-  },
-  modalModalView: {
+  fullModalView: {
     backgroundColor: "#E4E2F0",
     borderRadius: 20,
     padding: 20,
@@ -323,12 +320,21 @@ export const styles = StyleSheet.create({
   riderIconsContainer: {
     flexDirection: "row",
     position: "relative",
+    justifyContent: "center",
     height: 50,
-    marginRight: 20,
   },
   riderIcon: {
-    position: "absolute",
     opacity: 1,
+  },
+  riderControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center", // Centers horizontally
+    marginVertical: 10,
+  },
+  riderCountContainer: {
+    minWidth: 50, // Ensures consistent spacing
+    alignItems: "center",
   },
   modalCloseButton: {
     borderRadius: 20,
@@ -407,5 +413,76 @@ export const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     elevation: 5,
+  },
+  // bottom modal styles
+  bottomModalView: {
+    alignItems: "center",
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    width: "100%",
+    height: "70%",
+    position: "absolute",
+    bottom: -100,
+  },
+  bottomModalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  waitTimeText: {
+    fontSize: 16,
+    marginBottom: 8,
+    fontStyle: "italic",
+  },
+  locationContainer: {
+    padding: 15,
+    marginBottom: 10,
+    borderRadius: 10,
+    width: "100%",
+    backgroundColor: "#EEEEEE",
+    alignContent: "center",
+    flexDirection: "row",
+  },
+  locationImage: {
+    position: "absolute",
+    left: 25,
+    bottom: 15,
+    width: 20,
+    height: 20,
+  },
+  locationTextContainer: {
+    paddingLeft: 80,
+  },
+  bottomModalButtonContainer: {
+    paddingVertical: 10,
+    justifyContent: "center",
+    width: "100%",
+  },
+  bottomModalButton: {
+    padding: 20,
+    borderRadius: 10,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  confirmButton: {
+    backgroundColor: "#4B2E83",
+  },
+  cancelButton: {
+    backgroundColor: "red",
+  },
+  buttonText: {
+    color: "white",
+    fontSize: 18,
   },
 });
