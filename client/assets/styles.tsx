@@ -485,4 +485,104 @@ export const styles = StyleSheet.create({
     color: "white",
     fontSize: 18,
   },
+  // progressBar
+  progressContainer: {
+    position: "absolute",
+    bottom: 0,
+    backgroundColor: "white",
+    padding: 16,
+  },
+  progressBarTop: {
+      alignItems: "center",
+      borderBottomWidth: 2,
+      borderBottomColor: "#EEEEEE",
+      padding: 15,
+      marginBottom: 10,
+  },
+  mainTextContainer: {
+      flexDirection: "row",
+      marginBottom: 10,
+  },
+  mainText: {
+      fontSize: 18,
+      textAlign: "center",
+      fontWeight: "bold",
+      flex: 1,
+  },
+  subTextContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 5,
+  },
+  subText: {
+      fontSize: 16,
+      marginLeft: 8,
+  },
+  progressBarBottom: {
+      alignItems: "center",
+  },
+  rideTimeText: {
+      fontSize: 12,
+      fontWeight: "bold",
+      marginVertical: 8,
+  },
+  progressBarWrapper: {
+      flexDirection: "row",
+      alignItems: "center",
+      width: 320,
+      position: "relative",
+  },
+  progressBar: {
+      flex: 1,
+      height: 15,
+      borderRadius: 6,
+      backgroundColor: "#E3E3E3",
+      maxWidth: "100%",
+      width: 370,
+      zIndex: 1,
+  },
+  circleStart: {
+      width: 22,
+      height: 22,
+      borderRadius: 13,
+      backgroundColor: "#4B2E83",
+      borderWidth: 2,
+      borderColor: "#000000",
+      position: "absolute",
+      left: 0,
+      zIndex: 2,
+  },
+  circleEnd: {
+      width: 22,
+      height: 22,
+      borderRadius: 13,
+      backgroundColor: "#E34B64",
+      borderWidth: 2,
+      borderColor: "#000000",
+      position: "absolute",
+      right: 0,
+      zIndex: 2,
+  },
+  locationsContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      width: "100%",
+      marginTop: 15,
+  },
+  pickUpContainer: {
+      alignItems: "flex-start",
+      maxWidth: "50%"
+  },
+  dropOffContainer: {
+      alignItems: "flex-end",
+      maxWidth: "50%"
+  },
+  locationTitle: {
+      fontWeight: "bold",
+      fontSize: 12,
+      marginBottom: 3,
+  },
+  locationText: {
+      fontSize: 12,
+  }
 });
