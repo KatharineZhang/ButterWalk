@@ -1,12 +1,20 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
+import FAQ from "@/app/(student)/faq";
 import { styles } from "@/assets/styles";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useState } from "react";
-import { View, Image, Text, Pressable, Animated, TouchableOpacity } from "react-native";
+import {
+  View,
+  Image,
+  Text,
+  Pressable,
+  Animated,
+  TouchableOpacity,
+} from "react-native";
 
 interface RideConfirmCompProps {
   pickUpLoc: string;
   dropOffLoc: string;
+  numPassengers: number;
   driverETA: number;
   onClose: () => void; // callback function for when the user closes modal
   onConfirm: (numPassengers: number) => void; // callback function for when the user confirms ride
@@ -15,36 +23,13 @@ interface RideConfirmCompProps {
 const RideConfirmComp: React.FC<RideConfirmCompProps> = ({
   pickUpLoc,
   dropOffLoc,
+  numPassengers,
   driverETA,
   onClose,
   onConfirm,
 }) => {
-  const [numPassengers, setNumPassengers] = React.useState(1);
-
-  // animation functions
-  const fadeAnim = useState(new Animated.Value(0))[0];
-
-  const animateRiders = () => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  // Handle increase/decrease of riders
-  const handleIncreaseRiders = () => {
-    if (numPassengers < 4) {
-      setNumPassengers(numPassengers + 1);
-      animateRiders();
-    }
-  };
-  const handleDecreaseRiders = () => {
-    if (numPassengers > 1) {
-      setNumPassengers(numPassengers - 1);
-      animateRiders();
-    }
-  };
+  // FAQ State TODO: MOVE TO HOME PAGE
+  const [FAQVisible, setFAQVisible] = useState(false);
 
   return (
     <View
@@ -58,22 +43,25 @@ const RideConfirmComp: React.FC<RideConfirmCompProps> = ({
         padding: 10,
       }}
     >
+      <View style={{ height: 20 }} />
       {/* Close Button */}
       <TouchableOpacity
         style={[
           styles.modalCloseButton,
-          { position: "absolute", right: 10, top: 10, zIndex: 1 },
+          { position: "absolute", left: 10, top: 30, zIndex: 1 },
         ]}
         onPress={onClose}
       >
         <Image
-          source={require("@/assets/images/modal-close.png")}
-          style={{ width: 40, height: 40 }}
+          source={require("@/assets/images/confirm-back.png")}
+          style={{ width: 58, height: 30 }}
         />
       </TouchableOpacity>
       <View style={{ height: 10 }} />
 
-      <Text style={styles.bottomModalTitle}>Confirm Ride Details</Text>
+      <Text style={[styles.bottomModalTitle, { paddingBottom: 10 }]}>
+        Confirm Your Ride
+      </Text>
       <View style={{ height: 10 }} />
 
       {/* Wait Time Display */}
@@ -88,6 +76,28 @@ const RideConfirmComp: React.FC<RideConfirmCompProps> = ({
         </Text>
       </View>
       <View style={{ height: 10 }} />
+
+      {/* Number of Passengers */}
+      <View style={{ justifyContent: "center", alignItems: "center" }}>
+        <View style={{ flexDirection: "row", justifyContent: "center", padding: 10 }}>
+          {Array.from({ length: numPassengers }).map((_, index) => (
+            <Animated.View
+              key={index}
+              style={[styles.riderIcon, { marginLeft: index === 0 ? 0 : -29 }]} // Adjust overlap
+            >
+              <Image
+                source={require("../assets/images/rider-icon.png")}
+                style={{width: 20, 
+                  height: 20,
+                  resizeMode: "contain",}}
+                resizeMode="contain"
+              />
+            </Animated.View>
+          ))}
+        </View>
+        <Text style={{fontSize: 15}}>{numPassengers} passenger(s)</Text>
+      </View>
+      <View style={{ height: 20 }} />
 
       {/* Pickup and DropOff Location */}
       <View style={styles.locationContainer}>
@@ -114,52 +124,12 @@ const RideConfirmComp: React.FC<RideConfirmCompProps> = ({
         source={require("@/assets/images/confirm-line.png")}
         style={{
           position: "absolute",
-          top: 140,
+          top: 247,
           left: 44,
           width: 2,
           height: 30,
         }}
       />
-
-      {/* Number of Passengers */}
-      <View style={styles.animationContainer}>
-        <View style={styles.riderContainer}>
-          <View style={styles.iconRow}>
-            {/* Minus Button also handle changes to numPassengers state*/}
-            <Pressable onPress={handleDecreaseRiders}>
-              <Ionicons name="remove" size={32} color="#4B2E83" />
-            </Pressable>
-
-            {/* Rider Icons with verlapping effect seen in figma */}
-            <View style={{ justifyContent: "center" }}>
-              <View style={styles.riderIconsContainer}>
-                {Array.from({ length: numPassengers }).map((_, index) => (
-                  <Animated.View
-                    key={index}
-                    style={[
-                      styles.riderIcon,
-                      { marginLeft: index === 0 ? 0 : -20 },
-                    ]} // Adjust overlap
-                  >
-                    <Image
-                      source={require("../assets/images/rider-icon.png")}
-                      style={styles.riderImage}
-                      resizeMode="contain"
-                    />
-                  </Animated.View>
-                ))}
-              </View>
-              <Text style={styles.riderCount}>
-                {numPassengers} passenger(s)
-              </Text>
-            </View>
-            {/* handles the numPassengers state */}
-            <Pressable onPress={handleIncreaseRiders}>
-              <Ionicons name="add" size={32} color="#4B2E83" />
-            </Pressable>
-          </View>
-        </View>
-      </View>
 
       {/* Confirm Button */}
       <View style={styles.bottomModalButtonContainer}>
@@ -170,6 +140,20 @@ const RideConfirmComp: React.FC<RideConfirmCompProps> = ({
           <Text style={styles.buttonText}>Confirm Ride</Text>
         </Pressable>
       </View>
+
+      {/* faq button */}
+      <TouchableOpacity
+        style={{ position: "absolute", right: 30, top: 30 }}
+        onPress={() => setFAQVisible(true)}
+      >
+        <Image
+          source={require("@/assets/images/faq-button.png")}
+          style={{ width: 20, height: 20 }}
+        />
+      </TouchableOpacity>
+
+      {/* faq pop-up modal */}
+      <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
     </View>
   );
 };
