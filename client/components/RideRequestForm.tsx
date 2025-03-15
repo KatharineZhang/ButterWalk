@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -20,15 +20,14 @@ type RideRequestFormProps = {
   pickUpLocationChanged: (location: ValidLocationType) => void;
   dropOffLocationChanged: (location: ValidLocationType) => void;
   userLocation: { latitude: number; longitude: number };
-  rideRequested: () => void;
+  rideRequested: (numPassengers: number) => void;
+  startingState?: { pickup: string; dropoff: string; numRiders: number };
 };
 
 // the type of locations we can send to homepage
-export type ValidLocationType =
-  | LocationName
-  | `{latitude: ${number}, longitude: ${number}`;
+export type ValidLocationType = LocationName | `Current Location`;
 // the type of locations we can show in the dropdown
-export type DropDownType = LocationName | "Set location on map";
+export type DropDownType = LocationName | "Current Location";
 
 // What's in this component:
 // Ride Request Form which sends request to server and gets response back,
@@ -42,12 +41,23 @@ export default function RideRequestForm({
   dropOffLocationChanged,
   userLocation,
   rideRequested,
+  startingState,
 }: RideRequestFormProps) {
   // user input states for form
   const [location, setLocation] = useState("");
   const [destination, setDestination] = useState("");
   const [numRiders, setNumRiders] = useState(1);
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    if (startingState) {
+      setLocationQuery(startingState.pickup);
+      setLocation(startingState.pickup);
+      setDestinationQuery(startingState.dropoff);
+      setDestination(startingState.dropoff);
+      setNumRiders(startingState.numRiders);
+    }
+  }, []);
 
   // FAQ State
   const [FAQVisible, setFAQVisible] = useState(false);
@@ -62,7 +72,7 @@ export default function RideRequestForm({
       setMessage("Please specify a pickup and dropoff location!");
       return;
     }
-    rideRequested();
+    rideRequested(numRiders);
   };
 
   /* FUZZY SEARCH BAR STUFF */
@@ -74,7 +84,7 @@ export default function RideRequestForm({
   // data from LocationService.ts
 
   const data: DropDownType[] = [
-    "Set location on map",
+    "Current Location",
     "HUB",
     "Alder Hall",
     "Communication Building",
@@ -91,7 +101,7 @@ export default function RideRequestForm({
       alert("Pickup location and destination cannot be the same!");
       return;
     }
-    if (value === "Set location on map") {
+    if (value === "Current Location") {
       console.log("here");
       setConfirmationModalVisible(true);
     } else {
@@ -106,7 +116,7 @@ export default function RideRequestForm({
       alert("Pickup location and destination cannot be the same!");
       return;
     }
-    if (value === "Set location on map") {
+    if (value === "Current Location") {
       console.log(
         "Something went wrong! can't set destination to user location"
       );
@@ -119,11 +129,7 @@ export default function RideRequestForm({
   const confirmPickUpLocation = () => {
     console.log("RIDE REQ USER LOC:" + JSON.stringify(userLocation));
     setLocation(JSON.stringify(userLocation));
-    pickUpLocationChanged(
-      JSON.stringify(
-        userLocation
-      ) as `{latitude: ${number}, longitude: ${number}`
-    );
+    pickUpLocationChanged("Current Location");
     setConfirmationModalVisible(false);
   };
 
@@ -157,7 +163,7 @@ export default function RideRequestForm({
 
   return (
     <View style={{ flex: 1 }}>
-      <BottomDrawer modalVisible={confirmationModalVisible}>
+      <BottomDrawer>
         <View style={styles.formContainer}>
           <View>
             <Text style={styles.formHeader}>Request a Ride</Text>
@@ -179,9 +185,9 @@ export default function RideRequestForm({
                   setSelection={handleSetDestination}
                   placeholder="Drop Off Location"
                   // can't set the user location as a destination
-                  data={data.filter((item) => item !== "Set location on map")}
+                  data={data.filter((item) => item !== "Current Location")}
                 />
-              </View>
+              </View> 
             </View>
 
             {/* Rider Selection Animation */}
@@ -224,20 +230,34 @@ export default function RideRequestForm({
               </View>
             </View>
 
-            {/* Information Text */}
-            <Text style={styles.infoText}>
-              If the wait is too long, check out the NightRide shuttle! The
-              service is available 6:30 p.m. – 2 a.m. daily except University
-              Holidays. Extended service runs until 3:30 a.m. the week before
-              and the week of finals.
-            </Text>
-
             <Text style={{ color: "red" }}>{message}</Text>
 
-            {/* Confirm Ride Button */}
-            <Pressable onPress={handleSend} style={styles.sendButton}>
-              <Text style={styles.buttonLabel}>Confirm Ride</Text>
-            </Pressable>
+            {/* Next Button */}
+            <View
+              style={{
+                padding: 10,
+                alignItems: "center",
+                flexDirection: "row",
+                justifyContent: "flex-end",
+              }}
+            >
+              <Text style={{ fontStyle: "italic" }}>
+                Review and Confirm Your Ride
+              </Text>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={handleSend}
+              >
+                <Image
+                  source={require("@/assets/images/confirm-back.png")}
+                  style={{
+                    width: 58,
+                    height: 30,
+                    transform: [{ rotate: "180deg" }],
+                  }}
+                />
+              </TouchableOpacity>
+            </View>
 
             {/* faq button */}
             <TouchableOpacity

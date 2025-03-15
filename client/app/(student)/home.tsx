@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import React, { useState, useEffect } from "react";
-import { Image, TouchableOpacity, View } from "react-native";
+import { useState, useEffect } from "react";
+import { Text, Image, TouchableOpacity, View } from "react-native";
 import Profile from "./profile";
 import Map from "./map";
 import { useLocalSearchParams } from "expo-router";
@@ -11,12 +11,12 @@ import {
   WaitTimeResponse,
   WebSocketResponse,
 } from "../../../server/src/api";
-import RideConfirmComp from "@/components/RideConfirmComp";
 import RideRequestForm, {
   ValidLocationType,
 } from "@/components/RideRequestForm";
 import { LocationName, LocationService } from "@/services/LocationService";
 import WaitingForRide from "@/components/WaitingForRide";
+import ConfirmRide from "@/components/ConfirmRide";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -78,9 +78,11 @@ export default function HomePage() {
     useState<ValidLocationType>("" as ValidLocationType);
   const [dropOffLocationName, setDropOffLocationName] =
     useState<ValidLocationType>("" as ValidLocationType);
+  const [numPassengers, setNumPassengers] = useState(1);
 
   // user clicked on request ride button on ride request form
-  const rideRequested = () => {
+  const rideRequested = (numPassengers: number) => {
+    setNumPassengers(numPassengers);
     setWhichComponent("confirmRide");
   };
 
@@ -91,32 +93,28 @@ export default function HomePage() {
   /* CONFIRM RIDE STATE AND METHODS */
   const [rideDuration, setRideDuration] = useState(0);
   const [driverETA, setDriverETA] = useState(0);
+  const [startingState, setStartingState] = useState<
+    { pickup: string; dropoff: string; numRiders: number } | undefined
+  >(undefined);
 
   const closeConfirmRide = () => {
     setWhichComponent("rideReq");
-
-    // reset all locations
-    setPickUpLocation({
-      latitude: 0,
-      longitude: 0,
+    setStartingState({
+      pickup: pickUpLocationName,
+      dropoff: dropOffLocationName,
+      numRiders: numPassengers,
     });
-    setDropOffLocation({
-      latitude: 0,
-      longitude: 0,
-    });
-    setPickUpLocationName("" as ValidLocationType);
-    setDropOffLocationName("" as ValidLocationType);
   };
 
-  const requestRide = async (requestedPassengers: number) => {
+  const requestRide = async () => {
     // send the ride request to the server
     WebSocketService.send({
       directive: "REQUEST_RIDE",
       phoneNum: user.phoneNumber as string,
       netid,
-      location: "location",
-      destination: "destination",
-      numRiders: requestedPassengers,
+      location: JSON.stringify(pickUpLocation),
+      destination: JSON.stringify(dropOffLocation),
+      numRiders: numPassengers,
     });
     // set the component to show to loading
     setWhichComponent("Loading");
@@ -160,10 +158,10 @@ export default function HomePage() {
   // figure out coordinates from picku and dropoff locations
   useEffect(() => {
     console.log(pickUpLocationName, dropOffLocationName);
-    if (pickUpLocationName.search('{"latitude":') !== -1) {
+    if (pickUpLocationName === "Current Location") {
       // we were given user coordinates not a location name
       console.log("Pickup location is coordinates");
-      setPickUpLocation(JSON.parse(pickUpLocationName));
+      setPickUpLocation(userLocation);
     } else {
       // get the coordinates of the pickup location
       setPickUpLocation(
@@ -315,21 +313,32 @@ export default function HomePage() {
               dropOffLocationChanged={setDropOffLocationName}
               userLocation={userLocation}
               rideRequested={rideRequested}
+              startingState={startingState}
             />
           </View>
         ) : whichComponent === "confirmRide" ? (
           <View style={{ position: "absolute", width: "100%", height: "100%" }}>
             {/* confirm ride component */}
-            <RideConfirmComp
+            <ConfirmRide
               pickUpLoc={pickUpLocationName}
               dropOffLoc={dropOffLocationName}
               driverETA={driverETA}
+              numPassengers={numPassengers}
               onClose={closeConfirmRide}
               onConfirm={requestRide}
             />
           </View>
         ) : whichComponent === "Loading" ? (
-          <View>
+          <View
+            style={{
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+              backgroundColor: "white",
+            }}
+          >
+            <View style={{ height: 100 }}/>
+            <Text>Loading...</Text>
             {/* loading component */}
             {/* Example: <Loading 
             pickUpLocation={pickUpLocation}
