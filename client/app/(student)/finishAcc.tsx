@@ -90,9 +90,9 @@ const finishAcc = () => {
     return (
       <Redirect
         href={{
-          pathname: "/(student)/map",
+          pathname: "/(student)/home",
           params: {
-            netid: netid != "" ? netid : "dev-netID",
+            netid: netid != "" ? netid : "student-netID",
           },
         }}
       />

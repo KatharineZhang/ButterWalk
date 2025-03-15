@@ -79,7 +79,13 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
 
       {/* Number of Passengers */}
       <View style={{ justifyContent: "center", alignItems: "center" }}>
-        <View style={{ flexDirection: "row", justifyContent: "center", padding: 10 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "center",
+            padding: 10,
+          }}
+        >
           {Array.from({ length: numPassengers }).map((_, index) => (
             <Animated.View
               key={index}
@@ -87,15 +93,13 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
             >
               <Image
                 source={require("../assets/images/rider-icon.png")}
-                style={{width: 20, 
-                  height: 20,
-                  resizeMode: "contain",}}
+                style={{ width: 20, height: 20, resizeMode: "contain" }}
                 resizeMode="contain"
               />
             </Animated.View>
           ))}
         </View>
-        <Text style={{fontSize: 15}}>{numPassengers} passenger(s)</Text>
+        <Text style={{ fontSize: 15 }}>{numPassengers} passenger(s)</Text>
       </View>
       <View style={{ height: 20 }} />
 

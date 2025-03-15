@@ -97,7 +97,7 @@ const Login = () => {
   return accExists == true && netid ? (
     <Redirect
       href={{
-        pathname: "/(student)/map",
+        pathname: "/(student)/home",
         params: {
           netid: netid,
         },

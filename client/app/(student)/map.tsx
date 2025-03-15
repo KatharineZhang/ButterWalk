@@ -1,54 +1,40 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import MapView, { Polygon, Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { styles } from "@/assets/styles";
-import { View, TouchableOpacity, Image } from "react-native";
-import { useLocalSearchParams } from "expo-router";
-import WebSocketService from "@/services/WebSocketService";
-import RideRequestForm from "@/components/RideRequestForm";
-
-// file changes to test ride request form!
-import { Alert, Linking } from "react-native";
-import { LocationResponse, WebSocketResponse } from "../../../server/src/api";
+import { View, Image, Alert, Linking } from "react-native";
 import MapViewDirections from "react-native-maps-directions";
-import Profile from "./profile";
 
-export default function App() {
-  // INITIAL WEB SOCKET SETUP
-  // Extract netid from Redirect URL from signin page
-  const { netid } = useLocalSearchParams();
+interface MapProps {
+  pickUpLocation: { latitude: number; longitude: number };
+  dropOffLocation: { latitude: number; longitude: number };
+  driverLocation: { latitude: number; longitude: number };
+  rideDuration: number;
 
+  userLocationChanged: (location: {
+    latitude: number;
+    longitude: number;
+  }) => void;
+}
+
+// Simple renders the points passing in through the props
+// and keeps track of the user's location
+export default function Map({
+  driverLocation = { latitude: 0, longitude: 0 },
+  pickUpLocation = { latitude: 0, longitude: 0 },
+  dropOffLocation = { latitude: 0, longitude: 0 },
+  // rideDuration, // show the ride duration on the route
+  userLocationChanged,
+}: MapProps) {
   // STATE VARIABLES
   // the student's location
   const [userLocation, setUserLocation] = useState<{
     latitude: number;
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
-  // the driver's location
-  const [driverLocation, setDriverLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  }>({ latitude: 0, longitude: 0 });
-  // the pickup location
-  const [pickUpLocation, setPickUpLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  }>({ latitude: 0, longitude: 0 });
-  // destination location
-  const [dropOffLocation, setDropOffLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  }>({ latitude: 0, longitude: 0 });
-  const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
-    ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
-    : "";
 
-  // Profile State
-  const [profileVisible, setProfileVisible] = useState(false);
-
-  // control where we want to zoom on the map
   // in the format: [userLocation, driverLocation, pickUpLocation, dropOffLocation]
   const [zoomOn, setZoomOn] = useState<
     { latitude: number; longitude: number }[]
@@ -59,34 +45,35 @@ export default function App() {
     { latitude: 0, longitude: 0 },
   ]);
 
+  const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
+    ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
+    : "";
+
   // used for map zooming
   const mapRef = useRef<MapView>(null);
+
+  // UW parameter
+  const polygonCoordinates = [
+    { latitude: 47.666588, longitude: -122.311439 },
+    { latitude: 47.667353, longitude: -122.316263 },
+    { latitude: 47.652854, longitude: -122.316942 },
+    { latitude: 47.648566, longitude: -122.304858 },
+    { latitude: 47.660993, longitude: -122.301405 },
+    { latitude: 47.661138, longitude: -122.311331 },
+  ];
 
   // STATE HOOKS
   useEffect(() => {
     // on the first render, get the user's location
     // and set up listeners
     watchLocation();
-    WebSocketService.addListener(handleLocation, "LOCATION");
-    WebSocketService.addListener(handleCompleteOrCancel, "COMPLETE");
-    WebSocketService.addListener(handleCompleteOrCancel, "CANCEL");
-    WebSocketService.addListener(handleRequest, "REQUEST_RIDE");
   }, []);
 
   useEffect(() => {
     // when any of our locations change, check if we need to zoom on them
-    // we only want to update the zoom if a drastic change was made (distance > 10),
-    // i.e. the driver, pickup and dropoff locations were set to valid values,
-    // or they where set back to invalid values (0,0)
-    // only update zoomOn in these cases to allow the user more flexibility to
-    // move the map without being forced into a zoomed view
-    const diff0 = calculateDistance(userLocation, zoomOn[0]);
-    const diff1 = calculateDistance(driverLocation, zoomOn[1]);
-    const diff2 = calculateDistance(pickUpLocation, zoomOn[2]);
-    const diff3 = calculateDistance(dropOffLocation, zoomOn[3]);
-
-    // check zoomOn index 0 aka userLocation
-    if (diff0 > 10) {
+    // this is mainly because our user, pickup and dropoff locations set all the time (to the same values)
+    // but we don't necessarily want to zoom in on those location unless they are actually different
+    if (calculateDistance(userLocation, zoomOn[0]) > 10) {
       console.log("updating user location", userLocation);
       setZoomOn((prevZoomOn) => {
         const newZoomOn = [...prevZoomOn];
@@ -94,9 +81,8 @@ export default function App() {
         return newZoomOn;
       });
     }
-
     // check zoomOn index 1 aka driverLocation
-    if (diff1 > 10) {
+    if (calculateDistance(driverLocation, zoomOn[1]) > 10) {
       console.log("updating driver location", driverLocation);
       setZoomOn((prevZoomOn) => {
         const newZoomOn = [...prevZoomOn];
@@ -104,9 +90,8 @@ export default function App() {
         return newZoomOn;
       });
     }
-
     // check zoomOn index 2 aka pickUpLocation
-    if (diff2 > 10) {
+    if (calculateDistance(pickUpLocation, zoomOn[2]) > 10) {
       console.log("updating pickup location", pickUpLocation);
       setZoomOn((prevZoomOn) => {
         const newZoomOn = [...prevZoomOn];
@@ -114,9 +99,8 @@ export default function App() {
         return newZoomOn;
       });
     }
-
     // check zoomOn index 3 aka dropOffLocation
-    if (diff3 > 10) {
+    if (calculateDistance(dropOffLocation, zoomOn[3]) > 10) {
       console.log("updating dropoff location", dropOffLocation);
       setZoomOn((prevZoomOn) => {
         const newZoomOn = [...prevZoomOn];
@@ -132,7 +116,16 @@ export default function App() {
   }, [zoomOn]);
 
   /* FUNCTIONS */
-
+  // HELPER FOR USE EFFECT: calculate the distance between two points to check if we should update the zoomOn state
+  const calculateDistance = (
+    point1: { latitude: number; longitude: number },
+    point2: { latitude: number; longitude: number }
+  ) => {
+    return Math.sqrt(
+      Math.pow(point1.latitude - point2.latitude, 2) +
+        Math.pow(point1.longitude - point2.longitude, 2)
+    );
+  };
   // FOLLOW THE USER'S LOCATION
   async function watchLocation() {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -161,6 +154,11 @@ export default function App() {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         });
+        // notify the parent component that the user's location has changed
+        userLocationChanged({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
       }
     );
   }
@@ -180,69 +178,6 @@ export default function App() {
     });
   };
 
-  // HELPER FOR USE EFFECT: calculate the distance between two points to check if we should update the zoomOn state
-  const calculateDistance = (
-    point1: { latitude: number; longitude: number },
-    point2: { latitude: number; longitude: number }
-  ) => {
-    return Math.sqrt(
-      Math.pow(point1.latitude - point2.latitude, 2) +
-        Math.pow(point1.longitude - point2.longitude, 2)
-    );
-  };
-
-  // WEBSOCKET PLUMBING
-  // listen for any LOCATION messages from the server about the driver's location
-  const handleLocation = (message: WebSocketResponse) => {
-    if ("response" in message && message.response === "LOCATION") {
-      // update the marker on the driver's location from
-      // (message as LocationResponse).latitude and (message as LocationResponse).longitude
-      const driverResp = message as LocationResponse;
-      setDriverLocation({
-        latitude: driverResp.latitude,
-        longitude: driverResp.longitude,
-      });
-    }
-  };
-
-  const handleRequest = (message: WebSocketResponse) => {
-    // since we already set the pickup and dropoff locations assuming the request went through,
-    // if it didn't go through, we should reset them
-    if (
-      "response" in message &&
-      message.response === "ERROR" &&
-      "category" in message &&
-      message.category === "REQUEST_RIDE"
-    ) {
-      // something went wrong, reset the locations
-      setPickUpLocation({ latitude: 0, longitude: 0 });
-      setDropOffLocation({ latitude: 0, longitude: 0 });
-    }
-  };
-
-  // handle the case when the ride is completed or cancelled
-  // reset the locations when the ride is done
-  const handleCompleteOrCancel = (message: WebSocketResponse) => {
-    if (
-      "response" in message &&
-      (message.response === "COMPLETE" || message.response === "CANCEL")
-    ) {
-      // reset ride locations when the ride is done
-      setDriverLocation({
-        latitude: 0,
-        longitude: 0,
-      });
-      setPickUpLocation({
-        latitude: 0,
-        longitude: 0,
-      });
-      setDropOffLocation({
-        latitude: 0,
-        longitude: 0,
-      });
-    }
-  };
-
   // GET DISTANCE AND ETA FROM GMAPS when directions are shown
   const handleDirectionsReady = (result: {
     distance: number;
@@ -253,15 +188,6 @@ export default function App() {
 
     console.log(`Distance: ${distance} mi, Travel time: ${duration} minutes`);
   };
-
-  const polygonCoordinates = [
-    { latitude: 47.666588, longitude: -122.311439 },
-    { latitude: 47.667353, longitude: -122.316263 },
-    { latitude: 47.652854, longitude: -122.316942 },
-    { latitude: 47.648566, longitude: -122.304858 },
-    { latitude: 47.660993, longitude: -122.301405 },
-    { latitude: 47.661138, longitude: -122.311331 },
-  ];
 
   // Map UI
   return (
@@ -341,33 +267,6 @@ export default function App() {
           onReady={handleDirectionsReady}
         />
       </MapView>
-      {/* profile button TEMPORARY? */}
-      <View
-        style={{
-          position: "absolute",
-          paddingVertical: 50,
-          paddingHorizontal: 20,
-          width: "100%",
-          height: "100%",
-        }}
-      >
-        <TouchableOpacity onPress={() => setProfileVisible(true)}>
-          <Image
-            source={require("@/assets/images/profile.png")}
-            style={{ width: 35, height: 35, zIndex: 1 }}
-          />
-        </TouchableOpacity>
-      </View>
-      <View style={{ position: "absolute", width: "100%", height: "100%" }}>
-        <RideRequestForm />
-      </View>
-
-      {/* profile pop-up modal */}
-      <Profile
-        isVisible={profileVisible}
-        onClose={() => setProfileVisible(false)}
-        netid={netid as string}
-      />
     </View>
   );
 }

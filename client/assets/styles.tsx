@@ -429,7 +429,7 @@ export const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
     width: "100%",
-    height: "70%",
+    height: "50%",
     position: "absolute",
     bottom: -100,
   },
