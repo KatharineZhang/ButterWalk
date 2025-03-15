@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 
-interface RideConfirmCompProps {
+interface ConfirmRideProps {
   pickUpLoc: string;
   dropOffLoc: string;
   numPassengers: number;
@@ -20,7 +20,7 @@ interface RideConfirmCompProps {
   onConfirm: (numPassengers: number) => void; // callback function for when the user confirms ride
 }
 
-const RideConfirmComp: React.FC<RideConfirmCompProps> = ({
+const ConfirmRide: React.FC<ConfirmRideProps> = ({
   pickUpLoc,
   dropOffLoc,
   numPassengers,
@@ -158,4 +158,4 @@ const RideConfirmComp: React.FC<RideConfirmCompProps> = ({
   );
 };
 
-export default RideConfirmComp;
+export default ConfirmRide;
