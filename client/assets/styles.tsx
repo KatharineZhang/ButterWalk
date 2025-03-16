@@ -297,7 +297,7 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 16,
     borderColor: "Black/Black 3",
-    paddingVertical: 12,
+    paddingVertical: 3,
     paddingHorizontal: 40,
   },
   riderContainer: {

@@ -1,17 +1,16 @@
-import React, { useMemo, useRef } from "react";
+import React, { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 
 interface BottomDrawerProps {
   children: React.ReactNode;
+  bottomSheetRef: React.RefObject<BottomSheet>; // pass a reference to the bottom sheet for expansion
 }
 
-const BottomDrawer: React.FC<BottomDrawerProps> = ({ children }) => {
-  const bottomSheetRef = useRef<BottomSheet>(null);
-
+const BottomDrawer: React.FC<BottomDrawerProps> = ({ children, bottomSheetRef }) => {
   // Snap points define how high the drawer can be
-  const snapPoints = useMemo(() => ["35%", "50%", "82%"], []);
+  const snapPoints = useMemo(() => ["27%", "89%"], []);
 
   return (
     <GestureHandlerRootView style={styles.container}>

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { styles } from "../assets/styles";
 import BottomDrawer from "./BottomDrawer";
 import FAQ from "@/app/(student)/faq";
 import PopUpModal from "./PopUpModal";
+import BottomSheet from "@gorhom/bottom-sheet";
 
 type RideRequestFormProps = {
   pickUpLocationChanged: (location: ValidLocationType) => void;
@@ -49,6 +50,9 @@ export default function RideRequestForm({
   const [numRiders, setNumRiders] = useState(1);
   const [message, setMessage] = useState("");
 
+  // Bottom Sheet Reference needed to expand the bottom sheet
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  
   useEffect(() => {
     if (startingState) {
       setLocationQuery(startingState.pickup);
@@ -161,16 +165,37 @@ export default function RideRequestForm({
     }
   };
 
+  // expand the bottom sheet
+  const expand =() => {
+    if (bottomSheetRef == null) {
+      console.log("bottomSheetRef is null");
+      return;
+    }
+    bottomSheetRef.current?.expand();
+  }
+
   return (
     <View style={{ flex: 1 }}>
-      <BottomDrawer>
+      <BottomDrawer bottomSheetRef={bottomSheetRef}>
         <View style={styles.formContainer}>
+          
           <View>
-            <Text style={styles.formHeader}>Request a Ride</Text>
+            {/* faq button */}
+          <TouchableOpacity
+              style={{ position: "absolute", right: 10, top: -10 }}
+              onPress={() => setFAQVisible(true)}
+            >
+              <Image
+                source={require("@/assets/images/faq-button.png")}
+                style={{ width: 20, height: 20 }}
+              />
+            </TouchableOpacity>
+            <View style={{height: 20}}/>
             <View>
               {/* Location and Destination Autocomplete */}
               <View style={{ zIndex: 2 }}>
                 <AutocompleteInput
+                  onPress={() => bottomSheetRef.current?.expand()}
                   query={locationQuery}
                   setQuery={setLocationQuery}
                   setSelection={handleSetLocation}
@@ -180,6 +205,7 @@ export default function RideRequestForm({
               </View>
               <View style={{ zIndex: 1 }}>
                 <AutocompleteInput
+                  onPress={expand}
                   query={destinationQuery}
                   setQuery={setDestinationQuery}
                   setSelection={handleSetDestination}
@@ -258,17 +284,6 @@ export default function RideRequestForm({
                 />
               </TouchableOpacity>
             </View>
-
-            {/* faq button */}
-            <TouchableOpacity
-              style={{ position: "absolute", right: 10, top: 0 }}
-              onPress={() => setFAQVisible(true)}
-            >
-              <Image
-                source={require("@/assets/images/faq-button.png")}
-                style={{ width: 20, height: 20 }}
-              />
-            </TouchableOpacity>
 
             {/* faq pop-up modal */}
             <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />

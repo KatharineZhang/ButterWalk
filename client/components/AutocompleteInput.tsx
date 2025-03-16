@@ -5,6 +5,7 @@ import Autocomplete from "react-native-autocomplete-input";
 import { DropDownType } from "./RideRequestForm";
 
 interface AutoCompleteInputProps {
+  onPress: () => void;
   query: string;
   setQuery: (text: string) => void;
   setSelection: (text: DropDownType) => void;
@@ -13,6 +14,7 @@ interface AutoCompleteInputProps {
 }
 
 const AutoCompleteInput: React.FC<AutoCompleteInputProps> = ({
+  onPress,
   query,
   setQuery,
   setSelection,
@@ -35,6 +37,7 @@ const AutoCompleteInput: React.FC<AutoCompleteInputProps> = ({
         inputContainerStyle={styles.inputContainer}
         data={filteredData}
         value={query}
+        onPress={onPress}
         onChangeText={(text) => {
           setQuery(text);
           setHideResults(false);
