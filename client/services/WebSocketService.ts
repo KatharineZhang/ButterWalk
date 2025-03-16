@@ -48,7 +48,6 @@ class WebSocketService {
 
     this.startWebsocketListeners();
 
-    // return await this.waitForOpenConnection(netid, role);
     return await this.waitForOpenConnection();
   }
 

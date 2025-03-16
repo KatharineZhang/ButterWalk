@@ -4,6 +4,7 @@ import { Redirect } from "expo-router";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { User } from "../../../server/src/api";
+import WebsocketService from "../../services/WebSocketService";
 
 // Profile component that displays a list of frequently asked questions
 // takes in props on if the Profile modal should be shown and a function to close the modal
@@ -42,6 +43,8 @@ function Profile({ isVisible, onClose, user }: ProfileProps) {
 
   // Profile signout behavior
   if (signedIn === false) {
+    // disconnect user from the websocket connection
+    WebsocketService.send({ directive: "DISCONNECT" });
     return (
       <Redirect
         href={{

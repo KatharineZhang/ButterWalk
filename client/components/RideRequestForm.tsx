@@ -91,7 +91,7 @@ export default function RideRequestForm({
 
   // data from LocationService.ts
 
-  const data : DropDownType[] = [
+  const data: DropDownType[] = [
     "Current Location",
     "HUB",
     "Alder Hall",

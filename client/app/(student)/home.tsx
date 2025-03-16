@@ -127,7 +127,7 @@ export default function HomePage() {
   };
 
   /* EFFECTS */
-  useEffect(() => {
+  useEffect(() => {    
     // add the websocket listeners
     WebSocketService.addListener(handleProfileResponse, "PROFILE");
     WebSocketService.addListener(handleLocation, "LOCATION");

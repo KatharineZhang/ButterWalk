@@ -22,7 +22,8 @@ export type Command =
 
 // Input types
 export type WebSocketMessage =
-  | { directive: "CONNECT"; netid: string; role: "STUDENT" | "DRIVER" }
+  | { directive: "DISCONNECT" }
+  | { directive: "CONNECT"; netid: string; role: "STUDENT" | "DRIVER" } // TODO: REMOVE THIS ONCE BYPASS SIGNIN IS REMOVED
   | {
       directive: "SIGNIN";
       response: AuthSessionResult;

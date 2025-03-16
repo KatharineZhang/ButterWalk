@@ -1,5 +1,5 @@
 import WebSocketServer from "ws";
-import { clients } from "./index";
+import { clients, refreshClient } from "./index";
 import {
   acceptRide,
   addFeedback,
@@ -32,6 +32,7 @@ export const handleWebSocketMessage = async (
 ): Promise<void> => {
   let input: WebSocketMessage;
   let resp;
+  let client;
 
   console.log(`WEBSOCKET: Received message => ${message}`);
 
@@ -47,6 +48,29 @@ export const handleWebSocketMessage = async (
   }
 
   switch (input.directive) {
+    case "CONNECT":
+      // TODO: REMOVE THIS ONCE BYPASS SIGNIN IS REMOVED
+      // connect the websocket to a specific netid to send messages to
+      connectWebsocketToNetid(ws, input.netid, input.role);
+      break;
+    case "DISCONNECT":
+      // the user is signing out
+      // cancel any rides by this client if they close the app or signout
+      client = clients.find((client) => client.websocketInstance == ws);
+      if (client) {
+        handleWebSocketMessage(
+          ws,
+          JSON.stringify({
+            directive: "CANCEL",
+            netid: client.netid,
+            role: client.role,
+          })
+        );
+      }
+      // "remove" the client from the list by nullifying netid and role
+      refreshClient(ws);
+      break;
+
     case "SIGNIN": {
       if (input.response == null) {
         // early fail if the token is null
