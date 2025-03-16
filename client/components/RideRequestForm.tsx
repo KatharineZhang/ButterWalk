@@ -48,11 +48,10 @@ export default function RideRequestForm({
   const [location, setLocation] = useState("");
   const [destination, setDestination] = useState("");
   const [numRiders, setNumRiders] = useState(1);
-  const [message, setMessage] = useState("");
 
   // Bottom Sheet Reference needed to expand the bottom sheet
   const bottomSheetRef = useRef<BottomSheet>(null);
-  
+
   useEffect(() => {
     if (startingState) {
       setLocationQuery(startingState.pickup);
@@ -73,7 +72,7 @@ export default function RideRequestForm({
   // the request button was clicked
   const handleSend = () => {
     if (location == "" || destination == "") {
-      setMessage("Please specify a pickup and dropoff location!");
+      alert("Please specify a pickup and dropoff location!");
       return;
     }
     rideRequested(numRiders);
@@ -166,22 +165,21 @@ export default function RideRequestForm({
   };
 
   // expand the bottom sheet
-  const expand =() => {
+  const expand = () => {
     if (bottomSheetRef == null) {
       console.log("bottomSheetRef is null");
       return;
     }
     bottomSheetRef.current?.expand();
-  }
+  };
 
   return (
     <View style={{ flex: 1 }}>
       <BottomDrawer bottomSheetRef={bottomSheetRef}>
         <View style={styles.formContainer}>
-          
           <View>
             {/* faq button */}
-          <TouchableOpacity
+            <TouchableOpacity
               style={{ position: "absolute", right: 10, top: -10 }}
               onPress={() => setFAQVisible(true)}
             >
@@ -190,30 +188,65 @@ export default function RideRequestForm({
                 style={{ width: 20, height: 20 }}
               />
             </TouchableOpacity>
-            <View style={{height: 20}}/>
-            <View>
-              {/* Location and Destination Autocomplete */}
-              <View style={{ zIndex: 2 }}>
-                <AutocompleteInput
-                  onPress={() => bottomSheetRef.current?.expand()}
-                  query={locationQuery}
-                  setQuery={setLocationQuery}
-                  setSelection={handleSetLocation}
-                  placeholder="Pick Up Location"
-                  data={data}
-                />
-              </View>
-              <View style={{ zIndex: 1 }}>
-                <AutocompleteInput
-                  onPress={expand}
-                  query={destinationQuery}
-                  setQuery={setDestinationQuery}
-                  setSelection={handleSetDestination}
-                  placeholder="Drop Off Location"
-                  // can't set the user location as a destination
-                  data={data.filter((item) => item !== "Current Location")}
-                />
-              </View> 
+            <View style={{ height: 20 }} />
+
+            {/* Location and Destination Icons */}
+            <Image
+              source={require("@/assets/images/confirm-pickup-location.png")}
+              style={{
+                position: "absolute",
+                zIndex: 3,
+                top: 40,
+                left: 10,
+                height: 20,
+                width: 20,
+              }}
+            />
+            <Image
+              source={require("@/assets/images/confirm-line.png")}
+              style={{
+                zIndex: 3,
+                position: "absolute",
+                top: 65,
+                left: 19,
+                width: 2,
+                height: 40,
+              }}
+            />
+            <Image
+              source={require("@/assets/images/confirm-dropoff-location.png")}
+              style={{
+                position: "absolute",
+                zIndex: 3,
+                top: 110,
+                left: 10,
+                height: 20,
+                width: 20,
+              }}
+            />
+            <View
+              style={{
+                zIndex: 2,
+              }}
+            >
+              {/* Location and Destination Inputs */}
+              <AutocompleteInput
+                onPress={() => bottomSheetRef.current?.expand()}
+                query={locationQuery}
+                setQuery={setLocationQuery}
+                setSelection={handleSetLocation}
+                placeholder="Pick Up Location"
+                data={data}
+              />
+              <AutocompleteInput
+                onPress={expand}
+                query={destinationQuery}
+                setQuery={setDestinationQuery}
+                setSelection={handleSetDestination}
+                placeholder="Drop Off Location"
+                // can't set the user location as a destination
+                data={data.filter((item) => item !== "Current Location")}
+              />
             </View>
 
             {/* Rider Selection Animation */}
@@ -256,12 +289,10 @@ export default function RideRequestForm({
               </View>
             </View>
 
-            <Text style={{ color: "red" }}>{message}</Text>
-
             {/* Next Button */}
             <View
               style={{
-                padding: 10,
+                paddingVertical: 10,
                 alignItems: "center",
                 flexDirection: "row",
                 justifyContent: "flex-end",

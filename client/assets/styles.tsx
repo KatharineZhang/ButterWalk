@@ -255,8 +255,17 @@ export const styles = StyleSheet.create({
   // Ride Request Form styles
 
   formContainer: {
-    padding: 15,
-    width: "100%",
+    left:-14,
+    width: "108%",
+    borderRadius: 10,
+    shadowRadius: 2,
+    shadowOpacity: 0.4,
+    shadowOffset: { width: 0, height: 7 },
+    shadowColor: "gray",
+    paddingHorizontal: 10,
+    backgroundColor: "white",
+    justifyContent: "center",
+    alignItems: "center",
   },
   infoText:{
     fontSize: 12,
@@ -293,12 +302,13 @@ export const styles = StyleSheet.create({
     padding: 10,
   },
   animationContainer: {
-    marginVertical: 4,
+    marginTop: 8,
     borderWidth: 1,
     borderRadius: 16,
     borderColor: "Black/Black 3",
     paddingVertical: 3,
     paddingHorizontal: 40,
+    width: "96%",
   },
   riderContainer: {
     alignItems: "center",

@@ -337,7 +337,7 @@ export default function HomePage() {
               backgroundColor: "white",
             }}
           >
-            <View style={{ height: 100 }}/>
+            <View style={{ height: 100 }} />
             <Text>Loading...</Text>
             {/* loading component */}
             {/* Example: <Loading 

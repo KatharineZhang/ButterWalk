@@ -77,12 +77,14 @@ const styles = StyleSheet.create({
   autocompleteContainer: {
     position: "relative",
     zIndex: 100,
-    paddingBottom: 16,
+    paddingBottom: 7,
+    width: "100%",
   },
   inputContainer: {
     borderRadius: 8,
     paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingLeft: 40,
+    paddingRight: 20,
     borderColor: "#4B2E83",
     borderWidth: 2,
     backgroundColor: "white",
