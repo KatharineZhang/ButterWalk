@@ -16,6 +16,7 @@ import BottomDrawer from "./BottomDrawer";
 import FAQ from "@/app/(student)/faq";
 import PopUpModal from "./PopUpModal";
 import BottomSheet from "@gorhom/bottom-sheet";
+import { ScrollView } from "react-native-gesture-handler";
 
 type RideRequestFormProps = {
   pickUpLocationChanged: (location: ValidLocationType) => void;
@@ -86,7 +87,7 @@ export default function RideRequestForm({
 
   // data from LocationService.ts
 
-  const data: DropDownType[] = [
+  const [data, setData] = useState<DropDownType[]>([
     "Current Location",
     "HUB",
     "Alder Hall",
@@ -96,7 +97,7 @@ export default function RideRequestForm({
     "IMA",
     "Okanogan Lane",
     "UW Tower",
-  ];
+  ]);
 
   // check that does not allow location and destination to be the same
   const handleSetLocation = (value: DropDownType) => {
@@ -128,6 +129,14 @@ export default function RideRequestForm({
     setDestination(value);
     dropOffLocationChanged(value as LocationName);
   };
+
+  const handleFilterData = (query: string) => {
+    setData(data.filter(
+      (item) =>
+        item.toLowerCase().includes(query.toLowerCase()) ||
+        item === "Current Location"
+    ));
+  }
 
   const confirmPickUpLocation = () => {
     console.log("RIDE REQ USER LOC:" + JSON.stringify(userLocation));
@@ -315,34 +324,48 @@ export default function RideRequestForm({
                 />
               </TouchableOpacity>
             </View>
-
-            {/* faq pop-up modal */}
-            <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
-
-            {/* confirmation modal*/}
-            <PopUpModal
-              type="half"
-              isVisible={confirmationModalVisible}
-              onClose={() => setConfirmationModalVisible(false)}
-              content={
-                <View style={{ padding: 20 }}>
-                  <Text style={styles.formHeader}>Confirm Pickup Location</Text>
-                  <Text style={styles.description}>
-                    Are you sure you want to set your pickup location to your
-                    current location?
-                  </Text>
-                  <Pressable
-                    onPress={confirmPickUpLocation}
-                    style={styles.sendButton}
-                  >
-                    <Text style={styles.buttonLabel}>Confirm</Text>
-                  </Pressable>
-                </View>
-              }
-            />
           </View>
         </View>
+        {/* Autocomplete Suggestions */}
+        <View style={{flex:1, backgroundColor: "pink", height:100}}>
+        <ScrollView style={{paddingBottom: 350, }}>
+          {data.map((item) => (
+            <TouchableOpacity onPress={()=>{console.log(`${item} pressed`)}} key={item} style={{padding: 16,
+              borderBottomWidth: 1,
+              borderBottomColor: "#ccc", flexDirection: "row", justifyContent: "flex-start", alignItems: "center"}}>
+              <Image source={require("@/assets/images/dropdown-location.png")} style={{width: 35, height: 35}} />
+              <View style={{width: 10}} />
+              <Text style={{fontSize: 16, fontWeight: "bold"}}>{item}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+        </View>
+
       </BottomDrawer>
+      {/* faq pop-up modal */}
+      <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
+
+      {/* confirmation modal*/}
+      <PopUpModal
+        type="half"
+        isVisible={confirmationModalVisible}
+        onClose={() => setConfirmationModalVisible(false)}
+        content={
+          <View style={{ padding: 20 }}>
+            <Text style={styles.formHeader}>Confirm Pickup Location</Text>
+            <Text style={styles.description}>
+              Are you sure you want to set your pickup location to your current
+              location?
+            </Text>
+            <Pressable
+              onPress={confirmPickUpLocation}
+              style={styles.sendButton}
+            >
+              <Text style={styles.buttonLabel}>Confirm</Text>
+            </Pressable>
+          </View>
+        }
+      />
     </View>
   );
 }
