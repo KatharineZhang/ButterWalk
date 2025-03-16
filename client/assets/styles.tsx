@@ -255,6 +255,11 @@ export const styles = StyleSheet.create({
   // Ride Request Form styles
 
   formContainer: {
+    paddingHorizontal: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  requestFormContainer: {
     left:-14,
     width: "108%",
     borderRadius: 10,
@@ -266,7 +271,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "white",
     justifyContent: "center",
     alignItems: "center",
-  },
+  }, 
   infoText:{
     fontSize: 12,
     color: "#4B4C4F",

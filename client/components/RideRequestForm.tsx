@@ -85,9 +85,13 @@ export default function RideRequestForm({
   const [locationQuery, setLocationQuery] = useState(""); // Location query
   const [destinationQuery, setDestinationQuery] = useState(""); // Destination query
 
+  const [currentQuery, setCurrentQuery] = useState<"pickup" | "dropoff">(
+    "pickup"
+  );
+
   // data from LocationService.ts
 
-  const [data, setData] = useState<DropDownType[]>([
+  const data : DropDownType[] = [
     "Current Location",
     "HUB",
     "Alder Hall",
@@ -97,7 +101,19 @@ export default function RideRequestForm({
     "IMA",
     "Okanogan Lane",
     "UW Tower",
-  ]);
+  ];
+
+  const handleSelection = (value: DropDownType) => {
+    if (currentQuery === "pickup") {
+      setLocationQuery(value);
+      handleSetLocation(value);
+      //switch to dropoff
+      setCurrentQuery("dropoff");
+    } else {
+      setDestinationQuery(value);
+      handleSetDestination(value);
+    }
+  };
 
   // check that does not allow location and destination to be the same
   const handleSetLocation = (value: DropDownType) => {
@@ -129,14 +145,6 @@ export default function RideRequestForm({
     setDestination(value);
     dropOffLocationChanged(value as LocationName);
   };
-
-  const handleFilterData = (query: string) => {
-    setData(data.filter(
-      (item) =>
-        item.toLowerCase().includes(query.toLowerCase()) ||
-        item === "Current Location"
-    ));
-  }
 
   const confirmPickUpLocation = () => {
     console.log("RIDE REQ USER LOC:" + JSON.stringify(userLocation));
@@ -185,7 +193,7 @@ export default function RideRequestForm({
   return (
     <View style={{ flex: 1 }}>
       <BottomDrawer bottomSheetRef={bottomSheetRef}>
-        <View style={styles.formContainer}>
+        <View style={styles.requestFormContainer}>
           <View>
             {/* faq button */}
             <TouchableOpacity
@@ -240,21 +248,24 @@ export default function RideRequestForm({
             >
               {/* Location and Destination Inputs */}
               <AutocompleteInput
-                onPress={() => bottomSheetRef.current?.expand()}
+                onPress={() => {
+                  setCurrentQuery("pickup");
+                  expand();
+                }}
                 query={locationQuery}
                 setQuery={setLocationQuery}
-                setSelection={handleSetLocation}
                 placeholder="Pick Up Location"
                 data={data}
               />
               <AutocompleteInput
-                onPress={expand}
+                onPress={() => {
+                  setCurrentQuery("dropoff");
+                  expand();
+                }}
                 query={destinationQuery}
                 setQuery={setDestinationQuery}
-                setSelection={handleSetDestination}
                 placeholder="Drop Off Location"
-                // can't set the user location as a destination
-                data={data.filter((item) => item !== "Current Location")}
+                data={data}
               />
             </View>
 
@@ -327,20 +338,52 @@ export default function RideRequestForm({
           </View>
         </View>
         {/* Autocomplete Suggestions */}
-        <View style={{flex:1, backgroundColor: "pink", height:100}}>
-        <ScrollView style={{paddingBottom: 350, }}>
-          {data.map((item) => (
-            <TouchableOpacity onPress={()=>{console.log(`${item} pressed`)}} key={item} style={{padding: 16,
-              borderBottomWidth: 1,
-              borderBottomColor: "#ccc", flexDirection: "row", justifyContent: "flex-start", alignItems: "center"}}>
-              <Image source={require("@/assets/images/dropdown-location.png")} style={{width: 35, height: 35}} />
-              <View style={{width: 10}} />
-              <Text style={{fontSize: 16, fontWeight: "bold"}}>{item}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <View style={{ flex: 1, backgroundColor: "pink", height: 100 }}>
+          <ScrollView style={{ paddingBottom: 350 }}>
+            {data
+              .filter((item) => {
+                if (currentQuery == "dropoff") {
+                  return item !== "Current Location";
+                } else {
+                  return true;
+                }
+              })
+              .filter(
+                (item) =>
+                  item
+                    .toLowerCase()
+                    .includes(
+                      currentQuery == "pickup"
+                        ? locationQuery.toLowerCase()
+                        : destinationQuery
+                    ) ||
+                  (currentQuery == "pickup" && item == "Current Location")
+              )
+              .map((item) => (
+                <TouchableOpacity
+                  onPress={() => handleSelection(item)}
+                  key={item}
+                  style={{
+                    padding: 16,
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#ccc",
+                    flexDirection: "row",
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                  }}
+                >
+                  <Image
+                    source={require("@/assets/images/dropdown-location.png")}
+                    style={{ width: 35, height: 35 }}
+                  />
+                  <View style={{ width: 10 }} />
+                  <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+                    {item}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+          </ScrollView>
         </View>
-
       </BottomDrawer>
       {/* faq pop-up modal */}
       <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />

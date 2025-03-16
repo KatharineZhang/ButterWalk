@@ -1,14 +1,12 @@
 // Used for fuzze search in RideRequestForm component!
 import React from "react";
-import { View, Text, Pressable, StyleSheet, TextInput } from "react-native";
-import Autocomplete from "react-native-autocomplete-input";
+import { View, StyleSheet, TextInput } from "react-native";
 import { DropDownType } from "./RideRequestForm";
 
 interface AutoCompleteInputProps {
   onPress: () => void;
   query: string;
   setQuery: (text: string) => void;
-  setSelection: (text: DropDownType) => void;
   placeholder: string;
   data: DropDownType[];
 }
@@ -17,57 +15,19 @@ const AutoCompleteInput: React.FC<AutoCompleteInputProps> = ({
   onPress,
   query,
   setQuery,
-  setSelection,
   placeholder,
-  data,
 }) => {
-  const [hideResults, setHideResults] = React.useState(true);
-
-  const filteredData = data.filter(
-    (item) =>
-      // if the "Set location on map" is in data,
-      // we always want to show this option regardless of the query
-      item.toLowerCase().includes(query.toLowerCase()) ||
-      item === "Current Location"
-  );
-
   return (
     <View style={styles.autocompleteContainer}>
-      <Autocomplete
-        inputContainerStyle={styles.inputContainer}
-        data={filteredData}
+      <TextInput
+        style={styles.inputContainer}
         value={query}
         onPress={onPress}
         onChangeText={(text) => {
           setQuery(text);
-          setHideResults(false);
         }}
-        onSubmitEditing={() => setHideResults(true)}
-        hideResults={hideResults}
         placeholder={placeholder}
         placeholderTextColor="#888"
-        renderTextInput={(props) => (
-          <TextInput
-            {...props}
-            placeholder={placeholder}
-            placeholderTextColor="#888"
-          />
-        )}
-        flatListProps={{
-          keyExtractor: (_, idx) => idx.toString(),
-          renderItem: ({ item }) => (
-            <Pressable
-              onPress={() => {
-                setQuery(item);
-                setSelection(item);
-                setHideResults(true);
-              }}
-              style={styles.dropdownItem}
-            >
-              <Text>{item}</Text>
-            </Pressable>
-          ),
-        }}
       />
     </View>
   );
