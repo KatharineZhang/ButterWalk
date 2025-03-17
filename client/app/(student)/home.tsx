@@ -16,10 +16,10 @@ import RideRequestForm, {
 } from "@/components/RideRequestForm";
 import { LocationName, LocationService } from "@/services/LocationService";
 import ConfirmRide from "@/components/ConfirmRide";
-import RideProgressBar from "@/components/RideProgressBar";
 import FAQ from "./faq";
 import { Ionicons } from "@expo/vector-icons";
 import { styles } from "@/assets/styles";
+import HandleRideComponent from "@/components/HandleRideComp";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -485,7 +485,7 @@ export default function HomePage() {
         ) : whichComponent === "handleRide" ? (
           <View style={styles.homePageComponentContainer}>
             {/* driver on way component */}
-            <RideProgressBar
+            <HandleRideComponent
               status={rideStatus}
               walkProgress={walkProgress}
               rideProgress={rideProgress}

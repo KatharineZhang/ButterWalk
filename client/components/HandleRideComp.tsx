@@ -4,7 +4,7 @@ import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { ProgressBar } from "react-native-paper";
 
-interface ProgressBarProps {
+interface HandleRideProps {
   pickUpLocation: string;
   dropOffLocation: string;
   status:
@@ -23,7 +23,7 @@ interface ProgressBarProps {
   setFAQVisible: (visible: boolean) => void;
 }
 
-const RideProgressBar: React.FC<ProgressBarProps> = ({
+const HandleRideComponent: React.FC<HandleRideProps> = ({
   status,
   pickUpLocation,
   dropOffLocation,
@@ -172,4 +172,4 @@ const RideProgressBar: React.FC<ProgressBarProps> = ({
   );
 };
 
-export default RideProgressBar;
+export default HandleRideComponent;

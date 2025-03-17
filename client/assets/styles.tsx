@@ -24,7 +24,7 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 4,
+    borderRadius: 10,
     elevation: 3,
     backgroundColor: "#4B2E83",
     alignSelf: "center",
@@ -506,6 +506,7 @@ export const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "white",
     padding: 16,
+    borderRadius:10
   },
   progressBarTop: {
       alignItems: "center",
@@ -603,6 +604,24 @@ export const styles = StyleSheet.create({
       fontSize: 12,
   },
   homePageComponentContainer: {
-     position: "absolute", width: "100%", height: "100%"
+    position: "absolute",
+     width: "100%",
+      height: "100%",
+      shadowRadius: 5,
+    shadowOpacity: 0.4,
+    shadowOffset: { width: 0, height: -7 },
+    shadowColor: "gray",
+  },
+  profileItemContainer: {
+    padding: 10,
+    borderWidth: 1,
+    width: "100%",
+    borderRadius: 10,
+    marginVertical: 5,
+    borderColor: "grey",
+  },
+  profileItem: {
+    fontSize: 20,
+    textTransform: "capitalize",
   }  
 });
