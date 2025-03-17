@@ -75,11 +75,9 @@ const finishAcc = () => {
         const finishAccResp = message as FinishAccCreationResponse;
 
         if (finishAccResp.success) {
-          console.log("redirecting to map");
           setAccFinished(true);
         } else {
           setAccFinished(false);
-          console.log("Something wrong -- test");
         }
       }
     };

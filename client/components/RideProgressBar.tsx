@@ -1,31 +1,69 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, Pressable } from "react-native";
 import { styles } from "../assets/styles";
-import React, { useState } from "react";
+import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { ProgressBar } from "react-native-paper";
-import FAQ from "../app/(student)/faq";
 
 interface ProgressBarProps {
-  mainText: string;
-  subText?: string;
   pickUpLocation: string;
   dropOffLocation: string;
-  progress: number;
+  status:
+    | "WaitingForRide" // the ride has been requested
+    | "DriverEnRoute" // the ride is accepted
+    | "DriverArrived" // the driver is at the pickup location
+    | "RideInProgress" // the driver is taking the student to dropoff location
+    | "RideCompleted"; // the driver arrived at the dropoff location
+  // the progress of user walking to pickup location // will be -1 if walking is not needed
+  walkProgress: number;
+  // the progress of the driver taking the student to the destination
+  rideProgress: number;
+  rideDuration: number;
+  driverETA: number;
+  onCancel: () => void;
+  setFAQVisible: (visible: boolean) => void;
 }
 
 const RideProgressBar: React.FC<ProgressBarProps> = ({
-  mainText,
-  subText,
+  status,
   pickUpLocation,
   dropOffLocation,
-  progress,
+  walkProgress,
+  rideProgress,
+  onCancel,
+  rideDuration,
+  driverETA,
+  setFAQVisible,
 }) => {
-  const [FAQVisible, setFAQVisible] = useState(false);
+  let progress = 0;
+  if (walkProgress > 0) {
+    // change the walkProgress that was in the interval [0,1] ot [0,0.45]
+    walkProgress = walkProgress * 0.45;
+    // change the rideProgress that was in the interval [0,1] ot [0,0.55]
+    rideProgress = rideProgress * 0.55;
+
+    // the total progress is the sum of the walking and driving progress
+    progress = walkProgress + rideProgress;
+  } else {
+    progress = rideProgress;
+  }
+  console.log("progress", progress);
   return (
     <View style={styles.progressContainer}>
       <View style={styles.progressBarTop}>
         <View style={styles.mainTextContainer}>
-          <Text style={styles.mainText}>{mainText}</Text>
+          {/* Figure out what title to show */}
+          <Text style={styles.mainText}>
+            {status == "RideCompleted"
+              ? "You Have Arrived"
+              : status == "DriverArrived"
+                ? "Your Driver is Here"
+                : status == "RideInProgress"
+                  ? "You Are On Your Way"
+                  : status == "DriverEnRoute"
+                    ? "Your Driver Is En Route"
+                    : "Waiting For Your Ride"}
+          </Text>
+          {/* FAQ button */}
           <TouchableOpacity onPress={() => setFAQVisible(true)}>
             <Ionicons
               name="information-circle-outline"
@@ -35,18 +73,42 @@ const RideProgressBar: React.FC<ProgressBarProps> = ({
               right={0}
             />
           </TouchableOpacity>
-          <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
         </View>
 
+        {/* Wait Time / Timer */}
         <View style={styles.subTextContainer}>
-          <Ionicons name="time-outline" size={18} color="black" />
-          <Text style={styles.subText}>{subText}</Text>
+          {status !== "RideCompleted" && (
+            <Ionicons name="time-outline" size={18} color="black" />
+          )}
+          <Text style={styles.subText}>
+            {status == "RideCompleted"
+              ? ""
+              : status == "DriverArrived"
+                ? "TIMER"
+                : status == "RideInProgress"
+                  ? `Estimated Arrival Time: ${1}`
+                  : `Estimated Wait Time: ${driverETA == 0 ? "<2" : driverETA} min`}
+          </Text>
         </View>
       </View>
-      <View style={styles.progressBarBottom}>
-        <Text style={styles.rideTimeText}>10 min Ride</Text>
+      {/* Progress Bar */}
+      <View
+        style={[
+          styles.progressBarBottom,
+          status == "WaitingForRide" || status == "DriverArrived"
+            ? { borderBottomWidth: 2, borderBottomColor: "#EEEEEE" }
+            : {},
+        ]}
+      >
+        <Text style={styles.rideTimeText}>{rideDuration} min Ride</Text>
         <View style={styles.progressBarWrapper}>
-          <View style={styles.circleStart} />
+          {walkProgress >= 0 && <View style={[styles.circleStart, {backgroundColor: "white"}]} />}
+          <View
+            style={[
+              styles.circleStart,
+              ...(walkProgress >= 0 ? [{ left: 130 }] : []),
+            ]}
+          />
           <ProgressBar
             progress={progress}
             color="#C5B4E3"
@@ -66,6 +128,44 @@ const RideProgressBar: React.FC<ProgressBarProps> = ({
           </View>
         </View>
       </View>
+      {/* Cancel Button */}
+      {(status == "WaitingForRide" || status == "DriverEnRoute") && (
+        <View
+          style={[styles.bottomModalButtonContainer, { paddingHorizontal: 10 }]}
+        >
+          <Pressable
+            style={[
+              styles.bottomModalButton,
+              {
+                borderWidth: 2,
+                borderColor: "red",
+                backgroundColor: "white",
+              },
+            ]}
+            onPress={onCancel}
+          >
+            <Text style={[styles.buttonText, { color: "red" }]}>
+              Cancel Ride
+            </Text>
+          </Pressable>
+        </View>
+      )}
+      {/* I Found My Driver Button */}
+      {status == "DriverArrived" && (
+        <View
+          style={[styles.bottomModalButtonContainer, { paddingHorizontal: 10 }]}
+        >
+          <Pressable
+            style={[
+              styles.bottomModalButton,
+              { borderWidth: 2, backgroundColor: "#4B2E83" },
+            ]}
+            onPress={onCancel}
+          >
+            <Text style={styles.buttonText}>I Found My Driver</Text>
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 };

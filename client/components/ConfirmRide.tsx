@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import FAQ from "@/app/(student)/faq";
 import { styles } from "@/assets/styles";
-import React, { useState } from "react";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import React from "react";
 import {
   View,
   Image,
@@ -18,6 +18,7 @@ interface ConfirmRideProps {
   driverETA: number;
   onClose: () => void; // callback function for when the user closes modal
   onConfirm: (numPassengers: number) => void; // callback function for when the user confirms ride
+  setFAQVisible: (visible: boolean) => void;
 }
 
 const ConfirmRide: React.FC<ConfirmRideProps> = ({
@@ -27,10 +28,8 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
   driverETA,
   onClose,
   onConfirm,
+  setFAQVisible,
 }) => {
-  // FAQ State TODO: MOVE TO HOME PAGE
-  const [FAQVisible, setFAQVisible] = useState(false);
-
   return (
     <View
       style={{
@@ -44,7 +43,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
       }}
     >
       <View style={{ height: 20 }} />
-      {/* Close Button */}
+      {/* Back Button */}
       <TouchableOpacity
         style={[
           styles.modalCloseButton,
@@ -52,10 +51,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
         ]}
         onPress={onClose}
       >
-        <Image
-          source={require("@/assets/images/confirm-back.png")}
-          style={{ width: 58, height: 30 }}
-        />
+        <Ionicons name="arrow-back" size={30} color="#4B2E83" />
       </TouchableOpacity>
       <View style={{ height: 10 }} />
 
@@ -66,10 +62,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
 
       {/* Wait Time Display */}
       <View style={{ flexDirection: "row", justifyContent: "center" }}>
-        <Image
-          source={require("@/assets/images/wait-time-clock.png")}
-          style={{ width: 20, height: 20 }}
-        />
+        <Ionicons name="time-outline" size={22} color="black" />
         <View style={{ width: 15 }} />
         <Text style={styles.waitTimeText}>
           Estimated Wait Time: {driverETA} minutes
@@ -150,14 +143,14 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
         style={{ position: "absolute", right: 30, top: 30 }}
         onPress={() => setFAQVisible(true)}
       >
-        <Image
-          source={require("@/assets/images/faq-button.png")}
-          style={{ width: 20, height: 20 }}
+        <Ionicons
+          name="information-circle-outline"
+          size={20}
+          color="black"
+          position="absolute"
+          right={0}
         />
       </TouchableOpacity>
-
-      {/* faq pop-up modal */}
-      <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
     </View>
   );
 };

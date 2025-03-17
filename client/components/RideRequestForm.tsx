@@ -13,7 +13,6 @@ import AutocompleteInput from "./AutocompleteInput";
 import { LocationName } from "../services/LocationService";
 import { styles } from "../assets/styles";
 import BottomDrawer from "./BottomDrawer";
-import FAQ from "@/app/(student)/faq";
 import PopUpModal from "./PopUpModal";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { ScrollView } from "react-native-gesture-handler";
@@ -23,6 +22,7 @@ type RideRequestFormProps = {
   dropOffLocationChanged: (location: ValidLocationType) => void;
   userLocation: { latitude: number; longitude: number };
   rideRequested: (numPassengers: number) => void;
+  setFAQVisible: (visible: boolean) => void;
   startingState?: { pickup: string; dropoff: string; numRiders: number };
 };
 
@@ -44,6 +44,7 @@ export default function RideRequestForm({
   userLocation,
   rideRequested,
   startingState,
+  setFAQVisible,
 }: RideRequestFormProps) {
   // user input states for form
   const [location, setLocation] = useState("");
@@ -62,9 +63,6 @@ export default function RideRequestForm({
       setNumRiders(startingState.numRiders);
     }
   }, []);
-
-  // FAQ State
-  const [FAQVisible, setFAQVisible] = useState(false);
 
   // Confirmation Modal
   const [confirmationModalVisible, setConfirmationModalVisible] =
@@ -200,9 +198,12 @@ export default function RideRequestForm({
               style={{ position: "absolute", right: 10, top: -10 }}
               onPress={() => setFAQVisible(true)}
             >
-              <Image
-                source={require("@/assets/images/faq-button.png")}
-                style={{ width: 20, height: 20 }}
+              <Ionicons
+                name="information-circle-outline"
+                size={20}
+                color="black"
+                position="absolute"
+                right={0}
               />
             </TouchableOpacity>
             <View style={{ height: 20 }} />
@@ -325,20 +326,13 @@ export default function RideRequestForm({
                 style={styles.modalCloseButton}
                 onPress={handleSend}
               >
-                <Image
-                  source={require("@/assets/images/confirm-back.png")}
-                  style={{
-                    width: 58,
-                    height: 30,
-                    transform: [{ rotate: "180deg" }],
-                  }}
-                />
+                <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
               </TouchableOpacity>
             </View>
           </View>
         </View>
         {/* Autocomplete Suggestions */}
-        <View style={{ flex: 1, backgroundColor: "pink", height: 100 }}>
+        <View style={{ flex: 1, height: 100 }}>
           <ScrollView style={{ paddingBottom: 350 }}>
             {data
               .filter((item) => {
@@ -385,10 +379,7 @@ export default function RideRequestForm({
           </ScrollView>
         </View>
       </BottomDrawer>
-      {/* faq pop-up modal */}
-      <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
-
-      {/* confirmation modal*/}
+      {/* confirmation modal TODO: REMOVE???*/}
       <PopUpModal
         type="half"
         isVisible={confirmationModalVisible}

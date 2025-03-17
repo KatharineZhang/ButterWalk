@@ -73,8 +73,7 @@ export default function Map({
     // when any of our locations change, check if we need to zoom on them
     // this is mainly because our user, pickup and dropoff locations set all the time (to the same values)
     // but we don't necessarily want to zoom in on those location unless they are actually different
-    if (calculateDistance(userLocation, zoomOn[0]) > 10) {
-      console.log("updating user location", userLocation);
+    if (calculateDistance(userLocation, zoomOn[0]) > 0.001) {
       setZoomOn((prevZoomOn) => {
         const newZoomOn = [...prevZoomOn];
         newZoomOn[0] = userLocation;
@@ -82,8 +81,7 @@ export default function Map({
       });
     }
     // check zoomOn index 1 aka driverLocation
-    if (calculateDistance(driverLocation, zoomOn[1]) > 10) {
-      console.log("updating driver location", driverLocation);
+    if (calculateDistance(driverLocation, zoomOn[1]) > 0.001) {
       setZoomOn((prevZoomOn) => {
         const newZoomOn = [...prevZoomOn];
         newZoomOn[1] = driverLocation;
@@ -91,8 +89,7 @@ export default function Map({
       });
     }
     // check zoomOn index 2 aka pickUpLocation
-    if (calculateDistance(pickUpLocation, zoomOn[2]) > 10) {
-      console.log("updating pickup location", pickUpLocation);
+    if (calculateDistance(pickUpLocation, zoomOn[2]) > 0.001) {
       setZoomOn((prevZoomOn) => {
         const newZoomOn = [...prevZoomOn];
         newZoomOn[2] = pickUpLocation;
@@ -100,8 +97,7 @@ export default function Map({
       });
     }
     // check zoomOn index 3 aka dropOffLocation
-    if (calculateDistance(dropOffLocation, zoomOn[3]) > 10) {
-      console.log("updating dropoff location", dropOffLocation);
+    if (calculateDistance(dropOffLocation, zoomOn[3]) > 0.001) {
       setZoomOn((prevZoomOn) => {
         const newZoomOn = [...prevZoomOn];
         newZoomOn[3] = dropOffLocation;
@@ -116,16 +112,6 @@ export default function Map({
   }, [zoomOn]);
 
   /* FUNCTIONS */
-  // HELPER FOR USE EFFECT: calculate the distance between two points to check if we should update the zoomOn state
-  const calculateDistance = (
-    point1: { latitude: number; longitude: number },
-    point2: { latitude: number; longitude: number }
-  ) => {
-    return Math.sqrt(
-      Math.pow(point1.latitude - point2.latitude, 2) +
-        Math.pow(point1.longitude - point2.longitude, 2)
-    );
-  };
   // FOLLOW THE USER'S LOCATION
   async function watchLocation() {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -176,17 +162,6 @@ export default function Map({
       edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
       animated: true,
     });
-  };
-
-  // GET DISTANCE AND ETA FROM GMAPS when directions are shown
-  const handleDirectionsReady = (result: {
-    distance: number;
-    duration: number;
-  }) => {
-    const distance = result.distance * 0.62137119; // Distance (km to mi)
-    const duration = result.duration; // Travel time (minutes)
-
-    console.log(`Distance: ${distance} mi, Travel time: ${duration} minutes`);
   };
 
   // Map UI
@@ -254,19 +229,27 @@ export default function Map({
           title={"dropOffLocation"}
         />
         {/* show the directions between the pickup and dropoff locations if they are valid */}
-        {/* TODO: when these locations are (0,0) we get a gmaps error since it can't map between locations
-          in the atlantic. It's not really a problem. 
-          The other option would be the have these locations as a key to force rerender 
-          and then check if the locations are not 0 here, but then the rerender loses our wonderful zoom. */}
-        <MapViewDirections
-          origin={pickUpLocation}
-          destination={dropOffLocation}
-          apikey={GOOGLE_MAPS_APIKEY}
-          strokeWidth={3}
-          strokeColor="#D1AE49"
-          onReady={handleDirectionsReady}
-        />
+        {pickUpLocation.latitude != 0 && dropOffLocation.latitude != 0 && (
+          <MapViewDirections
+            origin={pickUpLocation}
+            destination={dropOffLocation}
+            apikey={GOOGLE_MAPS_APIKEY}
+            strokeWidth={3}
+            strokeColor="#D1AE49"
+          />
+        )}
       </MapView>
     </View>
   );
 }
+
+// HELPER FOR USE EFFECT: calculate the distance between two points to check if we should update the zoomOn state
+export const calculateDistance = (
+  point1: { latitude: number; longitude: number },
+  point2: { latitude: number; longitude: number }
+) => {
+  return Math.sqrt(
+    Math.pow(point1.latitude - point2.latitude, 2) +
+      Math.pow(point1.longitude - point2.longitude, 2)
+  );
+};

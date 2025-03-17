@@ -532,9 +532,11 @@ export const styles = StyleSheet.create({
   subText: {
       fontSize: 16,
       marginLeft: 8,
+      fontStyle: "italic",
   },
   progressBarBottom: {
       alignItems: "center",
+      paddingBottom: 15,
   },
   rideTimeText: {
       fontSize: 12,

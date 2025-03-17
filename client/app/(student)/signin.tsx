@@ -57,10 +57,8 @@ const Login = () => {
       const signinResp = message as SignInResponse;
 
       if (signinResp.alreadyExists) {
-        console.log("redirecting to map");
         setAccExists(true);
       } else {
-        console.log("redirecting to finish acc");
         setAccExists(false); // redundant but I just want to make sure
       }
 
@@ -69,7 +67,6 @@ const Login = () => {
       // there was a signin related error
       const errorResp = message as ErrorResponse;
 
-      console.log(errorResp);
       setErrMsg(errorResp.error);
     }
   };
