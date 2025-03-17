@@ -58,7 +58,7 @@ export type WebSocketMessage =
   | {
       directive: "WAIT_TIME";
       requestedRide?: {
-        pickupLocation: { latitude: number; longitude: number };
+        pickUpLocation: { latitude: number; longitude: number };
         dropOffLocation: { latitude: number; longitude: number };
       };
       requestid?: string;

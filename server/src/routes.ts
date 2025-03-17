@@ -569,7 +569,7 @@ The driverETA is calculated as the Google Maps eta from driverLocation to pickup
  */
 export const waitTime = async (
   requestedRide?: {
-    pickupLocation: { latitude: number; longitude: number };
+    pickUpLocation: { latitude: number; longitude: number };
     dropOffLocation: { latitude: number; longitude: number };
   },
   requestid?: string,
@@ -581,7 +581,7 @@ export const waitTime = async (
   // FIND THE RIDE DURATION (PICKUP TO DROPOFF)
   if (requestedRide) {
     const resp = await getDuration(
-      requestedRide.pickupLocation,
+      requestedRide.pickUpLocation,
       requestedRide.dropOffLocation
     );
     if (typeof resp === "number") {
@@ -622,7 +622,7 @@ export const waitTime = async (
     // we can calculate the ETA from driverLoc to pickupLoc
     const resp = await getDuration(
       driverLocation,
-      requestedRide.pickupLocation
+      requestedRide.pickUpLocation
     );
     if (typeof resp === "number") {
       driverETA = resp;
