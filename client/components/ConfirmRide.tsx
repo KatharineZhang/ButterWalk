@@ -15,6 +15,7 @@ interface ConfirmRideProps {
   pickUpLoc: string;
   dropOffLoc: string;
   numPassengers: number;
+  rideDuration: number;
   driverETA: number;
   onClose: () => void; // callback function for when the user closes modal
   onConfirm: (numPassengers: number) => void; // callback function for when the user confirms ride
@@ -25,6 +26,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
   pickUpLoc,
   dropOffLoc,
   numPassengers,
+  rideDuration,
   driverETA,
   onClose,
   onConfirm,
@@ -68,6 +70,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
           Estimated Wait Time: {driverETA} minutes
         </Text>
       </View>
+      <Text style={{textAlign: "center"}}>Ride Duration: {rideDuration} minutes</Text>
       <View style={{ height: 10 }} />
 
       {/* Number of Passengers */}

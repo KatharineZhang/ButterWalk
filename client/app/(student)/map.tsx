@@ -11,8 +11,6 @@ interface MapProps {
   pickUpLocation: { latitude: number; longitude: number };
   dropOffLocation: { latitude: number; longitude: number };
   driverLocation: { latitude: number; longitude: number };
-  rideDuration: number;
-
   userLocationChanged: (location: {
     latitude: number;
     longitude: number;
@@ -25,7 +23,6 @@ export default function Map({
   driverLocation = { latitude: 0, longitude: 0 },
   pickUpLocation = { latitude: 0, longitude: 0 },
   dropOffLocation = { latitude: 0, longitude: 0 },
-  // rideDuration, // show the ride duration on the route
   userLocationChanged,
 }: MapProps) {
   // STATE VARIABLES

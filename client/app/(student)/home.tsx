@@ -108,8 +108,8 @@ export default function HomePage() {
       directive: "REQUEST_RIDE",
       phoneNum: user.phoneNumber as string,
       netid,
-      location: JSON.stringify(pickUpLocation),
-      destination: JSON.stringify(dropOffLocation),
+      location: pickUpLocationName,
+      destination: dropOffLocationName,
       numRiders: numPassengers,
     });
     // set the component to show to loading
@@ -358,7 +358,6 @@ export default function HomePage() {
         dropOffLocation={dropOffLocation}
         driverLocation={driverLocation}
         userLocationChanged={userLocationChanged}
-        rideDuration={rideDuration}
       />
       {/* profile pop-up modal */}
       <Profile
@@ -376,12 +375,10 @@ export default function HomePage() {
           height: "100%",
         }}
       >
-        <TouchableOpacity onPress={() => setProfileVisible(true)}>
+        <TouchableOpacity style= {{width: 35, height:35}} onPress={() => setProfileVisible(true)}>
           <View
             style={{
               backgroundColor: "white",
-              width: "10%",
-              height: "22%",
               borderRadius: 100,
             }}
           >
@@ -412,6 +409,7 @@ export default function HomePage() {
             <ConfirmRide
               pickUpLoc={pickUpLocationName}
               dropOffLoc={dropOffLocationName}
+              rideDuration={rideDuration}
               driverETA={driverETA}
               numPassengers={numPassengers}
               onClose={closeConfirmRide}
