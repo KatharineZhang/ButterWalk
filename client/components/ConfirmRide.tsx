@@ -70,7 +70,9 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
           Estimated Wait Time: {driverETA} minutes
         </Text>
       </View>
-      <Text style={{textAlign: "center"}}>Ride Duration: {rideDuration} minutes</Text>
+      <Text style={{ textAlign: "center" }}>
+        Ride Duration: {rideDuration} minutes
+      </Text>
       <View style={{ height: 10 }} />
 
       {/* Number of Passengers */}
@@ -102,7 +104,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
       {/* Pickup and DropOff Location */}
       <View style={styles.locationContainer}>
         <Image
-          source={require("@/assets/images/confirm-pickup-location.png")}
+          source={require("@/assets/images/pickup-location.png")}
           style={styles.locationImage}
         />
         <View style={styles.locationTextContainer}>
@@ -111,7 +113,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
       </View>
       <View style={styles.locationContainer}>
         <Image
-          source={require("@/assets/images/confirm-dropoff-location.png")}
+          source={require("@/assets/images/dropoff-location.png")}
           style={styles.locationImage}
         />
         <View style={styles.locationTextContainer}>
@@ -121,7 +123,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
 
       {/* Dashed Line Between Locations */}
       <Image
-        source={require("@/assets/images/confirm-line.png")}
+        source={require("@/assets/images/dashed-line.png")}
         style={{
           position: "absolute",
           top: 247,

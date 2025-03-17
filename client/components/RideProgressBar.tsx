@@ -102,7 +102,9 @@ const RideProgressBar: React.FC<ProgressBarProps> = ({
       >
         <Text style={styles.rideTimeText}>{rideDuration} min Ride</Text>
         <View style={styles.progressBarWrapper}>
-          {walkProgress >= 0 && <View style={[styles.circleStart, {backgroundColor: "white"}]} />}
+          {walkProgress >= 0 && (
+            <View style={[styles.circleStart, { backgroundColor: "white" }]} />
+          )}
           <View
             style={[
               styles.circleStart,

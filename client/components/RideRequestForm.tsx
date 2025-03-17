@@ -210,7 +210,7 @@ export default function RideRequestForm({
 
             {/* Location and Destination Icons */}
             <Image
-              source={require("@/assets/images/confirm-pickup-location.png")}
+              source={require("@/assets/images/pickup-location.png")}
               style={{
                 position: "absolute",
                 zIndex: 3,
@@ -221,7 +221,7 @@ export default function RideRequestForm({
               }}
             />
             <Image
-              source={require("@/assets/images/confirm-line.png")}
+              source={require("@/assets/images/dashed-line.png")}
               style={{
                 zIndex: 3,
                 position: "absolute",
@@ -232,7 +232,7 @@ export default function RideRequestForm({
               }}
             />
             <Image
-              source={require("@/assets/images/confirm-dropoff-location.png")}
+              source={require("@/assets/images/dropoff-location.png")}
               style={{
                 position: "absolute",
                 zIndex: 3,

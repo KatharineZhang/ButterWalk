@@ -6,6 +6,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { styles } from "@/assets/styles";
 import { View, Image, Alert, Linking } from "react-native";
 import MapViewDirections from "react-native-maps-directions";
+import { Ionicons } from "@expo/vector-icons";
 
 interface MapProps {
   pickUpLocation: { latitude: number; longitude: number };
@@ -181,12 +182,36 @@ export default function Map({
           latitudeDelta: 0.015,
           longitudeDelta: 0.015,
         }}
+        userInterfaceStyle="light"
       >
         <Polygon
           coordinates={polygonCoordinates}
           strokeColor="rgba(128, 0, 128, 0.5)" // Light purple color
           fillColor="rgba(128, 0, 128, 0.2)" // Light purple transparent color
         />
+        {calculateDistance(userLocation, pickUpLocation) > 0.01 && (
+          <Marker
+            coordinate={{
+              latitude: pickUpLocation.latitude,
+              longitude: pickUpLocation.longitude,
+            }}
+            title={"pickUpLocation"}
+          >
+            <View style={[styles.circleStart, { borderWidth: 0 }]}></View>
+          </Marker>
+        )}
+        <Marker
+          coordinate={{
+            latitude: dropOffLocation.latitude,
+            longitude: dropOffLocation.longitude,
+          }}
+          title={"dropOffLocation"}
+        >
+          <Image
+            source={require("../../assets/images/dropoff-location.png")}
+            style={{ height: 30, width: 30 }}
+          />
+        </Marker>
         <Marker
           coordinate={{
             latitude: userLocation.latitude,
@@ -194,10 +219,15 @@ export default function Map({
           }}
           title={"userLocation"}
         >
-          <Image
-            source={require("../../assets/images/person-pindrop.webp")}
-            style={{ height: 50, width: 35 }}
-          />
+          <View
+            style={{
+              backgroundColor: "#C5B4E3",
+              borderRadius: 50,
+              opacity: 0.8,
+            }}
+          >
+            <Ionicons name="locate-sharp" size={25} color="black" />
+          </View>
         </Marker>
         <Marker
           coordinate={{
@@ -211,20 +241,6 @@ export default function Map({
             style={{ height: 60, width: 45 }}
           />
         </Marker>
-        <Marker
-          coordinate={{
-            latitude: pickUpLocation.latitude,
-            longitude: pickUpLocation.longitude,
-          }}
-          title={"pickUpLocation"}
-        />
-        <Marker
-          coordinate={{
-            latitude: dropOffLocation.latitude,
-            longitude: dropOffLocation.longitude,
-          }}
-          title={"dropOffLocation"}
-        />
         {/* show the directions between the pickup and dropoff locations if they are valid */}
         {pickUpLocation.latitude != 0 && dropOffLocation.latitude != 0 && (
           <MapViewDirections
@@ -232,7 +248,7 @@ export default function Map({
             destination={dropOffLocation}
             apikey={GOOGLE_MAPS_APIKEY}
             strokeWidth={3}
-            strokeColor="#D1AE49"
+            strokeColor="#4B2E83"
           />
         )}
       </MapView>

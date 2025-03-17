@@ -601,5 +601,8 @@ export const styles = StyleSheet.create({
   },
   locationText: {
       fontSize: 12,
-  }
+  },
+  homePageComponentContainer: {
+     position: "absolute", width: "100%", height: "100%"
+  }  
 });
