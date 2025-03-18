@@ -67,7 +67,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
         <Ionicons name="time-outline" size={22} color="black" />
         <View style={{ width: 15 }} />
         <Text style={styles.waitTimeText}>
-          Estimated Wait Time: {driverETA} minutes
+          Estimated Wait Time: {driverETA == 0? "<2": driverETA} minutes
         </Text>
       </View>
       <Text style={{ textAlign: "center" }}>
@@ -126,7 +126,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
         source={require("@/assets/images/dashed-line.png")}
         style={{
           position: "absolute",
-          top: 247,
+          top: 265,
           left: 44,
           width: 2,
           height: 30,

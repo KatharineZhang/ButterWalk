@@ -20,6 +20,7 @@ import {
   GoogleResponse,
   ProfileResponse,
   User,
+  DistanceResponse,
 } from "./api";
 import {
   acceptRideRequest,
@@ -637,7 +638,7 @@ export const waitTime = async (
 };
 
 /**
- * HELPER FUNCTION FOR WAIT_TIME TO GET THE DURATION FROM GOOGLE MAPS API
+ * HELPER FUNCTION FOR WAIT_TIME
  *
  * @param origin
  * @param destination
@@ -648,14 +649,14 @@ const getDuration = async (
   destination: { latitude: number; longitude: number }
 ): Promise<ErrorResponse | number> => {
   try {
-    const etaURL =
-      `https://maps.googleapis.com/maps/api/distancematrix/json?` +
-      `origins=${origin.latitude},${origin.longitude}` +
-      `&destinations=${destination.latitude},${destination.longitude}` +
-      `&key=${process.env.GOOGLE_MAPS_APIKEY}&mode=driving&units=imperial`;
-    const response = await fetch(etaURL);
-    const data = await response.json();
+    const distResp = await distanceMatrix([origin], [destination], "driving");
 
+    if ("response" in distResp && distResp.response === "ERROR") {
+      throw new Error(distResp.error);
+    }
+
+    const data = (distResp as DistanceResponse).apiResponse;
+    console.log(data);
     if (data.rows[0].elements[0].status === "OK") {
       const distance = data.rows[0].elements[0].distance.value; // in meters
       const duration = data.rows[0].elements[0].duration.value; // in seconds
@@ -675,6 +676,54 @@ const getDuration = async (
       response: "ERROR",
       error: `Error fetching distance: ${(error as Error).message}`,
       category: "WAIT_TIME",
+    };
+  }
+};
+
+/**
+ * FUNCTION FOR GOOGLE MAPS DISTANCE MATRIX API
+ * https://developers.google.com/maps/documentation/distance-matrix/distance-matrix
+ *
+ * @param origin list of origins
+ * @param destination list of destinations
+ * @returns DistanceMatrix object (the rows are a corss product of origin and destination coodinates)
+ */
+export const distanceMatrix = async (
+  origin: { latitude: number; longitude: number }[],
+  destination: { latitude: number; longitude: number }[],
+  mode: "driving" | "walking"
+): Promise<ErrorResponse | DistanceResponse> => {
+  try {
+    // convert from coordinate array to string
+    const originStr = origin.map(
+      (coord) => `${coord.latitude},${coord.longitude}`
+    );
+    const origins = originStr.join("|");
+    console.log("og" + origins + "!!!!");
+
+    // convert from coordinate array to string
+    const destinationStr = destination.map(
+      (coord) => `${coord.latitude},${coord.longitude}`
+    );
+    const destinations = destinationStr.join("|");
+    console.log("dt" + destinations + "!!!!");
+
+    // call api
+    const etaURL =
+      `https://maps.googleapis.com/maps/api/distancematrix/json?` +
+      `origins=${origins}` +
+      `&destinations=${destinations}` +
+      `&key=${process.env.GOOGLE_MAPS_APIKEY}&mode=${mode}&units=imperial`;
+    const response = await fetch(etaURL);
+    const data = await response.json();
+
+    // return response
+    return { response: "DISTANCE", apiResponse: data };
+  } catch (error: unknown) {
+    return {
+      response: "ERROR",
+      error: `Error fetching distance matrix info: ${(error as Error).message}`,
+      category: "DISTANCE",
     };
   }
 };

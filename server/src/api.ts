@@ -76,7 +76,13 @@ export type WebSocketMessage =
       date?: { start: Date; end: Date };
       rating?: number;
     }
-  | { directive: "PROFILE"; netid: string };
+  | { directive: "PROFILE"; netid: string }
+  | {
+      directive: "DISTANCE";
+      origin: { latitude: number; longitude: number }[];
+      destination: { latitude: number; longitude: number }[];
+      mode: "driving" | "walking";
+    };
 
 // TEMP FIX
 export type ConnectMessage = {
@@ -99,6 +105,7 @@ export type WebSocketResponse =
   | LocationResponse
   | QueryResponse
   | ProfileResponse
+  | DistanceResponse
   | ErrorResponse;
 
 export type GeneralResponse = {
@@ -200,7 +207,29 @@ export type ErrorResponse = {
     | "LOCATION"
     | "QUERY"
     | "PROFILE"
+    | "DISTANCE"
     | "FINISH_ACC";
+};
+
+export type DistanceResponse = {
+  response: "DISTANCE";
+  apiResponse: DistanceMatrixResponse;
+};
+export type DistanceMatrixResponse = {
+  destination_addresses: string[];
+  origin_addresses: string[];
+  rows: [
+    {
+      elements: [
+        {
+          distance: { text: string; value: 0 };
+          duration: { text: string; value: 0 };
+          status: string;
+        },
+      ];
+    },
+  ];
+  status: string;
 };
 
 // Google Authentication Response types

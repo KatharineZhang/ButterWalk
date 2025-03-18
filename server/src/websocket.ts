@@ -15,6 +15,7 @@ import {
   waitTime,
   googleAuth,
   profile,
+  distanceMatrix,
 } from "./routes";
 import {
   AcceptResponse,
@@ -235,6 +236,12 @@ export const handleWebSocketMessage = async (
 
     case "PROFILE":
       resp = await profile(input.netid);
+      // send response back to client (the student)
+      sendWebSocketMessage(ws, resp);
+      break;
+
+    case "DISTANCE":
+      resp = await distanceMatrix(input.origin, input.destination, input.mode);
       // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
       break;
