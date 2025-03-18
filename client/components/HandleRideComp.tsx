@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, Pressable } from "react-native";
 import { styles } from "../assets/styles";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { ProgressBar } from "react-native-paper";
 
@@ -34,6 +34,32 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   driverETA,
   setFAQVisible,
 }) => {
+  // timer
+  const [seconds, setSeconds] = useState(5 * 60); // 5 minutes
+
+  // Function to format time (mm:ss)
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+  };
+
+  useEffect(() => {
+    // if the status is not DriverArrived, clear the timer
+    if (status !== "DriverArrived") return () => clearInterval(interval);
+    // if the driver has arrived, show the timer
+    const interval = setInterval(() => {
+      setSeconds((prevSeconds) => prevSeconds - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  if (seconds <= 0) {
+    // the timer ran out! cancel the ride
+    onCancel();
+  }
+
   let progress = 0;
   if (walkProgress > 0) {
     // change the walkProgress that was in the interval [0,1] ot [0,0.45]
@@ -46,7 +72,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   } else {
     progress = rideProgress;
   }
-  console.log("progress", progress);
+
   return (
     <View style={styles.progressContainer}>
       <View style={styles.progressBarTop}>
@@ -84,7 +110,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             {status == "RideCompleted"
               ? ""
               : status == "DriverArrived"
-                ? "TIMER"
+                ? formatTime(seconds)
                 : status == "RideInProgress"
                   ? `Estimated Arrival Time: ${1}`
                   : `Estimated Wait Time: ${driverETA == 0 ? "<2" : driverETA} min`}
