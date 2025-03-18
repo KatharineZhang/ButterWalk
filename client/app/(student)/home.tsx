@@ -412,6 +412,7 @@ export default function HomePage() {
         dropOffLocation={dropOffLocation}
         driverLocation={driverLocation}
         userLocationChanged={userLocationChanged}
+        status={rideStatus}
       />
       {/* profile pop-up modal */}
       <Profile
@@ -431,6 +432,7 @@ export default function HomePage() {
           shadowRadius: 5,
           shadowOffset: { width: 0, height: 1 },
           shadowColor: "grey",
+          pointerEvents: "box-none",
         }}
       >
         <TouchableOpacity

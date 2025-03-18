@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { useState, useEffect, useRef } from "react";
-import MapView, { Polygon, Marker } from "react-native-maps";
+import MapView, { Polygon, Marker, Polyline } from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { styles } from "@/assets/styles";
@@ -16,6 +16,12 @@ interface MapProps {
     latitude: number;
     longitude: number;
   }) => void;
+  status:
+    | "WaitingForRide" // the ride has been requested
+    | "DriverEnRoute" // the ride is accepted
+    | "DriverArrived" // the driver is at the pickup location
+    | "RideInProgress" // the driver is taking the student to dropoff location
+    | "RideCompleted"; // the driver arrived at the dropoff location
 }
 
 // Simple renders the points passing in through the props
@@ -24,6 +30,7 @@ export default function Map({
   driverLocation = { latitude: 0, longitude: 0 },
   pickUpLocation = { latitude: 0, longitude: 0 },
   dropOffLocation = { latitude: 0, longitude: 0 },
+  status,
   userLocationChanged,
 }: MapProps) {
   // STATE VARIABLES
@@ -33,6 +40,7 @@ export default function Map({
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
 
+  // what locations to focus on when zooming in on the map
   // in the format: [userLocation, driverLocation, pickUpLocation, dropOffLocation]
   const [zoomOn, setZoomOn] = useState<
     { latitude: number; longitude: number }[]
@@ -43,6 +51,27 @@ export default function Map({
     { latitude: 0, longitude: 0 },
   ]);
 
+  const [ridePath, setRidePath] = useState<
+    { latitude: number; longitude: number }[]
+  >([]);
+
+  useEffect(() => {
+    if (status === "RideInProgress" && driverLocation.latitude != 0) {
+      // if the ride is in progress, show the path
+      // add newest driverLocation to the path
+      setRidePath([...ridePath, driverLocation]);
+      console.log("RIDE PATH:", ridePath);
+    }
+  }, [driverLocation]);
+
+  useEffect(() => {
+    // when the ride is completed, clear the path
+    if (status === "RideCompleted") {
+      setRidePath([]);
+    }
+  }, [status]);
+
+  // GOOGLE MAPS API KEY
   const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
     ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
     : "";
@@ -248,12 +277,25 @@ export default function Map({
             <Ionicons name="car-sharp" size={30} color="black" />
           </View>
         </Marker>
-        {/* show the directions between the pickup and dropoff locations if they are valid */}
-        {pickUpLocation.latitude != 0 && dropOffLocation.latitude != 0 && (
-          <MapViewDirections
-            origin={pickUpLocation}
-            destination={dropOffLocation}
-            apikey={GOOGLE_MAPS_APIKEY}
+        {/* show the directions between the pickup and dropoff locations if they are valid
+        if the ride is not currently happening / happened  */}
+        {status != "RideInProgress" &&
+          status != "RideCompleted" &&
+          pickUpLocation.latitude != 0 &&
+          dropOffLocation.latitude != 0 && (
+            <MapViewDirections
+              origin={pickUpLocation}
+              destination={dropOffLocation}
+              apikey={GOOGLE_MAPS_APIKEY}
+              strokeWidth={3}
+              strokeColor="#4B2E83"
+            />
+          )}
+
+        {/* show the path of the ride if it is in progress */}
+        {status === "RideInProgress" && (
+          <Polyline
+            coordinates={ridePath}
             strokeWidth={3}
             strokeColor="#4B2E83"
           />

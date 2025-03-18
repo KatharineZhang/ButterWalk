@@ -21,35 +21,37 @@ function Profile({ isVisible, onClose, user }: ProfileProps) {
 
   // the stuff that goes in the modal
   const info: JSX.Element = (
-    <View style={{justifyContent: "center", alignItems: "center"}}>
+    <View style={{ justifyContent: "center", alignItems: "center" }}>
       <View style={{ height: 60 }} />
-      <Text style={[styles.faqHeader, {alignSelf:"center"}]}>{user.netid}</Text>
+      <Text style={[styles.faqHeader, { alignSelf: "center" }]}>
+        {user.netid}
+      </Text>
       <View style={{ height: 10 }} />
       <Ionicons name="person-circle" size={100} color="#4B2E83" />
       <View style={{ height: 10 }} />
       {user.preferredName && (
         <View style={styles.profileItemContainer}>
-        <Text style={styles.profileItem}>
-          Preferred Name: {user.preferredName}
-        </Text>
-      </View>
+          <Text style={styles.profileItem}>
+            Preferred Name: {user.preferredName}
+          </Text>
+        </View>
       )}
       <View style={styles.profileItemContainer}>
-      <Text style={styles.profileItem}>Given Name: {user.firstName}</Text>
+        <Text style={styles.profileItem}>Given Name: {user.firstName}</Text>
       </View>
       <View style={styles.profileItemContainer}>
-      <Text style={styles.profileItem}>Last Name: {user.lastName}</Text>
+        <Text style={styles.profileItem}>Last Name: {user.lastName}</Text>
       </View>
       <View style={styles.profileItemContainer}>
-      <Text style={styles.profileItem}>Phone Number: {user.phoneNumber}</Text>
+        <Text style={styles.profileItem}>Phone Number: {user.phoneNumber}</Text>
       </View>
       <View style={styles.profileItemContainer}>
-      <Text style={styles.profileItem}>
-        Student Number: {user.studentNumber}
-      </Text>
+        <Text style={styles.profileItem}>
+          Student Number: {user.studentNumber}
+        </Text>
       </View>
       <View style={styles.profileItemContainer}>
-      <Text style={styles.profileItem}>Role: {user.studentOrDriver}</Text>
+        <Text style={styles.profileItem}>Role: {user.studentOrDriver}</Text>
       </View>
       <View style={{ height: 10 }} />
       <Pressable style={styles.button} onPress={() => setSignedIn(false)}>
