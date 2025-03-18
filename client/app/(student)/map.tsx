@@ -236,10 +236,17 @@ export default function Map({
           }}
           title={"driverLocation"}
         >
-          <Image
-            source={require("../../assets/images/car-pindrop.png")}
-            style={{ height: 60, width: 45 }}
-          />
+          <View
+            style={{
+              backgroundColor: "white",
+              borderRadius: 50,
+              borderWidth: 2,
+              // opacity: 0.8,
+            }}
+          >
+            {/* <Ionicons name="locate-sharp" size={25} color="black" /> */}
+            <Ionicons name="car-sharp" size={30} color="black" />
+          </View>
         </Marker>
         {/* show the directions between the pickup and dropoff locations if they are valid */}
         {pickUpLocation.latitude != 0 && dropOffLocation.latitude != 0 && (

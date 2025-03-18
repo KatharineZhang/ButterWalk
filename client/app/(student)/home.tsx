@@ -427,6 +427,10 @@ export default function HomePage() {
           paddingHorizontal: 20,
           width: "100%",
           height: "100%",
+          shadowOpacity: 0.5,
+          shadowRadius: 5,
+          shadowOffset: { width: 0, height: 1 },
+          shadowColor: "grey",
         }}
       >
         <TouchableOpacity

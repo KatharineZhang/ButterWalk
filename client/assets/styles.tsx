@@ -610,7 +610,8 @@ export const styles = StyleSheet.create({
       shadowRadius: 5,
     shadowOpacity: 0.4,
     shadowOffset: { width: 0, height: -7 },
-    shadowColor: "gray",
+    shadowColor: "grey",
+    pointerEvents: "box-none",
   },
   profileItemContainer: {
     padding: 10,
