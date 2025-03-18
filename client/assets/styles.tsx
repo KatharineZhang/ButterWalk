@@ -537,7 +537,7 @@ export const styles = StyleSheet.create({
   },
   progressBarBottom: {
       alignItems: "center",
-      paddingBottom: 15,
+      paddingBottom: 25,
   },
   rideTimeText: {
       fontSize: 12,

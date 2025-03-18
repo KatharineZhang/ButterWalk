@@ -21,6 +21,7 @@ import FAQ from "./faq";
 import { Ionicons } from "@expo/vector-icons";
 import { styles } from "@/assets/styles";
 import HandleRideComponent from "@/components/HandleRideComp";
+import { createOpenLink } from "react-native-open-maps";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -134,9 +135,11 @@ export default function HomePage() {
   };
 
   /* HANDLE RIDE STATE */
-  // TODO: DO WE WANT ADDRESSES?
+  // TODO: DO WE WANT PICKUP DROPOFF ADDRESSES?
   const [pickUpAddress, setPickUpAddress] = useState("");
   const [dropOffAddress, setDropOffAddress] = useState("");
+  // the address of the user's starting location
+  const [walkAddress, setWalkAddress] = useState("");
   // the amount of minutes it will take to walk to the pickup location
   const [walkDuration, setWalkDuration] = useState(0);
 
@@ -171,6 +174,12 @@ export default function HomePage() {
   // A number between 0 and 1 that represents the progress of the
   // ride from the pickup location to the dropoff location
   const [rideProgress, setRideProgress] = useState(0);
+
+  const routeToPickup = createOpenLink({
+    travelType: "walk",
+    start: walkAddress,
+    end: pickUpAddress,
+  });
 
   /* EFFECTS */
   useEffect(() => {
@@ -209,7 +218,7 @@ export default function HomePage() {
     }
   }, [pickUpLocationName, dropOffLocationName]);
 
-  // logic that should happen when the component changes
+  // logic that should happen when the component FIRST changes
   // currently only handles wait time when the confirm ride component is shown
   useEffect(() => {
     // when we are trying to show confirm ride component, get the ride duration and driver ETA
@@ -227,8 +236,11 @@ export default function HomePage() {
       setStartLocation(userLocation);
       // if the start location is not the pickup location
       // the user must walk
-      // find out how long it will take to walk
-      if (calculateDistance(startLocation, pickUpLocation) > 0.01) {
+      if (calculateDistance(userLocation, pickUpLocation) > 0.01) {
+        // set initial walk progress
+        setWalkProgress(0);
+
+        // find out how long it will take to walk
         WebSocketService.send({
           directive: "DISTANCE",
           origin: [userLocation],
@@ -237,47 +249,40 @@ export default function HomePage() {
         });
       }
     }
-  }, [whichComponent, userLocation]);
+  }, [whichComponent]);
 
   // if the component shown is handleRide,
   // everytime a location changes, check the wait time and walking/ride progress
   // to update the progress bar
   useEffect(() => {
     if (whichComponent == "handleRide") {
-        // update the walking progress if the pickup Location was not the user's starting location
-        if (
-          startLocation.latitude != 0 &&
-          calculateDistance(startLocation, pickUpLocation) > 0.01
-        ) {
-          console.log("updating walk progress");
-          // there is a large enough distance that the user needs to walk
-          const wp = calculateProgress(startLocation, userLocation, pickUpLocation);
-          console.log("walk progress:", wp);
-          setWalkProgress(wp);
-        }
+      console.log("handle ride effect");
+      // update the walking progress if the pickup Location was not the user's starting location
+      if (
+        startLocation.latitude != 0 &&
+        calculateDistance(startLocation, pickUpLocation) > 0.01
+      ) {
+        console.log("updating walk progress");
+        // there is a large enough distance that the user needs to walk
+        const wp = calculateProgress(
+          startLocation,
+          userLocation,
+          pickUpLocation
+        );
+        console.log("walk progress:", wp);
+        setWalkProgress(wp);
+      }
 
-        // a driver has not accepted, but if we are on the handleRide component
-        // we know a ride has been requested
-        // use the request id to check the status of the ride in the queue
-        if (driverLocation.latitude == 0 && driverLocation.longitude == 0) {
-            // if the last time we checked the driverETA (which represented our place in the queue * 15),
-            // it was not 0, we are not first in queue.
-            if (driverETA !== 0) {
-            // then we can check whether the request is advancing in the queue
-            WebSocketService.send({
-              directive: "WAIT_TIME",
-              requestid,
-              requestedRide: {
-                pickUpLocation,
-                dropOffLocation,
-              },
-            });
-          }
-        } else {
-          // the driver has accepted our ride, check their progress in reaching the student
+      // a driver has not accepted, but if we are on the handleRide component
+      // we know a ride has been requested
+      // use the request id to check the status of the ride in the queue
+      if (driverLocation.latitude == 0 && driverLocation.longitude == 0) {
+        // if the last time we checked the driverETA (which represented our place in the queue * 15),
+        // it was not 0, we are not first in queue.
+        if (driverETA !== 0) {
+          // then we can check whether the request is advancing in the queue
           WebSocketService.send({
             directive: "WAIT_TIME",
-            driverLocation,
             requestid,
             requestedRide: {
               pickUpLocation,
@@ -285,8 +290,20 @@ export default function HomePage() {
             },
           });
         }
+      } else {
+        // the driver has accepted our ride, check their progress in reaching the student
+        WebSocketService.send({
+          directive: "WAIT_TIME",
+          driverLocation,
+          requestid,
+          requestedRide: {
+            pickUpLocation,
+            dropOffLocation,
+          },
+        });
+      }
     }
-  }, [whichComponent, userLocation, driverLocation, driverETA]);
+  }, [userLocation, driverLocation, driverETA]);
 
   /* WEBSOCKET HANDLERS */
   // WEBSOCKET -- PROFILE
@@ -401,8 +418,6 @@ export default function HomePage() {
   const handleAccept = (message: WebSocketResponse) => {
     if ("response" in message && message.response === "ACCEPT_RIDE") {
       // we should already be showing the handleRide component
-      // but make sure we are showing it
-      setWhichComponent("handleRide");
       // set the ride status to DriverEnRoute
       setRideStatus("DriverEnRoute");
     } else {
@@ -427,13 +442,15 @@ export default function HomePage() {
   };
 
   // WEBSOCKET -- DISTANCE
-  // TODO: WE CANNOT ASSUME ALL DISTANCE RESPONSES 
+  // TODO: WE CANNOT ASSUME ALL DISTANCE RESPONSES
   // ARE FOR WALKING DURATION EVENTUALLY...(FAKE DIJKSTRAS)
   const handleDistance = (message: WebSocketResponse) => {
     if ("response" in message && message.response === "DISTANCE") {
       const distanceResp = message as DistanceResponse;
-      const walkSeconds = distanceResp.apiResponse.rows[0].elements[0].duration.value;
-      setWalkDuration(Math.floor(walkSeconds/60)); // convert seconds to minutes
+      const walkSeconds =
+        distanceResp.apiResponse.rows[0].elements[0].duration.value;
+      setWalkDuration(Math.floor(walkSeconds / 60)); // convert seconds to minutes
+      setWalkAddress(distanceResp.apiResponse.origin_addresses[0]);
     } else {
       console.log("Distance response error: ", message);
     }
@@ -539,6 +556,7 @@ export default function HomePage() {
               rideDuration={rideDuration}
               onCancel={cancelRide}
               setFAQVisible={setFAQVisible}
+              openNavigation={routeToPickup}
             />
           </View>
         ) : null // default
@@ -557,6 +575,13 @@ const calculateProgress = (
   // calculate the distance between the two coordinates
   const distance = calculateDistance(start, dest);
   const currentDistance = calculateDistance(start, current);
-  console.log("current distance:", currentDistance,"total distance:", distance, "fraction:", currentDistance / distance);
+  console.log(
+    "current distance:",
+    currentDistance,
+    "total distance:",
+    distance,
+    "fraction:",
+    currentDistance / distance
+  );
   return currentDistance / distance; // remaining distance
 };

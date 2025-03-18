@@ -24,6 +24,7 @@ interface HandleRideProps {
   driverETA: number;
   onCancel: () => void;
   setFAQVisible: (visible: boolean) => void;
+  openNavigation: () => void;
 }
 
 const HandleRideComponent: React.FC<HandleRideProps> = ({
@@ -39,6 +40,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   rideDuration,
   driverETA,
   setFAQVisible,
+  openNavigation,
 }) => {
   // TIMER STUFF
   // keep track of the seconds left
@@ -136,14 +138,17 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
         {/* Walk and Ride Duration*/}
         {walkProgress >= 0 ? (
           <View style={{ flexDirection: "row", paddingBottom: 3 }}>
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "bold",
-              }}
-            >
-              {walkDuration} min Walk
-            </Text>
+            <TouchableOpacity onPress={openNavigation}>
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: "bold",
+                  textDecorationLine: "underline",
+                }}
+              >
+                {walkDuration} min Walk
+              </Text>
+            </TouchableOpacity>
             <View style={{ width: 100 }} />
             <Text
               style={{
@@ -170,7 +175,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
               ...(walkProgress >= 0 ? [{ left: 130 }] : []),
             ]}
           />
-        {/* Progress Bar */}
+          {/* Progress Bar */}
           <ProgressBar
             progress={progress}
             color="#C5B4E3"
@@ -207,51 +212,45 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             {/* <Text style={{fontSize: 10}}>{dropOffAddress}</Text> */}
           </View>
         </View>
-        {/* Cancel Button */}
-        {(status == "WaitingForRide" || status == "DriverEnRoute") && (
-          <View
-            style={[
-              styles.bottomModalButtonContainer,
-              { paddingHorizontal: 10 },
-            ]}
-          >
-            <Pressable
-              style={[
-                styles.bottomModalButton,
-                {
-                  borderWidth: 2,
-                  borderColor: "red",
-                  backgroundColor: "white",
-                },
-              ]}
-              onPress={onCancel}
-            >
-              <Text style={[styles.buttonText, { color: "red" }]}>
-                Cancel Ride
-              </Text>
-            </Pressable>
-          </View>
-        )}
-        {/* I Found My Driver Button */}
-        {status == "DriverArrived" && (
-          <View
-            style={[
-              styles.bottomModalButtonContainer,
-              { paddingHorizontal: 10 },
-            ]}
-          >
-            <Pressable
-              style={[
-                styles.bottomModalButton,
-                { borderWidth: 2, backgroundColor: "#4B2E83" },
-              ]}
-              onPress={onCancel}
-            >
-              <Text style={styles.buttonText}>I Found My Driver</Text>
-            </Pressable>
-          </View>
-        )}
       </View>
+      {/* Cancel Button */}
+      {(status == "WaitingForRide" || status == "DriverEnRoute") && (
+        <View
+          style={[styles.bottomModalButtonContainer, { paddingHorizontal: 10 }]}
+        >
+          <Pressable
+            style={[
+              styles.bottomModalButton,
+              {
+                borderWidth: 2,
+                borderColor: "red",
+                backgroundColor: "white",
+              },
+            ]}
+            onPress={onCancel}
+          >
+            <Text style={[styles.buttonText, { color: "red" }]}>
+              Cancel Ride
+            </Text>
+          </Pressable>
+        </View>
+      )}
+      {/* I Found My Driver Button */}
+      {status == "DriverArrived" && (
+        <View
+          style={[styles.bottomModalButtonContainer, { paddingHorizontal: 10 }]}
+        >
+          <Pressable
+            style={[
+              styles.bottomModalButton,
+              { borderWidth: 2, backgroundColor: "#4B2E83" },
+            ]}
+            onPress={onCancel}
+          >
+            <Text style={styles.buttonText}>I Found My Driver</Text>
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 };
