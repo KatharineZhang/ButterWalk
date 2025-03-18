@@ -578,15 +578,20 @@ export const waitTime = async (
 ): Promise<WaitTimeResponse | ErrorResponse> => {
   let rideDuration = -1;
   let driverETA = -1;
+  let pickUpAddress = undefined;
+  let dropOffAddress = undefined;
 
   // FIND THE RIDE DURATION (PICKUP TO DROPOFF)
   if (requestedRide) {
     const resp = await getDuration(
       requestedRide.pickUpLocation,
-      requestedRide.dropOffLocation
+      requestedRide.dropOffLocation,
+      true // we are getting rideDuration so get addresses
     );
-    if (typeof resp === "number") {
-      rideDuration = resp;
+    if ("duration" in resp) {
+      rideDuration = resp.duration;
+      pickUpAddress = resp.pickUpAddress as string;
+      dropOffAddress = resp.dropOffAddress as string;
     } else {
       // error response
       return resp;
@@ -623,10 +628,11 @@ export const waitTime = async (
     // we can calculate the ETA from driverLoc to pickupLoc
     const resp = await getDuration(
       driverLocation,
-      requestedRide.pickUpLocation
+      requestedRide.pickUpLocation,
+      false // we are getting driverETA so don't get addresses
     );
-    if (typeof resp === "number") {
-      driverETA = resp;
+    if ("duration" in resp) {
+      driverETA = resp.duration;
     } else {
       // error response
       return resp;
@@ -634,7 +640,13 @@ export const waitTime = async (
   }
 
   queueLock.release();
-  return { response: "WAIT_TIME", rideDuration, driverETA };
+  return {
+    response: "WAIT_TIME",
+    rideDuration,
+    driverETA,
+    pickUpAddress,
+    dropOffAddress,
+  };
 };
 
 /**
@@ -646,8 +658,12 @@ export const waitTime = async (
  */
 const getDuration = async (
   origin: { latitude: number; longitude: number },
-  destination: { latitude: number; longitude: number }
-): Promise<ErrorResponse | number> => {
+  destination: { latitude: number; longitude: number },
+  getPickUpDropOffAddress: boolean
+): Promise<
+  | ErrorResponse
+  | { duration: number; pickUpAddress?: string; dropOffAddress?: string }
+> => {
   try {
     const distResp = await distanceMatrix([origin], [destination], "driving");
 
@@ -657,13 +673,31 @@ const getDuration = async (
 
     const data = (distResp as DistanceResponse).apiResponse;
     console.log(data);
+
+    const response: {
+      duration: number;
+      pickUpAddress?: string;
+      dropOffAddress?: string;
+    } = {
+      duration: 0,
+    };
+
+    if (getPickUpDropOffAddress) {
+      // if we wanted them, get pickup and dropoff addresses
+      const pickUpAddress = data.origin_addresses[0];
+      const dropOffAddress = data.destination_addresses[0];
+      response["pickUpAddress"] = pickUpAddress;
+      response["dropOffAddress"] = dropOffAddress;
+    }
+
     if (data.rows[0].elements[0].status === "OK") {
       const distance = data.rows[0].elements[0].distance.value; // in meters
       const duration = data.rows[0].elements[0].duration.value; // in seconds
 
       console.log(`driverETA: Distance: ${distance}`);
       console.log(`driverETA: Duration: ${duration}`);
-      return Math.ceil(duration / 60); // convert to minutes
+      response["duration"] = Math.ceil(duration / 60); // convert to minutes
+      return response;
     } else {
       return {
         response: "ERROR",
@@ -717,8 +751,13 @@ export const distanceMatrix = async (
     const response = await fetch(etaURL);
     const data = await response.json();
 
-    // return response
-    return { response: "DISTANCE", apiResponse: data };
+    if (data.rows[0].elements[0].status === "OK") {
+      // there are results so return response
+      return { response: "DISTANCE", apiResponse: data };
+    } else {
+      // trigger the catch branch
+      throw new Error(`Error fetching distance matrix info: ${data.status}`);
+    }
   } catch (error: unknown) {
     return {
       response: "ERROR",

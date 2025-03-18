@@ -7,6 +7,8 @@ import { ProgressBar } from "react-native-paper";
 interface HandleRideProps {
   pickUpLocation: string;
   dropOffLocation: string;
+  pickUpAddress: string;
+  dropOffAddress: string;
   status:
     | "WaitingForRide" // the ride has been requested
     | "DriverEnRoute" // the ride is accepted
@@ -17,6 +19,7 @@ interface HandleRideProps {
   walkProgress: number;
   // the progress of the driver taking the student to the destination
   rideProgress: number;
+  walkDuration: number;
   rideDuration: number;
   driverETA: number;
   onCancel: () => void;
@@ -27,23 +30,20 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   status,
   pickUpLocation,
   dropOffLocation,
+  // pickUpAddress,
+  // dropOffAddress,
   walkProgress,
   rideProgress,
+  walkDuration,
   onCancel,
   rideDuration,
   driverETA,
   setFAQVisible,
 }) => {
-  // timer
+  // TIMER STUFF
+  // keep track of the seconds left
   const [seconds, setSeconds] = useState(5 * 60); // 5 minutes
-
-  // Function to format time (mm:ss)
-  const formatTime = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
-  };
-
+  // the actual countdown
   useEffect(() => {
     // if the status is not DriverArrived, clear the timer
     if (status !== "DriverArrived") return () => clearInterval(interval);
@@ -60,8 +60,15 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
     onCancel();
   }
 
+  // Function to format time (mm:ss)
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
+  };
+
   let progress = 0;
-  if (walkProgress > 0) {
+  if (walkProgress >= 0) {
     // change the walkProgress that was in the interval [0,1] ot [0,0.45]
     walkProgress = walkProgress * 0.45;
     // change the rideProgress that was in the interval [0,1] ot [0,0.55]
@@ -126,17 +133,44 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             : {},
         ]}
       >
-        <Text style={styles.rideTimeText}>{rideDuration} min Ride</Text>
+        {/* Walk and Ride Duration*/}
+        {walkProgress >= 0 ? (
+          <View style={{ flexDirection: "row", paddingBottom: 3 }}>
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "bold",
+              }}
+            >
+              {walkDuration} min Walk
+            </Text>
+            <View style={{ width: 100 }} />
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "bold",
+              }}
+            >
+              {rideDuration} min Ride
+            </Text>
+          </View>
+        ) : (
+          <Text style={styles.rideTimeText}>{rideDuration} min Ride</Text>
+        )}
+
         <View style={styles.progressBarWrapper}>
+          {/* show white circle if walking needed */}
           {walkProgress >= 0 && (
             <View style={[styles.circleStart, { backgroundColor: "white" }]} />
           )}
+          {/* move purple circle to middle if walking needed */}
           <View
             style={[
               styles.circleStart,
               ...(walkProgress >= 0 ? [{ left: 130 }] : []),
             ]}
           />
+        {/* Progress Bar */}
           <ProgressBar
             progress={progress}
             color="#C5B4E3"
@@ -145,55 +179,79 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
           <View style={styles.circleEnd} />
         </View>
 
+        {/* Locations Text */}
         <View style={styles.locationsContainer}>
-          <View style={styles.pickUpContainer}>
-            <Text style={styles.locationTitle}>Pickup</Text>
-            <Text style={styles.locationText}>{pickUpLocation}</Text>
-          </View>
+          {/* Start and Pickup Location */}
+          {walkProgress >= 0 ? (
+            <View>
+              <View style={{ position: "absolute", left: 10, width: 80 }}>
+                <Text style={styles.locationTitle}>Start</Text>
+              </View>
+              <View style={{ position: "absolute", left: 140, width: 100 }}>
+                <Text style={styles.locationTitle}>Pickup</Text>
+                <Text style={styles.locationText}>{pickUpLocation}</Text>
+                {/* <Text style={{fontSize: 10}}>{pickUpAddress}</Text> */}
+              </View>
+            </View>
+          ) : (
+            <View style={styles.pickUpContainer}>
+              <Text style={styles.locationTitle}>Pickup</Text>
+              <Text style={styles.locationText}>{pickUpLocation}</Text>
+              {/* <Text style={{fontSize: 10}}>{pickUpAddress}</Text> */}
+            </View>
+          )}
+          {/* Dropoff Location */}
           <View style={styles.dropOffContainer}>
             <Text style={styles.locationTitle}>Dropoff</Text>
             <Text style={styles.locationText}>{dropOffLocation}</Text>
+            {/* <Text style={{fontSize: 10}}>{dropOffAddress}</Text> */}
           </View>
         </View>
+        {/* Cancel Button */}
+        {(status == "WaitingForRide" || status == "DriverEnRoute") && (
+          <View
+            style={[
+              styles.bottomModalButtonContainer,
+              { paddingHorizontal: 10 },
+            ]}
+          >
+            <Pressable
+              style={[
+                styles.bottomModalButton,
+                {
+                  borderWidth: 2,
+                  borderColor: "red",
+                  backgroundColor: "white",
+                },
+              ]}
+              onPress={onCancel}
+            >
+              <Text style={[styles.buttonText, { color: "red" }]}>
+                Cancel Ride
+              </Text>
+            </Pressable>
+          </View>
+        )}
+        {/* I Found My Driver Button */}
+        {status == "DriverArrived" && (
+          <View
+            style={[
+              styles.bottomModalButtonContainer,
+              { paddingHorizontal: 10 },
+            ]}
+          >
+            <Pressable
+              style={[
+                styles.bottomModalButton,
+                { borderWidth: 2, backgroundColor: "#4B2E83" },
+              ]}
+              onPress={onCancel}
+            >
+              <Text style={styles.buttonText}>I Found My Driver</Text>
+            </Pressable>
+          </View>
+        )}
       </View>
-      {/* Cancel Button */}
-      {(status == "WaitingForRide" || status == "DriverEnRoute") && (
-        <View
-          style={[styles.bottomModalButtonContainer, { paddingHorizontal: 10 }]}
-        >
-          <Pressable
-            style={[
-              styles.bottomModalButton,
-              {
-                borderWidth: 2,
-                borderColor: "red",
-                backgroundColor: "white",
-              },
-            ]}
-            onPress={onCancel}
-          >
-            <Text style={[styles.buttonText, { color: "red" }]}>
-              Cancel Ride
-            </Text>
-          </Pressable>
-        </View>
-      )}
-      {/* I Found My Driver Button */}
-      {status == "DriverArrived" && (
-        <View
-          style={[styles.bottomModalButtonContainer, { paddingHorizontal: 10 }]}
-        >
-          <Pressable
-            style={[
-              styles.bottomModalButton,
-              { borderWidth: 2, backgroundColor: "#4B2E83" },
-            ]}
-            onPress={onCancel}
-          >
-            <Text style={styles.buttonText}>I Found My Driver</Text>
-          </Pressable>
-        </View>
-      )}
     </View>
   );
 };

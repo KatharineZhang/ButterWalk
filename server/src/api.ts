@@ -18,6 +18,7 @@ export type Command =
   | "LOCATION"
   | "QUERY"
   | "PROFILE"
+  | "DISTANCE"
   | "ERROR";
 
 // Input types
@@ -143,6 +144,8 @@ export type WaitTimeResponse = {
   response: "WAIT_TIME";
   rideDuration: number;
   driverETA: number;
+  pickUpAddress?: string;
+  dropOffAddress?: string;
 };
 
 export type AcceptResponse = {
@@ -222,8 +225,8 @@ export type DistanceMatrixResponse = {
     {
       elements: [
         {
-          distance: { text: string; value: 0 };
-          duration: { text: string; value: 0 };
+          distance: { text: string; value: 0 }; // value in meters
+          duration: { text: string; value: 0 }; // value in seconds
           status: string;
         },
       ];

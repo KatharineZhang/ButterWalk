@@ -5,6 +5,7 @@ import Map, { calculateDistance } from "./map";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
 import {
+  DistanceResponse,
   LocationResponse,
   RequestRideResponse,
   User,
@@ -133,6 +134,12 @@ export default function HomePage() {
   };
 
   /* HANDLE RIDE STATE */
+  // TODO: DO WE WANT ADDRESSES?
+  const [pickUpAddress, setPickUpAddress] = useState("");
+  const [dropOffAddress, setDropOffAddress] = useState("");
+  // the amount of minutes it will take to walk to the pickup location
+  const [walkDuration, setWalkDuration] = useState(0);
+
   // the user wishes to cancel the ride
   // we want to send a cancel request to the server
   const cancelRide = () => {
@@ -175,6 +182,7 @@ export default function HomePage() {
     WebSocketService.addListener(handleCompleteOrCancel, "CANCEL");
     WebSocketService.addListener(handleCompleteOrCancel, "COMPLETE");
     WebSocketService.addListener(handleWaitTime, "WAIT_TIME");
+    WebSocketService.addListener(handleDistance, "DISTANCE");
 
     // get the user's profile on first render
     sendProfile();
@@ -214,37 +222,47 @@ export default function HomePage() {
           dropOffLocation,
         },
       });
+    } else if (whichComponent == "handleRide") {
+      // if we are handling the ride, check if walking is needed by setting start location
+      setStartLocation(userLocation);
+      // if the start location is not the pickup location
+      // the user must walk
+      // find out how long it will take to walk
+      if (calculateDistance(startLocation, pickUpLocation) > 0.01) {
+        WebSocketService.send({
+          directive: "DISTANCE",
+          origin: [userLocation],
+          destination: [pickUpLocation],
+          mode: "walking",
+        });
+      }
     }
-  }, [whichComponent]);
+  }, [whichComponent, userLocation]);
 
   // if the component shown is handleRide,
-  // check the wait time and walking/ride progress every minute
+  // everytime a location changes, check the wait time and walking/ride progress
   // to update the progress bar
   useEffect(() => {
-    const interval = setInterval(() => {
-      console.log("checking wait time and progress every minute");
-
-      if (whichComponent == "handleRide") {
-        // update the walking progress if the pickup Location was not the user's location
+    if (whichComponent == "handleRide") {
+        // update the walking progress if the pickup Location was not the user's starting location
         if (
           startLocation.latitude != 0 &&
           calculateDistance(startLocation, pickUpLocation) > 0.01
         ) {
+          console.log("updating walk progress");
           // there is a large enough distance that the user needs to walk
-          setWalkProgress(
-            calculateProgress(startLocation, userLocation, pickUpLocation)
-          );
+          const wp = calculateProgress(startLocation, userLocation, pickUpLocation);
+          console.log("walk progress:", wp);
+          setWalkProgress(wp);
         }
 
         // a driver has not accepted, but if we are on the handleRide component
         // we know a ride has been requested
         // use the request id to check the status of the ride in the queue
         if (driverLocation.latitude == 0 && driverLocation.longitude == 0) {
-          // the ride has been requested, get the wait time
-          // to see if the request is advancing in the queue
-          if (driverETA !== 0) {
             // if the last time we checked the driverETA (which represented our place in the queue * 15),
-            // it was not 0 (we are not first in queue)
+            // it was not 0, we are not first in queue.
+            if (driverETA !== 0) {
             // then we can check whether the request is advancing in the queue
             WebSocketService.send({
               directive: "WAIT_TIME",
@@ -267,12 +285,8 @@ export default function HomePage() {
             },
           });
         }
-      }
-    }, 60000);
-    // This represents the unmount function,
-    // in which you need to clear your interval to prevent memory leaks.
-    return () => clearInterval(interval);
-  }, [startLocation]);
+    }
+  }, [whichComponent, userLocation, driverLocation, driverETA]);
 
   /* WEBSOCKET HANDLERS */
   // WEBSOCKET -- PROFILE
@@ -350,6 +364,11 @@ export default function HomePage() {
         longitude: 0,
       });
 
+      // set walk progress back to -1
+      setWalkProgress(-1);
+      // set ride progress back to 0
+      setRideProgress(0);
+
       // go back to ride request component
       setWhichComponent("rideReq");
     }
@@ -363,12 +382,13 @@ export default function HomePage() {
       const reqMessage = message as RequestRideResponse;
       setRequestID(reqMessage.requestid);
 
+      // TODO: REDUNDANT? IDK WHY IT WASN'T UPDATING START LOCATION FROM HERE
+      // set the startLocation to figure out if the user needs to walk
+      setStartLocation(userLocation);
+
       // set the component to show to WaitingForRide version of handleRide
       setWhichComponent("handleRide");
       setRideStatus("WaitingForRide");
-
-      // set the startLocation to figure out if the user needs to walk
-      setStartLocation(userLocation);
     } else {
       console.log("Request ride error: ", message);
       // go back to request ride
@@ -399,8 +419,23 @@ export default function HomePage() {
       setRideDuration(waitTimeresp.rideDuration as number);
       // extract the driver ETA
       setDriverETA(waitTimeresp.driverETA as number);
+      setPickUpAddress(waitTimeresp.pickUpAddress as string);
+      setDropOffAddress(waitTimeresp.dropOffAddress as string);
     } else {
       console.log("Wait time response error: ", message);
+    }
+  };
+
+  // WEBSOCKET -- DISTANCE
+  // TODO: WE CANNOT ASSUME ALL DISTANCE RESPONSES 
+  // ARE FOR WALKING DURATION EVENTUALLY...(FAKE DIJKSTRAS)
+  const handleDistance = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "DISTANCE") {
+      const distanceResp = message as DistanceResponse;
+      const walkSeconds = distanceResp.apiResponse.rows[0].elements[0].duration.value;
+      setWalkDuration(Math.floor(walkSeconds/60)); // convert seconds to minutes
+    } else {
+      console.log("Distance response error: ", message);
     }
   };
 
@@ -497,6 +532,9 @@ export default function HomePage() {
               rideProgress={rideProgress}
               pickUpLocation={pickUpLocationName}
               dropOffLocation={dropOffLocationName}
+              pickUpAddress={pickUpAddress}
+              dropOffAddress={dropOffAddress}
+              walkDuration={walkDuration}
               driverETA={driverETA}
               rideDuration={rideDuration}
               onCancel={cancelRide}
@@ -519,5 +557,6 @@ const calculateProgress = (
   // calculate the distance between the two coordinates
   const distance = calculateDistance(start, dest);
   const currentDistance = calculateDistance(start, current);
-  return 1 - currentDistance / distance; // remaining distance
+  console.log("current distance:", currentDistance,"total distance:", distance, "fraction:", currentDistance / distance);
+  return currentDistance / distance; // remaining distance
 };

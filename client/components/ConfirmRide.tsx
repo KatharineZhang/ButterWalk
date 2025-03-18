@@ -67,7 +67,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
         <Ionicons name="time-outline" size={22} color="black" />
         <View style={{ width: 15 }} />
         <Text style={styles.waitTimeText}>
-          Estimated Wait Time: {driverETA == 0? "<2": driverETA} minutes
+          Estimated Wait Time: {driverETA == 0 ? "<2" : driverETA} minutes
         </Text>
       </View>
       <Text style={{ textAlign: "center" }}>
