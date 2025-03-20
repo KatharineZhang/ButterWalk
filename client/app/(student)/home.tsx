@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import Profile from "./profile";
 import Map, { calculateDistance } from "./map";
 import { useLocalSearchParams } from "expo-router";
@@ -22,6 +22,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { styles } from "@/assets/styles";
 import HandleRideComponent from "@/components/HandleRideComp";
 import { createOpenLink } from "react-native-open-maps";
+import LoadingPageComp from "@/components/loadingPageComp";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -536,9 +537,11 @@ export default function HomePage() {
         ) : whichComponent === "Loading" ? (
           <View style={styles.homePageComponentContainer}>
             {/* loading page component */}
-            {/* TODO: REPLACE WITH ACTUAL PAGE */}
-            <View style={{ backgroundColor: "white", height: 100 }} />
-            <Text>Loading...</Text>
+            <LoadingPageComp
+              pickUpLoc={pickUpLocationName}
+              dropOffLoc={dropOffLocationName}
+              numPassengers={numPassengers}
+            />
           </View>
         ) : whichComponent === "handleRide" ? (
           <View style={styles.homePageComponentContainer}>

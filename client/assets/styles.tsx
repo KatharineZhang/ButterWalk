@@ -636,30 +636,25 @@ export const loadingPageCompStyles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "center",
     width: "100%",
-  },
-  pickUpContainer: {
-    backgroundColor: "#000000",
-  },
-  dropOffContainer: {
-backgroundColor: "#000000"
+    padding: 20,
   },
   locationMainTextTypography: {
     color: "white",
     textAlign: "center",
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: "Open Sans",
     fontWeight: "700",
   },
   locationSubTextTypography: {
     color: "white",
-    fontSize: 12,
+    textAlign: "center",
+    fontSize: 14,
     fontFamily: "Open Sans",
     fontWeight: "400",
   },
   middleDisplayContainer: {
-    backgroundColor: "#000000",
     padding: 40,
-    marginTop: 150,
+    top: "15%",
     alignItems: "center",
     height: 150,
     justifyContent: "space-between"
@@ -678,6 +673,6 @@ backgroundColor: "#000000"
     fontFamily: "Open Sans",
     fontSize: 16,
     fontWeight: "400",
-    lineHeight: 16,
+    lineHeight: 23,
   },
 });
