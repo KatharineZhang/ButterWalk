@@ -1,6 +1,7 @@
 import { StyleSheet } from "react-native";
 
-//More random styling things that I think i copied from chatgpt....
+//This is absolutely a MESS and we need to fix it.
+// naming conventions are all over the place
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -625,4 +626,58 @@ export const styles = StyleSheet.create({
     fontSize: 20,
     textTransform: "capitalize",
   }  
+});
+
+
+export const loadingPageCompStyles = StyleSheet.create({
+  rootContainer: {
+    flex: 1,
+    backgroundColor: "#4B2E83",
+    flexDirection: "column",
+    alignItems: "center",
+    width: "100%",
+  },
+  pickUpContainer: {
+    backgroundColor: "#000000",
+  },
+  dropOffContainer: {
+backgroundColor: "#000000"
+  },
+  locationMainTextTypography: {
+    color: "white",
+    textAlign: "center",
+    fontSize: 12,
+    fontFamily: "Open Sans",
+    fontWeight: "700",
+  },
+  locationSubTextTypography: {
+    color: "white",
+    fontSize: 12,
+    fontFamily: "Open Sans",
+    fontWeight: "400",
+  },
+  middleDisplayContainer: {
+    backgroundColor: "#000000",
+    padding: 40,
+    marginTop: 150,
+    alignItems: "center",
+    height: 150,
+    justifyContent: "space-between"
+  },
+  mainTextTypography: {
+    color: "#FFF",
+    textAlign: "center",
+    fontFamily: "Encode Sans",
+    fontSize: 28,
+    fontWeight: "700",
+    lineHeight: 28,
+  },
+  subtextTypography: {
+    color: "#FFF",
+    textAlign: "center",
+    fontFamily: "Open Sans",
+    fontSize: 16,
+    fontWeight: "400",
+    lineHeight: 16,
+  },
 });
