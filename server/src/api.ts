@@ -18,11 +18,13 @@ export type Command =
   | "LOCATION"
   | "QUERY"
   | "PROFILE"
+  | "DISTANCE"
   | "ERROR";
 
 // Input types
 export type WebSocketMessage =
-  | { directive: "CONNECT"; netid: string; role: "STUDENT" | "DRIVER" }
+  | { directive: "DISCONNECT" }
+  | { directive: "CONNECT"; netid: string; role: "STUDENT" | "DRIVER" } // TODO: REMOVE THIS ONCE BYPASS SIGNIN IS REMOVED
   | {
       directive: "SIGNIN";
       response: AuthSessionResult;
@@ -57,7 +59,7 @@ export type WebSocketMessage =
   | {
       directive: "WAIT_TIME";
       requestedRide?: {
-        pickupLocation: { latitude: number; longitude: number };
+        pickUpLocation: { latitude: number; longitude: number };
         dropOffLocation: { latitude: number; longitude: number };
       };
       requestid?: string;
@@ -75,7 +77,13 @@ export type WebSocketMessage =
       date?: { start: Date; end: Date };
       rating?: number;
     }
-  | { directive: "PROFILE"; netid: string };
+  | { directive: "PROFILE"; netid: string }
+  | {
+      directive: "DISTANCE";
+      origin: { latitude: number; longitude: number }[];
+      destination: { latitude: number; longitude: number }[];
+      mode: "driving" | "walking";
+    };
 
 // TEMP FIX
 export type ConnectMessage = {
@@ -98,6 +106,7 @@ export type WebSocketResponse =
   | LocationResponse
   | QueryResponse
   | ProfileResponse
+  | DistanceResponse
   | ErrorResponse;
 
 export type GeneralResponse = {
@@ -135,6 +144,8 @@ export type WaitTimeResponse = {
   response: "WAIT_TIME";
   rideDuration: number;
   driverETA: number;
+  pickUpAddress?: string;
+  dropOffAddress?: string;
 };
 
 export type AcceptResponse = {
@@ -199,7 +210,29 @@ export type ErrorResponse = {
     | "LOCATION"
     | "QUERY"
     | "PROFILE"
+    | "DISTANCE"
     | "FINISH_ACC";
+};
+
+export type DistanceResponse = {
+  response: "DISTANCE";
+  apiResponse: DistanceMatrixResponse;
+};
+export type DistanceMatrixResponse = {
+  destination_addresses: string[];
+  origin_addresses: string[];
+  rows: [
+    {
+      elements: [
+        {
+          distance: { text: string; value: 0 }; // value in meters
+          duration: { text: string; value: 0 }; // value in seconds
+          status: string;
+        },
+      ];
+    },
+  ];
+  status: string;
 };
 
 // Google Authentication Response types

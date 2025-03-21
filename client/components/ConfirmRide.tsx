@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import FAQ from "@/app/(student)/faq";
 import { styles } from "@/assets/styles";
-import React, { useState } from "react";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import React from "react";
 import {
   View,
   Image,
@@ -15,22 +15,23 @@ interface ConfirmRideProps {
   pickUpLoc: string;
   dropOffLoc: string;
   numPassengers: number;
+  rideDuration: number;
   driverETA: number;
   onClose: () => void; // callback function for when the user closes modal
   onConfirm: (numPassengers: number) => void; // callback function for when the user confirms ride
+  setFAQVisible: (visible: boolean) => void;
 }
 
 const ConfirmRide: React.FC<ConfirmRideProps> = ({
   pickUpLoc,
   dropOffLoc,
   numPassengers,
+  rideDuration,
   driverETA,
   onClose,
   onConfirm,
+  setFAQVisible,
 }) => {
-  // FAQ State TODO: MOVE TO HOME PAGE
-  const [FAQVisible, setFAQVisible] = useState(false);
-
   return (
     <View
       style={{
@@ -44,7 +45,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
       }}
     >
       <View style={{ height: 20 }} />
-      {/* Close Button */}
+      {/* Back Button */}
       <TouchableOpacity
         style={[
           styles.modalCloseButton,
@@ -52,10 +53,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
         ]}
         onPress={onClose}
       >
-        <Image
-          source={require("@/assets/images/confirm-back.png")}
-          style={{ width: 58, height: 30 }}
-        />
+        <Ionicons name="arrow-back" size={30} color="#4B2E83" />
       </TouchableOpacity>
       <View style={{ height: 10 }} />
 
@@ -66,20 +64,26 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
 
       {/* Wait Time Display */}
       <View style={{ flexDirection: "row", justifyContent: "center" }}>
-        <Image
-          source={require("@/assets/images/wait-time-clock.png")}
-          style={{ width: 20, height: 20 }}
-        />
+        <Ionicons name="time-outline" size={22} color="black" />
         <View style={{ width: 15 }} />
         <Text style={styles.waitTimeText}>
-          Estimated Wait Time: {driverETA} minutes
+          Estimated Wait Time: {driverETA == 0 ? "<2" : driverETA} minutes
         </Text>
       </View>
+      <Text style={{ textAlign: "center" }}>
+        Ride Duration: {rideDuration} minutes
+      </Text>
       <View style={{ height: 10 }} />
 
       {/* Number of Passengers */}
       <View style={{ justifyContent: "center", alignItems: "center" }}>
-        <View style={{ flexDirection: "row", justifyContent: "center", padding: 10 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "center",
+            padding: 10,
+          }}
+        >
           {Array.from({ length: numPassengers }).map((_, index) => (
             <Animated.View
               key={index}
@@ -87,22 +91,20 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
             >
               <Image
                 source={require("../assets/images/rider-icon.png")}
-                style={{width: 20, 
-                  height: 20,
-                  resizeMode: "contain",}}
+                style={{ width: 20, height: 20, resizeMode: "contain" }}
                 resizeMode="contain"
               />
             </Animated.View>
           ))}
         </View>
-        <Text style={{fontSize: 15}}>{numPassengers} passenger(s)</Text>
+        <Text style={{ fontSize: 15 }}>{numPassengers} passenger(s)</Text>
       </View>
       <View style={{ height: 20 }} />
 
       {/* Pickup and DropOff Location */}
       <View style={styles.locationContainer}>
         <Image
-          source={require("@/assets/images/confirm-pickup-location.png")}
+          source={require("@/assets/images/pickup-location.png")}
           style={styles.locationImage}
         />
         <View style={styles.locationTextContainer}>
@@ -111,7 +113,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
       </View>
       <View style={styles.locationContainer}>
         <Image
-          source={require("@/assets/images/confirm-dropoff-location.png")}
+          source={require("@/assets/images/dropoff-location.png")}
           style={styles.locationImage}
         />
         <View style={styles.locationTextContainer}>
@@ -121,10 +123,10 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
 
       {/* Dashed Line Between Locations */}
       <Image
-        source={require("@/assets/images/confirm-line.png")}
+        source={require("@/assets/images/dashed-line.png")}
         style={{
           position: "absolute",
-          top: 247,
+          top: 265,
           left: 44,
           width: 2,
           height: 30,
@@ -146,14 +148,14 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
         style={{ position: "absolute", right: 30, top: 30 }}
         onPress={() => setFAQVisible(true)}
       >
-        <Image
-          source={require("@/assets/images/faq-button.png")}
-          style={{ width: 20, height: 20 }}
+        <Ionicons
+          name="information-circle-outline"
+          size={20}
+          color="black"
+          position="absolute"
+          right={0}
         />
       </TouchableOpacity>
-
-      {/* faq pop-up modal */}
-      <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
     </View>
   );
 };

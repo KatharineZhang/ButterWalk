@@ -8,7 +8,7 @@ import {
 type WebSocketResponseHandler = (message: WebSocketResponse) => void;
 
 export type WebsocketConnectMessage =
-  | "Failed to Connect"
+  | `Failed to Connect`
   | "Connected Successfully";
 
 // Abstracts the websocket details from the react native app
@@ -48,7 +48,6 @@ class WebSocketService {
 
     this.startWebsocketListeners();
 
-    // return await this.waitForOpenConnection(netid, role);
     return await this.waitForOpenConnection();
   }
 
@@ -98,7 +97,7 @@ class WebSocketService {
       const interval = setInterval(() => {
         if (currentAttempt > maxNumberOfAttempts - 1) {
           clearInterval(interval);
-          reject("Failed to Connect");
+          reject("Failed to Connect: Max number of attempts reached");
         } else if (
           this.websocket != null &&
           this.websocket.readyState === this.websocket.OPEN

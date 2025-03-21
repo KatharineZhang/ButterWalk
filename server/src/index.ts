@@ -39,17 +39,38 @@ wss.on("connection", (ws: WebSocketServer) => {
   ws.on("close", () => {
     console.log(`WEBSOCKET: ${instanceId} disconnected`);
     const client = clients.find((client) => client.websocketid == instanceId);
-    if (client) {
-      // cancel any pending rides by this client if they close the app
+    if (client && client.netid != "unknown") {
+      // a valid user is disconnecting
+      // cancel any ride requests they may have
       handleWebSocketMessage(
         ws,
         JSON.stringify({
           directive: "CANCEL",
-          netid: client?.netid,
-          role: client?.role,
+          netid: client.netid,
+          role: client.role,
         })
       );
     }
-    clients = clients.filter((client) => client.websocketid != instanceId); // remove the client from the list
+    // else, the websocket instance was alive, but not connected to a specific user
+    // remove the instance from the list
+    clients = clients.filter((client) => client.websocketid != instanceId);
   });
 });
+
+/**
+ * Keep the websocket server in the list but nullify netid and role info
+ * This is to allow for multiple users using the same websocket instance
+ *
+ * @param ws the websocket instance to remove
+ */
+export function refreshClient(ws: WebSocketServer) {
+  // find the client to remove
+  let client = clients.find((client) => client.websocketInstance === ws);
+  // remove it
+  clients = clients.filter((client) => client.websocketInstance !== ws);
+  if (client) {
+    client = { ...client, netid: "unknown", role: "STUDENT" };
+    // readd the client with the updated info
+    clients.push(client);
+  }
+}

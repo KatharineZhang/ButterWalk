@@ -20,6 +20,7 @@ import {
   GoogleResponse,
   ProfileResponse,
   User,
+  DistanceResponse,
 } from "./api";
 import {
   acceptRideRequest,
@@ -35,7 +36,6 @@ import {
   queryFeedback,
   db,
   getProfile,
-  //getProfile,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { Mutex } from "async-mutex";
@@ -570,7 +570,7 @@ The driverETA is calculated as the Google Maps eta from driverLocation to pickup
  */
 export const waitTime = async (
   requestedRide?: {
-    pickupLocation: { latitude: number; longitude: number };
+    pickUpLocation: { latitude: number; longitude: number };
     dropOffLocation: { latitude: number; longitude: number };
   },
   requestid?: string,
@@ -578,15 +578,20 @@ export const waitTime = async (
 ): Promise<WaitTimeResponse | ErrorResponse> => {
   let rideDuration = -1;
   let driverETA = -1;
+  let pickUpAddress = undefined;
+  let dropOffAddress = undefined;
 
   // FIND THE RIDE DURATION (PICKUP TO DROPOFF)
   if (requestedRide) {
     const resp = await getDuration(
-      requestedRide.pickupLocation,
-      requestedRide.dropOffLocation
+      requestedRide.pickUpLocation,
+      requestedRide.dropOffLocation,
+      true // we are getting rideDuration so get addresses
     );
-    if (typeof resp === "number") {
-      rideDuration = resp;
+    if ("duration" in resp) {
+      rideDuration = resp.duration;
+      pickUpAddress = resp.pickUpAddress as string;
+      dropOffAddress = resp.dropOffAddress as string;
     } else {
       // error response
       return resp;
@@ -598,8 +603,7 @@ export const waitTime = async (
   if (!requestid) {
     // if there is no concrete request in the queue, return the queue length * 15 minutes
     const queueLength = rideReqQueue.get().length;
-    // TODO: WHAT TO RETURN IF FIRST IN LINE, CURRENTLY 1
-    driverETA = queueLength * 15 + 1;
+    driverETA = queueLength * 15;
   } else if (requestid && !driverLocation) {
     // if there is a requestid, then there is a requested ride,
     // if there is also no driverLocation,
@@ -624,10 +628,11 @@ export const waitTime = async (
     // we can calculate the ETA from driverLoc to pickupLoc
     const resp = await getDuration(
       driverLocation,
-      requestedRide.pickupLocation
+      requestedRide.pickUpLocation,
+      false // we are getting driverETA so don't get addresses
     );
-    if (typeof resp === "number") {
-      driverETA = resp;
+    if ("duration" in resp) {
+      driverETA = resp.duration;
     } else {
       // error response
       return resp;
@@ -635,11 +640,17 @@ export const waitTime = async (
   }
 
   queueLock.release();
-  return { response: "WAIT_TIME", rideDuration, driverETA };
+  return {
+    response: "WAIT_TIME",
+    rideDuration,
+    driverETA,
+    pickUpAddress,
+    dropOffAddress,
+  };
 };
 
 /**
- * HELPER FUNCTION FOR WAIT_TIME TO GET THE DURATION FROM GOOGLE MAPS API
+ * HELPER FUNCTION FOR WAIT_TIME
  *
  * @param origin
  * @param destination
@@ -647,16 +658,37 @@ export const waitTime = async (
  */
 const getDuration = async (
   origin: { latitude: number; longitude: number },
-  destination: { latitude: number; longitude: number }
-): Promise<ErrorResponse | number> => {
+  destination: { latitude: number; longitude: number },
+  getPickUpDropOffAddress: boolean
+): Promise<
+  | ErrorResponse
+  | { duration: number; pickUpAddress?: string; dropOffAddress?: string }
+> => {
   try {
-    const etaURL =
-      `https://maps.googleapis.com/maps/api/distancematrix/json?` +
-      `origins=${origin.latitude},${origin.longitude}` +
-      `&destinations=${destination.latitude},${destination.longitude}` +
-      `&key=${process.env.GOOGLE_MAPS_APIKEY}&mode=driving&units=imperial`;
-    const response = await fetch(etaURL);
-    const data = await response.json();
+    const distResp = await distanceMatrix([origin], [destination], "driving");
+
+    if ("response" in distResp && distResp.response === "ERROR") {
+      throw new Error(distResp.error);
+    }
+
+    const data = (distResp as DistanceResponse).apiResponse;
+    console.log(data);
+
+    const response: {
+      duration: number;
+      pickUpAddress?: string;
+      dropOffAddress?: string;
+    } = {
+      duration: 0,
+    };
+
+    if (getPickUpDropOffAddress) {
+      // if we wanted them, get pickup and dropoff addresses
+      const pickUpAddress = data.origin_addresses[0];
+      const dropOffAddress = data.destination_addresses[0];
+      response["pickUpAddress"] = pickUpAddress;
+      response["dropOffAddress"] = dropOffAddress;
+    }
 
     if (data.rows[0].elements[0].status === "OK") {
       const distance = data.rows[0].elements[0].distance.value; // in meters
@@ -664,7 +696,8 @@ const getDuration = async (
 
       console.log(`driverETA: Distance: ${distance}`);
       console.log(`driverETA: Duration: ${duration}`);
-      return Math.ceil(duration / 60); // convert to minutes
+      response["duration"] = Math.ceil(duration / 60); // convert to minutes
+      return response;
     } else {
       return {
         response: "ERROR",
@@ -677,6 +710,59 @@ const getDuration = async (
       response: "ERROR",
       error: `Error fetching distance: ${(error as Error).message}`,
       category: "WAIT_TIME",
+    };
+  }
+};
+
+/**
+ * FUNCTION FOR GOOGLE MAPS DISTANCE MATRIX API
+ * https://developers.google.com/maps/documentation/distance-matrix/distance-matrix
+ *
+ * @param origin list of origins
+ * @param destination list of destinations
+ * @returns DistanceMatrix object (the rows are a corss product of origin and destination coodinates)
+ */
+export const distanceMatrix = async (
+  origin: { latitude: number; longitude: number }[],
+  destination: { latitude: number; longitude: number }[],
+  mode: "driving" | "walking"
+): Promise<ErrorResponse | DistanceResponse> => {
+  try {
+    // convert from coordinate array to string
+    const originStr = origin.map(
+      (coord) => `${coord.latitude},${coord.longitude}`
+    );
+    const origins = originStr.join("|");
+    console.log("og" + origins + "!!!!");
+
+    // convert from coordinate array to string
+    const destinationStr = destination.map(
+      (coord) => `${coord.latitude},${coord.longitude}`
+    );
+    const destinations = destinationStr.join("|");
+    console.log("dt" + destinations + "!!!!");
+
+    // call api
+    const etaURL =
+      `https://maps.googleapis.com/maps/api/distancematrix/json?` +
+      `origins=${origins}` +
+      `&destinations=${destinations}` +
+      `&key=${process.env.GOOGLE_MAPS_APIKEY}&mode=${mode}&units=imperial`;
+    const response = await fetch(etaURL);
+    const data = await response.json();
+
+    if (data.rows[0].elements[0].status === "OK") {
+      // there are results so return response
+      return { response: "DISTANCE", apiResponse: data };
+    } else {
+      // trigger the catch branch
+      throw new Error(`Error fetching distance matrix info: ${data.status}`);
+    }
+  } catch (error: unknown) {
+    return {
+      response: "ERROR",
+      error: `Error fetching distance matrix info: ${(error as Error).message}`,
+      category: "DISTANCE",
     };
   }
 };
