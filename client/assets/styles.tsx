@@ -625,7 +625,24 @@ export const styles = StyleSheet.create({
   profileItem: {
     fontSize: 20,
     textTransform: "capitalize",
-  }  
+  },
+
+  // notification component
+  notificationContainer: {
+    position: "absolute",
+    top: 40,
+    left: 10,
+    right: 10,
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  notificationText: {
+    flex: 1,
+    fontSize: 16,
+    marginLeft: 6,
+  },
 });
 
 
