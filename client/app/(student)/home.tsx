@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { TouchableOpacity, View } from "react-native";
 import Profile from "./profile";
 import Map, { calculateDistance } from "./map";
@@ -23,6 +23,7 @@ import { styles } from "@/assets/styles";
 import HandleRideComponent from "@/components/HandleRideComp";
 import { createOpenLink } from "react-native-open-maps";
 import LoadingPageComp from "@/components/loadingPageComp";
+import Notification from "@/components/Notification";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -33,6 +34,17 @@ export default function HomePage() {
   const [whichComponent, setWhichComponent] = useState<
     "rideReq" | "confirmRide" | "Loading" | "waitForRide" | "handleRide"
   >("rideReq");
+
+  // what notification to show
+  const [notifState, setNotifState] = useState<{
+    text: string;
+    color: string;
+    boldText?: string;
+  }>({
+    text: "",
+    color: "",
+    boldText: "",
+  });
 
   /* MAP STATE AND METHODS */
   // the student's location
@@ -136,7 +148,6 @@ export default function HomePage() {
   };
 
   /* HANDLE RIDE STATE */
-  // TODO: DO WE WANT PICKUP DROPOFF ADDRESSES?
   const [pickUpAddress, setPickUpAddress] = useState("");
   const [dropOffAddress, setDropOffAddress] = useState("");
   // the address of the user's starting location
@@ -144,12 +155,18 @@ export default function HomePage() {
   // the amount of minutes it will take to walk to the pickup location
   const [walkDuration, setWalkDuration] = useState(0);
 
+  // the reason could be that the user clicked the cancel button
+  // or the timer ran out
+  const cancelReason = useRef<"button" | "timer">("button");
+
   // the user wishes to cancel the ride
   // we want to send a cancel request to the server
-  const cancelRide = () => {
+  const cancelRide = (reason: "button" | "timer") => {
+    cancelReason.current = reason;
     // call cancel route
     WebSocketService.send({ directive: "CANCEL", netid, role: "STUDENT" });
   };
+
   // show different state in the DriverOneWay component
   // based on the status of the ride
   const [rideStatus, setRideStatus] = useState<
@@ -362,34 +379,66 @@ export default function HomePage() {
   };
 
   // WEBSOCKET -- CANCEL / COMPLETE RIDE
-  // handle the case when the ride is completed or cancelled
+  // handle the case when the ride is completed or canceled
   const handleCompleteOrCancel = (message: WebSocketResponse) => {
     if (
       "response" in message &&
       (message.response === "COMPLETE" || message.response === "CANCEL")
     ) {
-      // reset ride locations when the ride is done
-      setDriverLocation({
-        latitude: 0,
-        longitude: 0,
-      });
-      setPickUpLocation({
-        latitude: 0,
-        longitude: 0,
-      });
-      setDropOffLocation({
-        latitude: 0,
-        longitude: 0,
-      });
-
-      // set walk progress back to -1
-      setWalkProgress(-1);
-      // set ride progress back to 0
-      setRideProgress(0);
-
+      resetAllFields();
       // go back to ride request component
       setWhichComponent("rideReq");
+
+      // set the notif state based on the reason
+      if (cancelReason.current === "button") {
+        setNotifState({
+          text: "Ride successfully canceled",
+          color: "#FFCBCB",
+          boldText: "canceled",
+        });
+      } else {
+        setNotifState({
+          text: "Your ride was canceled— timer ran out",
+          color: "#FFCBCB",
+          boldText: "canceled",
+        });
+      }
     }
+  };
+
+  const resetAllFields = () => {
+    // reset ride locations when the ride is done
+    setDriverLocation({
+      latitude: 0,
+      longitude: 0,
+    });
+    setPickUpLocation({
+      latitude: 0,
+      longitude: 0,
+    });
+    setDropOffLocation({
+      latitude: 0,
+      longitude: 0,
+    });
+    setPickUpLocationName("" as ValidLocationType);
+    setDropOffLocationName("" as ValidLocationType);
+    setNumPassengers(1);
+    setRequestID("");
+    setPickUpAddress("");
+    setDropOffAddress("");
+    setWalkAddress("");
+    setWalkDuration(0);
+    setRideDuration(0);
+    setDriverETA(0);
+    setStartLocation({
+      latitude: 0,
+      longitude: 0,
+    });
+
+    // set walk progress back to -1
+    setWalkProgress(-1);
+    // set ride progress back to 0
+    setRideProgress(0);
   };
 
   // WEBSOCKET -- REQUEST RIDE
@@ -407,6 +456,13 @@ export default function HomePage() {
       // set the component to show to WaitingForRide version of handleRide
       setWhichComponent("handleRide");
       setRideStatus("WaitingForRide");
+
+      // show notification
+      setNotifState({
+        text: "Ride successfully requested",
+        color: "#C9FED0",
+        boldText: "requested",
+      });
     } else {
       console.log("Request ride error: ", message);
       // go back to request ride
@@ -506,6 +562,19 @@ export default function HomePage() {
       {/* faq pop-up modal */}
       <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
 
+      {/* notification component */}
+      <View
+        style={{ position: "absolute", top: 0, width: "100%", zIndex: 100 }}
+      >
+        {notifState.text != "" && (
+          <Notification
+            text={notifState.text}
+            color={notifState.color}
+            boldText={notifState.boldText}
+          />
+        )}
+      </View>
+
       {/* Figure out which component to render */}
       {
         whichComponent === "rideReq" ? (
@@ -547,7 +616,7 @@ export default function HomePage() {
           <View style={styles.homePageComponentContainer}>
             {/* driver on way component */}
             <HandleRideComponent
-              status={rideStatus}
+              status={"RideCompleted"}
               walkProgress={walkProgress}
               rideProgress={rideProgress}
               pickUpLocation={pickUpLocationName}
@@ -560,6 +629,8 @@ export default function HomePage() {
               onCancel={cancelRide}
               setFAQVisible={setFAQVisible}
               openNavigation={routeToPickup}
+              setNotificationState={setNotifState}
+              changeRideStatus={setRideStatus}
             />
           </View>
         ) : null // default

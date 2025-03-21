@@ -3,18 +3,22 @@ import { styles } from "../assets/styles";
 import React, { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { ProgressBar } from "react-native-paper";
+import moment from "moment";
+import momentTimezone from "moment-timezone";
+
+export type RideStatus =
+  | "WaitingForRide" // the ride has been requested
+  | "DriverEnRoute" // the ride is accepted
+  | "DriverArrived" // the driver is at the pickup location
+  | "RideInProgress" // the driver is taking the student to dropoff location
+  | "RideCompleted"; // the driver arrived at the dropoff location
 
 interface HandleRideProps {
   pickUpLocation: string;
   dropOffLocation: string;
   pickUpAddress: string;
   dropOffAddress: string;
-  status:
-    | "WaitingForRide" // the ride has been requested
-    | "DriverEnRoute" // the ride is accepted
-    | "DriverArrived" // the driver is at the pickup location
-    | "RideInProgress" // the driver is taking the student to dropoff location
-    | "RideCompleted"; // the driver arrived at the dropoff location
+  status: RideStatus;
   // the progress of user walking to pickup location // will be -1 if walking is not needed
   walkProgress: number;
   // the progress of the driver taking the student to the destination
@@ -22,9 +26,15 @@ interface HandleRideProps {
   walkDuration: number;
   rideDuration: number;
   driverETA: number;
-  onCancel: () => void;
+  onCancel: (reason: "button" | "timer") => void;
   setFAQVisible: (visible: boolean) => void;
   openNavigation: () => void;
+  setNotificationState: (state: {
+    text: string;
+    color: string;
+    boldText?: string;
+  }) => void;
+  changeRideStatus: (status: RideStatus) => void;
 }
 
 const HandleRideComponent: React.FC<HandleRideProps> = ({
@@ -41,6 +51,8 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   driverETA,
   setFAQVisible,
   openNavigation,
+  setNotificationState,
+  changeRideStatus,
 }) => {
   // TIMER STUFF
   // keep track of the seconds left
@@ -48,8 +60,25 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   // the actual countdown
   useEffect(() => {
     // if the status is not DriverArrived, clear the timer
-    if (status !== "DriverArrived") return () => clearInterval(interval);
+    if (status !== "DriverArrived") {
+      if (status == "DriverEnRoute") {
+        setNotificationState({
+          text: "Your driver is on their way!",
+          color: "#C9FED0",
+        });
+      }
+      return () => clearInterval(interval);
+    }
     // if the driver has arrived, show the timer
+
+    // send the notification
+    setNotificationState({
+      text: "Your driver has arrived. You have 5 min to find your driver.",
+      color: "#FFEFB4",
+      boldText: "5 min",
+    });
+
+    // Update seconds every second
     const interval = setInterval(() => {
       setSeconds((prevSeconds) => prevSeconds - 1);
     }, 1000);
@@ -57,10 +86,18 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  if (seconds <= 0) {
-    // the timer ran out! cancel the ride
-    onCancel();
-  }
+  useEffect(() => {
+    if (seconds == 60) {
+      setNotificationState({
+        text: "Your ride will be cancelled in one minute.",
+        color: "#FFCBCB",
+        boldText: "one minute",
+      });
+    } else if (seconds <= 0) {
+      // the timer ran out! cancel the ride
+      onCancel("timer");
+    }
+  }, [seconds]);
 
   // Function to format time (mm:ss)
   const formatTime = (seconds: number): string => {
@@ -121,7 +158,8 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
               : status == "DriverArrived"
                 ? formatTime(seconds)
                 : status == "RideInProgress"
-                  ? `Estimated Arrival Time: ${1}`
+                  ? // convert the arrival time to our best guess of the user's timezone
+                    `Estimated Arrival Time: ${momentTimezone.tz(moment().add(rideDuration, "minutes"), moment.tz.guess()).format("h:mm A")}`
                   : `Estimated Wait Time: ${driverETA == 0 ? "<2" : driverETA} min`}
           </Text>
         </View>
@@ -137,7 +175,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
       >
         {/* Walk and Ride Duration*/}
         {walkProgress >= 0 ? (
-          <View style={{ flexDirection: "row", paddingBottom: 3 }}>
+          <View style={{ flexDirection: "row", paddingBottom: 10 }}>
             <TouchableOpacity onPress={openNavigation}>
               <Text
                 style={{
@@ -227,7 +265,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
                 backgroundColor: "white",
               },
             ]}
-            onPress={onCancel}
+            onPress={() => onCancel("button")}
           >
             <Text style={[styles.buttonText, { color: "red" }]}>
               Cancel Ride
@@ -245,7 +283,9 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
               styles.bottomModalButton,
               { borderWidth: 2, backgroundColor: "#4B2E83" },
             ]}
-            onPress={onCancel}
+            onPress={() => {
+              changeRideStatus("RideInProgress");
+            }}
           >
             <Text style={styles.buttonText}>I Found My Driver</Text>
           </Pressable>

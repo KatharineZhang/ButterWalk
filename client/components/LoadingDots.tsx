@@ -1,7 +1,7 @@
-/** ALL CREDIT GOES TO https://github.com/alexvcasillas/react-native-loading-dots/blob/master/src/react-native-loading-dots.js 
- * THIS CODE IS ALL FROM THE ABOVE LINK WITH SLIGHT MODIFICATIONS 
+/** ALL CREDIT GOES TO https://github.com/alexvcasillas/react-native-loading-dots/blob/master/src/react-native-loading-dots.js
+ * THIS CODE IS ALL FROM THE ABOVE LINK WITH SLIGHT MODIFICATIONS
  * THIS PACKAGE COULD NOT BE IMPORTED DUE TO DEPENDENCY ISSUES SO CODE WAS COPIED. WE TAKE NO CREDIT FOR THIS CODE
-*/
+ */
 
 import React, { useState, useEffect, useRef } from "react";
 import { StyleSheet, Animated, Easing } from "react-native";
@@ -65,7 +65,11 @@ function LoadingDots({
     }).start();
   }
 
-  function floatAnimation(node: Animated.Value, reverseY: boolean, delay: number) {
+  function floatAnimation(
+    node: Animated.Value,
+    reverseY: boolean,
+    delay: number
+  ) {
     const floatSequence = Animated.sequence([
       Animated.timing(node, {
         toValue: reverseY ? bounceHeight : -bounceHeight,

@@ -78,7 +78,7 @@ const LoadingPageComp: React.FC<loadingPageCompProps> = ({
           />
         </View>
       </View>
-      <View style={{ height:20 }} />
+      <View style={{ height: 20 }} />
 
       {/* Locations Display */}
       <View
@@ -112,41 +112,38 @@ const LoadingPageComp: React.FC<loadingPageCompProps> = ({
 
       {/* Rider Icons */}
       <View
+        style={{
+          justifyContent: "center",
+          alignItems: "center",
+          position: "absolute",
+          left: "42%",
+          top: 50,
+        }}
+      >
+        <View
           style={{
+            flexDirection: "row",
             justifyContent: "center",
-            alignItems: "center",
-            position: "absolute",
-            left: "42%",
-            top: 50,
+            paddingBottom: 5,
           }}
         >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "center",
-              paddingBottom: 5,
-            }}
-          >
-            {Array.from({ length: numPassengers }).map((_, index) => (
-              <Animated.View
-                key={index}
-                style={[
-                  styles.riderIcon,
-                  { marginLeft: index === 0 ? 0 : -35 },
-                ]} // Adjust overlap
-              >
-                <Image
-                  source={require("../assets/images/rider-icon-white.png")}
-                  style={{ width: 25, height: 25, resizeMode: "contain" }}
-                  resizeMode="contain"
-                />
-              </Animated.View>
-            ))}
-          </View>
-          <Text style={{ fontSize: 14, color: "white" }}>
-            {numPassengers} passenger(s)
-          </Text>
+          {Array.from({ length: numPassengers }).map((_, index) => (
+            <Animated.View
+              key={index}
+              style={[styles.riderIcon, { marginLeft: index === 0 ? 0 : -35 }]} // Adjust overlap
+            >
+              <Image
+                source={require("../assets/images/rider-icon-white.png")}
+                style={{ width: 25, height: 25, resizeMode: "contain" }}
+                resizeMode="contain"
+              />
+            </Animated.View>
+          ))}
         </View>
+        <Text style={{ fontSize: 14, color: "white" }}>
+          {numPassengers} passenger(s)
+        </Text>
+      </View>
 
       {/* Middle Display */}
       <View style={loadingPageCompStyles.middleDisplayContainer}>
@@ -163,9 +160,9 @@ const LoadingPageComp: React.FC<loadingPageCompProps> = ({
         </View>
         <View style={{ height: 40 }} />
         {/* Loading Animation */}
-        < View style={{width: 80}}>
-        <LoadingDots/>
-          </View>
+        <View style={{ width: 80 }}>
+          <LoadingDots />
+        </View>
       </View>
     </View>
   );
