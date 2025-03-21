@@ -3,7 +3,7 @@ import React from "react";
 import { View, Text, Animated, Image } from "react-native";
 import { loadingPageCompStyles, styles } from "../assets/styles";
 import { Ionicons } from "@expo/vector-icons";
-import LoadingDots from "react-native-loading-dots";
+import LoadingDots from "./LoadingDots";
 
 interface loadingPageCompProps {
   pickUpLoc: string;
@@ -83,10 +83,10 @@ const LoadingPageComp: React.FC<loadingPageCompProps> = ({
       {/* Locations Display */}
       <View
         style={{
-          width: "120%",
+          width: "100%",
           flexDirection: "row",
           alignItems: "center",
-          justifyContent: "space-around",
+          justifyContent: "space-between",
           paddingBottom: 10,
         }}
       >
@@ -162,9 +162,10 @@ const LoadingPageComp: React.FC<loadingPageCompProps> = ({
           </Text>
         </View>
         <View style={{ height: 40 }} />
-        <View style= {{width: 70}}>
-        <LoadingDots dots={3} colors={["white", "white", "white"]} size={15}/>
-        </View>
+        {/* Loading Animation */}
+        < View style={{width: 80}}>
+        <LoadingDots/>
+          </View>
       </View>
     </View>
   );
