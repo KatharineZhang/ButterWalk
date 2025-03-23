@@ -566,7 +566,8 @@ The driverETA is calculated as the Google Maps eta from driverLocation to pickup
 - On error, returns the json object in the form:
     { response: “ERROR”, success: false, error: string, category: “WAIT_TIME” }.
 - Returns a json object TO THE STUDENT in the format:
-    { response: “WAIT_TIME”, rideDuration: number //in minutes, driverETA: number //in minutes }
+    { response: “WAIT_TIME”, rideDuration: number //in minutes, driverETA: number //in minutes, 
+     pickUpAddress?: string, dropOffAddress?: string } 
  */
 export const waitTime = async (
   requestedRide?: {
@@ -654,6 +655,7 @@ export const waitTime = async (
  *
  * @param origin
  * @param destination
+ * @param getPickUpDropOffAddress should we get the pickup and dropoff addresses from distance matrix
  * @returns the drive time in minutes or an error response
  */
 const getDuration = async (
@@ -665,15 +667,19 @@ const getDuration = async (
   | { duration: number; pickUpAddress?: string; dropOffAddress?: string }
 > => {
   try {
+    // all the api
     const distResp = await distanceMatrix([origin], [destination], "driving");
 
+    // check for an error
     if ("response" in distResp && distResp.response === "ERROR") {
+      // trigger the catch branch if error
       throw new Error(distResp.error);
     }
 
     const data = (distResp as DistanceResponse).apiResponse;
     console.log(data);
 
+    // instantiate the response object
     const response: {
       duration: number;
       pickUpAddress?: string;
@@ -683,19 +689,18 @@ const getDuration = async (
     };
 
     if (getPickUpDropOffAddress) {
-      // if we wanted them, get pickup and dropoff addresses
+      // if we wanted them, get the pickup and dropoff addresses
       const pickUpAddress = data.origin_addresses[0];
       const dropOffAddress = data.destination_addresses[0];
       response["pickUpAddress"] = pickUpAddress;
       response["dropOffAddress"] = dropOffAddress;
     }
 
+    // addresses are returned even if distance and duration are not
+    // in order to get distance and duration, we need to check the status
     if (data.rows[0].elements[0].status === "OK") {
-      const distance = data.rows[0].elements[0].distance.value; // in meters
+      // const distance = data.rows[0].elements[0].distance.value; // in meters
       const duration = data.rows[0].elements[0].duration.value; // in seconds
-
-      console.log(`driverETA: Distance: ${distance}`);
-      console.log(`driverETA: Duration: ${duration}`);
       response["duration"] = Math.ceil(duration / 60); // convert to minutes
       return response;
     } else {
@@ -720,6 +725,7 @@ const getDuration = async (
  *
  * @param origin list of origins
  * @param destination list of destinations
+ * @param mode should the distance be calculated for driving or walking
  * @returns DistanceMatrix object (the rows are a corss product of origin and destination coodinates)
  */
 export const distanceMatrix = async (
