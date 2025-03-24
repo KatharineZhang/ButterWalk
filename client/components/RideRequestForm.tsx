@@ -16,6 +16,7 @@ import BottomDrawer from "./BottomDrawer";
 import PopUpModal from "./PopUpModal";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { ScrollView } from "react-native-gesture-handler";
+import SegmentedProgressBar from "./SegmentedProgressBar";
 
 type RideRequestFormProps = {
   pickUpLocationChanged: (location: ValidLocationType) => void;
@@ -51,6 +52,8 @@ export default function RideRequestForm({
   const [destination, setDestination] = useState("");
   const [numRiders, setNumRiders] = useState(1);
 
+  const [showNumberRiders, setShowNumberRiders] = useState(false);
+
   // Bottom Sheet Reference needed to expand the bottom sheet
   const bottomSheetRef = useRef<BottomSheet>(null);
 
@@ -61,6 +64,8 @@ export default function RideRequestForm({
       setDestinationQuery(startingState.dropoff);
       setDestination(startingState.dropoff);
       setNumRiders(startingState.numRiders);
+      // show the number of riders modal
+      setShowNumberRiders(true);
     }
   }, []);
 
@@ -68,14 +73,14 @@ export default function RideRequestForm({
   const [confirmationModalVisible, setConfirmationModalVisible] =
     useState(false);
 
-  // the request button was clicked
-  const handleSend = () => {
+  // 
+  const goToNumberRiders = () => {
     if (location == "" || destination == "") {
       alert("Please specify a pickup and dropoff location!");
       return;
     }
-    rideRequested(numRiders);
-  };
+    setShowNumberRiders(true);
+  }
 
   /* FUZZY SEARCH BAR STUFF */
 
@@ -188,36 +193,51 @@ export default function RideRequestForm({
     bottomSheetRef.current?.expand();
   };
 
-  return (
+  const RideRequest: JSX.Element = (
     <View style={{ flex: 1 }}>
       <BottomDrawer bottomSheetRef={bottomSheetRef}>
         <View style={styles.requestFormContainer}>
           <View>
-            {/* faq button */}
-            <TouchableOpacity
-              style={{ position: "absolute", right: 10, top: -10 }}
-              onPress={() => setFAQVisible(true)}
+            {/* Header */}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "90%",
+                marginHorizontal: 20,
+              }}
             >
-              <Ionicons
-                name="information-circle-outline"
-                size={20}
-                color="black"
-                position="absolute"
-                right={0}
-              />
-            </TouchableOpacity>
+              <View style={{ width: 20 }} />
+              {/* Title */}
+              <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+                Choose Your Locations
+              </Text>
+
+              {/* faq button */}
+              <TouchableOpacity onPress={() => setFAQVisible(true)}>
+                <Ionicons
+                  name="information-circle-outline"
+                  size={25}
+                  color="black"
+                />
+              </TouchableOpacity>
+            </View>
+            <View style={{ height: 20 }} />
+            <SegmentedProgressBar type={1} />
             <View style={{ height: 20 }} />
 
             {/* Location and Destination Icons */}
-            <Image
-              source={require("@/assets/images/pickup-location.png")}
+            <View
               style={{
+                borderRadius: 13,
+                backgroundColor: "#4B2E83",
                 position: "absolute",
                 zIndex: 3,
-                top: 40,
-                left: 10,
-                height: 20,
-                width: 20,
+                top: 90,
+                left: 13,
+                height: 15,
+                width: 15,
               }}
             />
             <Image
@@ -225,7 +245,7 @@ export default function RideRequestForm({
               style={{
                 zIndex: 3,
                 position: "absolute",
-                top: 65,
+                top: 112,
                 left: 19,
                 width: 2,
                 height: 40,
@@ -236,7 +256,7 @@ export default function RideRequestForm({
               style={{
                 position: "absolute",
                 zIndex: 3,
-                top: 110,
+                top: 157,
                 left: 10,
                 height: 20,
                 width: 20,
@@ -270,61 +290,21 @@ export default function RideRequestForm({
               />
             </View>
 
-            {/* Rider Selection Animation */}
-            <View style={styles.animationContainer}>
-              <View style={styles.riderContainer}>
-                <View style={styles.iconRow}>
-                  {/* Decrease Riders */}
-                  <Pressable onPress={handleDecreaseRiders}>
-                    <Ionicons name="remove" size={32} color="#4B2E83" />
-                  </Pressable>
-
-                  {/* Rider Icons with verlapping effect seen in figma */}
-                  <View style={{ justifyContent: "center" }}>
-                    <View style={styles.riderIconsContainer}>
-                      {Array.from({ length: numRiders }).map((_, index) => (
-                        <Animated.View
-                          key={index}
-                          style={[
-                            styles.riderIcon,
-                            { marginLeft: index === 0 ? 0 : -20 },
-                          ]} // Adjust overlap
-                        >
-                          <Image
-                            source={require("../assets/images/rider-icon.png")}
-                            style={styles.riderImage}
-                            resizeMode="contain"
-                          />
-                        </Animated.View>
-                      ))}
-                    </View>
-                    <Text style={styles.riderCount}>
-                      {numRiders} passenger(s)
-                    </Text>
-                  </View>
-                  {/* Increase Riders */}
-                  <Pressable onPress={handleIncreaseRiders}>
-                    <Ionicons name="add" size={32} color="#4B2E83" />
-                  </Pressable>
-                </View>
-              </View>
-            </View>
-
             {/* Next Button */}
             <View
               style={{
-                paddingVertical: 10,
                 alignItems: "center",
                 flexDirection: "row",
                 justifyContent: "flex-end",
               }}
             >
               <Text style={{ fontStyle: "italic" }}>
-                Review and Confirm Your Ride
+                Choose # of passengers
               </Text>
               <TouchableOpacity
                 style={styles.modalCloseButton}
-                onPress={handleSend}
+                // onPress={handleSend}
+                onPress={goToNumberRiders}
               >
                 <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
               </TouchableOpacity>
@@ -402,4 +382,102 @@ export default function RideRequestForm({
       />
     </View>
   );
+
+  const NumberRiders: JSX.Element = (
+    <View
+      style={{
+        position: "absolute",
+        bottom: 0,
+        width: "100%",
+        backgroundColor: "white",
+        padding: 16,
+        borderRadius: 10,
+      }}
+    >
+      <View style={{ height: 5 }} />
+      {/* Header */}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginHorizontal: 20,
+        }}
+      >
+        {/* Back Button */}
+        <TouchableOpacity onPress={() => setShowNumberRiders(false)}>
+          <Ionicons name="arrow-back" size={30} color="#4B2E83" />
+        </TouchableOpacity>
+
+        {/* Title */}
+        <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+          Confirm Passengers
+        </Text>
+
+        {/* faq button */}
+        <TouchableOpacity onPress={() => setFAQVisible(true)}>
+          <Ionicons name="information-circle-outline" size={25} color="black" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={{ height: 20 }} />
+      <SegmentedProgressBar type={2} />
+      <View style={{ height: 20 }} />
+
+      {/* Rider Selection Animation */}
+      <View style={styles.animationContainer}>
+        <View style={styles.riderContainer}>
+          <View style={styles.iconRow}>
+            {/* Decrease Riders */}
+            <Pressable onPress={handleDecreaseRiders}>
+              <Ionicons name="remove" size={32} color="#4B2E83" />
+            </Pressable>
+
+            {/* Rider Icons with verlapping effect seen in figma */}
+            <View style={{ justifyContent: "center" }}>
+              <View style={styles.riderIconsContainer}>
+                {Array.from({ length: numRiders }).map((_, index) => (
+                  <Animated.View
+                    key={index}
+                    style={[
+                      styles.riderIcon,
+                      { marginLeft: index === 0 ? 0 : -20 },
+                    ]} // Adjust overlap
+                  >
+                    <Image
+                      source={require("../assets/images/rider-icon.png")}
+                      style={styles.riderImage}
+                      resizeMode="contain"
+                    />
+                  </Animated.View>
+                ))}
+              </View>
+              <Text style={styles.riderCount}>{numRiders} passenger(s)</Text>
+            </View>
+            {/* Increase Riders */}
+            <Pressable onPress={handleIncreaseRiders}>
+              <Ionicons name="add" size={32} color="#4B2E83" />
+            </Pressable>
+          </View>
+        </View>
+      </View>
+
+      {/* Next Button */}
+      <View
+        style={{
+          paddingVertical: 10,
+          alignItems: "center",
+          flexDirection: "row",
+          justifyContent: "flex-end",
+        }}
+      >
+        <Text style={{ fontStyle: "italic" }}>See ride details</Text>
+        <TouchableOpacity style={styles.modalCloseButton} onPress={() => rideRequested(numRiders)}>
+          <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  return showNumberRiders ? NumberRiders : RideRequest;
 }

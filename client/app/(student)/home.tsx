@@ -249,6 +249,14 @@ export default function HomePage() {
           dropOffLocation,
         },
       });
+      // find out how long it will take to walk
+      WebSocketService.send({
+        directive: "DISTANCE",
+        origin: [userLocation],
+        destination: [pickUpLocation],
+        mode: "walking",
+      });
+
     } else if (whichComponent == "handleRide") {
       // if we are handling the ride, check if walking is needed by setting start location
       setStartLocation(userLocation);
@@ -257,14 +265,6 @@ export default function HomePage() {
       if (calculateDistance(userLocation, pickUpLocation) > 0.01) {
         // set initial walk progress
         setWalkProgress(0);
-
-        // find out how long it will take to walk
-        WebSocketService.send({
-          directive: "DISTANCE",
-          origin: [userLocation],
-          destination: [pickUpLocation],
-          mode: "walking",
-        });
       }
     }
   }, [whichComponent]);
@@ -596,6 +596,7 @@ export default function HomePage() {
               pickUpLoc={pickUpLocationName}
               dropOffLoc={dropOffLocationName}
               rideDuration={rideDuration}
+              walkDuration={walkDuration}
               driverETA={driverETA}
               numPassengers={numPassengers}
               onClose={closeConfirmRide}
@@ -616,7 +617,7 @@ export default function HomePage() {
           <View style={styles.homePageComponentContainer}>
             {/* driver on way component */}
             <HandleRideComponent
-              status={"RideCompleted"}
+              status={rideStatus}
               walkProgress={walkProgress}
               rideProgress={rideProgress}
               pickUpLocation={pickUpLocationName}

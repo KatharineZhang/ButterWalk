@@ -2,19 +2,15 @@
 import { styles } from "@/assets/styles";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React from "react";
-import {
-  View,
-  Image,
-  Text,
-  Pressable,
-  TouchableOpacity,
-} from "react-native";
+import { View, Image, Text, Pressable, TouchableOpacity } from "react-native";
+import SegmentedProgressBar from "./SegmentedProgressBar";
 
 interface ConfirmRideProps {
   pickUpLoc: string;
   dropOffLoc: string;
   numPassengers: number;
   rideDuration: number;
+  walkDuration: number;
   driverETA: number;
   onClose: () => void; // callback function for when the user closes modal
   onConfirm: (numPassengers: number) => void; // callback function for when the user confirms ride
@@ -26,6 +22,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
   dropOffLoc,
   numPassengers,
   rideDuration,
+  walkDuration,
   driverETA,
   onClose,
   onConfirm,
@@ -70,6 +67,8 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
         </TouchableOpacity>
       </View>
 
+      <View style={{ height: 20 }} />
+      <SegmentedProgressBar type={3} />
       <View style={{ height: 20 }} />
 
       {/* Duration Info */}
@@ -146,12 +145,12 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
               fontSize: 16,
             }}
           >
-            lkdjkljfks min
+            {walkDuration} min
           </Text>
         </View>
       </View>
 
-          {/* Ride Duration */}
+      {/* Ride Duration */}
       <View
         style={{
           marginHorizontal: 50,
@@ -184,7 +183,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
         </View>
       </View>
 
-      <View style={{ height: 20 }} />
+      <View style={{ height: 10 }} />
 
       {/* Location and Passenger Info */}
       <Text
@@ -198,7 +197,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
       >
         Location and Passenger Information
       </Text>
-      
+
       {/* Pickup Location */}
       <View
         style={{
@@ -219,7 +218,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
         <View style={{ width: 30 }} />
         <Text style={{ fontSize: 16 }}>{pickUpLoc}</Text>
       </View>
-      
+
       {/* Dropoff Location */}
       <View
         style={{
@@ -236,7 +235,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
         <View style={{ width: 28 }} />
         <Text style={{ fontSize: 16 }}>{dropOffLoc}</Text>
       </View>
-      
+
       {/* Number of Passengers */}
       <View
         style={{
@@ -246,11 +245,11 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
           paddingBottom: 20,
         }}
       >
-
-      <Image
-        source={require("../assets/images/rider-icon.png")}
-        style={{ width: 20, height: 20 }}
-        resizeMode="contain"/>
+        <Image
+          source={require("../assets/images/rider-icon.png")}
+          style={{ width: 20, height: 20 }}
+          resizeMode="contain"
+        />
 
         <View style={{ width: 28 }} />
         <Text style={{ fontSize: 16 }}>{numPassengers} passenger(s)</Text>
@@ -261,7 +260,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
         source={require("@/assets/images/dashed-line.png")}
         style={{
           position: "absolute",
-          top: 314,
+          top: 329,
           left: 72,
           width: 2,
           height: 20,

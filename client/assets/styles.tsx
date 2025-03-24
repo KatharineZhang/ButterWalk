@@ -309,12 +309,12 @@ export const styles = StyleSheet.create({
   },
   animationContainer: {
     marginTop: 8,
-    borderWidth: 1,
+    borderWidth: 2,
     borderRadius: 16,
-    borderColor: "Black/Black 3",
+    borderColor: "#4B2E83",
     paddingVertical: 3,
     paddingHorizontal: 40,
-    width: "96%",
+    width: "100%",
   },
   riderContainer: {
     alignItems: "center",
@@ -642,6 +642,18 @@ export const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     marginLeft: 6,
+  },
+
+  // segmented progress bar
+  segmentedProgressContainer: {
+    flexDirection: "row",
+    width: "100%",
+    height: 5,
+    paddingHorizontal: 10,
+  },
+  segmentedProgressBar: {
+    borderRadius: 4,  
+    width: "33%",
   },
 });
 
