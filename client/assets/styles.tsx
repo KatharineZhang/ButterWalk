@@ -655,6 +655,15 @@ export const styles = StyleSheet.create({
     borderRadius: 4,  
     width: "33%",
   },
+
+  // confirm ride
+  confirmHeader:{
+    marginLeft: 30,
+    fontSize: 16,
+    color: "#4b2e83",
+    fontWeight: "bold",
+    paddingBottom: 20,
+  },
 });
 
 

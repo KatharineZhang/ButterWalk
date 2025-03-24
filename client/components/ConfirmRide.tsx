@@ -73,13 +73,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
 
       {/* Duration Info */}
       <Text
-        style={{
-          marginLeft: 30,
-          fontSize: 16,
-          color: "#4b2e83",
-          fontWeight: "bold",
-          paddingBottom: 20,
-        }}
+        style={styles.confirmHeader}
       >
         Duration Information
       </Text>
@@ -187,13 +181,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
 
       {/* Location and Passenger Info */}
       <Text
-        style={{
-          marginLeft: 30,
-          fontSize: 16,
-          color: "#4b2e83",
-          fontWeight: "bold",
-          paddingBottom: 20,
-        }}
+        style={styles.confirmHeader}
       >
         Location and Passenger Information
       </Text>
