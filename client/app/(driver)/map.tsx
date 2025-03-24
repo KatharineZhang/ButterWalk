@@ -8,16 +8,13 @@ import Header from "@/components/Header";
 import { styles } from "@/assets/styles";
 import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import WebSocketService, {
-  WebsocketConnectMessage,
-} from "@/services/WebSocketService";
+import WebSocketService from "@/services/WebSocketService";
 import { Alert, Linking } from "react-native";
 import {
   DriverAcceptResponse,
   WebSocketResponse,
 } from "../../../server/src/api";
-import { LocationNames, LocationService } from "@/services/LocationService";
-import RideRequestForm from "@/components/RideRequestForm";
+import { LocationName, LocationService } from "@/services/LocationService";
 
 export default function App() {
   // Extract netid from Redirect URL from signin page
@@ -69,17 +66,6 @@ export default function App() {
 
   // STATE HOOKS
   useEffect(() => {
-    // TODO: MOVE CONNECTION TO THE SIGNIN.TSX WHEN THAT IS IMPLEMENTED
-    // await connection from websocket
-    const connectWebSocket = async () => {
-      const msg: WebsocketConnectMessage = await WebSocketService.connect();
-      if (msg == "Connected Successfully") {
-        console.log("connected");
-      } else {
-        console.log("failed to connect!!!");
-      }
-    };
-    connectWebSocket();
     // on the first render, get the user's location
     // and set up listeners
     watchLocation();
@@ -231,11 +217,11 @@ export default function App() {
       setRideInfo(driverAccept);
       setPickUpLocation(
         // get coordinates from location names
-        LocationService.getLatAndLong(driverAccept.location as LocationNames)
+        LocationService.getLatAndLong(driverAccept.location as LocationName)
       );
       setDropOffLocation(
         // get coordinates from location names
-        LocationService.getLatAndLong(driverAccept.destination as LocationNames)
+        LocationService.getLatAndLong(driverAccept.destination as LocationName)
       );
     }
   };
@@ -398,11 +384,6 @@ export default function App() {
           </View>
         </View>
       </SafeAreaProvider>
-
-      {/* Overlay the RideRequestForm on top of the map */}
-      <View style={styles.formOverlay}>
-        <RideRequestForm />
-      </View>
     </View>
   );
 }

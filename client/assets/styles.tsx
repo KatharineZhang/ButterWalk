@@ -1,6 +1,7 @@
 import { StyleSheet } from "react-native";
 
-//More random styling things that I think i copied from chatgpt....
+//This is absolutely a MESS and we need to fix it.
+// naming conventions are all over the place
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -255,9 +256,23 @@ export const styles = StyleSheet.create({
   // Ride Request Form styles
 
   formContainer: {
-    padding: 15,
-    width: "100%",
+    paddingHorizontal: 10,
+    justifyContent: "center",
+    alignItems: "center",
   },
+  requestFormContainer: {
+    left:-14,
+    width: "108%",
+    borderRadius: 10,
+    shadowRadius: 2,
+    shadowOpacity: 0.4,
+    shadowOffset: { width: 0, height: 7 },
+    shadowColor: "gray",
+    paddingHorizontal: 10,
+    backgroundColor: "white",
+    justifyContent: "center",
+    alignItems: "center",
+  }, 
   infoText:{
     fontSize: 12,
     color: "#4B4C4F",
@@ -293,12 +308,13 @@ export const styles = StyleSheet.create({
     padding: 10,
   },
   animationContainer: {
-    marginVertical: 4,
-    borderWidth: 1,
+    marginTop: 8,
+    borderWidth: 2,
     borderRadius: 16,
-    borderColor: "Black/Black 3",
-    paddingVertical: 12,
+    borderColor: "#4B2E83",
+    paddingVertical: 3,
     paddingHorizontal: 40,
+    width: "100%",
   },
   riderContainer: {
     alignItems: "center",
@@ -429,7 +445,7 @@ export const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
     width: "100%",
-    height: "70%",
+    height: "50%",
     position: "absolute",
     bottom: -100,
   },
@@ -484,5 +500,217 @@ export const styles = StyleSheet.create({
   buttonText: {
     color: "white",
     fontSize: 18,
+  },
+  // progressBar
+  progressContainer: {
+    position: "absolute",
+    bottom: 0,
+    backgroundColor: "white",
+    padding: 16,
+    borderRadius:10
+  },
+  progressBarTop: {
+      alignItems: "center",
+      borderBottomWidth: 2,
+      borderBottomColor: "#EEEEEE",
+      padding: 15,
+      marginBottom: 10,
+  },
+  mainTextContainer: {
+      flexDirection: "row",
+      marginBottom: 10,
+  },
+  mainText: {
+      fontSize: 18,
+      textAlign: "center",
+      fontWeight: "bold",
+      flex: 1,
+  },
+  subTextContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 5,
+  },
+  subText: {
+      fontSize: 16,
+      marginLeft: 8,
+      fontStyle: "italic",
+  },
+  progressBarBottom: {
+      alignItems: "center",
+      paddingBottom: 25,
+  },
+  rideTimeText: {
+      fontSize: 12,
+      fontWeight: "bold",
+      marginVertical: 8,
+  },
+  progressBarWrapper: {
+      flexDirection: "row",
+      alignItems: "center",
+      width: 320,
+      position: "relative",
+  },
+  progressBar: {
+      flex: 1,
+      height: 15,
+      borderRadius: 6,
+      backgroundColor: "#E3E3E3",
+      maxWidth: "100%",
+      width: 370,
+      zIndex: 1,
+  },
+  circleStart: {
+      width: 22,
+      height: 22,
+      borderRadius: 13,
+      backgroundColor: "#4B2E83",
+      borderWidth: 2,
+      borderColor: "#000000",
+      position: "absolute",
+      left: 0,
+      zIndex: 2,
+  },
+  circleEnd: {
+      width: 22,
+      height: 22,
+      borderRadius: 13,
+      backgroundColor: "#E34B64",
+      borderWidth: 2,
+      borderColor: "#000000",
+      position: "absolute",
+      right: 0,
+      zIndex: 2,
+  },
+  locationsContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      width: "100%",
+      marginTop: 15,
+  },
+  pickUpContainer: {
+      alignItems: "flex-start",
+      maxWidth: "50%"
+  },
+  dropOffContainer: {
+      alignItems: "flex-end",
+      maxWidth: "50%"
+  },
+  locationTitle: {
+      fontWeight: "bold",
+      fontSize: 12,
+      marginBottom: 3,
+  },
+  locationText: {
+      fontSize: 12,
+  },
+  homePageComponentContainer: {
+    position: "absolute",
+     width: "100%",
+      height: "100%",
+      shadowRadius: 5,
+    shadowOpacity: 0.4,
+    shadowOffset: { width: 0, height: -7 },
+    shadowColor: "grey",
+    pointerEvents: "box-none",
+  },
+  profileItemContainer: {
+    padding: 10,
+    borderWidth: 1,
+    width: "100%",
+    borderRadius: 10,
+    marginVertical: 5,
+    borderColor: "grey",
+  },
+  profileItem: {
+    fontSize: 20,
+    textTransform: "capitalize",
+  },
+
+  // notification component
+  notificationContainer: {
+    position: "absolute",
+    top: 40,
+    left: 10,
+    right: 10,
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  notificationText: {
+    flex: 1,
+    fontSize: 16,
+    marginLeft: 6,
+  },
+
+  // segmented progress bar
+  segmentedProgressContainer: {
+    flexDirection: "row",
+    width: "100%",
+    height: 5,
+    paddingHorizontal: 10,
+  },
+  segmentedProgressBar: {
+    borderRadius: 4,  
+    width: "33%",
+  },
+
+  // confirm ride
+  confirmHeader:{
+    marginLeft: 30,
+    fontSize: 16,
+    color: "#4b2e83",
+    fontWeight: "bold",
+    paddingBottom: 20,
+  },
+});
+
+
+export const loadingPageCompStyles = StyleSheet.create({
+  rootContainer: {
+    flex: 1,
+    backgroundColor: "#4B2E83",
+    flexDirection: "column",
+    alignItems: "center",
+    width: "100%",
+    padding: 20,
+  },
+  locationMainTextTypography: {
+    color: "white",
+    textAlign: "center",
+    fontSize: 14,
+    fontFamily: "Open Sans",
+    fontWeight: "700",
+  },
+  locationSubTextTypography: {
+    color: "white",
+    textAlign: "center",
+    fontSize: 14,
+    fontFamily: "Open Sans",
+    fontWeight: "400",
+  },
+  middleDisplayContainer: {
+    padding: 40,
+    top: "15%",
+    alignItems: "center",
+    height: 150,
+    justifyContent: "space-between"
+  },
+  mainTextTypography: {
+    color: "#FFF",
+    textAlign: "center",
+    fontFamily: "Encode Sans",
+    fontSize: 28,
+    fontWeight: "700",
+    lineHeight: 28,
+  },
+  subtextTypography: {
+    color: "#FFF",
+    textAlign: "center",
+    fontFamily: "Open Sans",
+    fontSize: 16,
+    fontWeight: "400",
+    lineHeight: 23,
   },
 });

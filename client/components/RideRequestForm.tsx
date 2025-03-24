@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import WebSocketService from "@/services/WebSocketService";
-import { useLocalSearchParams } from "expo-router";
-import React, { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -9,14 +7,30 @@ import {
   Animated,
   TouchableOpacity,
 } from "react-native";
-import { ErrorResponse, WebSocketResponse } from "../../server/src/api";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
 import AutocompleteInput from "./AutocompleteInput";
-import { LocationNames } from "../services/LocationService";
+import { LocationName } from "../services/LocationService";
 import { styles } from "../assets/styles";
 import BottomDrawer from "./BottomDrawer";
-import FAQ from "@/app/(student)/faq";
+import PopUpModal from "./PopUpModal";
+import BottomSheet from "@gorhom/bottom-sheet";
+import { ScrollView } from "react-native-gesture-handler";
+import SegmentedProgressBar from "./SegmentedProgressBar";
+
+type RideRequestFormProps = {
+  pickUpLocationChanged: (location: ValidLocationType) => void;
+  dropOffLocationChanged: (location: ValidLocationType) => void;
+  userLocation: { latitude: number; longitude: number };
+  rideRequested: (numPassengers: number) => void;
+  setFAQVisible: (visible: boolean) => void;
+  startingState?: { pickup: string; dropoff: string; numRiders: number };
+};
+
+// the type of locations we can send to homepage
+export type ValidLocationType = LocationName | `Current Location`;
+// the type of locations we can show in the dropdown
+export type DropDownType = LocationName | "Current Location";
 
 // What's in this component:
 // Ride Request Form which sends request to server and gets response back,
@@ -25,81 +39,48 @@ import FAQ from "@/app/(student)/faq";
 // animation for rider icons,
 // This is a beefy component!
 
-export default function RideRequestForm() {
-  // connect to websocket
-  const { netid } = useLocalSearchParams();
-
+export default function RideRequestForm({
+  pickUpLocationChanged,
+  dropOffLocationChanged,
+  userLocation,
+  rideRequested,
+  startingState,
+  setFAQVisible,
+}: RideRequestFormProps) {
   // user input states for form
   const [location, setLocation] = useState("");
   const [destination, setDestination] = useState("");
   const [numRiders, setNumRiders] = useState(1);
-  const [message, setMessage] = useState("");
 
-  // FAQ State
-  const [FAQVisible, setFAQVisible] = useState(false);
+  const [showNumberRiders, setShowNumberRiders] = useState(false);
 
-  // true if ride request is accepted by server
-  const [accepted, setAccepted] = useState(false);
+  // Bottom Sheet Reference needed to expand the bottom sheet
+  const bottomSheetRef = useRef<BottomSheet>(null);
 
-  /* SERVER STUFF START */
-
-  // This function will be called whenever the server sends a message for REQUEST_RIDE
-  const handleMessage = (message: WebSocketResponse) => {
-    // Ride will only accepted if we get a successful response from server
-    if ("response" in message && message.response === "REQUEST_RIDE") {
-      console.log(message);
-      setAccepted(true);
-      setMessage(""); // clear error message
-    } else {
-      // something went wrong
-      setMessage((message as ErrorResponse).error);
-    }
-  };
-  // send ride request to server
-  const handleSend = () => {
-    if (location == "" || destination == "") {
-      setMessage("Please specify a pickup and dropoff location!");
-      return;
-    }
-    WebSocketService.send({
-      directive: "REQUEST_RIDE",
-      phoneNum: "111-111-1111", // TODO: GET PHONE NUMBER HERE SOMEHOW
-      netid: Array.isArray(netid) ? netid[0] : netid,
-      location,
-      destination,
-      numRiders,
-    });
-  };
-
-  // This function will be called whenever the server sends a message for CANCEL RIDE
-  const handleCancelMessage = (message: WebSocketResponse) => {
-    // If cancellation was successful (server gave correct response), set accepted to false
-    if ("response" in message && message.response === "CANCEL") {
-      setAccepted(false);
-    } else {
-      alert("Failed to cancel ride. Please try again.");
-    }
-  };
-  // Send cancel request to server
-  const sendCancel = () => {
-    WebSocketService.send({
-      directive: "CANCEL",
-      netid: netid as string,
-      role: "STUDENT",
-    });
-  };
-
-  // add listeners for REQUEST_RIDE and CANCEL to call handle functions
   useEffect(() => {
-    WebSocketService.addListener(handleMessage, "REQUEST_RIDE");
-    WebSocketService.addListener(handleCancelMessage, "CANCEL");
-    return () => {
-      WebSocketService.removeListener(handleMessage, "REQUEST_RIDE");
-      WebSocketService.removeListener(handleCancelMessage, "CANCEL");
-    };
+    if (startingState) {
+      setLocationQuery(startingState.pickup);
+      setLocation(startingState.pickup);
+      setDestinationQuery(startingState.dropoff);
+      setDestination(startingState.dropoff);
+      setNumRiders(startingState.numRiders);
+      // show the number of riders modal
+      setShowNumberRiders(true);
+    }
   }, []);
 
-  /* SERVER STUFF ENDS HERE */
+  // Confirmation Modal
+  const [confirmationModalVisible, setConfirmationModalVisible] =
+    useState(false);
+
+  // 
+  const goToNumberRiders = () => {
+    if (location == "" || destination == "") {
+      alert("Please specify a pickup and dropoff location!");
+      return;
+    }
+    setShowNumberRiders(true);
+  }
 
   /* FUZZY SEARCH BAR STUFF */
 
@@ -107,8 +88,14 @@ export default function RideRequestForm() {
   const [locationQuery, setLocationQuery] = useState(""); // Location query
   const [destinationQuery, setDestinationQuery] = useState(""); // Destination query
 
+  const [currentQuery, setCurrentQuery] = useState<"pickup" | "dropoff">(
+    "pickup"
+  );
+
   // data from LocationService.ts
-  const data: LocationNames[] = [
+
+  const data: DropDownType[] = [
+    "Current Location",
     "HUB",
     "Alder Hall",
     "Communication Building",
@@ -119,20 +106,54 @@ export default function RideRequestForm() {
     "UW Tower",
   ];
 
+  const handleSelection = (value: DropDownType) => {
+    if (currentQuery === "pickup") {
+      setLocationQuery(value);
+      handleSetLocation(value);
+      //switch to dropoff
+      setCurrentQuery("dropoff");
+    } else {
+      setDestinationQuery(value);
+      handleSetDestination(value);
+    }
+  };
+
   // check that does not allow location and destination to be the same
-  const handleSetLocation = (value: string) => {
+  const handleSetLocation = (value: DropDownType) => {
     if (value === destination) {
       alert("Pickup location and destination cannot be the same!");
       return;
     }
-    setLocation(value);
+    if (value === "Current Location") {
+      console.log("here");
+      setConfirmationModalVisible(true);
+    } else {
+      // we clicked a normal location
+      setLocation(value);
+      pickUpLocationChanged(value as LocationName);
+    }
   };
-  const handleSetDestination = (value: string) => {
+
+  const handleSetDestination = (value: DropDownType) => {
     if (value === location) {
       alert("Pickup location and destination cannot be the same!");
       return;
     }
+    if (value === "Current Location") {
+      console.log(
+        "Something went wrong! can't set destination to user location"
+      );
+      return;
+    }
     setDestination(value);
+    dropOffLocationChanged(value as LocationName);
+  };
+
+  const confirmPickUpLocation = () => {
+    console.log("RIDE REQ USER LOC:" + JSON.stringify(userLocation));
+    setLocation(JSON.stringify(userLocation));
+    pickUpLocationChanged("Current Location");
+    setConfirmationModalVisible(false);
   };
 
   /* FUZZY SEARCH BAR STUFF ENDS HERE */
@@ -163,114 +184,300 @@ export default function RideRequestForm() {
     }
   };
 
-  return (
-    <BottomDrawer>
-      <View style={styles.formContainer}>
-        {/* If ride is accepted show cancel button, else show ride request form */}
-        {accepted ? (
-          <>
-            <Text style={styles.formHeader}>Ride Request Accepted</Text>
-            <Pressable onPress={sendCancel} style={styles.sendButton}>
-              <Text style={styles.buttonLabel}>Cancel Ride</Text>
-            </Pressable>
-          </>
-        ) : (
+  // expand the bottom sheet
+  const expand = () => {
+    if (bottomSheetRef == null) {
+      console.log("bottomSheetRef is null");
+      return;
+    }
+    bottomSheetRef.current?.expand();
+  };
+
+  const RideRequest: JSX.Element = (
+    <View style={{ flex: 1 }}>
+      <BottomDrawer bottomSheetRef={bottomSheetRef}>
+        <View style={styles.requestFormContainer}>
           <View>
-            <Text style={styles.formHeader}>Request a Ride</Text>
-            <View>
-              {/* Location and Destination Autocomplete */}
-              <View style={{ zIndex: 2 }}>
-                <AutocompleteInput
-                  query={locationQuery}
-                  setQuery={setLocationQuery}
-                  setSelection={handleSetLocation}
-                  placeholder="Pick Up Location"
-                  data={data}
+            {/* Header */}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "90%",
+                marginHorizontal: 20,
+              }}
+            >
+              <View style={{ width: 20 }} />
+              {/* Title */}
+              <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+                Choose Your Locations
+              </Text>
+
+              {/* faq button */}
+              <TouchableOpacity onPress={() => setFAQVisible(true)}>
+                <Ionicons
+                  name="information-circle-outline"
+                  size={25}
+                  color="black"
                 />
-              </View>
-              <View style={{ zIndex: 1 }}>
-                <AutocompleteInput
-                  query={destinationQuery}
-                  setQuery={setDestinationQuery}
-                  setSelection={handleSetDestination}
-                  placeholder="Drop Off Location"
-                  data={data}
-                />
-              </View>
+              </TouchableOpacity>
+            </View>
+            <View style={{ height: 20 }} />
+            <SegmentedProgressBar type={1} />
+            <View style={{ height: 20 }} />
+
+            {/* Location and Destination Icons */}
+            <View
+              style={{
+                borderRadius: 13,
+                backgroundColor: "#4B2E83",
+                position: "absolute",
+                zIndex: 3,
+                top: 90,
+                left: 13,
+                height: 15,
+                width: 15,
+              }}
+            />
+            <Image
+              source={require("@/assets/images/dashed-line.png")}
+              style={{
+                zIndex: 3,
+                position: "absolute",
+                top: 112,
+                left: 19,
+                width: 2,
+                height: 40,
+              }}
+            />
+            <Image
+              source={require("@/assets/images/dropoff-location.png")}
+              style={{
+                position: "absolute",
+                zIndex: 3,
+                top: 157,
+                left: 10,
+                height: 20,
+                width: 20,
+              }}
+            />
+            <View
+              style={{
+                zIndex: 2,
+              }}
+            >
+              {/* Location and Destination Inputs */}
+              <AutocompleteInput
+                onPress={() => {
+                  setCurrentQuery("pickup");
+                  expand();
+                }}
+                query={locationQuery}
+                setQuery={setLocationQuery}
+                placeholder="Pick Up Location"
+                data={data}
+              />
+              <AutocompleteInput
+                onPress={() => {
+                  setCurrentQuery("dropoff");
+                  expand();
+                }}
+                query={destinationQuery}
+                setQuery={setDestinationQuery}
+                placeholder="Drop Off Location"
+                data={data}
+              />
             </View>
 
-            {/* Rider Selection Animation */}
-            <View style={styles.animationContainer}>
-              <View style={styles.riderContainer}>
-                <View style={styles.iconRow}>
-                  {/* Decrease Riders */}
-                  <Pressable
-                    onPress={handleDecreaseRiders}
-                    style={styles.clearButton}
-                  >
-                    <Ionicons name="remove" size={32} color="#4B2E83" />
-                  </Pressable>
-
-                  {/* Rider Icons */}
-                  <View style={styles.riderIconsContainer}>
-                    {Array.from({ length: numRiders }).map((_, index) => (
-                      <Animated.View
-                        key={index}
-                        style={[styles.riderIcon, { left: index * -10 }]} // Adjust overlap
-                      >
-                        <Image
-                          source={require("../assets/images/rider-icon.png")}
-                          style={styles.riderImage}
-                          resizeMode="contain"
-                        />
-                      </Animated.View>
-                    ))}
-                  </View>
-
-                  {/* Increase Riders */}
-                  <Pressable
-                    onPress={handleIncreaseRiders}
-                    style={styles.clearButton}
-                  >
-                    <Ionicons name="add" size={32} color="#4B2E83" />
-                  </Pressable>
-                </View>
-
-                <Text style={styles.riderCount}>{numRiders} passenger(s)</Text>
-              </View>
+            {/* Next Button */}
+            <View
+              style={{
+                alignItems: "center",
+                flexDirection: "row",
+                justifyContent: "flex-end",
+              }}
+            >
+              <Text style={{ fontStyle: "italic" }}>
+                Choose # of passengers
+              </Text>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                // onPress={handleSend}
+                onPress={goToNumberRiders}
+              >
+                <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
+              </TouchableOpacity>
             </View>
-
-            {/* Information Text */}
-            <Text style={styles.infoText}>
-              If the wait is too long, check out the NightRide shuttle! The
-              service is available 6:30 p.m. – 2 a.m. daily except University
-              Holidays. Extended service runs until 3:30 a.m. the week before
-              and the week of finals.
+          </View>
+        </View>
+        {/* Autocomplete Suggestions */}
+        <View style={{ flex: 1, height: 100 }}>
+          <ScrollView style={{ paddingBottom: 350 }}>
+            {data
+              .filter((item) => {
+                if (currentQuery == "dropoff") {
+                  return item !== "Current Location";
+                } else {
+                  return true;
+                }
+              })
+              .filter(
+                (item) =>
+                  item
+                    .toLowerCase()
+                    .includes(
+                      currentQuery == "pickup"
+                        ? locationQuery.toLowerCase()
+                        : destinationQuery
+                    ) ||
+                  (currentQuery == "pickup" && item == "Current Location")
+              )
+              .map((item) => (
+                <TouchableOpacity
+                  onPress={() => handleSelection(item)}
+                  key={item}
+                  style={{
+                    padding: 16,
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#ccc",
+                    flexDirection: "row",
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                  }}
+                >
+                  <Image
+                    source={require("@/assets/images/dropdown-location.png")}
+                    style={{ width: 35, height: 35 }}
+                  />
+                  <View style={{ width: 10 }} />
+                  <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+                    {item}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+          </ScrollView>
+        </View>
+      </BottomDrawer>
+      {/* confirmation modal TODO: REMOVE???*/}
+      <PopUpModal
+        type="half"
+        isVisible={confirmationModalVisible}
+        onClose={() => setConfirmationModalVisible(false)}
+        content={
+          <View style={{ padding: 20 }}>
+            <Text style={styles.formHeader}>Confirm Pickup Location</Text>
+            <Text style={styles.description}>
+              Are you sure you want to set your pickup location to your current
+              location?
             </Text>
+            <Pressable
+              onPress={confirmPickUpLocation}
+              style={styles.sendButton}
+            >
+              <Text style={styles.buttonLabel}>Confirm</Text>
+            </Pressable>
+          </View>
+        }
+      />
+    </View>
+  );
 
-            <Text style={{ color: "red" }}>{message}</Text>
+  const NumberRiders: JSX.Element = (
+    <View
+      style={{
+        position: "absolute",
+        bottom: 0,
+        width: "100%",
+        backgroundColor: "white",
+        padding: 16,
+        borderRadius: 10,
+      }}
+    >
+      <View style={{ height: 5 }} />
+      {/* Header */}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginHorizontal: 20,
+        }}
+      >
+        {/* Back Button */}
+        <TouchableOpacity onPress={() => setShowNumberRiders(false)}>
+          <Ionicons name="arrow-back" size={30} color="#4B2E83" />
+        </TouchableOpacity>
 
-            {/* Confirm Ride Button */}
-            <Pressable onPress={handleSend} style={styles.sendButton}>
-              <Text style={styles.buttonLabel}>Confirm Ride</Text>
+        {/* Title */}
+        <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+          Confirm Passengers
+        </Text>
+
+        {/* faq button */}
+        <TouchableOpacity onPress={() => setFAQVisible(true)}>
+          <Ionicons name="information-circle-outline" size={25} color="black" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={{ height: 20 }} />
+      <SegmentedProgressBar type={2} />
+      <View style={{ height: 20 }} />
+
+      {/* Rider Selection Animation */}
+      <View style={styles.animationContainer}>
+        <View style={styles.riderContainer}>
+          <View style={styles.iconRow}>
+            {/* Decrease Riders */}
+            <Pressable onPress={handleDecreaseRiders}>
+              <Ionicons name="remove" size={32} color="#4B2E83" />
             </Pressable>
 
-            {/* faq button */}
-            <TouchableOpacity
-              style={{ position: "absolute", right: 10, top: 0 }}
-              onPress={() => setFAQVisible(true)}
-            >
-              <Image
-                source={require("@/assets/images/faq-button.png")}
-                style={{ width: 20, height: 20 }}
-              />
-            </TouchableOpacity>
-
-            {/* faq pop-up modal */}
-            <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
+            {/* Rider Icons with verlapping effect seen in figma */}
+            <View style={{ justifyContent: "center" }}>
+              <View style={styles.riderIconsContainer}>
+                {Array.from({ length: numRiders }).map((_, index) => (
+                  <Animated.View
+                    key={index}
+                    style={[
+                      styles.riderIcon,
+                      { marginLeft: index === 0 ? 0 : -20 },
+                    ]} // Adjust overlap
+                  >
+                    <Image
+                      source={require("../assets/images/rider-icon.png")}
+                      style={styles.riderImage}
+                      resizeMode="contain"
+                    />
+                  </Animated.View>
+                ))}
+              </View>
+              <Text style={styles.riderCount}>{numRiders} passenger(s)</Text>
+            </View>
+            {/* Increase Riders */}
+            <Pressable onPress={handleIncreaseRiders}>
+              <Ionicons name="add" size={32} color="#4B2E83" />
+            </Pressable>
           </View>
-        )}
+        </View>
       </View>
-    </BottomDrawer>
+
+      {/* Next Button */}
+      <View
+        style={{
+          paddingVertical: 10,
+          alignItems: "center",
+          flexDirection: "row",
+          justifyContent: "flex-end",
+        }}
+      >
+        <Text style={{ fontStyle: "italic" }}>See ride details</Text>
+        <TouchableOpacity style={styles.modalCloseButton} onPress={() => rideRequested(numRiders)}>
+          <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
+        </TouchableOpacity>
+      </View>
+    </View>
   );
+
+  return showNumberRiders ? NumberRiders : RideRequest;
 }

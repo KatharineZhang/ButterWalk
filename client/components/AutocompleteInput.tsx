@@ -1,65 +1,33 @@
 // Used for fuzze search in RideRequestForm component!
 import React from "react";
-import { View, Text, Pressable, StyleSheet, TextInput } from "react-native";
-import Autocomplete from "react-native-autocomplete-input";
+import { View, StyleSheet, TextInput } from "react-native";
+import { DropDownType } from "./RideRequestForm";
 
 interface AutoCompleteInputProps {
+  onPress: () => void;
   query: string;
   setQuery: (text: string) => void;
-  setSelection: (text: string) => void;
   placeholder: string;
-  data: string[];
+  data: DropDownType[];
 }
 
 const AutoCompleteInput: React.FC<AutoCompleteInputProps> = ({
+  onPress,
   query,
   setQuery,
-  setSelection,
   placeholder,
-  data,
 }) => {
-  const [hideResults, setHideResults] = React.useState(true);
-
-  const filteredData = data.filter((item) =>
-    item.toLowerCase().includes(query.toLowerCase())
-  );
-
   return (
     <View style={styles.autocompleteContainer}>
-      <Autocomplete
-        inputContainerStyle={styles.inputContainer}
-        data={filteredData}
+      <TextInput
+        style={styles.inputContainer}
         value={query}
+        onPress={onPress}
         onChangeText={(text) => {
           setQuery(text);
-          setHideResults(false);
         }}
-        onSubmitEditing={() => setHideResults(true)}
-        hideResults={hideResults}
         placeholder={placeholder}
         placeholderTextColor="#888"
-        renderTextInput={(props) => (
-          <TextInput
-            {...props}
-            placeholder={placeholder}
-            placeholderTextColor="#888"
-          />
-        )}
-        flatListProps={{
-          keyExtractor: (_, idx) => idx.toString(),
-          renderItem: ({ item }) => (
-            <Pressable
-              onPress={() => {
-                setQuery(item);
-                setSelection(item);
-                setHideResults(true);
-              }}
-              style={styles.dropdownItem}
-            >
-              <Text>{item}</Text>
-            </Pressable>
-          ),
-        }}
       />
     </View>
   );
@@ -69,12 +37,14 @@ const styles = StyleSheet.create({
   autocompleteContainer: {
     position: "relative",
     zIndex: 100,
-    paddingBottom: 16,
+    paddingBottom: 7,
+    width: "100%",
   },
   inputContainer: {
     borderRadius: 8,
     paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingLeft: 40,
+    paddingRight: 20,
     borderColor: "#4B2E83",
     borderWidth: 2,
     backgroundColor: "white",

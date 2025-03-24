@@ -75,11 +75,9 @@ const finishAcc = () => {
         const finishAccResp = message as FinishAccCreationResponse;
 
         if (finishAccResp.success) {
-          console.log("redirecting to map");
           setAccFinished(true);
         } else {
           setAccFinished(false);
-          console.log("Something wrong -- test");
         }
       }
     };
@@ -90,9 +88,9 @@ const finishAcc = () => {
     return (
       <Redirect
         href={{
-          pathname: "/(student)/map",
+          pathname: "/(student)/home",
           params: {
-            netid: netid != "" ? netid : "dev-netID",
+            netid: netid != "" ? netid : "student-netID",
           },
         }}
       />
@@ -139,7 +137,18 @@ const finishAcc = () => {
         <Text style={styles.button_text}>Sign Up</Text>
       </Pressable>
       <Text>For easier dev testing (will be removed later) </Text>
-      <Pressable style={styles.button} onPress={() => setAccFinished(true)}>
+      <Pressable
+        style={styles.button}
+        onPress={() => {
+          // temporary connection to websocket since we aren't going through the sign in process
+          WebSocketService.send({
+            directive: "CONNECT",
+            netid: netid as string,
+            role: "STUDENT",
+          });
+          setAccFinished(true);
+        }}
+      >
         <Text style={styles.text}>Bypass Signin</Text>
       </Pressable>
     </View>
