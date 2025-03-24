@@ -7,7 +7,6 @@ import {
   Image,
   Text,
   Pressable,
-  Animated,
   TouchableOpacity,
 } from "react-native";
 
@@ -40,85 +39,221 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
         position: "absolute",
         bottom: -10,
         width: "100%",
-        height: "55%",
+        height: "65%",
         padding: 10,
       }}
     >
       <View style={{ height: 20 }} />
-      {/* Back Button */}
-      <TouchableOpacity
-        style={[
-          styles.modalCloseButton,
-          { position: "absolute", left: 10, top: 30, zIndex: 1 },
-        ]}
-        onPress={onClose}
+
+      {/* Header */}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginHorizontal: 20,
+        }}
       >
-        <Ionicons name="arrow-back" size={30} color="#4B2E83" />
-      </TouchableOpacity>
-      <View style={{ height: 10 }} />
+        {/* Back Button */}
+        <TouchableOpacity onPress={onClose}>
+          <Ionicons name="arrow-back" size={30} color="#4B2E83" />
+        </TouchableOpacity>
 
-      <Text style={[styles.bottomModalTitle, { paddingBottom: 10 }]}>
-        Confirm Your Ride
-      </Text>
-      <View style={{ height: 10 }} />
-
-      {/* Wait Time Display */}
-      <View style={{ flexDirection: "row", justifyContent: "center" }}>
-        <Ionicons name="time-outline" size={22} color="black" />
-        <View style={{ width: 15 }} />
-        <Text style={styles.waitTimeText}>
-          Estimated Wait Time: {driverETA == 0 ? "<2" : driverETA} minutes
+        {/* Title */}
+        <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+          Confirm Your Ride
         </Text>
-      </View>
-      <Text style={{ textAlign: "center" }}>
-        Ride Duration: {rideDuration} minutes
-      </Text>
-      <View style={{ height: 10 }} />
 
-      {/* Number of Passengers */}
-      <View style={{ justifyContent: "center", alignItems: "center" }}>
+        {/* faq button */}
+        <TouchableOpacity onPress={() => setFAQVisible(true)}>
+          <Ionicons name="information-circle-outline" size={25} color="black" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={{ height: 20 }} />
+
+      {/* Duration Info */}
+      <Text
+        style={{
+          marginLeft: 30,
+          fontSize: 16,
+          color: "#4b2e83",
+          fontWeight: "bold",
+          paddingBottom: 20,
+        }}
+      >
+        Duration Information
+      </Text>
+
+      {/* Estimated Wait Time */}
+      <View
+        style={{
+          marginHorizontal: 50,
+          flexDirection: "row",
+          justifyContent: "space-around",
+          alignItems: "center",
+          paddingBottom: 20,
+        }}
+      >
+        <Ionicons name="time-outline" size={22} color="black" />
+        <View style={{ width: 10 }} />
         <View
           style={{
             flexDirection: "row",
-            justifyContent: "center",
-            padding: 10,
+            alignItems: "center",
+            width: 250,
+            justifyContent: "space-between",
           }}
         >
-          {Array.from({ length: numPassengers }).map((_, index) => (
-            <Animated.View
-              key={index}
-              style={[styles.riderIcon, { marginLeft: index === 0 ? 0 : -29 }]} // Adjust overlap
-            >
-              <Image
-                source={require("../assets/images/rider-icon.png")}
-                style={{ width: 20, height: 20, resizeMode: "contain" }}
-                resizeMode="contain"
-              />
-            </Animated.View>
-          ))}
+          <Text style={{ fontSize: 16 }}>Estimated Wait Time</Text>
+
+          <Text
+            style={{
+              fontStyle: "italic",
+              fontSize: 16,
+            }}
+          >
+            {driverETA == 0 ? "<2" : driverETA} min
+          </Text>
         </View>
-        <Text style={{ fontSize: 15 }}>{numPassengers} passenger(s)</Text>
       </View>
+
+      {/* Walking Duration */}
+      <View
+        style={{
+          marginHorizontal: 50,
+          flexDirection: "row",
+          justifyContent: "space-around",
+          alignItems: "center",
+          paddingBottom: 20,
+        }}
+      >
+        <Ionicons name="walk" size={22} color="black" />
+        <View style={{ width: 10 }} />
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            width: 250,
+            justifyContent: "space-between",
+          }}
+        >
+          <Text style={{ fontSize: 16 }}>Walking Duration</Text>
+
+          <Text
+            style={{
+              fontStyle: "italic",
+              fontSize: 16,
+            }}
+          >
+            lkdjkljfks min
+          </Text>
+        </View>
+      </View>
+
+          {/* Ride Duration */}
+      <View
+        style={{
+          marginHorizontal: 50,
+          flexDirection: "row",
+          justifyContent: "space-around",
+          alignItems: "center",
+          paddingBottom: 10,
+        }}
+      >
+        <Ionicons name="car" size={22} color="black" />
+        <View style={{ width: 10 }} />
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            width: 250,
+            justifyContent: "space-between",
+          }}
+        >
+          <Text style={{ fontSize: 16 }}>Ride Duration</Text>
+
+          <Text
+            style={{
+              fontStyle: "italic",
+              fontSize: 16,
+            }}
+          >
+            {rideDuration} min
+          </Text>
+        </View>
+      </View>
+
       <View style={{ height: 20 }} />
 
-      {/* Pickup and DropOff Location */}
-      <View style={styles.locationContainer}>
-        <Image
-          source={require("@/assets/images/pickup-location.png")}
-          style={styles.locationImage}
+      {/* Location and Passenger Info */}
+      <Text
+        style={{
+          marginLeft: 30,
+          fontSize: 16,
+          color: "#4b2e83",
+          fontWeight: "bold",
+          paddingBottom: 20,
+        }}
+      >
+        Location and Passenger Information
+      </Text>
+      
+      {/* Pickup Location */}
+      <View
+        style={{
+          marginHorizontal: 55,
+          flexDirection: "row",
+          alignItems: "center",
+          paddingBottom: 20,
+        }}
+      >
+        <View
+          style={{
+            width: 15,
+            height: 15,
+            borderRadius: 13,
+            backgroundColor: "#4B2E83",
+          }}
         />
-        <View style={styles.locationTextContainer}>
-          <Text style={{ fontSize: 16 }}>{pickUpLoc}</Text>
-        </View>
+        <View style={{ width: 30 }} />
+        <Text style={{ fontSize: 16 }}>{pickUpLoc}</Text>
       </View>
-      <View style={styles.locationContainer}>
+      
+      {/* Dropoff Location */}
+      <View
+        style={{
+          marginHorizontal: 53,
+          flexDirection: "row",
+          alignItems: "center",
+          paddingBottom: 20,
+        }}
+      >
         <Image
           source={require("@/assets/images/dropoff-location.png")}
-          style={styles.locationImage}
+          style={{ width: 20, height: 20, resizeMode: "contain" }}
         />
-        <View style={styles.locationTextContainer}>
-          <Text style={{ fontSize: 16 }}>{dropOffLoc}</Text>
-        </View>
+        <View style={{ width: 28 }} />
+        <Text style={{ fontSize: 16 }}>{dropOffLoc}</Text>
+      </View>
+      
+      {/* Number of Passengers */}
+      <View
+        style={{
+          marginHorizontal: 52,
+          flexDirection: "row",
+          alignItems: "center",
+          paddingBottom: 20,
+        }}
+      >
+
+      <Image
+        source={require("../assets/images/rider-icon.png")}
+        style={{ width: 20, height: 20 }}
+        resizeMode="contain"/>
+
+        <View style={{ width: 28 }} />
+        <Text style={{ fontSize: 16 }}>{numPassengers} passenger(s)</Text>
       </View>
 
       {/* Dashed Line Between Locations */}
@@ -126,10 +261,10 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
         source={require("@/assets/images/dashed-line.png")}
         style={{
           position: "absolute",
-          top: 265,
-          left: 44,
+          top: 314,
+          left: 72,
           width: 2,
-          height: 30,
+          height: 20,
         }}
       />
 
@@ -142,20 +277,6 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
           <Text style={styles.buttonText}>Confirm Ride</Text>
         </Pressable>
       </View>
-
-      {/* faq button */}
-      <TouchableOpacity
-        style={{ position: "absolute", right: 30, top: 30 }}
-        onPress={() => setFAQVisible(true)}
-      >
-        <Ionicons
-          name="information-circle-outline"
-          size={20}
-          color="black"
-          position="absolute"
-          right={0}
-        />
-      </TouchableOpacity>
     </View>
   );
 };
