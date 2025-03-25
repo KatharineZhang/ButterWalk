@@ -274,7 +274,6 @@ export default function HomePage() {
   // to update the progress bar
   useEffect(() => {
     if (whichComponent == "handleRide") {
-      console.log("handle ride effect");
       // update the walking progress if the pickup Location was not the user's starting location
       if (
         startLocation.latitude != 0 &&
@@ -309,16 +308,22 @@ export default function HomePage() {
           });
         }
       } else {
-        // the driver has accepted our ride, check their progress in reaching the student
-        WebSocketService.send({
-          directive: "WAIT_TIME",
-          driverLocation,
-          requestid,
-          requestedRide: {
-            pickUpLocation,
-            dropOffLocation,
-          },
-        });
+        // the driver has accepted our ride
+         if (calculateDistance(userLocation, pickUpLocation) < 0.0001 && rideStatus == "DriverEnRoute") {
+          // check if the driver has arrived
+          setRideStatus("DriverArrived");
+        } else {
+          // else check their progress in reaching the student
+          WebSocketService.send({
+            directive: "WAIT_TIME",
+            driverLocation,
+            requestid,
+            requestedRide: {
+              pickUpLocation,
+              dropOffLocation,
+            },
+          });
+        }
       }
     }
   }, [userLocation, driverLocation, driverETA]);
@@ -351,8 +356,9 @@ export default function HomePage() {
         longitude: driverResp.longitude,
       });
 
-      // check if the driver has arrived at the pickup locatio
+      // check if the driver has arrived at the pickup location
       // (aka the driver is a negligible distance from the pickup location)
+      console.log("distance", calculateDistance(driverResp, pickUpLocation));
       if (
         driverResp.latitude - pickUpLocation.latitude < 0.0001 &&
         driverResp.longitude - pickUpLocation.longitude < 0.0001

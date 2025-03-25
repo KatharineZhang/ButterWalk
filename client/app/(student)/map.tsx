@@ -241,7 +241,7 @@ export default function Map({
             style={{ height: 30, width: 30 }}
           />
         </Marker>
-        <Marker
+        {status != "RideInProgress" && <Marker
           coordinate={{
             latitude: userLocation.latitude,
             longitude: userLocation.longitude,
@@ -257,7 +257,7 @@ export default function Map({
           >
             <Ionicons name="locate-sharp" size={25} color="black" />
           </View>
-        </Marker>
+        </Marker>}
         <Marker
           coordinate={{
             latitude: driverLocation.latitude,
