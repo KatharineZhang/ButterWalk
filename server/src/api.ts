@@ -225,8 +225,8 @@ export type DistanceMatrixResponse = {
     {
       elements: [
         {
-          distance: { text: string; value: 0 }; // value in meters
-          duration: { text: string; value: 0 }; // value in seconds
+          distance: { text: string; value: number }; // value in meters
+          duration: { text: string; value: number }; // value in seconds
           status: string;
         },
       ];
