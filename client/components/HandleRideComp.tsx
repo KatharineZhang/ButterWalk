@@ -84,7 +84,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [status]);
 
   useEffect(() => {
     if (seconds == 60) {

@@ -739,14 +739,12 @@ export const distanceMatrix = async (
       (coord) => `${coord.latitude},${coord.longitude}`
     );
     const origins = originStr.join("|");
-    console.log("og" + origins + "!!!!");
 
     // convert from coordinate array to string
     const destinationStr = destination.map(
       (coord) => `${coord.latitude},${coord.longitude}`
     );
     const destinations = destinationStr.join("|");
-    console.log("dt" + destinations + "!!!!");
 
     // call api
     const etaURL =
