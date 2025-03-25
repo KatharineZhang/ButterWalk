@@ -23,14 +23,14 @@
 - Switch to Expo Go by pressing 's' if the QR code is in development mode
 - Open your app on the device in the simulator
 
-# To Use Simulator (Windows)
+# To Use Simulator (Windows) 
 - Download Android Studio
-- Add ANDROID_HOME to your system variables
+- Add ANDROID_HOME to your system variables (see [expo docs](https://docs.expo.dev/workflow/android-studio-emulator/))
 - Add platform-tools path to User variables Path
 - Make an emulator on Android Studio
 - Launch the emulator and download expo go on the phone
 - Switch to Expo Go by pressing 's' 
-- Copy paste the link under Metro waiting at "exp://..." into the 'paste url manually' in the emulator's expo go
+- Copy paste the link under Metro waiting at "exp://..." into the 'paste url manually' in the emulator's expo go (see [video](https://www.youtube.com/watch?v=uN64m3bUY6M&t=590s))
 
 # Development
 
