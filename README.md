@@ -14,7 +14,7 @@
 - cd into the client folder and run `npx expo start`
 - Scan the QR code that appears in the terminal with your phone, which should open the app in Expo Go!
 
-# To Use Simulator
+# To Use Simulator (Mac)
 - Download simulator (macOS only) and open any device
 - Download zip file from [here](https://expo.dev/accounts/katzhang/projects/husky-betterWalk/builds/ca622619-adcc-4adf-9201-5865b8a44236)
 - Unzip the file and drag the app to the device in the simulator
@@ -22,6 +22,15 @@
 - cd into the client folder and run `npx expo start`
 - Switch to Expo Go by pressing 's' if the QR code is in development mode
 - Open your app on the device in the simulator
+
+# To Use Simulator (Windows)
+- Download Android Studio
+- Add ANDROID_HOME to your system variables
+- Add platform-tools path to User variables Path
+- Make an emulator on Android Studio
+- Launch the emulator and download expo go on the phone
+- Switch to Expo Go by pressing 's' 
+- Copy paste the link under Metro waiting at "exp://..." into the 'paste url manually' in the emulator's expo go
 
 # Development
 
