@@ -23,7 +23,7 @@ import { styles } from "@/assets/styles";
 import HandleRideComponent from "@/components/HandleRideComp";
 import { createOpenLink } from "react-native-open-maps";
 import LoadingPageComp from "@/components/loadingPageComp";
-import Notification from "@/components/Notification";
+import Notification from "@/components/notification";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
