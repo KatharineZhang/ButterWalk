@@ -118,6 +118,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   } else {
     progress = rideProgress;
   }
+  console.log("progress", progress);
 
   return (
     <View style={styles.progressContainer}>
