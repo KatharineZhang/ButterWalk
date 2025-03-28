@@ -35,6 +35,7 @@ interface HandleRideProps {
     boldText?: string;
   }) => void;
   changeRideStatus: (status: RideStatus) => void;
+  goHome: () => void;
 }
 
 const HandleRideComponent: React.FC<HandleRideProps> = ({
@@ -53,6 +54,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   openNavigation,
   setNotificationState,
   changeRideStatus,
+  goHome,
 }) => {
   // TIMER STUFF
   // keep track of the seconds left
@@ -285,6 +287,22 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             }}
           >
             <Text style={styles.buttonText}>I Found My Driver</Text>
+          </Pressable>
+        </View>
+      )}
+      {/* Go Home Button */}
+      {status == "RideCompleted" && (
+        <View
+          style={[styles.bottomModalButtonContainer, { paddingHorizontal: 10 }]}
+        >
+          <Pressable
+            style={[
+              styles.bottomModalButton,
+              { borderWidth: 2, backgroundColor: "#4B2E83" },
+            ]}
+            onPress={goHome}
+          >
+            <Text style={styles.buttonText}>Go Back Home</Text>
           </Pressable>
         </View>
       )}

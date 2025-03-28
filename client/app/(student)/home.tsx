@@ -199,6 +199,13 @@ export default function HomePage() {
     end: pickUpAddress,
   });
 
+  // when the user clicks the go-home button
+  // reset all fields to their default values and go back to the ride request form
+  const goHome = () => {
+    setWhichComponent("rideReq");
+    resetAllFields();
+  }
+
   /* EFFECTS */
   useEffect(() => {
     // add the websocket listeners
@@ -638,6 +645,7 @@ export default function HomePage() {
               openNavigation={routeToPickup}
               setNotificationState={setNotifState}
               changeRideStatus={setRideStatus}
+              goHome={goHome}
             />
           </View>
         ) : null // default
