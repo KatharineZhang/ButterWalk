@@ -199,6 +199,13 @@ export default function HomePage() {
     end: pickUpAddress,
   });
 
+  // when the user clicks the go-home button
+  // reset all fields to their default values and go back to the ride request form
+  const goHome = () => {
+    setWhichComponent("rideReq");
+    resetAllFields();
+  }
+
   /* EFFECTS */
   useEffect(() => {
     // add the websocket listeners
@@ -277,7 +284,7 @@ export default function HomePage() {
       // update the walking progress if the pickup Location was not the user's starting location
       if (
         startLocation.latitude != 0 &&
-        calculateDistance(startLocation, pickUpLocation) > 0.01
+        calculateDistance(startLocation, pickUpLocation) > 0.0001
       ) {
         console.log("updating walk progress");
         // there is a large enough distance that the user needs to walk
@@ -308,8 +315,9 @@ export default function HomePage() {
           });
         }
       } else {
+        console.log("distance", calculateDistance(driverLocation, pickUpLocation));
         // the driver has accepted our ride
-         if (calculateDistance(userLocation, pickUpLocation) < 0.0001 && rideStatus == "DriverEnRoute") {
+         if (calculateDistance(driverLocation, pickUpLocation) < 0.0001 && rideStatus == "DriverEnRoute") {
           // check if the driver has arrived
           setRideStatus("DriverArrived");
         } else {
@@ -360,8 +368,7 @@ export default function HomePage() {
       // (aka the driver is a negligible distance from the pickup location)
       console.log("distance", calculateDistance(driverResp, pickUpLocation));
       if (
-        driverResp.latitude - pickUpLocation.latitude < 0.0001 &&
-        driverResp.longitude - pickUpLocation.longitude < 0.0001
+        calculateDistance(driverResp, pickUpLocation) < 0.0001
       ) {
         setRideStatus("DriverArrived");
       }
@@ -375,8 +382,8 @@ export default function HomePage() {
 
         // check if the driver has reached the dropoff location
         if (
-          driverResp.latitude - dropOffLocation.latitude < 0.0001 &&
-          driverResp.longitude - dropOffLocation.longitude < 0.0001
+          calculateDistance(driverResp, dropOffLocation) < 0.0001 ||
+          calculateDistance(driverLocation, dropOffLocation) < 0.0001
         ) {
           setRideStatus("RideCompleted");
         }
@@ -638,6 +645,7 @@ export default function HomePage() {
               openNavigation={routeToPickup}
               setNotificationState={setNotifState}
               changeRideStatus={setRideStatus}
+              goHome={goHome}
             />
           </View>
         ) : null // default

@@ -20,7 +20,11 @@ export class LocationService {
   // TODO: putting this in api and importing it causes the "None of these files exist" error for some reason
   // TODO: Replace this with google maps place search autocomplete api
   public static Locations: LocationType[] = [
-    { name: "HUB", latitude: 47.6553, longitude: -122.3035 },
+    {
+      name: "HUB",
+      latitude: 47.65495783716224,
+      longitude: -122.3049647918257,
+    },
     { name: "Alder Hall", latitude: 47.655731, longitude: -122.313911 },
     {
       name: "Communication Building",
@@ -34,8 +38,8 @@ export class LocationService {
     },
     {
       name: "Meany Hall",
-      latitude: 47.65632880026814,
-      longitude: -122.31054925348383,
+      latitude: 47.65601509591645,
+      longitude: -122.31049478782538,
     },
     {
       name: "IMA",

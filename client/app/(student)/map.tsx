@@ -218,7 +218,7 @@ export default function Map({
           strokeColor="rgba(128, 0, 128, 0.5)" // Light purple color
           fillColor="rgba(128, 0, 128, 0.2)" // Light purple transparent color
         />
-        {calculateDistance(userLocation, pickUpLocation) > 0.01 && (
+        {calculateDistance(userLocation, pickUpLocation) > 0.0001 && (
           <Marker
             coordinate={{
               latitude: pickUpLocation.latitude,
