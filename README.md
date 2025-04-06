@@ -4,17 +4,20 @@
 - If you haven't already, you need to also install `Node.js v20.18.0`
 - cd into the client folder and copy the `.env.sample`. Rename the copied file `.env`.
   - Fill in the EXPO_PUBLIC_IP_ADDRESS with your publically accessible IPv4 ip address. Windows instructions are in the `.env.sample` (someone please add the mac and linux versions if you know).
-  - Fill in the EXPO_PUBLIC_GOOGLE_MAPS_APIKEY. Ask someone on the dev team for this key.
+  - Fill in the rest of the information by asking someone on the dev team.
+- cd into the server folder and copy `.env.sample`. Rename the copied file `.env`.
+  - Fill in the information by asking someone on the dev team.
 - cd into both the client and server folders and run `npm i`
 - Install the Expo Go app on your phone or a mobile emulator onto your computer.
 
 # To Run
 
 - cd into the server folder and run `npm run buildandstart`
-- cd into the client folder and run `npx expo start`
+- In a new terminal, cd into the client folder and run `npx expo start`
 - Scan the QR code that appears in the terminal with your phone, which should open the app in Expo Go!
 
 # To Use Simulator (Mac)
+
 - Download simulator (macOS only) and open any device
 - Download zip file from [here](https://expo.dev/accounts/katzhang/projects/husky-betterWalk/builds/ca622619-adcc-4adf-9201-5865b8a44236)
 - Unzip the file and drag the app to the device in the simulator
@@ -23,13 +26,14 @@
 - Switch to Expo Go by pressing 's' if the QR code is in development mode
 - Open your app on the device in the simulator
 
-# To Use Simulator (Windows) 
+# To Use Simulator (Windows)
+
 - Download Android Studio
 - Add ANDROID_HOME to your system variables (see [expo docs](https://docs.expo.dev/workflow/android-studio-emulator/))
 - Add platform-tools path to User variables Path
 - Make an emulator on Android Studio
 - Launch the emulator and download expo go on the phone
-- Switch to Expo Go by pressing 's' 
+- Switch to Expo Go by pressing 's'
 - Copy paste the link under Metro waiting at "exp://..." into the 'paste url manually' in the emulator's expo go (see [video](https://www.youtube.com/watch?v=uN64m3bUY6M&t=590s))
 
 # Development
