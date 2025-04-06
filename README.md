@@ -14,7 +14,8 @@
 
 - cd into the server folder and run `npm run buildandstart`
 - In a new terminal, cd into the client folder and run `npx expo start`
-- Scan the QR code that appears in the terminal with your phone, which should open the app in Expo Go!
+   Switch to Expo Go by pressing 's' if the QR code is in development mode
+- Scan the new QR code that appears in the terminal with your phone, which should open the app in Expo Go!
 
 # To Use Simulator (Mac)
 
