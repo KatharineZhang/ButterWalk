@@ -9,12 +9,19 @@
   - Fill in the information by asking someone on the dev team.
 - cd into both the client and server folders and run `npm i`
 - Install the Expo Go app on your phone or a mobile emulator onto your computer.
+  - Remember the login details you use to sign in with expo. You will need them soon.
 
 # To Run
 
 - cd into the server folder and run `npm run buildandstart`
 - In a new terminal, cd into the client folder and run `npx expo start`
-- Scan the QR code that appears in the terminal with your phone, which should open the app in Expo Go!
+- Switch to Expo Go by pressing 's' if the QR code is in development mode
+- Scan the new QR code that appears in the terminal with your phone, which should open the app in Expo Go.
+- ## IF THIS IS YOUR FIRST TIME RUNNING:
+  - You will be prompted to sign in with EAS in the terminal
+  - Type the login details you used to sign in the to the expo app into the terminal.
+  - Now rescan the QR code and see the app run!
+  - NOTE: MAKE SURE TO ALLOW ANY PERMISSION THE APP ASKS FOR (LOCATION, ETC.) !
 
 # To Use Simulator (Mac)
 
