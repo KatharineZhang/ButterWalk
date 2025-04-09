@@ -100,7 +100,7 @@ export default function Map({
     // when any of our locations change, check if we need to zoom on them
     // this is mainly because our user, pickup and dropoff locations set all the time (to the same values)
     // but we don't necessarily want to zoom in on those location unless they are actually different
-    if (calculateDistance(userLocation, zoomOn[0]) > 0.001) {
+    if (!isSameLocation(userLocation, zoomOn[0])) {
       setZoomOn((prevZoomOn) => {
         const newZoomOn = [...prevZoomOn];
         newZoomOn[0] = userLocation;
@@ -108,7 +108,7 @@ export default function Map({
       });
     }
     // check zoomOn index 1 aka driverLocation
-    if (calculateDistance(driverLocation, zoomOn[1]) > 0.001) {
+    if (!isSameLocation(driverLocation, zoomOn[1])) {
       setZoomOn((prevZoomOn) => {
         const newZoomOn = [...prevZoomOn];
         newZoomOn[1] = driverLocation;
@@ -116,7 +116,7 @@ export default function Map({
       });
     }
     // check zoomOn index 2 aka pickUpLocation
-    if (calculateDistance(pickUpLocation, zoomOn[2]) > 0.001) {
+    if (!isSameLocation(pickUpLocation, zoomOn[2])) {
       setZoomOn((prevZoomOn) => {
         const newZoomOn = [...prevZoomOn];
         newZoomOn[2] = pickUpLocation;
@@ -124,7 +124,7 @@ export default function Map({
       });
     }
     // check zoomOn index 3 aka dropOffLocation
-    if (calculateDistance(dropOffLocation, zoomOn[3]) > 0.001) {
+    if (!isSameLocation(dropOffLocation, zoomOn[3])) {
       setZoomOn((prevZoomOn) => {
         const newZoomOn = [...prevZoomOn];
         newZoomOn[3] = dropOffLocation;
@@ -218,7 +218,7 @@ export default function Map({
           strokeColor="rgba(128, 0, 128, 0.5)" // Light purple color
           fillColor="rgba(128, 0, 128, 0.2)" // Light purple transparent color
         />
-        {calculateDistance(userLocation, pickUpLocation) > 0.0001 && (
+        {!isSameLocation(userLocation, pickUpLocation) && (
           <Marker
             coordinate={{
               latitude: pickUpLocation.latitude,
@@ -310,8 +310,25 @@ export const calculateDistance = (
   point1: { latitude: number; longitude: number },
   point2: { latitude: number; longitude: number }
 ) => {
-  return Math.sqrt(
-    Math.pow(point1.latitude - point2.latitude, 2) +
-      Math.pow(point1.longitude - point2.longitude, 2)
-  );
+  // use the haversine formula to calculate the distance between two points
+  // based on https://www.geeksforgeeks.org/haversine-formula-to-find-distance-between-two-points-on-a-sphere/
+  const R = 6371; // radius of earth in km
+  const dLat = (point2.latitude - point1.latitude) * (Math.PI / 180); // distance btw lat converted to radians
+  const dLon = (point2.longitude - point1.longitude) * (Math.PI / 180); // distance btw lng converted to radians
+  const h =
+    Math.pow(Math.sin(dLat /2), 2) +
+    Math.cos(point1.latitude * (Math.PI / 180)) *
+      Math.cos(point2.latitude * (Math.PI / 180)) *
+      Math.pow(Math.sin(dLon /2), 2);
+  const d = 2 * R * Math.asin(Math.sqrt(h)); // distance in km
+  return d * 0.6213711922; // return distance in miles
 };
+
+export const isSameLocation = (
+  point1: { latitude: number; longitude: number },
+  point2: { latitude: number; longitude: number }
+) => {
+  // check if the distance between two points is less than the threshold
+  const SAME_LOCATION_THRESHOLD = 0.02; // 0.02 miles
+  return calculateDistance(point1, point2) < SAME_LOCATION_THRESHOLD;
+}

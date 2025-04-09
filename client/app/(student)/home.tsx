@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { TouchableOpacity, View } from "react-native";
 import Profile from "./profile";
-import Map, { calculateDistance } from "./map";
+import Map, { calculateDistance, isSameLocation } from "./map";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
 import {
@@ -269,7 +269,7 @@ export default function HomePage() {
       setStartLocation(userLocation);
       // if the start location is not the pickup location
       // the user must walk
-      if (calculateDistance(userLocation, pickUpLocation) > 0.01) {
+      if (!isSameLocation(userLocation, pickUpLocation)) {
         // set initial walk progress
         setWalkProgress(0);
       }
@@ -284,7 +284,7 @@ export default function HomePage() {
       // update the walking progress if the pickup Location was not the user's starting location
       if (
         startLocation.latitude != 0 &&
-        calculateDistance(startLocation, pickUpLocation) > 0.0001
+        !isSameLocation(userLocation, pickUpLocation)
       ) {
         console.log("updating walk progress");
         // there is a large enough distance that the user needs to walk
@@ -317,7 +317,7 @@ export default function HomePage() {
       } else {
         console.log("distance", calculateDistance(driverLocation, pickUpLocation));
         // the driver has accepted our ride
-         if (calculateDistance(driverLocation, pickUpLocation) < 0.0001 && rideStatus == "DriverEnRoute") {
+         if (isSameLocation(driverLocation, pickUpLocation) && rideStatus == "DriverEnRoute") {
           // check if the driver has arrived
           setRideStatus("DriverArrived");
         } else {
@@ -368,7 +368,8 @@ export default function HomePage() {
       // (aka the driver is a negligible distance from the pickup location)
       console.log("distance", calculateDistance(driverResp, pickUpLocation));
       if (
-        calculateDistance(driverResp, pickUpLocation) < 0.0001
+        isSameLocation(driverResp, pickUpLocation) &&
+        rideStatus == "DriverEnRoute"
       ) {
         setRideStatus("DriverArrived");
       }
@@ -382,8 +383,7 @@ export default function HomePage() {
 
         // check if the driver has reached the dropoff location
         if (
-          calculateDistance(driverResp, dropOffLocation) < 0.0001 ||
-          calculateDistance(driverLocation, dropOffLocation) < 0.0001
+          isSameLocation(driverResp, dropOffLocation)
         ) {
           setRideStatus("RideCompleted");
         }
