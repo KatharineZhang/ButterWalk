@@ -280,7 +280,7 @@ export default function HomePage() {
   // everytime a location changes, check the wait time and walking/ride progress
   // to update the progress bar
   useEffect(() => {
-    if (whichComponent == "handleRide") {
+    if (whichComponent == "handleRide" && rideStatus != "RideCompleted") {
       // update the walking progress if the pickup Location was not the user's starting location
       if (
         startLocation.latitude != 0 &&
@@ -386,6 +386,7 @@ export default function HomePage() {
           isSameLocation(driverResp, dropOffLocation)
         ) {
           setRideStatus("RideCompleted");
+          setRideProgress(1); // set the ride progress to 1 to show the user they have arrived
         }
       }
     }

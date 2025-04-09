@@ -68,6 +68,11 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
           text: "Your driver is on their way!",
           color: "#C9FED0",
         });
+      } else if (status == "RideCompleted") {
+        setNotificationState({
+          text: "You have arrived!",
+          color: "#C9FED0",
+        });
       }
       return () => clearInterval(interval);
     }
@@ -120,6 +125,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   } else {
     progress = rideProgress;
   }
+  progress = Math.min(progress, 1); // make sure the progress is not greater than 1
   console.log("progress", progress);
 
   return (
