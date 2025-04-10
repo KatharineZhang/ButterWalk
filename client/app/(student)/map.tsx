@@ -241,23 +241,25 @@ export default function Map({
             style={{ height: 30, width: 30 }}
           />
         </Marker>
-        {status != "RideInProgress" && <Marker
-          coordinate={{
-            latitude: userLocation.latitude,
-            longitude: userLocation.longitude,
-          }}
-          title={"userLocation"}
-        >
-          <View
-            style={{
-              backgroundColor: "#C5B4E3",
-              borderRadius: 50,
-              opacity: 0.8,
+        {status != "RideInProgress" && (
+          <Marker
+            coordinate={{
+              latitude: userLocation.latitude,
+              longitude: userLocation.longitude,
             }}
+            title={"userLocation"}
           >
-            <Ionicons name="locate-sharp" size={25} color="black" />
-          </View>
-        </Marker>}
+            <View
+              style={{
+                backgroundColor: "#C5B4E3",
+                borderRadius: 50,
+                opacity: 0.8,
+              }}
+            >
+              <Ionicons name="locate-sharp" size={25} color="black" />
+            </View>
+          </Marker>
+        )}
         <Marker
           coordinate={{
             latitude: driverLocation.latitude,
@@ -316,10 +318,10 @@ export const calculateDistance = (
   const dLat = (point2.latitude - point1.latitude) * (Math.PI / 180); // distance btw lat converted to radians
   const dLon = (point2.longitude - point1.longitude) * (Math.PI / 180); // distance btw lng converted to radians
   const h =
-    Math.pow(Math.sin(dLat /2), 2) +
+    Math.pow(Math.sin(dLat / 2), 2) +
     Math.cos(point1.latitude * (Math.PI / 180)) *
       Math.cos(point2.latitude * (Math.PI / 180)) *
-      Math.pow(Math.sin(dLon /2), 2);
+      Math.pow(Math.sin(dLon / 2), 2);
   const d = 2 * R * Math.asin(Math.sqrt(h)); // distance in km
   return d * 0.6213711922; // return distance in miles
 };
@@ -331,4 +333,4 @@ export const isSameLocation = (
   // check if the distance between two points is less than the threshold
   const SAME_LOCATION_THRESHOLD = 0.02; // 0.02 miles
   return calculateDistance(point1, point2) < SAME_LOCATION_THRESHOLD;
-}
+};
