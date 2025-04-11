@@ -507,7 +507,8 @@ export const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "white",
     padding: 16,
-    borderRadius:10
+    borderRadius:10,
+    width: "100%",
   },
   progressBarTop: {
       alignItems: "center",
@@ -585,22 +586,28 @@ export const styles = StyleSheet.create({
   locationsContainer: {
       flexDirection: "row",
       justifyContent: "space-between",
-      width: "100%",
+      width: "90%",
       marginTop: 15,
   },
   pickUpContainer: {
       alignItems: "flex-start",
-      maxWidth: "50%"
+      maxWidth: "40%"
   },
   dropOffContainer: {
       alignItems: "flex-end",
-      maxWidth: "50%"
+      maxWidth: "40%"
   },
   locationTitle: {
       fontWeight: "bold",
       fontSize: 12,
       marginBottom: 3,
   },
+  locationSubtitle: {
+    fontWeight: "bold",
+    fontSize: 12,
+    color: "#4B2E83",
+    marginBottom: 3,
+  },  
   locationText: {
       fontSize: 12,
   },

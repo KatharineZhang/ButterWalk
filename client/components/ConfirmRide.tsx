@@ -72,11 +72,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
       <View style={{ height: 20 }} />
 
       {/* Duration Info */}
-      <Text
-        style={styles.confirmHeader}
-      >
-        Duration Information
-      </Text>
+      <Text style={styles.confirmHeader}>Duration Information</Text>
 
       {/* Estimated Wait Time */}
       <View
@@ -180,9 +176,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
       <View style={{ height: 10 }} />
 
       {/* Location and Passenger Info */}
-      <Text
-        style={styles.confirmHeader}
-      >
+      <Text style={styles.confirmHeader}>
         Location and Passenger Information
       </Text>
 

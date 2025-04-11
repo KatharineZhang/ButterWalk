@@ -42,8 +42,8 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   status,
   pickUpLocation,
   dropOffLocation,
-  // pickUpAddress,
-  // dropOffAddress,
+  pickUpAddress,
+  dropOffAddress,
   walkProgress,
   rideProgress,
   walkDuration,
@@ -66,6 +66,11 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
       if (status == "DriverEnRoute") {
         setNotificationState({
           text: "Your driver is on their way!",
+          color: "#C9FED0",
+        });
+      } else if (status == "RideCompleted") {
+        setNotificationState({
+          text: "You have arrived!",
           color: "#C9FED0",
         });
       }
@@ -120,7 +125,11 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   } else {
     progress = rideProgress;
   }
+  progress = Math.min(progress, 1); // make sure the progress is not greater than 1
   console.log("progress", progress);
+
+  // height expansion
+  const [expanded, setExpanded] = useState(false); // if the progress bar is expanded or not
 
   return (
     <View style={styles.progressContainer}>
@@ -151,17 +160,19 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
         </View>
 
         {/* Wait Time / Timer */}
-        {status !== "RideCompleted" && (<View style={styles.subTextContainer}>
-          <Ionicons name="time-outline" size={18} color="black" />
-          <Text style={styles.subText}>
+        {status !== "RideCompleted" && (
+          <View style={styles.subTextContainer}>
+            <Ionicons name="time-outline" size={18} color="black" />
+            <Text style={styles.subText}>
               {status == "DriverArrived"
                 ? formatTime(seconds)
                 : status == "RideInProgress"
                   ? // convert the arrival time to our best guess of the user's timezone
                     `Estimated Arrival Time: ${momentTimezone.tz(moment().add(rideDuration, "minutes"), moment.tz.guess()).format("h:mm A")}`
                   : `Estimated Wait Time: ${driverETA == 0 ? "<2" : driverETA} min`}
-          </Text>
-        </View>)}
+            </Text>
+          </View>
+        )}
       </View>
       {/* Progress Bar */}
       <View
@@ -223,30 +234,92 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
 
         {/* Locations Text */}
         <View style={styles.locationsContainer}>
-          {/* Start and Pickup Location */}
+          {/* If walking is needed, show Start and Pickup Location */}
           {walkProgress >= 0 ? (
             <View>
-              <View style={{ position: "absolute", left: 10, width: 80 }}>
+              <View style={{ alignSelf: "flex-start" }}>
                 <Text style={styles.locationTitle}>Start</Text>
               </View>
-              <View style={{ position: "absolute", left: 140, width: 100 }}>
+              <View
+                style={{
+                  position: "absolute",
+                  left: 90,
+                  width: 100,
+                  alignItems: "center",
+                }}
+              >
                 <Text style={styles.locationTitle}>Pickup</Text>
-                <Text style={styles.locationText}>{pickUpLocation}</Text>
-                {/* <Text style={{fontSize: 10}}>{pickUpAddress}</Text> */}
+                {/* If expanded, show location name and address */}
+                {expanded && (
+                  <View style={{ alignItems: "center" }}>
+                    <Text style={styles.locationSubtitle}>
+                      {pickUpLocation}
+                    </Text>
+                    <Text style={{ fontSize: 10, left: 10 }}>
+                      {pickUpAddress}
+                    </Text>
+                  </View>
+                )}
               </View>
             </View>
           ) : (
             <View style={styles.pickUpContainer}>
+              {/* Else just show Pickup Location */}
               <Text style={styles.locationTitle}>Pickup</Text>
-              <Text style={styles.locationText}>{pickUpLocation}</Text>
-              {/* <Text style={{fontSize: 10}}>{pickUpAddress}</Text> */}
+              {/* If expanded, show location name and address */}
+              {expanded && (
+                <View>
+                  <Text style={styles.locationSubtitle}>{pickUpLocation}</Text>
+                  <Text style={{ fontSize: 10, marginBottom: 5 }}>
+                    {pickUpAddress}
+                  </Text>
+                </View>
+              )}
             </View>
           )}
           {/* Dropoff Location */}
-          <View style={styles.dropOffContainer}>
+          <View
+            style={[
+              styles.dropOffContainer,
+              walkProgress >= 0 ? { maxWidth: "30%" } : {},
+            ]}
+          >
             <Text style={styles.locationTitle}>Dropoff</Text>
-            <Text style={styles.locationText}>{dropOffLocation}</Text>
-            {/* <Text style={{fontSize: 10}}>{dropOffAddress}</Text> */}
+            {expanded ? (
+              <View style={{ alignItems: "flex-end" }}>
+                {/* If expanded, show location name and address */}
+                <Text style={[styles.locationSubtitle, { textAlign: "right" }]}>
+                  {dropOffLocation}
+                </Text>
+                <Text
+                  style={{ fontSize: 10, marginBottom: 5, textAlign: "right" }}
+                >
+                  {dropOffAddress}
+                </Text>
+                <Pressable onPress={() => setExpanded(!expanded)}>
+                  <Text
+                    style={[
+                      styles.locationText,
+                      { textDecorationLine: "underline" },
+                    ]}
+                  >
+                    (Less Details)
+                  </Text>
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable onPress={() => setExpanded(!expanded)}>
+                {/* If not expanded, show "more details" button */}
+                <Text
+                  style={[
+                    styles.locationText,
+                    { textDecorationLine: "underline" },
+                  ]}
+                >
+                  (More Details)
+                </Text>
+              </Pressable>
+            )}
           </View>
         </View>
       </View>

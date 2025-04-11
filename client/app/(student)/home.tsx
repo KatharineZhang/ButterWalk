@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { TouchableOpacity, View } from "react-native";
 import Profile from "./profile";
-import Map, { calculateDistance } from "./map";
+import Map, { calculateDistance, isSameLocation } from "./map";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
 import {
@@ -204,7 +204,7 @@ export default function HomePage() {
   const goHome = () => {
     setWhichComponent("rideReq");
     resetAllFields();
-  }
+  };
 
   /* EFFECTS */
   useEffect(() => {
@@ -263,13 +263,12 @@ export default function HomePage() {
         destination: [pickUpLocation],
         mode: "walking",
       });
-
     } else if (whichComponent == "handleRide") {
       // if we are handling the ride, check if walking is needed by setting start location
       setStartLocation(userLocation);
       // if the start location is not the pickup location
       // the user must walk
-      if (calculateDistance(userLocation, pickUpLocation) > 0.01) {
+      if (!isSameLocation(userLocation, pickUpLocation)) {
         // set initial walk progress
         setWalkProgress(0);
       }
@@ -280,11 +279,11 @@ export default function HomePage() {
   // everytime a location changes, check the wait time and walking/ride progress
   // to update the progress bar
   useEffect(() => {
-    if (whichComponent == "handleRide") {
+    if (whichComponent == "handleRide" && rideStatus != "RideCompleted") {
       // update the walking progress if the pickup Location was not the user's starting location
       if (
         startLocation.latitude != 0 &&
-        calculateDistance(startLocation, pickUpLocation) > 0.0001
+        !isSameLocation(userLocation, pickUpLocation)
       ) {
         console.log("updating walk progress");
         // there is a large enough distance that the user needs to walk
@@ -315,9 +314,15 @@ export default function HomePage() {
           });
         }
       } else {
-        console.log("distance", calculateDistance(driverLocation, pickUpLocation));
+        console.log(
+          "distance",
+          calculateDistance(driverLocation, pickUpLocation)
+        );
         // the driver has accepted our ride
-         if (calculateDistance(driverLocation, pickUpLocation) < 0.0001 && rideStatus == "DriverEnRoute") {
+        if (
+          isSameLocation(driverLocation, pickUpLocation) &&
+          rideStatus == "DriverEnRoute"
+        ) {
           // check if the driver has arrived
           setRideStatus("DriverArrived");
         } else {
@@ -368,7 +373,8 @@ export default function HomePage() {
       // (aka the driver is a negligible distance from the pickup location)
       console.log("distance", calculateDistance(driverResp, pickUpLocation));
       if (
-        calculateDistance(driverResp, pickUpLocation) < 0.0001
+        isSameLocation(driverResp, pickUpLocation) &&
+        rideStatus == "DriverEnRoute"
       ) {
         setRideStatus("DriverArrived");
       }
@@ -381,11 +387,9 @@ export default function HomePage() {
         );
 
         // check if the driver has reached the dropoff location
-        if (
-          calculateDistance(driverResp, dropOffLocation) < 0.0001 ||
-          calculateDistance(driverLocation, dropOffLocation) < 0.0001
-        ) {
+        if (isSameLocation(driverResp, dropOffLocation)) {
           setRideStatus("RideCompleted");
+          setRideProgress(1); // set the ride progress to 1 to show the user they have arrived
         }
       }
     }
