@@ -507,7 +507,8 @@ export const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "white",
     padding: 16,
-    borderRadius:10
+    borderRadius:10,
+    width: "100%",
   },
   progressBarTop: {
       alignItems: "center",
@@ -585,7 +586,7 @@ export const styles = StyleSheet.create({
   locationsContainer: {
       flexDirection: "row",
       justifyContent: "space-between",
-      width: "100%",
+      width: "90%",
       marginTop: 15,
   },
   pickUpContainer: {

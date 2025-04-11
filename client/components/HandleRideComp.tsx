@@ -234,41 +234,68 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
 
         {/* Locations Text */}
         <View style={styles.locationsContainer}>
-          {/* Start and Pickup Location */}
+          {/* If walking is needed, show Start and Pickup Location */}
           {walkProgress >= 0 ? (
             <View>
-              <View style={{ position: "absolute", left: 10, width: 80 }}>
+              <View style={{ alignSelf: "flex-start" }}>
                 <Text style={styles.locationTitle}>Start</Text>
               </View>
-              <View style={{ position: "absolute", left: 140, width: 100 }}>
+              <View
+                style={{
+                  position: "absolute",
+                  left: 90,
+                  width: 100,
+                  alignItems: "center",
+                }}
+              >
                 <Text style={styles.locationTitle}>Pickup</Text>
-                {expanded ? (
-                  <View>
-                    <Text style={styles.locationSubtitle}>{pickUpLocation}</Text>
-                    <Text style={{ fontSize: 10 }}>{pickUpAddress}</Text>
+                {/* If expanded, show location name and address */}
+                {expanded && (
+                  <View style={{ alignItems: "center" }}>
+                    <Text style={styles.locationSubtitle}>
+                      {pickUpLocation}
+                    </Text>
+                    <Text style={{ fontSize: 10, left: 10 }}>
+                      {pickUpAddress}
+                    </Text>
                   </View>
-                ) : (null)}
+                )}
               </View>
             </View>
           ) : (
             <View style={styles.pickUpContainer}>
+              {/* Else just show Pickup Location */}
               <Text style={styles.locationTitle}>Pickup</Text>
-              {expanded ? (
+              {/* If expanded, show location name and address */}
+              {expanded && (
                 <View>
                   <Text style={styles.locationSubtitle}>{pickUpLocation}</Text>
-                  <Text style={{ fontSize: 10, marginBottom: 5 }}>{pickUpAddress}</Text>
+                  <Text style={{ fontSize: 10, marginBottom: 5 }}>
+                    {pickUpAddress}
+                  </Text>
                 </View>
-              ) : (null
               )}
             </View>
           )}
           {/* Dropoff Location */}
-          <View style={[styles.dropOffContainer, walkProgress >= 0? {maxWidth:"30%"}: {}]}>
+          <View
+            style={[
+              styles.dropOffContainer,
+              walkProgress >= 0 ? { maxWidth: "30%" } : {},
+            ]}
+          >
             <Text style={styles.locationTitle}>Dropoff</Text>
             {expanded ? (
-              <View style={{alignItems:"flex-end"}}>
-                <Text style={styles.locationSubtitle}>{dropOffLocation}</Text>
-                <Text style={{ fontSize: 10, marginBottom:5 }}>{dropOffAddress}</Text>
+              <View style={{ alignItems: "flex-end" }}>
+                {/* If expanded, show location name and address */}
+                <Text style={[styles.locationSubtitle, { textAlign: "right" }]}>
+                  {dropOffLocation}
+                </Text>
+                <Text
+                  style={{ fontSize: 10, marginBottom: 5, textAlign: "right" }}
+                >
+                  {dropOffAddress}
+                </Text>
                 <Pressable onPress={() => setExpanded(!expanded)}>
                   <Text
                     style={[
@@ -282,6 +309,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
               </View>
             ) : (
               <Pressable onPress={() => setExpanded(!expanded)}>
+                {/* If not expanded, show "more details" button */}
                 <Text
                   style={[
                     styles.locationText,
