@@ -8,9 +8,7 @@ import Header from "@/components/Header";
 import { styles } from "@/assets/styles";
 import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import WebSocketService, {
-  WebsocketConnectMessage,
-} from "@/services/WebSocketService";
+import WebSocketService, { WebsocketConnectMessage } from "@/services/WebSocketService";
 import { Alert, Linking } from "react-native";
 import {
   DriverAcceptResponse,
@@ -78,22 +76,22 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const connectWebSocket = async () => {
-      // call our new route
-      const msg: WebsocketConnectMessage = await WebSocketService.connect();
-      if (msg == "Connected Successfully") {
-        // temporary connection to websocket since we aren't going through the sign in process
-        WebSocketService.send({
-          directive: "CONNECT",
-          netid: netid as string,
-          role: "DRIVER",
-        });
-      } else {
-        console.log("failed to connect!!!");
-      }
-    };
-    connectWebSocket();
-  }, []);
+      const connectWebSocket = async () => {
+        // call our new route
+        const msg: WebsocketConnectMessage = await WebSocketService.connect();
+        if (msg == "Connected Successfully") {
+          // temporary connection to websocket since we aren't going through the sign in process
+          WebSocketService.send({
+            directive: "CONNECT",
+            netid: netid as string,
+            role: "DRIVER",
+          });
+        } else {
+          console.log("failed to connect!!!");
+        }
+      };
+      connectWebSocket();
+    }, []);
 
   useEffect(() => {
     // we only want to update the zoom if a drastic change was made,

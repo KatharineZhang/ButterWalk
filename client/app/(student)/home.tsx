@@ -204,7 +204,7 @@ export default function HomePage() {
   const goHome = () => {
     setWhichComponent("rideReq");
     resetAllFields();
-  };
+  }
 
   /* EFFECTS */
   useEffect(() => {
@@ -263,6 +263,7 @@ export default function HomePage() {
         destination: [pickUpLocation],
         mode: "walking",
       });
+
     } else if (whichComponent == "handleRide") {
       // if we are handling the ride, check if walking is needed by setting start location
       setStartLocation(userLocation);
@@ -314,15 +315,9 @@ export default function HomePage() {
           });
         }
       } else {
-        console.log(
-          "distance",
-          calculateDistance(driverLocation, pickUpLocation)
-        );
+        console.log("distance", calculateDistance(driverLocation, pickUpLocation));
         // the driver has accepted our ride
-        if (
-          calculateDistance(driverLocation, pickUpLocation) < 0.0001 &&
-          rideStatus == "DriverEnRoute"
-        ) {
+         if (calculateDistance(driverLocation, pickUpLocation) < 0.0001 && rideStatus == "DriverEnRoute") {
           // check if the driver has arrived
           setRideStatus("DriverArrived");
         } else {
@@ -372,7 +367,9 @@ export default function HomePage() {
       // check if the driver has arrived at the pickup location
       // (aka the driver is a negligible distance from the pickup location)
       console.log("distance", calculateDistance(driverResp, pickUpLocation));
-      if (calculateDistance(driverResp, pickUpLocation) < 0.0001) {
+      if (
+        calculateDistance(driverResp, pickUpLocation) < 0.0001
+      ) {
         setRideStatus("DriverArrived");
       }
 

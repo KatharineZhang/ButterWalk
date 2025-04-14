@@ -241,25 +241,23 @@ export default function Map({
             style={{ height: 30, width: 30 }}
           />
         </Marker>
-        {status != "RideInProgress" && (
-          <Marker
-            coordinate={{
-              latitude: userLocation.latitude,
-              longitude: userLocation.longitude,
+        {status != "RideInProgress" && <Marker
+          coordinate={{
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude,
+          }}
+          title={"userLocation"}
+        >
+          <View
+            style={{
+              backgroundColor: "#C5B4E3",
+              borderRadius: 50,
+              opacity: 0.8,
             }}
-            title={"userLocation"}
           >
-            <View
-              style={{
-                backgroundColor: "#C5B4E3",
-                borderRadius: 50,
-                opacity: 0.8,
-              }}
-            >
-              <Ionicons name="locate-sharp" size={25} color="black" />
-            </View>
-          </Marker>
-        )}
+            <Ionicons name="locate-sharp" size={25} color="black" />
+          </View>
+        </Marker>}
         <Marker
           coordinate={{
             latitude: driverLocation.latitude,
