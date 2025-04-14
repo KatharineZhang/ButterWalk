@@ -1,9 +1,11 @@
+import React from "react";
 import { styles } from "@/assets/styles";
 import {
   View,
   Animated,
   useWindowDimensions,
   ImageSourcePropType,
+  StyleSheet,
 } from "react-native";
 
 interface PaginatorProps {
@@ -14,6 +16,7 @@ interface PaginatorProps {
   }>;
   scrollX: Animated.Value;
 }
+
 export default function Paginator({ data, scrollX }: PaginatorProps) {
   const { width } = useWindowDimensions();
   return (
@@ -23,10 +26,10 @@ export default function Paginator({ data, scrollX }: PaginatorProps) {
           (index - 1) * width,
           index * width,
           (index + 1) * width,
-        ]; // prev, curr, next dots
-        const dotWidth = scrollX.interpolate({
+        ];
+        const dotSize = scrollX.interpolate({
           inputRange,
-          outputRange: [10, 35, 10], //prev, (bigger) curr, next dots
+          outputRange: [8, 12, 8], // prev, curr, next
           extrapolate: "clamp",
         });
         const opacity = scrollX.interpolate({
@@ -35,10 +38,25 @@ export default function Paginator({ data, scrollX }: PaginatorProps) {
           outputRange: [0.3, 1, 0.3],
           extrapolate: "clamp",
         });
+        const backgroundColor = scrollX.interpolate({
+          inputRange,
+          outputRange: ["#333", "#4B2E83", "#333"],
+          extrapolate: "clamp",
+        });
 
         return (
           <Animated.View
-            style={[styles.paginatorDot, { width: dotWidth, opacity }]}
+            style={[
+              styles.paginatorDot,
+              {
+                width: dotSize,
+                height: dotSize,
+                borderRadius: 6,
+                opacity,
+                backgroundColor,
+                marginHorizontal: 8,
+              },
+            ]}
             key={index.toString()}
           />
         );
