@@ -24,6 +24,7 @@ import HandleRideComponent from "@/components/HandleRideComp";
 import { createOpenLink } from "react-native-open-maps";
 import LoadingPageComp from "@/components/loadingPageComp";
 import Notification from "@/components/notification";
+import Legend from "@/components/Legend";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -591,6 +592,9 @@ export default function HomePage() {
           />
         )}
       </View>
+
+      {/* Side map legend */}
+      <Legend bottom={350}/>
 
       {/* Figure out which component to render */}
       {

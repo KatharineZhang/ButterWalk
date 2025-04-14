@@ -13,7 +13,7 @@ const BottomDrawer: React.FC<BottomDrawerProps> = ({
   bottomSheetRef,
 }) => {
   // Snap points define how high the drawer can be
-  const snapPoints = useMemo(() => ["27%", "89%"], []);
+  const snapPoints = useMemo(() => ["40%", "89%"], []);
 
   return (
     <GestureHandlerRootView style={styles.container}>
