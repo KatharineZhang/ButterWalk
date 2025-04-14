@@ -174,7 +174,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
           </View>
         )}
       </View>
-      {/* Progress Bar */}
+      {/* Progress Bar Top Labels */}
       <View
         style={[
           styles.progressBarBottom,
@@ -183,12 +183,15 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             : {},
         ]}
       >
-        {/* Walk and Ride Duration*/}
+        {/* If walking is needed show Walk and Ride Duration*/}
         {walkProgress >= 0 ? (
           <View style={{ flexDirection: "row", paddingBottom: 10 }}>
+            {/* Open walking directions in native maps */}
             <TouchableOpacity onPress={openNavigation}>
+              <View style={{ height: 12 }} />
               <Text
                 style={{
+                  alignSelf: "baseline",
                   fontSize: 12,
                   fontWeight: "bold",
                   textDecorationLine: "underline",
@@ -198,6 +201,45 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
               </Text>
             </TouchableOpacity>
             <View style={{ width: 100 }} />
+            {/* Descriptor above the progress bar __ min Ride */}
+            <View
+              style={{
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                left: -20,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: "bold",
+                }}
+              >
+                {rideDuration} min Ride
+              </Text>
+              {/* Show more or less details about the ride */}
+              <Pressable onPress={() => setExpanded(!expanded)}>
+                <Text
+                  style={[
+                    styles.locationText,
+                    { textDecorationLine: "underline" },
+                  ]}
+                >
+                  {expanded ? "(Less Details)" : "(More Details)"}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : (
+          <View
+            style={{
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            {/* Else, only show ride duration*/}
             <Text
               style={{
                 fontSize: 12,
@@ -206,11 +248,21 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             >
               {rideDuration} min Ride
             </Text>
+            {/* Show more or less details about the ride */}
+            <Pressable onPress={() => setExpanded(!expanded)}>
+              <Text
+                style={[
+                  styles.locationText,
+                  { textDecorationLine: "underline" },
+                ]}
+              >
+                {expanded ? "(Less Details)" : "(More Details)"}
+              </Text>
+            </Pressable>
+            <View style={{ height: 10 }} />
           </View>
-        ) : (
-          <Text style={styles.rideTimeText}>{rideDuration} min Ride</Text>
         )}
-
+        {/* Actual Progress Bar */}
         <View style={styles.progressBarWrapper}>
           {/* show white circle if walking needed */}
           {walkProgress >= 0 && (
@@ -236,14 +288,13 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
         <View style={styles.locationsContainer}>
           {/* If walking is needed, show Start and Pickup Location */}
           {walkProgress >= 0 ? (
-            <View>
+            <View style={{ flexDirection: "row", maxWidth: "50%" }}>
               <View style={{ alignSelf: "flex-start" }}>
                 <Text style={styles.locationTitle}>Start</Text>
               </View>
               <View
                 style={{
-                  position: "absolute",
-                  left: 90,
+                  left: 60,
                   width: 100,
                   alignItems: "center",
                 }}
@@ -252,11 +303,13 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
                 {/* If expanded, show location name and address */}
                 {expanded && (
                   <View style={{ alignItems: "center" }}>
-                    <Text style={styles.locationSubtitle}>
+                    <Text
+                      style={[styles.locationSubtitle, { textAlign: "center" }]}
+                    >
                       {pickUpLocation}
                     </Text>
-                    <Text style={{ fontSize: 10, left: 10 }}>
-                      {pickUpAddress}
+                    <Text style={{ fontSize: 10, textAlign: "center" }}>
+                      {pickUpAddress}21qz
                     </Text>
                   </View>
                 )}
@@ -285,7 +338,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             ]}
           >
             <Text style={styles.locationTitle}>Dropoff</Text>
-            {expanded ? (
+            {expanded && (
               <View style={{ alignItems: "flex-end" }}>
                 {/* If expanded, show location name and address */}
                 <Text style={[styles.locationSubtitle, { textAlign: "right" }]}>
@@ -296,29 +349,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
                 >
                   {dropOffAddress}
                 </Text>
-                <Pressable onPress={() => setExpanded(!expanded)}>
-                  <Text
-                    style={[
-                      styles.locationText,
-                      { textDecorationLine: "underline" },
-                    ]}
-                  >
-                    (Less Details)
-                  </Text>
-                </Pressable>
               </View>
-            ) : (
-              <Pressable onPress={() => setExpanded(!expanded)}>
-                {/* If not expanded, show "more details" button */}
-                <Text
-                  style={[
-                    styles.locationText,
-                    { textDecorationLine: "underline" },
-                  ]}
-                >
-                  (More Details)
-                </Text>
-              </Pressable>
             )}
           </View>
         </View>
@@ -375,7 +406,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             ]}
             onPress={goHome}
           >
-            <Text style={styles.buttonText}>Go Back Home</Text>
+            <Text style={styles.buttonText}>Back To HomePage</Text>
           </Pressable>
         </View>
       )}
