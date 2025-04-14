@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { TouchableOpacity, View } from "react-native";
+import { Pressable, TouchableOpacity, View } from "react-native";
 import Profile from "./profile";
-import Map, { calculateDistance, isSameLocation } from "./map";
+import Map, { calculateDistance, isSameLocation, MapRef } from "./map";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
 import {
@@ -18,7 +18,7 @@ import RideRequestForm, {
 import { LocationName, LocationService } from "@/services/LocationService";
 import ConfirmRide from "@/components/ConfirmRide";
 import FAQ from "./faq";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { styles } from "@/assets/styles";
 import HandleRideComponent from "@/components/HandleRideComp";
 import { createOpenLink } from "react-native-open-maps";
@@ -75,6 +75,16 @@ export default function HomePage() {
         latitude: location.latitude,
         longitude: location.longitude,
       });
+    }
+  };
+
+  // retain a reference to the map to call functions on it later
+  const mapRef = useRef<MapRef>(null);
+  // when the user clicks the recenter button
+  // recenter the map to the user's location
+  const recenter = () => {
+    if (mapRef.current) {
+      mapRef.current.recenterMap();
     }
   };
 
@@ -535,6 +545,7 @@ export default function HomePage() {
     <View>
       {/* map component */}
       <Map
+        ref={mapRef}
         pickUpLocation={pickUpLocation}
         dropOffLocation={dropOffLocation}
         driverLocation={driverLocation}
@@ -593,8 +604,37 @@ export default function HomePage() {
         )}
       </View>
 
-      {/* Side map legend */}
-      <Legend bottom={350}/>
+      {/* Side Bar */}
+      <View
+        style={{
+          position: "absolute",
+          bottom: 340,
+          left: 10,
+          alignItems: "center",
+        }}
+      >
+        {/* Recenter Button */}
+        <Pressable
+          style={{
+            backgroundColor: "#4b2e83",
+            width: 35,
+            height: 35,
+            borderRadius: 50,
+            borderWidth: 2,
+            borderColor: "white",
+            justifyContent: "center",
+            alignItems: "center",
+            marginBottom: 10,
+            shadowOpacity: 0.3,
+          }}
+          onPress={recenter}
+        >
+          <FontAwesome name="location-arrow" size={20} color="white" />
+        </Pressable>
+
+        {/* Side map legend */}
+        <Legend />
+      </View>
 
       {/* Figure out which component to render */}
       {

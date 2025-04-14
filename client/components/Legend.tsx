@@ -3,20 +3,13 @@ import React from "react";
 import { View, Text, Pressable, Image } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 
-type LegendProps = {
-  bottom: number;
-};
-
-export default function Legend({ bottom }: LegendProps) {
+export default function Legend() {
   const [width, setWidth] = React.useState(40);
 
   return (
     <View
       style={{
-        position: "absolute",
-        bottom: bottom,
         backgroundColor: "white",
-        left: 10,
         borderRadius: 10,
         shadowOpacity: 0.5,
         width: width,
@@ -24,7 +17,9 @@ export default function Legend({ bottom }: LegendProps) {
         padding: 10,
       }}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 7 }}>
+      <View
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 7 }}
+      >
         <Image
           source={require("@/assets/images/dropoff-location.png")}
           style={{
@@ -36,7 +31,9 @@ export default function Legend({ bottom }: LegendProps) {
           <Text style={{ fontSize: 12, marginLeft: 5 }}>Destination</Text>
         )}
       </View>
-      <View style={{ flexDirection: "row", alignItems: "center",marginBottom: 7 }}>
+      <View
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 7 }}
+      >
         <View
           style={{
             borderRadius: 13,
@@ -49,7 +46,9 @@ export default function Legend({ bottom }: LegendProps) {
           <Text style={{ fontSize: 12, marginLeft: 5 }}>Pick Up Location</Text>
         )}
       </View>
-      <View style={{ flexDirection: "row", alignItems: "center",marginBottom: 7 }}>
+      <View
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 7 }}
+      >
         <View
           style={{
             borderRadius: 13,
@@ -58,7 +57,6 @@ export default function Legend({ bottom }: LegendProps) {
             width: 20,
             alignItems: "center",
             justifyContent: "center",
-            
           }}
         >
           <View
@@ -74,9 +72,14 @@ export default function Legend({ bottom }: LegendProps) {
           <Text style={{ fontSize: 12, marginLeft: 5 }}>Your Location</Text>
         )}
       </View>
-      <View style={{ flexDirection: "row", alignItems:"center", alignContent: "center",
-            marginBottom: 7
-      }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          alignContent: "center",
+          marginBottom: 7,
+        }}
+      >
         <View
           style={{
             borderRadius: 13,
