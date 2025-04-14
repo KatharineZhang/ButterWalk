@@ -671,6 +671,16 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
     paddingBottom: 20,
   },
+
+  // legend
+  legendContainer: {
+    flexDirection: "row",
+          alignItems: "center",
+          marginBottom: 7,
+  },
+  legendText: {
+    left: 5, fontSize: 12, marginLeft: 5 
+  }
 });
 
 

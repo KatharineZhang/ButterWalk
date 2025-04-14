@@ -610,7 +610,7 @@ export default function HomePage() {
           position: "absolute",
           bottom: 340,
           left: 10,
-          alignItems: "center",
+          alignItems: "flex-start",
         }}
       >
         {/* Recenter Button */}
@@ -626,6 +626,7 @@ export default function HomePage() {
             alignItems: "center",
             marginBottom: 10,
             shadowOpacity: 0.3,
+            left: 2
           }}
           onPress={recenter}
         >

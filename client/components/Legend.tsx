@@ -1,7 +1,8 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 import React from "react";
-import { View, Text, Pressable, Image } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
+import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
+import { styles } from "@/assets/styles";
 
 export default function Legend() {
   const [width, setWidth] = React.useState(40);
@@ -13,23 +14,15 @@ export default function Legend() {
         borderRadius: 10,
         shadowOpacity: 0.5,
         width: width,
-        height: 150,
+        height: 180,
         padding: 10,
       }}
     >
       <View
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 7 }}
       >
-        <Image
-          source={require("@/assets/images/dropoff-location.png")}
-          style={{
-            height: 25,
-            width: 20,
-          }}
-        />
-        {width != 40 && (
-          <Text style={{ fontSize: 12, marginLeft: 5 }}>Destination</Text>
-        )}
+        <FontAwesome6 name="location-dot" size={24} color="#d02323" />
+        {width != 40 && <Text style={styles.legendText}>Destination</Text>}
       </View>
       <View
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 7 }}
@@ -42,9 +35,7 @@ export default function Legend() {
             width: 20,
           }}
         />
-        {width != 40 && (
-          <Text style={{ fontSize: 12, marginLeft: 5 }}>Pick Up Location</Text>
-        )}
+        {width != 40 && <Text style={styles.legendText}>Pick Up Location</Text>}
       </View>
       <View
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 7 }}
@@ -68,18 +59,9 @@ export default function Legend() {
             }}
           />
         </View>
-        {width != 40 && (
-          <Text style={{ fontSize: 12, marginLeft: 5 }}>Your Location</Text>
-        )}
+        {width != 40 && <Text style={styles.legendText}>Your Location</Text>}
       </View>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          alignContent: "center",
-          marginBottom: 7,
-        }}
-      >
+      <View style={styles.legendContainer}>
         <View
           style={{
             borderRadius: 13,
@@ -90,9 +72,22 @@ export default function Legend() {
             width: 20,
           }}
         />
-        {width != 40 && (
-          <Text style={{ fontSize: 12, marginLeft: 5 }}>Start Location</Text>
-        )}
+        {width != 40 && <Text style={styles.legendText}>Start Location</Text>}
+      </View>
+      <View style={styles.legendContainer}>
+        <View
+          style={{
+            backgroundColor: "#4b2e83",
+            width: 20,
+            height: 20,
+            borderRadius: 50,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <FontAwesome name="location-arrow" size={13} color="white" />
+        </View>
+        {width != 40 && <Text style={styles.legendText}>Recenter Map</Text>}
       </View>
       <Pressable onPress={() => setWidth(width === 40 ? 150 : 40)}>
         {width == 40 ? (

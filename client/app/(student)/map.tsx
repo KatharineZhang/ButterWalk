@@ -215,7 +215,7 @@ const Map = forwardRef<MapRef, MapProps>(
       );
       console.log("ZOOMING TO LOCATIONS:", locations);
       mapRef?.current?.fitToCoordinates(locations, {
-        edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+        edgePadding: { bottom: 300, left: 80, right: 70, top: 50 },
         animated: true,
       });
     };
@@ -280,12 +280,22 @@ const Map = forwardRef<MapRef, MapProps>(
             >
               <View
                 style={{
-                  backgroundColor: "#C5B4E3",
+                  backgroundColor: "rgba(197, 180, 227, 0.5)", // reduced opacity
                   borderRadius: 50,
-                  opacity: 0.8,
+                  height: 45,
+                  width: 45,
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
-                <Ionicons name="locate-sharp" size={25} color="black" />
+                <View
+                  style={{
+                    borderRadius: 13,
+                    backgroundColor: "#4B2E83",
+                    height: 15,
+                    width: 15,
+                  }}
+                />
               </View>
             </Marker>
           )}
