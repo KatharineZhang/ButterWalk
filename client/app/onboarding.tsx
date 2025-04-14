@@ -138,7 +138,7 @@ const pages: Array<{
     id: "2",
     title: "Navigate with Ease",
     image: require("@/assets/images/hbw-vectors-phone 1.png"),
-    text: "Easily request free rides around the University of Washinton campus",
+    text: "Easily request free rides around the University of Washington campus",
     color: "#4B2E83",
   },
   {
