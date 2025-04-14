@@ -43,11 +43,22 @@ const styles = StyleSheet.create({
     height: "100%",
     position: "absolute",
     bottom: 0,
+    left: 0,
+    right: 0,
   },
   contentContainer: {
+    flex: 1,
     padding: 15,
     width: "100%",
     backgroundColor: "white",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: -3,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    elevation: 5,
   },
 });
 
