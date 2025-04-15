@@ -5,7 +5,6 @@ import {
   Animated,
   useWindowDimensions,
   ImageSourcePropType,
-  StyleSheet,
 } from "react-native";
 
 interface PaginatorProps {
@@ -20,7 +19,7 @@ interface PaginatorProps {
 export default function Paginator({ data, scrollX }: PaginatorProps) {
   const { width } = useWindowDimensions();
   return (
-    <View style={{ flexDirection: "row", height: 50, alignItems: "center" }}>
+    <View style={{ flexDirection: "row", alignItems: "center", bottom: -10 }}>
       {data.map((_, index) => {
         const inputRange = [
           (index - 1) * width,
@@ -29,7 +28,7 @@ export default function Paginator({ data, scrollX }: PaginatorProps) {
         ];
         const dotSize = scrollX.interpolate({
           inputRange,
-          outputRange: [8, 12, 8], // prev, curr, next
+          outputRange: [8, 20, 8], // prev, curr, next
           extrapolate: "clamp",
         });
         const opacity = scrollX.interpolate({
@@ -51,7 +50,7 @@ export default function Paginator({ data, scrollX }: PaginatorProps) {
               {
                 width: dotSize,
                 height: dotSize,
-                borderRadius: 6,
+                borderRadius: 50,
                 opacity,
                 backgroundColor,
                 marginHorizontal: 8,

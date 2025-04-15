@@ -128,9 +128,8 @@ export const styles = StyleSheet.create({
   },
   lastPageContent: {
     position: "absolute",
-    bottom: 40,
+    bottom: 20,
     width: "100%",
-    paddingHorizontal: 20,
     alignItems: "center",
     zIndex: 10,
   },
@@ -145,6 +144,8 @@ export const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 20,
     borderRadius: 8,
+    width: 104,
+    alignItems: "center",
   },
   nextButtonText: {
     color: "black",
@@ -154,7 +155,7 @@ export const styles = StyleSheet.create({
   startedButton: {
     backgroundColor: "#4B2E83",
     paddingVertical: 15,
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
     borderRadius: 8,
   },
   startedButtonText: {

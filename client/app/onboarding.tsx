@@ -17,9 +17,8 @@ import { Link, router } from "expo-router";
 //Onboarding Page
 export default function Onboarding() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  // const [buttonTitle, setButtonTitle] = useState("Skip");
   const scrollX = useRef(new Animated.Value(0)).current;
-  const pagesRef = useRef(null);
+  const pagesRef = useRef<FlatList>(null);
 
   const viewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
