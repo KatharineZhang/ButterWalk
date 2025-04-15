@@ -40,6 +40,8 @@ export default function Map({
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
 
+  
+
   // what locations to focus on when zooming in on the map
   // in the format: [userLocation, driverLocation, pickUpLocation, dropOffLocation]
   const [zoomOn, setZoomOn] = useState<
@@ -290,7 +292,22 @@ export default function Map({
               strokeWidth={3}
               strokeColor="#4B2E83"
             />
+            
           )}
+          {status != "RideInProgress" &&
+          status != "RideCompleted" &&
+          userLocation.latitude != 0 &&
+          pickUpLocation.latitude != 0 && (
+            <MapViewDirections
+              origin={userLocation}
+              destination={pickUpLocation}
+              apikey={GOOGLE_MAPS_APIKEY}
+              strokeWidth={3}
+              strokeColor="#000000"
+            />
+            
+          )}
+          
 
         {/* show the path of the ride if it is in progress */}
         {status === "RideInProgress" && (
