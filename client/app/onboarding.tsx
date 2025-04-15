@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-// testing
 import { styles } from "@/assets/styles";
 import { useState, useRef } from "react";
 import {
