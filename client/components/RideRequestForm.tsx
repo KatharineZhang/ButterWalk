@@ -303,7 +303,6 @@ export default function RideRequestForm({
               </Text>
               <TouchableOpacity
                 style={styles.modalCloseButton}
-                // onPress={handleSend}
                 onPress={goToNumberRiders}
               >
                 <Ionicons name="arrow-forward" size={30} color="#4B2E83" />

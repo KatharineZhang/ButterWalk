@@ -355,7 +355,6 @@ export const styles = StyleSheet.create({
   modalCloseButton: {
     borderRadius: 20,
     padding: 10,
-    elevation: 2,
   },
   faqHeader: {
     fontSize: 25,
