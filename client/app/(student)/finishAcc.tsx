@@ -39,9 +39,9 @@ const finishAcc = () => {
       );
     }
 
-    const phoneRegex = /^\d{3}-\d{3}-\d{4}$/;
+    const phoneRegex = /^\d{10}$/;
     if (!phoneRegex.test(phoneNumberTemp)) {
-      alert("Phone number must be in the format ###-###-####");
+      alert("Phone number must be in the format ##########, no spaces or dashes");
       return;
     }
 
