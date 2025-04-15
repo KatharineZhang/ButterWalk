@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, Pressable } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
-import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
+import { FontAwesome6 } from "@expo/vector-icons";
 import { styles } from "@/assets/styles";
 
 export default function Legend() {
@@ -14,7 +14,6 @@ export default function Legend() {
         borderRadius: 10,
         shadowOpacity: 0.5,
         width: width,
-        height: 180,
         padding: 10,
       }}
     >
@@ -73,21 +72,6 @@ export default function Legend() {
           }}
         />
         {width != 40 && <Text style={styles.legendText}>Start Location</Text>}
-      </View>
-      <View style={styles.legendContainer}>
-        <View
-          style={{
-            backgroundColor: "#4b2e83",
-            width: 20,
-            height: 20,
-            borderRadius: 50,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <FontAwesome name="location-arrow" size={13} color="white" />
-        </View>
-        {width != 40 && <Text style={styles.legendText}>Recenter Map</Text>}
       </View>
       <Pressable onPress={() => setWidth(width === 40 ? 150 : 40)}>
         {width == 40 ? (

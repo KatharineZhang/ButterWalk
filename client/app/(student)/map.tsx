@@ -280,7 +280,7 @@ const Map = forwardRef<MapRef, MapProps>(
             >
               <View
                 style={{
-                  backgroundColor: "rgba(197, 180, 227, 0.5)", // reduced opacity
+                  backgroundColor: "rgba(197, 180, 227, 0.8)", // reduced opacity
                   borderRadius: 50,
                   height: 45,
                   width: 45,

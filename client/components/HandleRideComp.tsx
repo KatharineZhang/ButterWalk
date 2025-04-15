@@ -151,7 +151,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
           <TouchableOpacity onPress={() => setFAQVisible(true)}>
             <Ionicons
               name="information-circle-outline"
-              size={20}
+              size={25}
               color="black"
               position="absolute"
               right={0}

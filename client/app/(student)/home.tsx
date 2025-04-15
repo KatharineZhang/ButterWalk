@@ -18,7 +18,7 @@ import RideRequestForm, {
 import { LocationName, LocationService } from "@/services/LocationService";
 import ConfirmRide from "@/components/ConfirmRide";
 import FAQ from "./faq";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { styles } from "@/assets/styles";
 import HandleRideComponent from "@/components/HandleRideComp";
 import { createOpenLink } from "react-native-open-maps";
@@ -620,7 +620,7 @@ export default function HomePage() {
             width: 35,
             height: 35,
             borderRadius: 50,
-            borderWidth: 2,
+            borderWidth: 3,
             borderColor: "white",
             justifyContent: "center",
             alignItems: "center",
@@ -630,7 +630,7 @@ export default function HomePage() {
           }}
           onPress={recenter}
         >
-          <FontAwesome name="location-arrow" size={20} color="white" />
+          <Ionicons name="locate" size={20} color="white" />
         </Pressable>
 
         {/* Side map legend */}
