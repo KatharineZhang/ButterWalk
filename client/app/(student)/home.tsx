@@ -24,6 +24,7 @@ import HandleRideComponent from "@/components/HandleRideComp";
 import { createOpenLink } from "react-native-open-maps";
 import LoadingPageComp from "@/components/loadingPageComp";
 import Notification from "@/components/notification";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -527,6 +528,7 @@ export default function HomePage() {
   };
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <View>
       {/* map component */}
       <Map
@@ -651,6 +653,7 @@ export default function HomePage() {
         ) : null // default
       }
     </View>
+    </GestureHandlerRootView>
   );
 }
 

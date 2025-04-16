@@ -194,7 +194,7 @@ export default function RideRequestForm({
   };
 
   const RideRequest: JSX.Element = (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, pointerEvents: "box-none" }}>
       <BottomDrawer bottomSheetRef={bottomSheetRef}>
         <View style={styles.requestFormContainer}>
           <View>
