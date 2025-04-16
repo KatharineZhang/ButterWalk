@@ -105,8 +105,7 @@ export const styles = StyleSheet.create({
   },
 
   appNameText: {
-    fontSize: 40,
-    lineHeight: 50,
+    fontSize: 70,
     fontWeight: "700",
     letterSpacing: 0,
     color: "black",
@@ -115,14 +114,13 @@ export const styles = StyleSheet.create({
 
   },
   signInText: {
-    fontSize: 28,
-    lineHeight: 35,
+    fontSize: 25,
+    fontStyle: "italic",
     fontWeight: 700,
     letterSpacing: 0,
     color: "black",
     fontFamily: "Encode Sans",
     textAlign: "center",
-    paddingTop: 20,
   },
   signinLogo: {
     width: 100,
@@ -141,6 +139,7 @@ export const styles = StyleSheet.create({
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
+    maxWidth: 300
   },
   signInGoogleLogo: {
     marginRight: 10,
@@ -159,10 +158,8 @@ export const styles = StyleSheet.create({
 
   signInbottomImageContainer: {
     resizeMode: "contain",
-    width: "60%",
-    position: "absolute",
-    top: 0,
-    alignItems: "flex-start",
+    width: "80%",
+    position: "relative",
   },
 
   input: {

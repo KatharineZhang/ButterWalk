@@ -118,7 +118,7 @@ const Login = () => {
       <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
         
         
-        <Text style={styles.signInText}>Sign in</Text>
+        <Text style={styles.signInText}>start your ride by signing in!</Text>
         <View style={{ height: 20 }}></View>
 
         <TouchableOpacity
