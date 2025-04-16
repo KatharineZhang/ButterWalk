@@ -12,14 +12,13 @@ import {
 } from "react-native";
 import OnboardingItem from "../components/OnboardingItem";
 import Paginator from "@/components/Paginator";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 
 //Onboarding Page
 export default function Onboarding() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  // const [buttonTitle, setButtonTitle] = useState("Skip");
   const scrollX = useRef(new Animated.Value(0)).current;
-  const pagesRef = useRef(null);
+  const pagesRef = useRef<FlatList>(null);
 
   const viewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
@@ -34,9 +33,70 @@ export default function Onboarding() {
 
   return (
     <SafeAreaView
-      style={[styles.viewOnboardingPager, { alignItems: "center" }]}
+      style={[
+        styles.viewOnboardingPager,
+        { alignItems: "center" },
+        { backgroundColor: pages[currentIndex].color },
+      ]}
     >
-      <View style={{ flex: 3 }}>
+      {currentIndex === pages.length - 1 ? (
+        // Content for last page without overlay panel
+        <View style={styles.lastPageContent}>
+          <View style={{ marginBottom: 190 }}>
+            <Text style={[styles.overlayText, {paddingHorizontal: 60}]}>
+              {pages[currentIndex].title}
+            </Text>
+            <Text style={[styles.overlayTextSmall]}>
+              {pages[currentIndex].text}
+            </Text>
+          </View>
+
+          <View style={styles.navigationContainer}>
+            <Link href={"/driverOrstudent"} asChild>
+              <Pressable style={styles.navigationButton}>
+                <Text style={styles.navigationButtonText}>Skip</Text>
+              </Pressable>
+            </Link>
+            <Paginator data={pages} scrollX={scrollX} />
+            <Pressable
+              style={styles.startedButton}
+              onPress={() => router.push("/driverOrstudent")}
+            >
+              <Text style={styles.startedButtonText}>Get Started</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : (
+        // Overlay panel for other pages
+        <View style={styles.overlayPanel}>
+          <Text style={styles.overlayText}>{pages[currentIndex].title}</Text>
+          <Text style={styles.overlayTextSmall}>
+            {pages[currentIndex].text}
+          </Text>
+          <View style={styles.navigationContainer}>
+            <Link href={"/driverOrstudent"} asChild>
+              <Pressable style={styles.navigationButton}>
+                <Text style={styles.navigationButtonText}>Skip</Text>
+              </Pressable>
+            </Link>
+            <Paginator data={pages} scrollX={scrollX} />
+            <Pressable
+              style={[styles.navigationButton, styles.nextButton]}
+              onPress={() => {
+                pagesRef.current?.scrollToIndex({
+                  index: currentIndex + 1,
+                  animated: true,
+                });
+              }}
+            >
+              <Text style={styles.nextButtonText}>Next</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+      <View
+        style={[{ flex: 3 }, { backgroundColor: pages[currentIndex].color }]}
+      >
         <FlatList
           data={pages}
           renderItem={({ item }) => <OnboardingItem item={item} />}
@@ -55,16 +115,6 @@ export default function Onboarding() {
           ref={pagesRef}
         />
       </View>
-      <Paginator data={pages} scrollX={scrollX}></Paginator>
-      <View style={styles.onboardingFooterButtonContainer}>
-        <Link href={"/driverOrstudent"} asChild>
-          <Pressable style={styles.onboardingFooterButton}>
-            <Text style={{ color: "#fff", fontSize: 16 }}>
-              {currentIndex === pages.length - 1 ? "Sign In" : "Skip"}
-            </Text>
-          </Pressable>
-        </Link>
-      </View>
     </SafeAreaView>
   );
 }
@@ -73,26 +123,35 @@ const pages: Array<{
   id: string;
   title: string;
   image: ImageSourcePropType;
+  text: string;
+  color: string;
 }> = [
   {
     id: "1",
-    title: "Sign in with your UW Net ID or UWPD Driver Net ID",
-    image: require("@/assets/images/husky-card.png"),
+    title: "Seamless Login",
+    image: require("@/assets/images/hbw-vectors-id 1.png"),
+    text: "Swiftly create and login to your account using your UW NetID",
+    color: "#C5B4E3",
   },
   {
     id: "2",
-    title: "Easily request and accept free rides around the UW campus",
-    image: require("@/assets/images/request-ride.png"),
+    title: "Navigate with Ease",
+    image: require("@/assets/images/hbw-vectors-phone 1.png"),
+    text: "Easily request free rides around the University of Washington campus",
+    color: "#4B2E83",
   },
   {
     id: "3",
-    title:
-      "Track your driver's location, and share your ride details with others to ensure safety",
-    image: require("@/assets/images/location.png"),
+    title: "Enhance Your Safety",
+    image: require("@/assets/images/hbw-vectors-shield 1.png"),
+    text: "Track your driver's location, and safely get to your destination",
+    color: "#D7C896",
   },
   {
     id: "4",
-    image: require("@/assets/images/husky.png"),
-    title: "Ready to begin?",
+    image: require("@/assets/images/hbw-vectors-car 1.png"),
+    title: "Ready for a Smooth Ride?",
+    text: "Press Get Started to login or create an account to schedule a smooth and safe ride!",
+    color: "white",
   },
 ];
