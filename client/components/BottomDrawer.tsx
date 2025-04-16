@@ -15,25 +15,24 @@ const BottomDrawer: React.FC<BottomDrawerProps> = ({
   const snapPoints = useMemo(() => ["27%", "89%"], []);
 
   return (
-      <View style={styles.bottomSheetContainer}>
-        <BottomSheet
-          ref={bottomSheetRef}
-          snapPoints={snapPoints}
-          enablePanDownToClose={false}
-          index={0}
-        >
-          <BottomSheetView style={styles.contentContainer}>
-            {children}
-          </BottomSheetView>
-        </BottomSheet>
-      </View>
+    <View style={styles.bottomSheetContainer}>
+      <BottomSheet
+        ref={bottomSheetRef}
+        snapPoints={snapPoints}
+        enablePanDownToClose={false}
+        index={0}
+      >
+        <BottomSheetView style={styles.contentContainer}>
+          {children}
+        </BottomSheetView>
+      </BottomSheet>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-
   },
   bottomSheetContainer: {
     flex: 1,

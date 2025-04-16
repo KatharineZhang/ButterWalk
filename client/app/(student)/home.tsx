@@ -205,7 +205,7 @@ export default function HomePage() {
   const goHome = () => {
     setWhichComponent("rideReq");
     resetAllFields();
-  }
+  };
 
   /* EFFECTS */
   useEffect(() => {
@@ -264,7 +264,6 @@ export default function HomePage() {
         destination: [pickUpLocation],
         mode: "walking",
       });
-
     } else if (whichComponent == "handleRide") {
       // if we are handling the ride, check if walking is needed by setting start location
       setStartLocation(userLocation);
@@ -316,9 +315,15 @@ export default function HomePage() {
           });
         }
       } else {
-        console.log("distance", calculateDistance(driverLocation, pickUpLocation));
+        console.log(
+          "distance",
+          calculateDistance(driverLocation, pickUpLocation)
+        );
         // the driver has accepted our ride
-         if (calculateDistance(driverLocation, pickUpLocation) < 0.0001 && rideStatus == "DriverEnRoute") {
+        if (
+          calculateDistance(driverLocation, pickUpLocation) < 0.0001 &&
+          rideStatus == "DriverEnRoute"
+        ) {
           // check if the driver has arrived
           setRideStatus("DriverArrived");
         } else {
@@ -368,9 +373,7 @@ export default function HomePage() {
       // check if the driver has arrived at the pickup location
       // (aka the driver is a negligible distance from the pickup location)
       console.log("distance", calculateDistance(driverResp, pickUpLocation));
-      if (
-        calculateDistance(driverResp, pickUpLocation) < 0.0001
-      ) {
+      if (calculateDistance(driverResp, pickUpLocation) < 0.0001) {
         setRideStatus("DriverArrived");
       }
 
@@ -529,130 +532,137 @@ export default function HomePage() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-    <View>
-      {/* map component */}
-      <Map
-        pickUpLocation={pickUpLocation}
-        dropOffLocation={dropOffLocation}
-        driverLocation={driverLocation}
-        userLocationChanged={userLocationChanged}
-        status={rideStatus}
-      />
-      {/* profile pop-up modal */}
-      <Profile
-        isVisible={profileVisible}
-        onClose={() => setProfileVisible(false)}
-        user={user}
-      />
-      {/* profile button in top left corner*/}
-      <View
-        style={{
-          position: "absolute",
-          paddingVertical: 50,
-          paddingHorizontal: 20,
-          width: "100%",
-          height: "100%",
-          shadowOpacity: 0.5,
-          shadowRadius: 5,
-          shadowOffset: { width: 0, height: 1 },
-          shadowColor: "grey",
-          pointerEvents: "box-none",
-        }}
-      >
-        <TouchableOpacity
-          style={{ width: 35, height: 35 }}
-          onPress={() => setProfileVisible(true)}
+      <View>
+        {/* map component */}
+        <Map
+          pickUpLocation={pickUpLocation}
+          dropOffLocation={dropOffLocation}
+          driverLocation={driverLocation}
+          userLocationChanged={userLocationChanged}
+          status={rideStatus}
+        />
+        {/* profile pop-up modal */}
+        <View
+          style={styles.modalContainer}
         >
-          <View
-            style={{
-              backgroundColor: "white",
-              borderRadius: 100,
-            }}
-          >
-            <Ionicons name="person-circle" size={35} color="#4B2E83" />
-          </View>
-        </TouchableOpacity>
-      </View>
-
-      {/* faq pop-up modal */}
-      <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
-
-      {/* notification component */}
-      <View
-        style={{ position: "absolute", top: 0, width: "100%", zIndex: 100 }}
-      >
-        {notifState.text != "" && (
-          <Notification
-            text={notifState.text}
-            color={notifState.color}
-            boldText={notifState.boldText}
+          <Profile
+            isVisible={profileVisible}
+            onClose={() => setProfileVisible(false)}
+            user={user}
           />
-        )}
-      </View>
+        </View>
+        {/* profile button in top left corner*/}
+        <View
+          style={{
+            position: "absolute",
+            paddingVertical: 50,
+            paddingHorizontal: 20,
+            width: "100%",
+            height: "100%",
+            shadowOpacity: 0.5,
+            shadowRadius: 5,
+            shadowOffset: { width: 0, height: 1 },
+            shadowColor: "grey",
+            pointerEvents: "box-none",
+          }}
+        >
+          <TouchableOpacity
+            style={{ width: 35, height: 35 }}
+            onPress={() => setProfileVisible(true)}
+          >
+            <View
+              style={{
+                backgroundColor: "white",
+                borderRadius: 100,
+              }}
+            >
+              <Ionicons name="person-circle" size={35} color="#4B2E83" />
+            </View>
+          </TouchableOpacity>
+        </View>
 
-      {/* Figure out which component to render */}
-      {
-        whichComponent === "rideReq" ? (
-          <View style={styles.homePageComponentContainer}>
-            {/* ride request form component */}
-            <RideRequestForm
-              pickUpLocationChanged={setPickUpLocationName}
-              dropOffLocationChanged={setDropOffLocationName}
-              userLocation={userLocation}
-              rideRequested={rideRequested}
-              startingState={startingState}
-              setFAQVisible={setFAQVisible}
+        {/* faq pop-up modal */}
+        <View
+          style={styles.modalContainer}
+        >
+          <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
+        </View>
+        {/* notification component */}
+        <View
+          style={{ position: "absolute", top: 0, width: "100%", zIndex: 100 }}
+        >
+          {notifState.text != "" && (
+            <Notification
+              text={notifState.text}
+              color={notifState.color}
+              boldText={notifState.boldText}
             />
-          </View>
-        ) : whichComponent === "confirmRide" ? (
-          <View style={styles.homePageComponentContainer}>
-            {/* confirm ride component */}
-            <ConfirmRide
-              pickUpLoc={pickUpLocationName}
-              dropOffLoc={dropOffLocationName}
-              rideDuration={rideDuration}
-              walkDuration={walkDuration}
-              driverETA={driverETA}
-              numPassengers={numPassengers}
-              onClose={closeConfirmRide}
-              onConfirm={requestRide}
-              setFAQVisible={setFAQVisible}
-            />
-          </View>
-        ) : whichComponent === "Loading" ? (
-          <View style={styles.homePageComponentContainer}>
-            {/* loading page component */}
-            <LoadingPageComp
-              pickUpLoc={pickUpLocationName}
-              dropOffLoc={dropOffLocationName}
-              numPassengers={numPassengers}
-            />
-          </View>
-        ) : whichComponent === "handleRide" ? (
-          <View style={styles.homePageComponentContainer}>
-            {/* driver on way component */}
-            <HandleRideComponent
-              status={rideStatus}
-              walkProgress={walkProgress}
-              rideProgress={rideProgress}
-              pickUpLocation={pickUpLocationName}
-              dropOffLocation={dropOffLocationName}
-              pickUpAddress={pickUpAddress}
-              dropOffAddress={dropOffAddress}
-              walkDuration={walkDuration}
-              driverETA={driverETA}
-              rideDuration={rideDuration}
-              onCancel={cancelRide}
-              setFAQVisible={setFAQVisible}
-              openNavigation={routeToPickup}
-              setNotificationState={setNotifState}
-              changeRideStatus={setRideStatus}
-              goHome={goHome}
-            />
-          </View>
-        ) : null // default
-      }
-    </View>
+          )}
+        </View>
+
+        {/* Figure out which component to render */}
+        {
+          whichComponent === "rideReq" ? (
+            <View style={styles.homePageComponentContainer}>
+              {/* ride request form component */}
+              <RideRequestForm
+                pickUpLocationChanged={setPickUpLocationName}
+                dropOffLocationChanged={setDropOffLocationName}
+                userLocation={userLocation}
+                rideRequested={rideRequested}
+                startingState={startingState}
+                setFAQVisible={setFAQVisible}
+              />
+            </View>
+          ) : whichComponent === "confirmRide" ? (
+            <View style={styles.homePageComponentContainer}>
+              {/* confirm ride component */}
+              <ConfirmRide
+                pickUpLoc={pickUpLocationName}
+                dropOffLoc={dropOffLocationName}
+                rideDuration={rideDuration}
+                walkDuration={walkDuration}
+                driverETA={driverETA}
+                numPassengers={numPassengers}
+                onClose={closeConfirmRide}
+                onConfirm={requestRide}
+                setFAQVisible={setFAQVisible}
+              />
+            </View>
+          ) : whichComponent === "Loading" ? (
+            <View style={styles.homePageComponentContainer}>
+              {/* loading page component */}
+              <LoadingPageComp
+                pickUpLoc={pickUpLocationName}
+                dropOffLoc={dropOffLocationName}
+                numPassengers={numPassengers}
+              />
+            </View>
+          ) : whichComponent === "handleRide" ? (
+            <View style={styles.homePageComponentContainer}>
+              {/* driver on way component */}
+              <HandleRideComponent
+                status={rideStatus}
+                walkProgress={walkProgress}
+                rideProgress={rideProgress}
+                pickUpLocation={pickUpLocationName}
+                dropOffLocation={dropOffLocationName}
+                pickUpAddress={pickUpAddress}
+                dropOffAddress={dropOffAddress}
+                walkDuration={walkDuration}
+                driverETA={driverETA}
+                rideDuration={rideDuration}
+                onCancel={cancelRide}
+                setFAQVisible={setFAQVisible}
+                openNavigation={routeToPickup}
+                setNotificationState={setNotifState}
+                changeRideStatus={setRideStatus}
+                goHome={goHome}
+              />
+            </View>
+          ) : null // default
+        }
+      </View>
     </GestureHandlerRootView>
   );
 }
