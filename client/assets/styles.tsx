@@ -333,6 +333,9 @@ export const styles = StyleSheet.create({
     marginTop: 10,
     marginLeft: 3,
   },
+  modalContainer: {
+    flex: 1, justifyContent: "flex-end", alignItems: "center" 
+  },
   fullModalView: {
     backgroundColor: "#E4E2F0",
     borderRadius: 20,
@@ -344,11 +347,10 @@ export const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 4,
-    elevation: 5,
     width: "100%",
-    height: "100%",
+    height: "90%",
     position: "absolute",
-    bottom: -100,
+    bottom: 0,
   },
 
   // Ride Request Form styles
@@ -453,7 +455,6 @@ export const styles = StyleSheet.create({
   modalCloseButton: {
     borderRadius: 20,
     padding: 10,
-    elevation: 2,
   },
   faqHeader: {
     fontSize: 25,
@@ -511,11 +512,6 @@ export const styles = StyleSheet.create({
     color: "#8E632A",
     textDecorationLine: "underline",
     fontWeight: "bold",
-  },
-  bottomSheetContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
   formOverlay: {
     position: "absolute",

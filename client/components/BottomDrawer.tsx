@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 
 interface BottomDrawerProps {
@@ -16,20 +15,18 @@ const BottomDrawer: React.FC<BottomDrawerProps> = ({
   const snapPoints = useMemo(() => ["27%", "89%"], []);
 
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <View style={styles.bottomSheetContainer}>
-        <BottomSheet
-          ref={bottomSheetRef}
-          snapPoints={snapPoints}
-          enablePanDownToClose={false}
-          index={0}
-        >
-          <BottomSheetView style={styles.contentContainer}>
-            {children}
-          </BottomSheetView>
-        </BottomSheet>
-      </View>
-    </GestureHandlerRootView>
+    <View style={styles.bottomSheetContainer}>
+      <BottomSheet
+        ref={bottomSheetRef}
+        snapPoints={snapPoints}
+        enablePanDownToClose={false}
+        index={0}
+      >
+        <BottomSheetView style={styles.contentContainer}>
+          {children}
+        </BottomSheetView>
+      </BottomSheet>
+    </View>
   );
 };
 

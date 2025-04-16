@@ -20,27 +20,30 @@ function PopUpModal({ isVisible, onClose, content, type }: PopUpModalProps) {
       visible={isVisible}
       onRequestClose={onClose}
     >
-      <View style={{ backgroundColor: "rgba(0, 0, 0, 0.5)", flex: 1 }} />
       <View
-        style={type === "full" ? styles.fullModalView : styles.bottomModalView}
+        style={{
+          flex: 1,
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          justifyContent: "flex-end", // align modal to bottom
+        }}
       >
-        {/* Close Button only if full screen modal */}
-        {type == "full" && (
-          <TouchableOpacity
-            style={[
-              styles.modalCloseButton,
-              { position: "absolute", right: 10, top: 10, zIndex: 1 },
-            ]}
-            onPress={onClose}
-          >
-            <Image
-              source={require("@/assets/images/modal-close.png")}
-              style={{ width: 40, height: 40 }}
-            />
-          </TouchableOpacity>
-        )}
-        {/* Whatever is inside the modal */}
-        <ScrollView>{content}</ScrollView>
+        <View
+          style={
+            type === "full" ? styles.fullModalView : styles.bottomModalView
+          }
+        >
+          {type === "full" && (
+            <TouchableOpacity style={styles.modalCloseButton} onPress={onClose}>
+              <Image
+                source={require("@/assets/images/modal-close.png")}
+                style={{ width: 40, height: 40 }}
+              />
+            </TouchableOpacity>
+          )}
+          <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+            {content}
+          </ScrollView>
+        </View>
       </View>
     </Modal>
   );
