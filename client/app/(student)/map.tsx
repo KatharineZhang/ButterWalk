@@ -279,6 +279,14 @@ export default function Map({
             <Ionicons name="car-sharp" size={30} color="black" />
           </View>
         </Marker>
+        {/* TODO: Move the MapViewDirections rendering to the server, i.e. 
+         SERVER SIDE RENDERING or SSR. It is also possible that we can make
+         the API call on the server and render on the client. Either way, the
+         API key needs to be sent from the server environment, not the client
+         (so the user does not have access to the API key).
+         TODO 2: Look for other places in the code base where credenials are
+         being compiled into the client and move them to SSR as well.
+         (this may be a major undertaking depending on how much this is done)*/}
         {/* show the directions between the pickup and dropoff locations if they are valid
         if the ride is not currently happening / happened  */}
         {status != "RideInProgress" &&
@@ -294,6 +302,8 @@ export default function Map({
             />
             
           )}
+          {/* TODO: show the directions between the users current location and the
+          pick up location if they are far enough apart*/}
           {status != "RideInProgress" &&
           status != "RideCompleted" &&
           userLocation.latitude != 0 &&
