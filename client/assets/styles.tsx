@@ -112,6 +112,7 @@ export const styles = StyleSheet.create({
     color: "black",
     textAlign: "center",
     fontFamily: "Encode Sans",
+
   },
   signInText: {
     fontSize: 28,
@@ -120,7 +121,8 @@ export const styles = StyleSheet.create({
     letterSpacing: 0,
     color: "black",
     fontFamily: "Encode Sans",
-    marginLeft: 10,
+    textAlign: "center",
+    paddingTop: 20,
   },
   signinLogo: {
     width: 100,
@@ -133,7 +135,7 @@ export const styles = StyleSheet.create({
   signInGoogleContainer: {
     flexDirection: "row",
     margin: 10,
-    padding: 22,
+    padding: 10,
     borderRadius: 10,
     borderColor: "#C1C1C1",
     borderWidth: 2,
@@ -141,8 +143,7 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
   },
   signInGoogleLogo: {
-    position: "absolute",
-    left: 15,
+    marginRight: 10,
     width: 30,
     height: 30,
   },
@@ -156,17 +157,14 @@ export const styles = StyleSheet.create({
     backgroundColor: "#4B2E83",
   },
 
-  /*
-  formContainer: {
-    alignSelf: "flex-start",
-    justifyContent: "center",
-    marginLeft: 21,
-    width: 335,
-    zIndex: 100,
-    flex: 1,
-    display: "flex",
+  signInbottomImageContainer: {
+    resizeMode: "contain",
+    width: "60%",
+    position: "absolute",
+    top: 0,
+    alignItems: "flex-start",
   },
-*/
+
   input: {
     height: 50,
     width: 335,
