@@ -40,7 +40,9 @@ export default function Map({
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
 
-  
+  // initial location used for determining the walking route
+  // to the pick up location
+  const initialUserLocation = userLocation;
 
   // what locations to focus on when zooming in on the map
   // in the format: [userLocation, driverLocation, pickUpLocation, dropOffLocation]
@@ -305,15 +307,17 @@ export default function Map({
           {/* TODO: show the directions between the users current location and the
           pick up location if they are far enough apart*/}
           {status != "RideInProgress" &&
-          status != "RideCompleted" &&
-          userLocation.latitude != 0 &&
-          pickUpLocation.latitude != 0 && (
+           status != "RideCompleted" &&
+           pickUpLocation.latitude != 0 &&
+           dropOffLocation.latitude != 0 && 
+           (calculateDistance(initialUserLocation, pickUpLocation) > 0.0001) && (
             <MapViewDirections
-              origin={userLocation}
+              origin={initialUserLocation}
               destination={pickUpLocation}
               apikey={GOOGLE_MAPS_APIKEY}
               strokeWidth={3}
               strokeColor="#000000"
+              mode="WALKING"
             />
             
           )}
