@@ -28,7 +28,7 @@ import WebSocketService, {
 // @ts-expect-error the image does exists so get rid of the error
 import logo from "@/assets/images/GoogleG.png";
 // @ts-expect-error the image does exists so get rid of the error
-import butterWalkLogo from "@/assets/images/butterWalkLogo.png";
+// import butterWalkLogo from "@/assets/images/butterWalkLogo.png";
 import huskyCarImage from "@/assets/images/husky-car.png";
 import { SafeAreaView } from "react-native-safe-area-context";
 
