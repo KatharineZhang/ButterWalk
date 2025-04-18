@@ -47,14 +47,13 @@ export const styles = StyleSheet.create({
   },
   viewOnboardingPager: {
     width: "100%",
-    height: "90%",
+    height: "100%",
   },
   onboardingFooterButtonContainer: {
     position: "absolute",
     bottom: 5,
     right: 20,
     elevation: 3,
-    opacity: 0.9,
   },
   onboardingFooterButton: {
     alignItems: "center",
@@ -64,6 +63,104 @@ export const styles = StyleSheet.create({
     borderRadius: 4,
     elevation: 3,
     backgroundColor: "#4B2E83",
+  },
+  /* Onboarding styling */
+  overlayPanel: {
+    position: "absolute",
+    zIndex: 10,
+    bottom: 0,
+    height: "48%",
+    width: "100%",
+    backgroundColor: "white",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: -8,
+    },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 8,
+    justifyContent: "space-between",
+    paddingVertical: 20,
+  },
+  overlayText: {
+    fontSize: 28,
+    fontWeight: 700,
+    color: "black",
+    fontFamily: "Encode Sans",
+    textAlign: "center",
+    marginTop: 25,
+    marginBottom: 8,
+  },
+  overlayTextSmall: {
+    fontSize: 18,
+    fontFamily: "DM Sans",
+    fontWeight: 400,
+    color: "#7D7D7D",
+    textAlign: "center",
+    marginTop: 20,
+    marginHorizontal: 40,
+    paddingHorizontal: 20,
+  },
+  paginatorContainer: {
+    alignItems: "center",
+    flex: 1,
+  },
+  navigationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    paddingHorizontal: 20,
+    marginTop: "auto",
+    marginBottom: 30,
+  },
+  navigationButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+  },
+  navigationButtonText: {
+    color: "#7D7D7D",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  lastPageContent: {
+    position: "absolute",
+    bottom: 20,
+    width: "100%",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  lastPageTextContainer: {
+    position: "absolute",
+    bottom: 120,
+    width: "100%",
+    alignItems: "center",
+  },
+  nextButton: {
+    backgroundColor: "#C5B4E3",
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    width: 104,
+    alignItems: "center",
+  },
+  nextButtonText: {
+    color: "black",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  startedButton: {
+    backgroundColor: "#4B2E83",
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+  },
+  startedButtonText: {
+    color: "white",
+    fontSize: 16,
   },
   headerButtonContainer: {
     position: "absolute",
@@ -94,6 +191,7 @@ export const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: "#333",
     marginHorizontal: 8,
+    marginBottom: 20,
   },
   map: {
     width: "100%",
@@ -105,22 +203,22 @@ export const styles = StyleSheet.create({
   },
 
   appNameText: {
-    fontSize: 40,
-    lineHeight: 50,
+    fontSize: 70,
     fontWeight: "700",
     letterSpacing: 0,
     color: "black",
     textAlign: "center",
     fontFamily: "Encode Sans",
+
   },
   signInText: {
-    fontSize: 28,
-    lineHeight: 35,
+    fontSize: 25,
+    fontStyle: "italic",
     fontWeight: 700,
     letterSpacing: 0,
     color: "black",
     fontFamily: "Encode Sans",
-    marginLeft: 10,
+    textAlign: "center",
   },
   signinLogo: {
     width: 100,
@@ -133,16 +231,16 @@ export const styles = StyleSheet.create({
   signInGoogleContainer: {
     flexDirection: "row",
     margin: 10,
-    padding: 22,
+    padding: 10,
     borderRadius: 10,
     borderColor: "#C1C1C1",
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
+    maxWidth: 300
   },
   signInGoogleLogo: {
-    position: "absolute",
-    left: 15,
+    marginRight: 10,
     width: 30,
     height: 30,
   },
@@ -156,17 +254,12 @@ export const styles = StyleSheet.create({
     backgroundColor: "#4B2E83",
   },
 
-  /*
-  formContainer: {
-    alignSelf: "flex-start",
-    justifyContent: "center",
-    marginLeft: 21,
-    width: 335,
-    zIndex: 100,
-    flex: 1,
-    display: "flex",
+  signInbottomImageContainer: {
+    resizeMode: "contain",
+    width: "80%",
+    position: "relative",
   },
-*/
+
   input: {
     height: 50,
     width: 335,
@@ -235,6 +328,9 @@ export const styles = StyleSheet.create({
     marginTop: 10,
     marginLeft: 3,
   },
+  modalContainer: {
+    flex: 1, justifyContent: "flex-end", alignItems: "center" 
+  },
   fullModalView: {
     backgroundColor: "#E4E2F0",
     borderRadius: 20,
@@ -246,11 +342,10 @@ export const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 4,
-    elevation: 5,
     width: "100%",
-    height: "100%",
+    height: "90%",
     position: "absolute",
-    bottom: -100,
+    bottom: 0,
   },
 
   // Ride Request Form styles
@@ -261,7 +356,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
   },
   requestFormContainer: {
-    left:-14,
+    left: -14,
     width: "108%",
     borderRadius: 10,
     shadowRadius: 2,
@@ -272,8 +367,8 @@ export const styles = StyleSheet.create({
     backgroundColor: "white",
     justifyContent: "center",
     alignItems: "center",
-  }, 
-  infoText:{
+  },
+  infoText: {
     fontSize: 12,
     color: "#4B4C4F",
     fontWeight: 400,
@@ -282,7 +377,7 @@ export const styles = StyleSheet.create({
     marginBottom: 40,
   },
   riderImage: {
-    width: 32, 
+    width: 32,
     height: 32,
     resizeMode: "contain",
   },
@@ -355,7 +450,6 @@ export const styles = StyleSheet.create({
   modalCloseButton: {
     borderRadius: 20,
     padding: 10,
-    elevation: 2,
   },
   faqHeader: {
     fontSize: 25,
@@ -413,11 +507,6 @@ export const styles = StyleSheet.create({
     color: "#8E632A",
     textDecorationLine: "underline",
     fontWeight: "bold",
-  },
-  bottomSheetContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
   formOverlay: {
     position: "absolute",
@@ -511,77 +600,77 @@ export const styles = StyleSheet.create({
     width: "100%",
   },
   progressBarTop: {
-      alignItems: "center",
-      borderBottomWidth: 2,
-      borderBottomColor: "#EEEEEE",
-      padding: 15,
-      marginBottom: 10,
+    alignItems: "center",
+    borderBottomWidth: 2,
+    borderBottomColor: "#EEEEEE",
+    padding: 15,
+    marginBottom: 10,
   },
   mainTextContainer: {
-      flexDirection: "row",
-      marginBottom: 10,
+    flexDirection: "row",
+    marginBottom: 10,
   },
   mainText: {
-      fontSize: 18,
-      textAlign: "center",
-      fontWeight: "bold",
-      flex: 1,
+    fontSize: 18,
+    textAlign: "center",
+    fontWeight: "bold",
+    flex: 1,
   },
   subTextContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginTop: 5,
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 5,
   },
   subText: {
-      fontSize: 16,
-      marginLeft: 8,
-      fontStyle: "italic",
+    fontSize: 16,
+    marginLeft: 8,
+    fontStyle: "italic",
   },
   progressBarBottom: {
-      alignItems: "center",
-      paddingBottom: 25,
+    alignItems: "center",
+    paddingBottom: 25,
   },
   rideTimeText: {
-      fontSize: 12,
-      fontWeight: "bold",
-      marginVertical: 8,
+    fontSize: 12,
+    fontWeight: "bold",
+    marginVertical: 8,
   },
   progressBarWrapper: {
-      flexDirection: "row",
-      alignItems: "center",
-      width: 320,
-      position: "relative",
+    flexDirection: "row",
+    alignItems: "center",
+    width: 320,
+    position: "relative",
   },
   progressBar: {
-      flex: 1,
-      height: 15,
-      borderRadius: 6,
-      backgroundColor: "#E3E3E3",
-      maxWidth: "100%",
-      width: 370,
-      zIndex: 1,
+    flex: 1,
+    height: 15,
+    borderRadius: 6,
+    backgroundColor: "#E3E3E3",
+    maxWidth: "100%",
+    width: 370,
+    zIndex: 1,
   },
   circleStart: {
-      width: 22,
-      height: 22,
-      borderRadius: 13,
-      backgroundColor: "#4B2E83",
-      borderWidth: 2,
-      borderColor: "#000000",
-      position: "absolute",
-      left: 0,
-      zIndex: 2,
+    width: 22,
+    height: 22,
+    borderRadius: 13,
+    backgroundColor: "#4B2E83",
+    borderWidth: 2,
+    borderColor: "#000000",
+    position: "absolute",
+    left: 0,
+    zIndex: 2,
   },
   circleEnd: {
-      width: 22,
-      height: 22,
-      borderRadius: 13,
-      backgroundColor: "#E34B64",
-      borderWidth: 2,
-      borderColor: "#000000",
-      position: "absolute",
-      right: 0,
-      zIndex: 2,
+    width: 22,
+    height: 22,
+    borderRadius: 13,
+    backgroundColor: "#E34B64",
+    borderWidth: 2,
+    borderColor: "#000000",
+    position: "absolute",
+    right: 0,
+    zIndex: 2,
   },
   locationsContainer: {
       flexDirection: "row",
@@ -609,13 +698,13 @@ export const styles = StyleSheet.create({
     marginBottom: 3,
   },  
   locationText: {
-      fontSize: 12,
+    fontSize: 12,
   },
   homePageComponentContainer: {
     position: "absolute",
-     width: "100%",
-      height: "100%",
-      shadowRadius: 5,
+    width: "100%",
+    height: "100%",
+    shadowRadius: 5,
     shadowOpacity: 0.4,
     shadowOffset: { width: 0, height: -7 },
     shadowColor: "grey",
@@ -659,12 +748,12 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   segmentedProgressBar: {
-    borderRadius: 4,  
+    borderRadius: 4,
     width: "33%",
   },
 
   // confirm ride
-  confirmHeader:{
+  confirmHeader: {
     marginLeft: 30,
     fontSize: 16,
     color: "#4b2e83",
@@ -682,7 +771,6 @@ export const styles = StyleSheet.create({
     left: 5, fontSize: 12, marginLeft: 5 
   }
 });
-
 
 export const loadingPageCompStyles = StyleSheet.create({
   rootContainer: {
@@ -712,7 +800,7 @@ export const loadingPageCompStyles = StyleSheet.create({
     top: "15%",
     alignItems: "center",
     height: 150,
-    justifyContent: "space-between"
+    justifyContent: "space-between",
   },
   mainTextTypography: {
     color: "#FFF",

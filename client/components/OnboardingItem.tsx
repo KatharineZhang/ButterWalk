@@ -22,13 +22,15 @@ export default function OnboardingItem({ item }: OnboardingItemProps) {
       <Image
         source={item.image}
         style={{
-          flex: 0.7,
+          flex: 0.5,
           justifyContent: "center",
-          width,
+          width: width * (item.id === "2" ? 0.35 : item.id === "3" ? 0.4 : 0.7),
           resizeMode: "contain",
+          marginTop: -350,
+          alignSelf: "center",
         }}
       />
-      <View style={{ flex: 0.3, alignContent: "center", margin: 20 }}>
+      {/*<View style={{ flex: 0.3, alignContent: "center", margin: 20 }}>
         <Text
           style={{
             fontSize: 28,
@@ -38,7 +40,7 @@ export default function OnboardingItem({ item }: OnboardingItemProps) {
         >
           {item.title}
         </Text>
-      </View>
+        </View> */}
     </View>
   );
 }
