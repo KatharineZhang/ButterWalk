@@ -247,17 +247,15 @@ const Map = forwardRef<MapRef, MapProps>(
             strokeColor="rgba(128, 0, 128, 0.5)" // Light purple color
             fillColor="rgba(128, 0, 128, 0.2)" // Light purple transparent color
           />
-          {!isSameLocation(userLocation, pickUpLocation) && (
-            <Marker
-              coordinate={{
-                latitude: pickUpLocation.latitude,
-                longitude: pickUpLocation.longitude,
-              }}
-              title={"pickUpLocation"}
-            >
-              <View style={[styles.circleStart, { borderWidth: 0 }]}></View>
-            </Marker>
-          )}
+          <Marker
+            coordinate={{
+              latitude: pickUpLocation.latitude,
+              longitude: pickUpLocation.longitude,
+            }}
+            title={"pickUpLocation"}
+          >
+            <View style={[styles.circleStart, { borderWidth: 0 }]}></View>
+          </Marker>
           <Marker
             coordinate={{
               latitude: dropOffLocation.latitude,
