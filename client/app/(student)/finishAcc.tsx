@@ -41,7 +41,9 @@ const finishAcc = () => {
 
     const phoneRegex = /^\d{10}$/;
     if (!phoneRegex.test(phoneNumberTemp)) {
-      alert("Phone number must be in the format ##########, no spaces or dashes");
+      alert(
+        "Phone number must be in the format ##########, no spaces or dashes"
+      );
       return;
     }
 

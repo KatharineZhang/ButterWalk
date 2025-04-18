@@ -73,14 +73,14 @@ export default function RideRequestForm({
   const [confirmationModalVisible, setConfirmationModalVisible] =
     useState(false);
 
-  // 
+  //
   const goToNumberRiders = () => {
     if (location == "" || destination == "") {
       alert("Please specify a pickup and dropoff location!");
       return;
     }
     setShowNumberRiders(true);
-  }
+  };
 
   /* FUZZY SEARCH BAR STUFF */
 
@@ -472,7 +472,10 @@ export default function RideRequestForm({
         }}
       >
         <Text style={{ fontStyle: "italic" }}>See ride details</Text>
-        <TouchableOpacity style={styles.modalCloseButton} onPress={() => rideRequested(numRiders)}>
+        <TouchableOpacity
+          style={styles.modalCloseButton}
+          onPress={() => rideRequested(numRiders)}
+        >
           <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
         </TouchableOpacity>
       </View>

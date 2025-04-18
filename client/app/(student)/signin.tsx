@@ -116,8 +116,6 @@ const Login = () => {
       <Text style={styles.appNameText}>Husky ButterWalk</Text>
       <Image style={styles.signInbottomImageContainer} source={huskyCarImage} />
       <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
-        
-        
         <Text style={styles.signInText}>start your ride by signing in!</Text>
         <View style={{ height: 20 }}></View>
 
@@ -126,7 +124,7 @@ const Login = () => {
           onPress={() => promptAsync()}
         >
           <Image style={styles.signInGoogleLogo} source={logo} />
-          <Text style={{ fontWeight: "bold", fontSize: 17}}>
+          <Text style={{ fontWeight: "bold", fontSize: 17 }}>
             Sign in with UW Email
           </Text>
         </TouchableOpacity>
@@ -141,10 +139,9 @@ const Login = () => {
             setNetid("student-netID");
           }}
         >
-        <Text style={styles.signInText}>Bypass Signin</Text>
+          <Text style={styles.signInText}>Bypass Signin</Text>
         </Pressable>
       </KeyboardAvoidingView>
-      
     </SafeAreaView>
   );
 };
