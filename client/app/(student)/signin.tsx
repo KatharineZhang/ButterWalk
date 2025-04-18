@@ -14,6 +14,7 @@ import * as WebBrowser from "expo-web-browser";
 // need to 'npx expo install expo-web-browser expo-auth-session expo-crypto' ON MAC
 // or 'npm i expo-auth-session@~6.0.3' on windows
 import * as Google from "expo-auth-session/providers/google";
+import * as AuthSession from "expo-auth-session";
 
 import {
   WebSocketResponse,
@@ -42,10 +43,19 @@ const Login = () => {
   const [netid, setNetid] = useState("");
 
   const config = {
+    expoClientId: webClientId,
     webClientId,
     iosClientId,
     androidClientId,
   };
+
+  useEffect(() => {
+    const getRedirectUri = async () => {
+      const uri = await AuthSession.makeRedirectUri();
+      console.log("Redirect URI:", uri);
+    };
+    getRedirectUri();
+  }, []);
 
   // Request is needed to make google auth work without errors,
   // but is not explicitly used, hence the override
@@ -78,6 +88,7 @@ const Login = () => {
       const msg: WebsocketConnectMessage = await WebSocketService.connect();
       if (msg == "Connected Successfully") {
         if (response) {
+          console.log("REQ", request?.redirectUri);
           WebSocketService.send({
             directive: "SIGNIN",
             response,

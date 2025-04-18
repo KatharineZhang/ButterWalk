@@ -10,11 +10,11 @@ dotenv.config();
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Husky ButterWalk",
-  slug: "husky-betterWalk",
+  slug: "husky-butterWalk",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/butterWalkLogo.png",
-  scheme: "myapp",
+  scheme: "butterwalk",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   splash: {
@@ -29,8 +29,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY,
     },
     infoPlist: {
-      ITSAppUsesNonExemptEncryption: false
-    }
+      ITSAppUsesNonExemptEncryption: false,
+    },
   },
   android: {
     adaptiveIcon: {

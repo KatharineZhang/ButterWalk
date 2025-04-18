@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/butterWalkLogo.png",
-    "scheme": "myapp",
+    "scheme": "betterwalk",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
