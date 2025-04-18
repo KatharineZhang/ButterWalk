@@ -28,7 +28,9 @@ import WebSocketService, {
 // @ts-expect-error the image does exists so get rid of the error
 import logo from "@/assets/images/GoogleG.png";
 // @ts-expect-error the image does exists so get rid of the error
-import butterWalkLogo from "@/assets/images/butterWalkLogo.png";
+// import butterWalkLogo from "@/assets/images/butterWalkLogo.png";
+import huskyCarImage from "@/assets/images/husky-car.png";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const webClientId = process.env.EXPO_PUBLIC_WEB_CLIENT_ID;
 const iosClientId = process.env.EXPO_PUBLIC_IOS_CLIENT_ID;
@@ -110,11 +112,11 @@ const Login = () => {
       }}
     />
   ) : (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.appNameText}>Husky ButterWalk</Text>
+      <Image style={styles.signInbottomImageContainer} source={huskyCarImage} />
       <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
-        <Text style={styles.appNameText}>Husky ButterWalk</Text>
-        <Image style={styles.signinLogo} source={butterWalkLogo} />
-        <Text style={styles.signInText}>Sign in</Text>
+        <Text style={styles.signInText}>start your ride by signing in!</Text>
         <View style={{ height: 20 }}></View>
 
         <TouchableOpacity
@@ -140,7 +142,7 @@ const Login = () => {
           <Text style={styles.signInText}>Bypass Signin</Text>
         </Pressable>
       </KeyboardAvoidingView>
-    </View>
+    </SafeAreaView>
   );
 };
 

@@ -203,22 +203,22 @@ export const styles = StyleSheet.create({
   },
 
   appNameText: {
-    fontSize: 40,
-    lineHeight: 50,
+    fontSize: 70,
     fontWeight: "700",
     letterSpacing: 0,
     color: "black",
     textAlign: "center",
     fontFamily: "Encode Sans",
+
   },
   signInText: {
-    fontSize: 28,
-    lineHeight: 35,
+    fontSize: 25,
+    fontStyle: "italic",
     fontWeight: 700,
     letterSpacing: 0,
     color: "black",
     fontFamily: "Encode Sans",
-    marginLeft: 10,
+    textAlign: "center",
   },
   signinLogo: {
     width: 100,
@@ -231,16 +231,16 @@ export const styles = StyleSheet.create({
   signInGoogleContainer: {
     flexDirection: "row",
     margin: 10,
-    padding: 22,
+    padding: 10,
     borderRadius: 10,
     borderColor: "#C1C1C1",
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
+    maxWidth: 300
   },
   signInGoogleLogo: {
-    position: "absolute",
-    left: 15,
+    marginRight: 10,
     width: 30,
     height: 30,
   },
@@ -254,17 +254,12 @@ export const styles = StyleSheet.create({
     backgroundColor: "#4B2E83",
   },
 
-  /*
-  formContainer: {
-    alignSelf: "flex-start",
-    justifyContent: "center",
-    marginLeft: 21,
-    width: 335,
-    zIndex: 100,
-    flex: 1,
-    display: "flex",
+  signInbottomImageContainer: {
+    resizeMode: "contain",
+    width: "80%",
+    position: "relative",
   },
-*/
+
   input: {
     height: 50,
     width: 335,
