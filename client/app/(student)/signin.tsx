@@ -48,6 +48,8 @@ const Login = () => {
     androidClientId,
   };
 
+  // Print out the redirect URI to the console
+  // TODO: REMOVE AFTER GOOGLE AUTH WORKS ON ANDROID
   useEffect(() => {
     const getRedirectUri = async () => {
       const uri = await AuthSession.makeRedirectUri();
