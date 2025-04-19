@@ -87,7 +87,6 @@ const Login = () => {
       const msg: WebsocketConnectMessage = await WebSocketService.connect();
       if (msg == "Connected Successfully") {
         if (response) {
-          console.log("REQ", request?.redirectUri);
           WebSocketService.send({
             directive: "SIGNIN",
             response,
