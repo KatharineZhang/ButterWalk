@@ -38,8 +38,8 @@ export class LocationService {
     },
     {
       name: "Meany Hall",
-      latitude: 47.65601509591645,
-      longitude: -122.31049478782538,
+      latitude: 47.65652026633631,
+      longitude: -122.30965547639778,
     },
     {
       name: "IMA",

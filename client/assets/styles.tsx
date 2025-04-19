@@ -596,7 +596,8 @@ export const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "white",
     padding: 16,
-    borderRadius: 10,
+    borderRadius:10,
+    width: "100%",
   },
   progressBarTop: {
     alignItems: "center",
@@ -672,24 +673,30 @@ export const styles = StyleSheet.create({
     zIndex: 2,
   },
   locationsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    marginTop: 15,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      width: "90%",
+      marginTop: 15,
   },
   pickUpContainer: {
-    alignItems: "flex-start",
-    maxWidth: "50%",
+      alignItems: "flex-start",
+      maxWidth: "40%"
   },
   dropOffContainer: {
-    alignItems: "flex-end",
-    maxWidth: "50%",
+      alignItems: "flex-end",
+      maxWidth: "40%"
   },
   locationTitle: {
+      fontWeight: "bold",
+      fontSize: 12,
+      marginBottom: 3,
+  },
+  locationSubtitle: {
     fontWeight: "bold",
     fontSize: 12,
+    color: "#4B2E83",
     marginBottom: 3,
-  },
+  },  
   locationText: {
     fontSize: 12,
   },
@@ -753,6 +760,16 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
     paddingBottom: 20,
   },
+
+  // legend
+  legendContainer: {
+    flexDirection: "row",
+          alignItems: "center",
+          marginBottom: 7,
+  },
+  legendText: {
+    left: 5, fontSize: 12, marginLeft: 5 
+  }
 });
 
 export const loadingPageCompStyles = StyleSheet.create({

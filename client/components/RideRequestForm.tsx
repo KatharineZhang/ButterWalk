@@ -312,7 +312,7 @@ export default function RideRequestForm({
         </View>
         {/* Autocomplete Suggestions */}
         <View style={{ flex: 1, height: 100 }}>
-          <ScrollView style={{ paddingBottom: 350 }}>
+          <ScrollView style={{ paddingBottom: 400 }}>
             {data
               .filter((item) => {
                 if (currentQuery == "dropoff") {

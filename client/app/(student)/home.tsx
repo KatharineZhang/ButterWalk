@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { TouchableOpacity, View } from "react-native";
+import { Pressable, TouchableOpacity, View } from "react-native";
 import Profile from "./profile";
-import Map, { calculateDistance } from "./map";
+import Map, { calculateDistance, isSameLocation, MapRef } from "./map";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
 import {
@@ -25,6 +25,7 @@ import { createOpenLink } from "react-native-open-maps";
 import LoadingPageComp from "@/components/loadingPageComp";
 import Notification from "@/components/notification";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import Legend from "@/components/Legend";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -66,6 +67,7 @@ export default function HomePage() {
     latitude: number;
     longitude: number;
   }) => {
+    console.log("USER LOC", location);
     setUserLocation(location);
     // if the ride has been accepted, send the new location to the driver
     if (rideStatus === "DriverEnRoute") {
@@ -75,6 +77,16 @@ export default function HomePage() {
         latitude: location.latitude,
         longitude: location.longitude,
       });
+    }
+  };
+
+  // retain a reference to the map to call functions on it later
+  const mapRef = useRef<MapRef>(null);
+  // when the user clicks the recenter button
+  // recenter the map to the user's location
+  const recenter = () => {
+    if (mapRef.current) {
+      mapRef.current.recenterMap();
     }
   };
 
@@ -269,7 +281,7 @@ export default function HomePage() {
       setStartLocation(userLocation);
       // if the start location is not the pickup location
       // the user must walk
-      if (calculateDistance(userLocation, pickUpLocation) > 0.01) {
+      if (!isSameLocation(userLocation, pickUpLocation)) {
         // set initial walk progress
         setWalkProgress(0);
       }
@@ -280,20 +292,18 @@ export default function HomePage() {
   // everytime a location changes, check the wait time and walking/ride progress
   // to update the progress bar
   useEffect(() => {
-    if (whichComponent == "handleRide") {
+    if (whichComponent == "handleRide" && rideStatus != "RideCompleted") {
       // update the walking progress if the pickup Location was not the user's starting location
       if (
         startLocation.latitude != 0 &&
-        calculateDistance(startLocation, pickUpLocation) > 0.0001
+        !isSameLocation(userLocation, pickUpLocation)
       ) {
-        console.log("updating walk progress");
         // there is a large enough distance that the user needs to walk
         const wp = calculateProgress(
           startLocation,
           userLocation,
           pickUpLocation
         );
-        console.log("walk progress:", wp);
         setWalkProgress(wp);
       }
 
@@ -315,13 +325,9 @@ export default function HomePage() {
           });
         }
       } else {
-        console.log(
-          "distance",
-          calculateDistance(driverLocation, pickUpLocation)
-        );
         // the driver has accepted our ride
         if (
-          calculateDistance(driverLocation, pickUpLocation) < 0.0001 &&
+          isSameLocation(driverLocation, pickUpLocation) &&
           rideStatus == "DriverEnRoute"
         ) {
           // check if the driver has arrived
@@ -369,11 +375,14 @@ export default function HomePage() {
         latitude: driverResp.latitude,
         longitude: driverResp.longitude,
       });
+      console.log("DRIVER LOC", driverResp);
 
       // check if the driver has arrived at the pickup location
       // (aka the driver is a negligible distance from the pickup location)
-      console.log("distance", calculateDistance(driverResp, pickUpLocation));
-      if (calculateDistance(driverResp, pickUpLocation) < 0.0001) {
+      if (
+        isSameLocation(driverResp, pickUpLocation) &&
+        rideStatus == "DriverEnRoute"
+      ) {
         setRideStatus("DriverArrived");
       }
 
@@ -385,11 +394,9 @@ export default function HomePage() {
         );
 
         // check if the driver has reached the dropoff location
-        if (
-          calculateDistance(driverResp, dropOffLocation) < 0.0001 ||
-          calculateDistance(driverLocation, dropOffLocation) < 0.0001
-        ) {
+        if (isSameLocation(driverResp, dropOffLocation)) {
           setRideStatus("RideCompleted");
+          setRideProgress(1); // set the ride progress to 1 to show the user they have arrived
         }
       }
     }
@@ -535,6 +542,7 @@ export default function HomePage() {
       <View>
         {/* map component */}
         <Map
+          ref={mapRef}
           pickUpLocation={pickUpLocation}
           dropOffLocation={dropOffLocation}
           driverLocation={driverLocation}
@@ -542,15 +550,11 @@ export default function HomePage() {
           status={rideStatus}
         />
         {/* profile pop-up modal */}
-        <View
-          style={styles.modalContainer}
-        >
-          <Profile
-            isVisible={profileVisible}
-            onClose={() => setProfileVisible(false)}
-            user={user}
-          />
-        </View>
+        <Profile
+          isVisible={profileVisible}
+          onClose={() => setProfileVisible(false)}
+          user={user}
+        />
         {/* profile button in top left corner*/}
         <View
           style={{
@@ -582,11 +586,8 @@ export default function HomePage() {
         </View>
 
         {/* faq pop-up modal */}
-        <View
-          style={styles.modalContainer}
-        >
-          <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
-        </View>
+        <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
+
         {/* notification component */}
         <View
           style={{ position: "absolute", top: 0, width: "100%", zIndex: 100 }}
@@ -598,6 +599,39 @@ export default function HomePage() {
               boldText={notifState.boldText}
             />
           )}
+        </View>
+
+        {/* Side Bar */}
+        <View
+          style={{
+            position: "absolute",
+            bottom: 340,
+            left: 10,
+            alignItems: "flex-start",
+          }}
+        >
+          {/* Recenter Button */}
+          <Pressable
+            style={{
+              backgroundColor: "#4b2e83",
+              width: 35,
+              height: 35,
+              borderRadius: 50,
+              borderWidth: 3,
+              borderColor: "white",
+              justifyContent: "center",
+              alignItems: "center",
+              marginBottom: 10,
+              shadowOpacity: 0.3,
+              left: 2,
+            }}
+            onPress={recenter}
+          >
+            <Ionicons name="locate" size={20} color="white" />
+          </Pressable>
+
+          {/* Side map legend */}
+          <Legend />
         </View>
 
         {/* Figure out which component to render */}
@@ -667,8 +701,15 @@ export default function HomePage() {
   );
 }
 
-// Helper function to calculate the progress of the user walking to the pickup location
-// or the progress of the ride from the pickup location to the dropoff location
+/**
+ * Helper function to calculate the progress of the user walking to the pickup location
+ * or the progress of the ride from the pickup location to the dropoff location
+
+ * @param start 
+ * @param current 
+ * @param dest 
+ * @returns 
+ */
 const calculateProgress = (
   start: { latitude: number; longitude: number },
   current: { latitude: number; longitude: number },
@@ -677,13 +718,13 @@ const calculateProgress = (
   // calculate the distance between the two coordinates
   const distance = calculateDistance(start, dest);
   const currentDistance = calculateDistance(start, current);
-  console.log(
-    "current distance:",
-    currentDistance,
-    "total distance:",
-    distance,
-    "fraction:",
-    currentDistance / distance
-  );
+  // console.log(
+  //   "current distance:",
+  //   currentDistance,
+  //   "total distance:",
+  //   distance,
+  //   "fraction:",
+  //   currentDistance / distance
+  // );
   return currentDistance / distance; // remaining distance
 };
