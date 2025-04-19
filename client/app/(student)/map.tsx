@@ -72,11 +72,15 @@ const Map = forwardRef<MapRef, MapProps>(
     >([]);
 
     useEffect(() => {
-      if (status === "RideInProgress" && driverLocation.latitude != 0) {
+      if (
+        status === "RideInProgress" &&
+        driverLocation.latitude != 0 &&
+        driverLocation.longitude != 0 &&
+        !isSameLocation(driverLocation, ridePath[ridePath.length - 1]) // check if we have moved far enough
+      ) {
         // if the ride is in progress, show the path
         // add newest driverLocation to the path
         setRidePath([...ridePath, driverLocation]);
-        console.log("RIDE PATH:", ridePath);
       }
     }, [driverLocation]);
 
@@ -213,7 +217,6 @@ const Map = forwardRef<MapRef, MapProps>(
       locations = locations.filter(
         (loc) => loc.latitude != 0 && loc.longitude != 0
       );
-      console.log("ZOOMING TO LOCATIONS:", locations);
       mapRef?.current?.fitToCoordinates(locations, {
         edgePadding: { bottom: 300, left: 80, right: 70, top: 50 },
         animated: true,

@@ -121,13 +121,13 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
       // when ride is in progress
       // progress = 0.45 + (dist from driver+student to dropoff) / (dist from pickup to dropoff)
       const driving =
-        rideProgress * 0.55 // translated ride progress from 0 - 0.55
-        + 0.45; // walking is done
+        rideProgress * 0.55 + // translated ride progress from 0 - 0.55
+        0.45; // walking is done
 
       const newProgress = Math.max(progress, driving); // Make sure the progress bar always increases
 
       progress = Math.min(newProgress, 1); // Make sure the progress is not greater than 1
-      console.log ("ride in progress", progress);
+      console.log("ride in progress", progress);
     } else if (status == "RideCompleted") {
       // When ride is completed
       // progress = 1

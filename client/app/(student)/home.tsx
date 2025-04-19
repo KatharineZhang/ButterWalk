@@ -67,6 +67,7 @@ export default function HomePage() {
     latitude: number;
     longitude: number;
   }) => {
+    console.log("USER LOC", location);
     setUserLocation(location);
     // if the ride has been accepted, send the new location to the driver
     if (rideStatus === "DriverEnRoute") {
@@ -374,6 +375,7 @@ export default function HomePage() {
         latitude: driverResp.latitude,
         longitude: driverResp.longitude,
       });
+      console.log("DRIVER LOC", driverResp);
 
       // check if the driver has arrived at the pickup location
       // (aka the driver is a negligible distance from the pickup location)
@@ -716,13 +718,13 @@ const calculateProgress = (
   // calculate the distance between the two coordinates
   const distance = calculateDistance(start, dest);
   const currentDistance = calculateDistance(start, current);
-  console.log(
-    "current distance:",
-    currentDistance,
-    "total distance:",
-    distance,
-    "fraction:",
-    currentDistance / distance
-  );
+  // console.log(
+  //   "current distance:",
+  //   currentDistance,
+  //   "total distance:",
+  //   distance,
+  //   "fraction:",
+  //   currentDistance / distance
+  // );
   return currentDistance / distance; // remaining distance
 };
