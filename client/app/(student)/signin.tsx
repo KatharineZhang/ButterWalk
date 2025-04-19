@@ -43,7 +43,6 @@ const Login = () => {
   const [netid, setNetid] = useState("");
 
   const config = {
-    expoClientId: webClientId,
     webClientId,
     iosClientId,
     androidClientId,
