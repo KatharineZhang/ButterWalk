@@ -115,17 +115,37 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
 
   let progress = 0;
   if (walkProgress >= 0) {
-    // change the walkProgress that was in the interval [0,1] ot [0,0.45]
-    walkProgress = walkProgress * 0.45;
-    // change the rideProgress that was in the interval [0,1] ot [0,0.55]
-    rideProgress = rideProgress * 0.55;
+    // walking is needed
 
-    // the total progress is the sum of the walking and driving progress
-    progress = walkProgress + rideProgress;
+    if (status == "RideInProgress") {
+      // when ride is in progress
+      // progress = 0.45 + (dist from driver+student to dropoff) / (dist from pickup to dropoff)
+      const driving =
+        rideProgress * 0.55 // translated ride progress from 0 - 0.55
+        + 0.45; // walking is done
+
+      const newProgress = Math.max(progress, driving); // Make sure the progress bar always increases
+
+      progress = Math.min(newProgress, 1); // Make sure the progress is not greater than 1
+    } else if (status == "RideCompleted") {
+      // When ride is completed
+      // progress = 1
+      progress = 1; // Make sure the progress is not greater than 1
+    } else {
+      // When ride is not in progress, the user can only walk to the pickup location
+      // progress = (dist from user to pickup) / (dist from start to pickup)
+
+      const walking = walkProgress * 0.45; // walk progress translated from 0 - 0.45
+      const newProgress = Math.max(progress, walking); // Make sure the progress bar always increases
+
+      // The max progress is 0.45
+      progress = Math.min(newProgress, 0.45); // Make sure the progress is not greater than 0.45
+    }
   } else {
+    // else walking is not needed, just show the ride progress
     progress = rideProgress;
   }
-  progress = Math.min(progress, 1); // make sure the progress is not greater than 1
+
   console.log("progress", progress);
 
   // height expansion
