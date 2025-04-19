@@ -297,14 +297,12 @@ export default function HomePage() {
         startLocation.latitude != 0 &&
         !isSameLocation(userLocation, pickUpLocation)
       ) {
-        console.log("updating walk progress");
         // there is a large enough distance that the user needs to walk
         const wp = calculateProgress(
           startLocation,
           userLocation,
           pickUpLocation
         );
-        console.log("walk progress:", wp);
         setWalkProgress(wp);
       }
 
@@ -326,10 +324,6 @@ export default function HomePage() {
           });
         }
       } else {
-        console.log(
-          "distance",
-          calculateDistance(driverLocation, pickUpLocation)
-        );
         // the driver has accepted our ride
         if (
           isSameLocation(driverLocation, pickUpLocation) &&
@@ -383,7 +377,6 @@ export default function HomePage() {
 
       // check if the driver has arrived at the pickup location
       // (aka the driver is a negligible distance from the pickup location)
-      console.log("distance", calculateDistance(driverResp, pickUpLocation));
       if (
         isSameLocation(driverResp, pickUpLocation) &&
         rideStatus == "DriverEnRoute"
