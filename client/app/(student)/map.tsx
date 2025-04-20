@@ -40,7 +40,9 @@ export default function Map({
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
 
-  
+  // initial location used for determining the walking route
+  // to the pick up location
+  const initialUserLocation = userLocation;
 
   // what locations to focus on when zooming in on the map
   // in the format: [userLocation, driverLocation, pickUpLocation, dropOffLocation]
@@ -279,6 +281,14 @@ export default function Map({
             <Ionicons name="car-sharp" size={30} color="black" />
           </View>
         </Marker>
+        {/* TODO: Move the MapViewDirections rendering to the server, i.e. 
+         SERVER SIDE RENDERING or SSR. It is also possible that we can make
+         the API call on the server and render on the client. Either way, the
+         API key needs to be sent from the server environment, not the client
+         (so the user does not have access to the API key).
+         TODO 2: Look for other places in the code base where credenials are
+         being compiled into the client and move them to SSR as well.
+         (this may be a major undertaking depending on how much this is done)*/}
         {/* show the directions between the pickup and dropoff locations if they are valid
         if the ride is not currently happening / happened  */}
         {status !== "RideInProgress" && status !== "RideCompleted" ? (
@@ -308,33 +318,24 @@ export default function Map({
           )
         ) : null}
 
-        {/* {status != "RideInProgress" &&
-          status != "RideCompleted" &&
-          pickUpLocation.latitude != 0 &&
-          dropOffLocation.latitude != 0 && (
+
+          {/* TODO: show the directions between the users current location and the
+          pick up location if they are far enough apart*/}
+          {/* {status != "RideInProgress" &&
+           status != "RideCompleted" &&
+           pickUpLocation.latitude != 0 &&
+           dropOffLocation.latitude != 0 && 
+           (calculateDistance(initialUserLocation, pickUpLocation) > 0.0001) && (
             <MapViewDirections
-              origin={pickUpLocation}
-              destination={dropOffLocation}
+              origin={initialUserLocation}
+              destination={pickUpLocation}
               apikey={GOOGLE_MAPS_APIKEY}
               strokeWidth={3}
-              strokeColor="#4B2E83"
+              strokeColor="#000000"
+              mode="WALKING"
             />
             
-        )}
-        {status != "RideInProgress" &&
-        status != "RideCompleted" &&
-        userLocation.latitude != 0 &&
-        pickUpLocation.latitude != 0 && (
-          <MapViewDirections
-            origin={userLocation}
-            waypoints={[pickUpLocation]}
-            destination={dropOffLocation}
-            apikey={GOOGLE_MAPS_APIKEY}
-            strokeWidth={3}
-            strokeColor="#000000"
-          />
-          
-        )} */}
+          )} */}
           
 
         {/* show the path of the ride if it is in progress. 
