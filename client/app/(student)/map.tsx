@@ -281,7 +281,34 @@ export default function Map({
         </Marker>
         {/* show the directions between the pickup and dropoff locations if they are valid
         if the ride is not currently happening / happened  */}
-        {status != "RideInProgress" &&
+        {status !== "RideInProgress" && status !== "RideCompleted" ? (
+          userLocation.latitude === 0 ? (
+            pickUpLocation.latitude !== 0 && dropOffLocation.latitude !== 0 && (
+              <MapViewDirections
+                origin={pickUpLocation}
+                destination={dropOffLocation}
+                apikey={GOOGLE_MAPS_APIKEY}
+                strokeWidth={3}
+                strokeColor="#4B2E83"
+              />
+            )
+          ) : (
+            userLocation.latitude !== 0 &&
+            pickUpLocation.latitude !== 0 &&
+            dropOffLocation.latitude !== 0 && (
+              <MapViewDirections
+                origin={userLocation}
+                waypoints={[pickUpLocation]}
+                destination={dropOffLocation}
+                apikey={GOOGLE_MAPS_APIKEY}
+                strokeWidth={3}
+                strokeColor="#000000"
+              />
+            )
+          )
+        ) : null}
+
+        {/* {status != "RideInProgress" &&
           status != "RideCompleted" &&
           pickUpLocation.latitude != 0 &&
           dropOffLocation.latitude != 0 && (
@@ -293,23 +320,25 @@ export default function Map({
               strokeColor="#4B2E83"
             />
             
-          )}
-          {status != "RideInProgress" &&
-          status != "RideCompleted" &&
-          userLocation.latitude != 0 &&
-          pickUpLocation.latitude != 0 && (
-            <MapViewDirections
-              origin={userLocation}
-              destination={pickUpLocation}
-              apikey={GOOGLE_MAPS_APIKEY}
-              strokeWidth={3}
-              strokeColor="#000000"
-            />
-            
-          )}
+        )}
+        {status != "RideInProgress" &&
+        status != "RideCompleted" &&
+        userLocation.latitude != 0 &&
+        pickUpLocation.latitude != 0 && (
+          <MapViewDirections
+            origin={userLocation}
+            waypoints={[pickUpLocation]}
+            destination={dropOffLocation}
+            apikey={GOOGLE_MAPS_APIKEY}
+            strokeWidth={3}
+            strokeColor="#000000"
+          />
+          
+        )} */}
           
 
-        {/* show the path of the ride if it is in progress */}
+        {/* show the path of the ride if it is in progress. 
+        Used to plot the path of the driver during the ride */}
         {status === "RideInProgress" && (
           <Polyline
             coordinates={ridePath}
