@@ -67,7 +67,7 @@ export default function HomePage() {
     latitude: number;
     longitude: number;
   }) => {
-    console.log("USER LOC", location);
+    console.log("LOG", "USER LOC", location);
     setUserLocation(location);
     // if the ride has been accepted, send the new location to the driver
     if (rideStatus === "DriverEnRoute") {
@@ -189,10 +189,6 @@ export default function HomePage() {
     | "RideInProgress"
     | "RideCompleted"
   >("WaitingForRide");
-
-  useEffect(() => {
-    console.log("PROGRESS", "RIDE STATUS", rideStatus);
-  }, [rideStatus]);
 
   // the user's location when the ride was requested
   // could be the pickup location if the user clicked
@@ -382,6 +378,7 @@ export default function HomePage() {
           }
           break;
         case "RideCompleted":
+          console.log("PROGRESS", "RIDE COMPLETED");
           // the ride is completed
           break;
         default:
@@ -417,7 +414,7 @@ export default function HomePage() {
         latitude: driverResp.latitude,
         longitude: driverResp.longitude,
       });
-      console.log("DRIVER LOC", driverResp);
+      console.log("LOG","DRIVER LOC", driverResp);
     } else {
       // something went wrong
       console.log("Location response error: ", message);
