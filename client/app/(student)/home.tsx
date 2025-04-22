@@ -190,6 +190,10 @@ export default function HomePage() {
     | "RideCompleted"
   >("WaitingForRide");
 
+  useEffect(() => {
+    console.log("PROGRESS", "RIDE STATUS", rideStatus);
+  }, [rideStatus]);
+
   // the user's location when the ride was requested
   // could be the pickup location if the user clicked
   // "Current Location" on the ride request form
@@ -292,58 +296,96 @@ export default function HomePage() {
   // everytime a location changes, check the wait time and walking/ride progress
   // to update the progress bar
   useEffect(() => {
-    if (whichComponent == "handleRide" && rideStatus != "RideCompleted") {
-      // update the walking progress if the pickup Location was not the user's starting location
-      if (
-        startLocation.latitude != 0 &&
-        !isSameLocation(userLocation, pickUpLocation)
-      ) {
-        // there is a large enough distance that the user needs to walk
-        const wp = calculateProgress(
-          startLocation,
-          userLocation,
-          pickUpLocation
-        );
-        setWalkProgress(wp);
-      }
+    if (whichComponent == "handleRide") {
+      switch (rideStatus) {
+        case "WaitingForRide":
+          // update the walking progress if the pickup Location was not the user's starting location
+          if (
+            startLocation.latitude != 0 &&
+            startLocation.longitude != 0 &&
+            !isSameLocation(userLocation, pickUpLocation)
+          ) {
+            // there is a large enough distance that the user needs to walk
+            // calculate the progress of the user walking to the pickup location
+            const wp = calculateProgress(
+              startLocation,
+              userLocation,
+              pickUpLocation
+            );
+            setWalkProgress(wp);
+          }
+          // if the last time we checked the driverETA (which represented our place in the queue * 15),
+          // it was not 0, we are not first in queue.
+          if (driverETA !== 0) {
+            // then we can check whether the request is advancing in the queue
+            // use the request id to check the status of the ride in the queue
+            WebSocketService.send({
+              directive: "WAIT_TIME",
+              requestid,
+              requestedRide: {
+                pickUpLocation,
+                dropOffLocation,
+              },
+            });
+          }
+          break;
+        case "DriverEnRoute":
+          // update the walking progress if the pickup Location was not the user's starting location
+          if (
+            startLocation.latitude != 0 &&
+            startLocation.longitude != 0 &&
+            !isSameLocation(userLocation, pickUpLocation)
+          ) {
+            // there is a large enough distance that the user needs to walk
+            // calculate the progress of the user walking to the pickup location
+            const wp = calculateProgress(
+              startLocation,
+              userLocation,
+              pickUpLocation
+            );
+            setWalkProgress(wp);
+          }
 
-      // a driver has not accepted, but if we are on the handleRide component
-      // we know a ride has been requested
-      // use the request id to check the status of the ride in the queue
-      if (driverLocation.latitude == 0 && driverLocation.longitude == 0) {
-        // if the last time we checked the driverETA (which represented our place in the queue * 15),
-        // it was not 0, we are not first in queue.
-        if (driverETA !== 0) {
-          // then we can check whether the request is advancing in the queue
-          WebSocketService.send({
-            directive: "WAIT_TIME",
-            requestid,
-            requestedRide: {
-              pickUpLocation,
-              dropOffLocation,
-            },
-          });
-        }
-      } else {
-        // the driver has accepted our ride
-        if (
-          isSameLocation(driverLocation, pickUpLocation) &&
-          rideStatus == "DriverEnRoute"
-        ) {
-          // check if the driver has arrived
-          setRideStatus("DriverArrived");
-        } else {
-          // else check their progress in reaching the student
-          WebSocketService.send({
-            directive: "WAIT_TIME",
-            driverLocation,
-            requestid,
-            requestedRide: {
-              pickUpLocation,
-              dropOffLocation,
-            },
-          });
-        }
+          // the driver has accepted the ride  and they are on their way
+          // check if the driver has arrived at the pickup location
+          if (isSameLocation(driverLocation, pickUpLocation)) {
+            setRideStatus("DriverArrived");
+          } else {
+            // else check their ETA in reaching the student
+            WebSocketService.send({
+              directive: "WAIT_TIME",
+              driverLocation,
+              requestid,
+              requestedRide: {
+                pickUpLocation,
+                dropOffLocation,
+              },
+            });
+          }
+          break;
+        case "DriverArrived":
+          // driver arrived. hopefully walk progress is 1
+          break;
+        case "RideInProgress":
+          // if the ride is currently happening
+          // walk progress should be set to 1
+          setWalkProgress(1);
+          // update the progress of the ride
+          setRideProgress(
+            calculateProgress(pickUpLocation, driverLocation, dropOffLocation)
+          );
+
+          // check if the driver has reached the dropoff location
+          if (isSameLocation(driverLocation, dropOffLocation)) {
+            setRideStatus("RideCompleted");
+            setRideProgress(1); // set the ride progress to 1 to show the user they have arrived
+          }
+          break;
+        case "RideCompleted":
+          // the ride is completed
+          break;
+        default:
+          break;
       }
     }
   }, [userLocation, driverLocation, driverETA]);
@@ -376,29 +418,9 @@ export default function HomePage() {
         longitude: driverResp.longitude,
       });
       console.log("DRIVER LOC", driverResp);
-
-      // check if the driver has arrived at the pickup location
-      // (aka the driver is a negligible distance from the pickup location)
-      if (
-        isSameLocation(driverResp, pickUpLocation) &&
-        rideStatus == "DriverEnRoute"
-      ) {
-        setRideStatus("DriverArrived");
-      }
-
-      // if the ride is currently happening
-      if (rideStatus == "RideInProgress") {
-        // check the progress of the ride
-        setRideProgress(
-          calculateProgress(pickUpLocation, driverLocation, dropOffLocation)
-        );
-
-        // check if the driver has reached the dropoff location
-        if (isSameLocation(driverResp, dropOffLocation)) {
-          setRideStatus("RideCompleted");
-          setRideProgress(1); // set the ride progress to 1 to show the user they have arrived
-        }
-      }
+    } else {
+      // something went wrong
+      console.log("Location response error: ", message);
     }
   };
 
@@ -718,13 +740,14 @@ const calculateProgress = (
   // calculate the distance between the two coordinates
   const distance = calculateDistance(start, dest);
   const currentDistance = calculateDistance(start, current);
-  // console.log(
-  //   "current distance:",
-  //   currentDistance,
-  //   "total distance:",
-  //   distance,
-  //   "fraction:",
-  //   currentDistance / distance
-  // );
+  console.log(
+    "PROGRESS",
+    "current distance:",
+    currentDistance,
+    "total distance:",
+    distance,
+    "fraction:",
+    currentDistance / distance
+  );
   return currentDistance / distance; // remaining distance
 };

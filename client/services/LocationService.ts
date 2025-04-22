@@ -6,7 +6,9 @@ export type LocationName =
   | "Meany Hall"
   | "IMA"
   | "Okanogan Lane"
-  | "UW Tower";
+  | "UW Tower"
+  | "Suzallo"
+  | "Allen South";
 
 type LocationType = {
   // currently these are the locations we support
@@ -55,6 +57,16 @@ export class LocationService {
       name: "UW Tower",
       latitude: 47.660855088183816,
       longitude: -122.31464458754253,
+    },
+    {
+      name: "Suzallo",
+      latitude: 47.655901903652214,
+      longitude: -122.3086684103709,
+    },
+    {
+      name: "Allen South",
+      latitude: 47.65528726113183,
+      longitude: -122.3067912718363,
     },
   ];
 
