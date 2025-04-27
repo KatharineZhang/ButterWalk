@@ -736,7 +736,12 @@ const calculateProgress = (
 ): number => {
   // calculate the distance between the two coordinates
   const distance = calculateDistance(start, dest);
-  const currentDistance = calculateDistance(start, current);
+  // the distance between the current location and the destination
+  // is the remaining distance to the destination
+  // use this to calc progress because the user may not be 
+  // walking in a straight line from the start location
+  const remaining = calculateDistance(current, dest);
+  const currentDistance = distance - remaining;
   console.log(
     "PROGRESS",
     "current distance:",
