@@ -161,14 +161,6 @@ type Building = {
           longitude: -122.30583,  
         },
       },
-
-      {
-        name: "Chemistry Library Building (CHL)",
-        location: {
-          latitude: 47.6553,
-          longitude: -122.30583
-        }
-      },
       {
         name: "Child Learning & Care Center",
         location: {
@@ -210,13 +202,6 @@ type Building = {
           latitude: 47.6517,
           longitude: -122.3051
         }
-      },
-      {
-        name: "Bullitt Center (L191)",
-        location: {
-          latitude: 47.6553,
-          longitude: -122.30583,  
-        },
       },
       {
         name: "Bullitt Center (L191)",

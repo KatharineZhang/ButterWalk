@@ -17,6 +17,7 @@ import PopUpModal from "./PopUpModal";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { ScrollView } from "react-native-gesture-handler";
 import SegmentedProgressBar from "./SegmentedProgressBar";
+import { BuildingService } from "@/services/campus";
 
 type RideRequestFormProps = {
   pickUpLocationChanged: (location: ValidLocationType) => void;
@@ -28,9 +29,9 @@ type RideRequestFormProps = {
 };
 
 // the type of locations we can send to homepage
-export type ValidLocationType = LocationName | `Current Location`;
+export type ValidLocationType = string | `Current Location`;
 // the type of locations we can show in the dropdown
-export type DropDownType = LocationName | "Current Location";
+export type DropDownType = string | "Current Location";
 
 // What's in this component:
 // Ride Request Form which sends request to server and gets response back,
@@ -94,17 +95,8 @@ export default function RideRequestForm({
 
   // data from LocationService.ts
 
-  const data: DropDownType[] = [
-    "Current Location",
-    "HUB",
-    "Alder Hall",
-    "Communication Building",
-    "Flagpole",
-    "Meany Hall",
-    "IMA",
-    "Okanogan Lane",
-    "UW Tower",
-  ];
+  const data: DropDownType[] = BuildingService.Buildings.map(b => b.name);
+  data.unshift("Current Location")
 
   const handleSelection = (value: DropDownType) => {
     if (currentQuery === "pickup") {
