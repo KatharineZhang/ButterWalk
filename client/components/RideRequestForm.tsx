@@ -125,7 +125,6 @@ export default function RideRequestForm({
       return;
     }
     if (value === "Current Location") {
-      console.log("here");
       setConfirmationModalVisible(true);
     } else {
       // we clicked a normal location

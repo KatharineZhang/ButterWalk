@@ -67,7 +67,6 @@ export default function HomePage() {
     latitude: number;
     longitude: number;
   }) => {
-    console.log("LOG", "USER LOC", location);
     setUserLocation(location);
     // if the ride has been accepted, send the new location to the driver
     if (rideStatus === "DriverEnRoute") {
@@ -365,7 +364,12 @@ export default function HomePage() {
         case "RideInProgress":
           // if the ride is currently happening
           // walk progress should be set to 1
+          if (
+            startLocation.latitude != 0 &&
+            startLocation.longitude != 0
+          ){
           setWalkProgress(1);
+          }
           // update the progress of the ride
           setRideProgress(
             calculateProgress(pickUpLocation, driverLocation, dropOffLocation)
@@ -378,7 +382,6 @@ export default function HomePage() {
           }
           break;
         case "RideCompleted":
-          console.log("PROGRESS", "RIDE COMPLETED");
           // the ride is completed
           break;
         default:
@@ -414,7 +417,6 @@ export default function HomePage() {
         latitude: driverResp.latitude,
         longitude: driverResp.longitude,
       });
-      console.log("LOG","DRIVER LOC", driverResp);
     } else {
       // something went wrong
       console.log("Location response error: ", message);
@@ -569,11 +571,15 @@ export default function HomePage() {
           status={rideStatus}
         />
         {/* profile pop-up modal */}
-        <Profile
-          isVisible={profileVisible}
-          onClose={() => setProfileVisible(false)}
-          user={user}
-        />
+        <View
+          style={styles.modalContainer}
+        >
+          <Profile
+            isVisible={profileVisible}
+            onClose={() => setProfileVisible(false)}
+            user={user}
+          />
+        </View>
         {/* profile button in top left corner*/}
         <View
           style={{
@@ -605,8 +611,11 @@ export default function HomePage() {
         </View>
 
         {/* faq pop-up modal */}
-        <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
-
+        <View
+          style={styles.modalContainer}
+        >
+          <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
+        </View>
         {/* notification component */}
         <View
           style={{ position: "absolute", top: 0, width: "100%", zIndex: 100 }}

@@ -127,12 +127,10 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
       const newProgress = Math.max(progress, driving); // Make sure the progress bar always increases
 
       progress = Math.min(newProgress, 1); // Make sure the progress is not greater than 1
-      console.log("PROGRESS","ride in progress", progress);
     } else if (status == "RideCompleted") {
       // When ride is completed
       // progress = 1
       progress = 1; // Make sure the progress is not greater than 1
-      console.log("PROGRESS","ride completed", progress);
     } else {
       // When ride is not in progress, the user can only walk to the pickup location
       // progress = (dist from user to pickup) / (dist from start to pickup)
@@ -142,14 +140,11 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
 
       // The max progress is 0.45
       progress = Math.min(newProgress, 0.45); // Make sure the progress is not greater than 0.45
-      console.log("PROGRESS","walking", progress);
     }
   } else {
     // else walking is not needed, just show the ride progress
     progress = rideProgress;
   }
-
-  console.log("PROGRESS","progress", progress);
 
   // height expansion
   const [expanded, setExpanded] = useState(false); // if the progress bar is expanded or not

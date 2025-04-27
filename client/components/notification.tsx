@@ -17,7 +17,6 @@ const Notification: React.FC<NotificationProps> = ({
   const top = useRef(new Animated.Value(-1000)).current;
 
   useEffect(() => {
-    console.log("notification");
     Animated.timing(top, {
       toValue: 50,
       duration: 1000,
