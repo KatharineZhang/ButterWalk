@@ -6,12 +6,12 @@ import {
   useImperativeHandle,
   forwardRef,
 } from "react";
-import MapView, { Polygon, Marker, Polyline } from "react-native-maps";
+import MapView, { Polygon, Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { styles } from "@/assets/styles";
 import { View, Image, Alert, Linking } from "react-native";
-import MapViewDirections from "react-native-maps-directions";
+// import MapViewDirections from "react-native-maps-directions";
 import { Ionicons } from "@expo/vector-icons";
 import { user_Suz_to_AllenSouth_goto } from "@/mocks/userMocks";
 import { RideStatus } from "./home";
@@ -54,7 +54,6 @@ const Map = forwardRef<MapRef, MapProps>(
       latitude: number;
       longitude: number;
     }>({ latitude: 0, longitude: 0 });
-    let index = 0;
 
     // what locations to focus on when zooming in on the map
     // in the format: [userLocation, driverLocation, pickUpLocation, dropOffLocation]
@@ -85,40 +84,56 @@ const Map = forwardRef<MapRef, MapProps>(
     }, [driverLocation]);
 
     useEffect(() => {
-      console.log("Status changed", rideStatus);
-      // when the ride is completed, clear the path
+      let interval: NodeJS.Timeout | null = null;
+      let index = 0;
+    
       if (rideStatus === "RideCompleted") {
         setRidePath([]);
       } else if (rideStatus === "WaitingForRide") {
-        const interval = setInterval(() => {
+        interval = setInterval(() => {
+          if (index >= user_Suz_to_AllenSouth_goto.length && interval !== null) {
+            console.log("clearing user location interval at end");
+            clearInterval(interval);
+            index = 0;
+            return;
+          } 
+
           console.log("Interval running", index);
+    
           setUserLocation({
             latitude: user_Suz_to_AllenSouth_goto[index].latitude,
             longitude: user_Suz_to_AllenSouth_goto[index].longitude,
           });
+    
           userLocationChanged({
             latitude: user_Suz_to_AllenSouth_goto[index].latitude,
             longitude: user_Suz_to_AllenSouth_goto[index].longitude,
           });
-          if (index <= user_Suz_to_AllenSouth_goto.length-1) {
-            index++;
-          } 
-          
-          if (index >= user_Suz_to_AllenSouth_goto.length-1 || rideStatus !== "WaitingForRide") {
-            console.log("Interval exit");
-            return () => clearInterval(interval); 
-          }
-
-        }, 1000); // every second
+    
+          index++;
+        }, 1000);
       } else {
-        index = 0;
+        if (interval !== null) {
+          clearInterval(interval);
+          index = 0;
+          return;
+        }
       }
+    
+      return () => {
+        if (interval !== null) {
+          console.log("clearing user location interval on cleanup");
+          clearInterval(interval);
+          index = 0;
+        }
+      };
     }, [rideStatus]);
+    
 
     // GOOGLE MAPS API KEY
-    const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
-      ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
-      : "";
+    // const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
+    //   ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
+    //   : "";
 
     // used for map zooming
     const mapRef = useRef<MapView>(null);
@@ -285,10 +300,29 @@ const Map = forwardRef<MapRef, MapProps>(
           />
           <Marker
             coordinate={{
+              latitude: driverLocation.latitude,
+              longitude: driverLocation.longitude,
+            }}
+            title={"Driver"}
+          >
+            <View
+              style={{
+                backgroundColor: "white",
+                borderRadius: 50,
+                borderWidth: 2,
+                // opacity: 0.8,
+              }}
+            >
+              {/* <Ionicons name="locate-sharp" size={25} color="black" /> */}
+              <Ionicons name="car-sharp" size={30} color="black" />
+            </View>
+          </Marker>
+          <Marker
+            coordinate={{
               latitude: pickUpLocation.latitude,
               longitude: pickUpLocation.longitude,
             }}
-            title={"pickUpLocation"}
+            title={"Pick Up"}
           >
             <View style={[styles.circleStart, { borderWidth: 0 }]}></View>
           </Marker>
@@ -297,7 +331,7 @@ const Map = forwardRef<MapRef, MapProps>(
               latitude: dropOffLocation.latitude,
               longitude: dropOffLocation.longitude,
             }}
-            title={"dropOffLocation"}
+            title={"Drop Off"}
           >
             <Image
               source={require("../../assets/images/dropoff-location.png")}
@@ -310,7 +344,7 @@ const Map = forwardRef<MapRef, MapProps>(
                 latitude: userLocation.latitude,
                 longitude: userLocation.longitude,
               }}
-              title={"userLocation"}
+              title={"Your Location"}
             >
               <View
                 style={{
@@ -338,32 +372,15 @@ const Map = forwardRef<MapRef, MapProps>(
               latitude: startLocation.latitude,
               longitude: startLocation.longitude,
             }}
-            title={"startLocation"}
-          >
-            <View style={[styles.circleStart, { backgroundColor: "white" }]}></View>
-          </Marker>
-          <Marker
-            coordinate={{
-              latitude: driverLocation.latitude,
-              longitude: driverLocation.longitude,
-            }}
-            title={"driverLocation"}
+            title={"Start Location"}
           >
             <View
-              style={{
-                backgroundColor: "white",
-                borderRadius: 50,
-                borderWidth: 2,
-                // opacity: 0.8,
-              }}
-            >
-              {/* <Ionicons name="locate-sharp" size={25} color="black" /> */}
-              <Ionicons name="car-sharp" size={30} color="black" />
-            </View>
+              style={[styles.circleStart, { backgroundColor: "white" }]}
+            ></View>
           </Marker>
           {/* show the directions between the pickup and dropoff locations if they are valid
         if the ride is not currently happening / happened  */}
-          {rideStatus != "RideInProgress" &&
+          {/* {rideStatus != "RideInProgress" &&
             rideStatus != "RideCompleted" &&
             pickUpLocation.latitude != 0 &&
             dropOffLocation.latitude != 0 && (
@@ -374,16 +391,16 @@ const Map = forwardRef<MapRef, MapProps>(
                 strokeWidth={3}
                 strokeColor="#4B2E83"
               />
-            )}
+            )} */}
 
           {/* show the path of the ride if it is in progress */}
-          {rideStatus === "RideInProgress" && (
+          {/* {rideStatus === "RideInProgress" && (
             <Polyline
               coordinates={ridePath}
               strokeWidth={3}
               strokeColor="#4B2E83"
             />
-          )}
+          )} */}
         </MapView>
       </View>
     );
@@ -395,6 +412,9 @@ export const calculateDistance = (
   point1: { latitude: number; longitude: number },
   point2: { latitude: number; longitude: number }
 ) => {
+  if (!point1 || !point2) {
+    return 0;
+  }
   // use the haversine formula to calculate the distance between two points
   // based on https://www.geeksforgeeks.org/haversine-formula-to-find-distance-between-two-points-on-a-sphere/
   const R = 6371; // radius of earth in km

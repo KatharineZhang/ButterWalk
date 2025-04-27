@@ -25,6 +25,11 @@ type RideRequestFormProps = {
   rideRequested: (numPassengers: number) => void;
   setFAQVisible: (visible: boolean) => void;
   startingState?: { pickup: string; dropoff: string; numRiders: number };
+  setNotificationState: (state: {
+    text: string;
+    color: string;
+    boldText?: string;
+  }) => void;
 };
 
 // the type of locations we can send to homepage
@@ -46,6 +51,7 @@ export default function RideRequestForm({
   rideRequested,
   startingState,
   setFAQVisible,
+  setNotificationState
 }: RideRequestFormProps) {
   // user input states for form
   const [location, setLocation] = useState("");
@@ -68,6 +74,26 @@ export default function RideRequestForm({
       setShowNumberRiders(true);
     }
   }, []);
+
+
+  // If the user selected a pickup location or dropoff location that is not
+  // Suzzallo or Allen South respectively, show the notification
+  useEffect(() => {
+    if (location !== "Suzzallo" && location !== "") {
+      setNotificationState({
+        text: "You must select Suzzallo as your pickup location",
+        color: "red",
+        boldText: "Pickup Location",
+      })
+    }
+    if( destination !== "Allen South" && destination !== "") {
+      setNotificationState({
+        text: "You must select Allen South as your dropoff location",
+        color: "red",
+        boldText: "Dropoff Location",
+      })
+    }
+  }, [location, destination]);
 
   // Confirmation Modal
   const [confirmationModalVisible, setConfirmationModalVisible] =
@@ -94,29 +120,20 @@ export default function RideRequestForm({
 
   // data from LocationService.ts
 
-  const data: DropDownType[] = [
-    "Current Location",
-    "HUB",
-    "Alder Hall",
-    "Communication Building",
-    "Flagpole",
-    "Meany Hall",
-    "IMA",
-    "Okanogan Lane",
-    "UW Tower",
-    "Suzallo",
-    "Allen South",
-  ];
+  const data: DropDownType[] = ["Suzzallo", "Allen South"];
 
   const handleSelection = (value: DropDownType) => {
+    console.log("Selected value: " + value); // temporary debug! Can delete later
     if (currentQuery === "pickup") {
-      setLocationQuery(value);
-      handleSetLocation(value);
+      // if we are doing pickup, manually set location as Suzzallo
+      setLocationQuery("Suzzallo");
+      handleSetLocation("Suzzallo");
       //switch to dropoff
       setCurrentQuery("dropoff");
-    } else {
-      setDestinationQuery(value);
-      handleSetDestination(value);
+    } else { // dropoff branch
+      // if we are doing dropoff, manually set destination as Allen South
+      setDestinationQuery("Allen South");
+      handleSetDestination("Allen South");
     }
   };
 

@@ -7,7 +7,7 @@ export type LocationName =
   | "IMA"
   | "Okanogan Lane"
   | "UW Tower"
-  | "Suzallo"
+  | "Suzzallo"
   | "Allen South";
 
 type LocationType = {
@@ -59,7 +59,7 @@ export class LocationService {
       longitude: -122.31464458754253,
     },
     {
-      name: "Suzallo",
+      name: "Suzzallo",
       latitude: 47.655901903652214,
       longitude: -122.3086684103709,
     },

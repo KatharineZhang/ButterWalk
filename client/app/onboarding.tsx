@@ -52,7 +52,7 @@ export default function Onboarding() {
           </View>
 
           <View style={styles.navigationContainer}>
-            <Link href={"/driverOrstudent"} asChild>
+            <Link href={"/(student)/signin"} asChild>
               <Pressable style={styles.navigationButton}>
                 <Text style={styles.navigationButtonText}>Skip</Text>
               </Pressable>
@@ -60,7 +60,7 @@ export default function Onboarding() {
             <Paginator data={pages} scrollX={scrollX} />
             <Pressable
               style={styles.startedButton}
-              onPress={() => router.push("/driverOrstudent")}
+              onPress={() => router.push("/(student)/signin")}
             >
               <Text style={styles.startedButtonText}>Get Started</Text>
             </Pressable>
@@ -74,7 +74,7 @@ export default function Onboarding() {
             {pages[currentIndex].text}
           </Text>
           <View style={styles.navigationContainer}>
-            <Link href={"/driverOrstudent"} asChild>
+            <Link href={"/(student)/signin"} asChild>
               <Pressable style={styles.navigationButton}>
                 <Text style={styles.navigationButtonText}>Skip</Text>
               </Pressable>

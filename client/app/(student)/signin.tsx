@@ -2,7 +2,7 @@ import {
   View,
   Text,
   KeyboardAvoidingView,
-  Pressable,
+  // Pressable,
   TouchableOpacity,
   Image,
 } from "react-native";
@@ -21,7 +21,7 @@ import {
   ErrorResponse,
 } from "../../../server/src/api";
 import WebSocketService, {
-  WebsocketConnectMessage,
+  // WebsocketConnectMessage,
 } from "../../services/WebSocketService";
 
 // Images
@@ -75,22 +75,22 @@ const Login = () => {
   WebSocketService.addListener(handleSigninMessage, "SIGNIN");
 
   useEffect(() => {
-    const connectWebSocket = async () => {
-      // call our new route
-      const msg: WebsocketConnectMessage = await WebSocketService.connect();
-      if (msg == "Connected Successfully") {
-        if (response) {
-          WebSocketService.send({
-            directive: "SIGNIN",
-            response,
-            role: "STUDENT",
-          });
-        }
-      } else {
-        console.log("failed to connect!!!");
-      }
-    };
-    connectWebSocket();
+    // const connectWebSocket = async () => {
+    //   // call our new route
+    //   const msg: WebsocketConnectMessage = await WebSocketService.connect();
+    //   if (msg == "Connected Successfully") {
+    //     if (response) {
+    //       WebSocketService.send({
+    //         directive: "SIGNIN",
+    //         response,
+    //         role: "STUDENT",
+    //       });
+    //     }
+    //   } else {
+    //     console.log("failed to connect!!!");
+    //   }
+    // };
+    // connectWebSocket();
   }, [response]);
 
   return accExists == true && netid ? (
@@ -113,7 +113,7 @@ const Login = () => {
     />
   ) : (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.appNameText}>Husky ButterWalk</Text>
+      <Text style={styles.appNameText}>RideSafe+</Text>
       <Image style={styles.signInbottomImageContainer} source={huskyCarImage} />
       <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
         <Text style={styles.signInText}>start your ride by signing in!</Text>
@@ -121,7 +121,7 @@ const Login = () => {
 
         <TouchableOpacity
           style={styles.signInGoogleContainer}
-          onPress={() => promptAsync()}
+          onPress={() => {setAccExists(true); setNetid("1nv35t0r");}}
         >
           <Image style={styles.signInGoogleLogo} source={logo} />
           <Text style={{ fontWeight: "bold", fontSize: 17 }}>
@@ -130,7 +130,7 @@ const Login = () => {
         </TouchableOpacity>
         <Text style={{ color: "red" }}>{errMsg}</Text>
 
-        {/* TEMPORARY Bypass Signin Button */}
+        {/* TEMPORARY Bypass Signin Button
         <View style={{ height: 20 }}></View>
         <Pressable
           style={styles.signInButton}
@@ -140,7 +140,7 @@ const Login = () => {
           }}
         >
           <Text style={styles.signInText}>Bypass Signin</Text>
-        </Pressable>
+        </Pressable> */}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
