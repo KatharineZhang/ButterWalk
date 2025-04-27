@@ -353,6 +353,9 @@ export const calculateDistance = (
   point1: { latitude: number; longitude: number },
   point2: { latitude: number; longitude: number }
 ) => {
+  if (!point1 || !point2) {
+    return 0; // if either point is null, return 0
+  }
   // use the haversine formula to calculate the distance between two points
   // based on https://www.geeksforgeeks.org/haversine-formula-to-find-distance-between-two-points-on-a-sphere/
   const R = 6371; // radius of earth in km
