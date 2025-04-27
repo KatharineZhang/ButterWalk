@@ -5,13 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { ProgressBar } from "react-native-paper";
 import moment from "moment";
 import momentTimezone from "moment-timezone";
-
-export type RideStatus =
-  | "WaitingForRide" // the ride has been requested
-  | "DriverEnRoute" // the ride is accepted
-  | "DriverArrived" // the driver is at the pickup location
-  | "RideInProgress" // the driver is taking the student to dropoff location
-  | "RideCompleted"; // the driver arrived at the dropoff location
+import { RideStatus } from "@/app/(student)/home";
 
 interface HandleRideProps {
   pickUpLocation: string;
@@ -114,9 +108,9 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   };
 
   let progress = 0;
+  console.log(walkProgress, rideProgress);
   if (walkProgress >= 0) {
     // walking is needed
-
     if (status == "RideInProgress") {
       // when ride is in progress
       // progress = 0.45 + (dist from driver+student to dropoff) / (dist from pickup to dropoff)
@@ -136,7 +130,6 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
     } else {
       // When ride is not in progress, the user can only walk to the pickup location
       // progress = (dist from user to pickup) / (dist from start to pickup)
-
       const walking = walkProgress * 0.45; // walk progress translated from 0 - 0.45
       const newProgress = Math.max(progress, walking); // Make sure the progress bar always increases
 

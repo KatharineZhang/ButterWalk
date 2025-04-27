@@ -104,6 +104,8 @@ export default function RideRequestForm({
     "IMA",
     "Okanogan Lane",
     "UW Tower",
+    "Suzallo",
+    "Allen South",
   ];
 
   const handleSelection = (value: DropDownType) => {

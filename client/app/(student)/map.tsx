@@ -13,8 +13,11 @@ import { styles } from "@/assets/styles";
 import { View, Image, Alert, Linking } from "react-native";
 import MapViewDirections from "react-native-maps-directions";
 import { Ionicons } from "@expo/vector-icons";
+import { user_Suz_to_AllenSouth_goto } from "@/mocks/userMocks";
+import { RideStatus } from "./home";
 
 interface MapProps {
+  startLocation: { latitude: number; longitude: number };
   pickUpLocation: { latitude: number; longitude: number };
   dropOffLocation: { latitude: number; longitude: number };
   driverLocation: { latitude: number; longitude: number };
@@ -22,12 +25,7 @@ interface MapProps {
     latitude: number;
     longitude: number;
   }) => void;
-  status:
-    | "WaitingForRide" // the ride has been requested
-    | "DriverEnRoute" // the ride is accepted
-    | "DriverArrived" // the driver is at the pickup location
-    | "RideInProgress" // the driver is taking the student to dropoff location
-    | "RideCompleted"; // the driver arrived at the dropoff location
+  rideStatus: RideStatus;
 }
 
 // functions that can be called from the parent component
@@ -41,10 +39,11 @@ export interface MapRef {
 const Map = forwardRef<MapRef, MapProps>(
   (
     {
+      startLocation = { latitude: 0, longitude: 0 },
       driverLocation = { latitude: 0, longitude: 0 },
       pickUpLocation = { latitude: 0, longitude: 0 },
       dropOffLocation = { latitude: 0, longitude: 0 },
-      status,
+      rideStatus,
       userLocationChanged,
     },
     ref
@@ -55,6 +54,7 @@ const Map = forwardRef<MapRef, MapProps>(
       latitude: number;
       longitude: number;
     }>({ latitude: 0, longitude: 0 });
+    let index = 0;
 
     // what locations to focus on when zooming in on the map
     // in the format: [userLocation, driverLocation, pickUpLocation, dropOffLocation]
@@ -73,7 +73,7 @@ const Map = forwardRef<MapRef, MapProps>(
 
     useEffect(() => {
       if (
-        status === "RideInProgress" &&
+        rideStatus === "RideInProgress" &&
         driverLocation.latitude != 0 &&
         driverLocation.longitude != 0 &&
         !isSameLocation(driverLocation, ridePath[ridePath.length - 1]) // check if we have moved far enough
@@ -85,11 +85,35 @@ const Map = forwardRef<MapRef, MapProps>(
     }, [driverLocation]);
 
     useEffect(() => {
+      console.log("Status changed", rideStatus);
       // when the ride is completed, clear the path
-      if (status === "RideCompleted") {
+      if (rideStatus === "RideCompleted") {
         setRidePath([]);
+      } else if (rideStatus === "WaitingForRide") {
+        const interval = setInterval(() => {
+          console.log("Interval running", index);
+          setUserLocation({
+            latitude: user_Suz_to_AllenSouth_goto[index].latitude,
+            longitude: user_Suz_to_AllenSouth_goto[index].longitude,
+          });
+          userLocationChanged({
+            latitude: user_Suz_to_AllenSouth_goto[index].latitude,
+            longitude: user_Suz_to_AllenSouth_goto[index].longitude,
+          });
+          if (index <= user_Suz_to_AllenSouth_goto.length-1) {
+            index++;
+          } 
+          
+          if (index >= user_Suz_to_AllenSouth_goto.length-1 || rideStatus !== "WaitingForRide") {
+            console.log("Interval exit");
+            return () => clearInterval(interval); 
+          }
+
+        }, 1000); // every second
+      } else {
+        index = 0;
       }
-    }, [status]);
+    }, [rideStatus]);
 
     // GOOGLE MAPS API KEY
     const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
@@ -183,25 +207,34 @@ const Map = forwardRef<MapRef, MapProps>(
         return;
       }
 
-      await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.High,
-          timeInterval: 1000, // Update every second
-          distanceInterval: 1, // Update every meter
-        },
-        (location) => {
-          // when location changes, change our state
-          setUserLocation({
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          });
-          // notify the parent component that the user's location has changed
-          userLocationChanged({
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          });
-        }
-      );
+      // set location to the quad
+      setUserLocation({
+        latitude: 47.656356249513586,
+        longitude: -122.3068807109975,
+      });
+      userLocationChanged({
+        latitude: 47.656356249513586,
+        longitude: -122.3068807109975,
+      });
+      // await Location.watchPositionAsync(
+      //   {
+      //     accuracy: Location.Accuracy.High,
+      //     timeInterval: 1000, // Update every second
+      //     distanceInterval: 1, // Update every meter
+      //   },
+      //   (location) => {
+      //     // when location changes, change our state
+      //     setUserLocation({
+      //       latitude: location.coords.latitude,
+      //       longitude: location.coords.longitude,
+      //     });
+      //     // notify the parent component that the user's location has changed
+      //     userLocationChanged({
+      //       latitude: location.coords.latitude,
+      //       longitude: location.coords.longitude,
+      //     });
+      //   }
+      // );
     }
 
     // RECENTER
@@ -271,7 +304,7 @@ const Map = forwardRef<MapRef, MapProps>(
               style={{ height: 30, width: 30 }}
             />
           </Marker>
-          {status != "RideInProgress" && (
+          {rideStatus != "RideInProgress" && (
             <Marker
               coordinate={{
                 latitude: userLocation.latitude,
@@ -302,6 +335,15 @@ const Map = forwardRef<MapRef, MapProps>(
           )}
           <Marker
             coordinate={{
+              latitude: startLocation.latitude,
+              longitude: startLocation.longitude,
+            }}
+            title={"startLocation"}
+          >
+            <View style={[styles.circleStart, { backgroundColor: "white" }]}></View>
+          </Marker>
+          <Marker
+            coordinate={{
               latitude: driverLocation.latitude,
               longitude: driverLocation.longitude,
             }}
@@ -321,8 +363,8 @@ const Map = forwardRef<MapRef, MapProps>(
           </Marker>
           {/* show the directions between the pickup and dropoff locations if they are valid
         if the ride is not currently happening / happened  */}
-          {status != "RideInProgress" &&
-            status != "RideCompleted" &&
+          {rideStatus != "RideInProgress" &&
+            rideStatus != "RideCompleted" &&
             pickUpLocation.latitude != 0 &&
             dropOffLocation.latitude != 0 && (
               <MapViewDirections
@@ -335,7 +377,7 @@ const Map = forwardRef<MapRef, MapProps>(
             )}
 
           {/* show the path of the ride if it is in progress */}
-          {status === "RideInProgress" && (
+          {rideStatus === "RideInProgress" && (
             <Polyline
               coordinates={ridePath}
               strokeWidth={3}

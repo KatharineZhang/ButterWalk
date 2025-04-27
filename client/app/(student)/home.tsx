@@ -6,6 +6,7 @@ import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
 import {
   DistanceResponse,
+  ErrorResponse,
   LocationResponse,
   RequestRideResponse,
   User,
@@ -26,6 +27,15 @@ import LoadingPageComp from "@/components/loadingPageComp";
 import Notification from "@/components/notification";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Legend from "@/components/Legend";
+import { user_Suz_to_AllenSouth_2_ride, user_Suz_to_AllenSouth_goto } from "@/mocks/userMocks";
+
+export type RideStatus =
+| "NoRide"
+| "WaitingForRide" // the ride has been requested
+| "DriverEnRoute" // the ride is accepted
+| "DriverArrived" // the driver is at the pickup location
+| "RideInProgress" // the driver is taking the student to dropoff location
+| "RideCompleted"; // the driver arrived at the dropoff location
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -67,7 +77,6 @@ export default function HomePage() {
     latitude: number;
     longitude: number;
   }) => {
-    console.log("LOG", "USER LOC", location);
     setUserLocation(location);
     // if the ride has been accepted, send the new location to the driver
     if (rideStatus === "DriverEnRoute") {
@@ -182,13 +191,8 @@ export default function HomePage() {
 
   // show different state in the DriverOneWay component
   // based on the status of the ride
-  const [rideStatus, setRideStatus] = useState<
-    | "WaitingForRide"
-    | "DriverEnRoute"
-    | "DriverArrived"
-    | "RideInProgress"
-    | "RideCompleted"
-  >("WaitingForRide");
+  const [rideStatus, setRideStatus] = useState<RideStatus
+  >("NoRide");
 
   // the user's location when the ride was requested
   // could be the pickup location if the user clicked
@@ -288,18 +292,56 @@ export default function HomePage() {
     }
   }, [whichComponent]);
 
+  useEffect(() => {
+    if (rideStatus === "DriverEnRoute") {
+      let index = 0;
+      const interval = setInterval(() => {
+        console.log("DRIVER running", index);
+        setDriverLocation({
+          latitude: user_Suz_to_AllenSouth_goto[index].latitude,
+          longitude: user_Suz_to_AllenSouth_goto[index].longitude,
+        });
+        if (index < user_Suz_to_AllenSouth_goto.length - 1) {
+          index++;
+        } else {
+          clearInterval(interval);
+        }
+      }, 1000);
+  
+      return () => clearInterval(interval); 
+    } else if (rideStatus === "RideInProgress") {
+        let index = 0;
+        const interval = setInterval(() => {
+          console.log("RIDE running", index);
+          setDriverLocation({
+            latitude: user_Suz_to_AllenSouth_2_ride[index].latitude,
+            longitude: user_Suz_to_AllenSouth_2_ride[index].longitude,
+          });
+          if (index < user_Suz_to_AllenSouth_2_ride.length - 1) {
+            index++;
+          } else {
+            clearInterval(interval);
+          }
+        }, 1000);
+    
+        return () => clearInterval(interval); 
+      } 
+    
+  }, [rideStatus]);
+
   // if the component shown is handleRide,
   // everytime a location changes, check the wait time and walking/ride progress
   // to update the progress bar
   useEffect(() => {
     if (whichComponent == "handleRide") {
+      console.log("PROGRESS", "USER LOC", userLocation);
+      console.log("PROGRESS", "DRIVER LOC", driverLocation);
       switch (rideStatus) {
         case "WaitingForRide":
           // update the walking progress if the pickup Location was not the user's starting location
           if (
             startLocation.latitude != 0 &&
-            startLocation.longitude != 0 &&
-            !isSameLocation(userLocation, pickUpLocation)
+            startLocation.longitude != 0 
           ) {
             // there is a large enough distance that the user needs to walk
             // calculate the progress of the user walking to the pickup location
@@ -309,7 +351,16 @@ export default function HomePage() {
               pickUpLocation
             );
             setWalkProgress(wp);
+
+            if (isSameLocation(userLocation, pickUpLocation)) {
+              console.log("PROGRESS", "USER AT PICKUP LOCATION");
+              setWalkProgress(1); // set walk progress to 1
+              setRideStatus("DriverEnRoute");
+              // setDriverLocation(userLocation);
+            }
+              
           }
+
           // if the last time we checked the driverETA (which represented our place in the queue * 15),
           // it was not 0, we are not first in queue.
           if (driverETA !== 0) {
@@ -366,6 +417,7 @@ export default function HomePage() {
           // if the ride is currently happening
           // walk progress should be set to 1
           setWalkProgress(1);
+
           // update the progress of the ride
           setRideProgress(
             calculateProgress(pickUpLocation, driverLocation, dropOffLocation)
@@ -500,6 +552,14 @@ export default function HomePage() {
       setWhichComponent("handleRide");
       setRideStatus("WaitingForRide");
 
+      // if the start location is not the pickup location
+      // the user must walk
+      if (!isSameLocation(userLocation, pickUpLocation)) {
+        setStartLocation(userLocation);
+        // set initial walk progress
+        setWalkProgress(0);
+      }
+
       // show notification
       setNotifState({
         text: "Ride successfully requested",
@@ -507,7 +567,14 @@ export default function HomePage() {
         boldText: "requested",
       });
     } else {
-      console.log("Request ride error: ", message);
+      const errMessage = message as ErrorResponse;
+      console.log("Request ride error: ", errMessage);
+      // show notification
+      setNotifState({
+        text: errMessage.error,
+        color: "#FFCBCB",
+        boldText: "requested",
+      });
       // go back to request ride
       setWhichComponent("rideReq");
     }
@@ -565,8 +632,9 @@ export default function HomePage() {
           pickUpLocation={pickUpLocation}
           dropOffLocation={dropOffLocation}
           driverLocation={driverLocation}
+          startLocation={startLocation}
           userLocationChanged={userLocationChanged}
-          status={rideStatus}
+          rideStatus={rideStatus}
         />
         {/* profile pop-up modal */}
         <Profile
