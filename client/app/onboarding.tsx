@@ -43,7 +43,7 @@ export default function Onboarding() {
         // Content for last page without overlay panel
         <View style={styles.lastPageContent}>
           <View style={{ marginBottom: 190 }}>
-            <Text style={[styles.overlayText, {paddingHorizontal: 60}]}>
+            <Text style={[styles.overlayText, { paddingHorizontal: 60 }]}>
               {pages[currentIndex].title}
             </Text>
             <Text style={[styles.overlayTextSmall]}>

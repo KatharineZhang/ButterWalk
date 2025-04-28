@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { TouchableOpacity, View } from "react-native";
+import { Pressable, TouchableOpacity, View } from "react-native";
 import Profile from "./profile";
-import Map, { calculateDistance } from "./map";
+import Map, { calculateDistance, isSameLocation, MapRef } from "./map";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
 import {
   DistanceResponse,
+  ErrorResponse,
   LocationResponse,
   RequestRideResponse,
   User,
@@ -25,6 +26,7 @@ import { createOpenLink } from "react-native-open-maps";
 import LoadingPageComp from "@/components/loadingPageComp";
 import Notification from "@/components/notification";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import Legend from "@/components/Legend";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -75,6 +77,16 @@ export default function HomePage() {
         latitude: location.latitude,
         longitude: location.longitude,
       });
+    }
+  };
+
+  // retain a reference to the map to call functions on it later
+  const mapRef = useRef<MapRef>(null);
+  // when the user clicks the recenter button
+  // recenter the map to the user's location
+  const recenter = () => {
+    if (mapRef.current) {
+      mapRef.current.recenterMap();
     }
   };
 
@@ -186,10 +198,7 @@ export default function HomePage() {
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
   // A number between 0 and 1 that represents the progress of the user
-  // walking to the pickup location will be -1 if the user clicked
-  // "Current Location" on the ride request form
-  // and therefore will not need to walk
-  const [walkProgress, setWalkProgress] = useState(-1);
+  const [walkProgress, setWalkProgress] = useState(0);
   // A number between 0 and 1 that represents the progress of the
   // ride from the pickup location to the dropoff location
   const [rideProgress, setRideProgress] = useState(0);
@@ -267,11 +276,9 @@ export default function HomePage() {
     } else if (whichComponent == "handleRide") {
       // if we are handling the ride, check if walking is needed by setting start location
       setStartLocation(userLocation);
-      // if the start location is not the pickup location
-      // the user must walk
-      if (calculateDistance(userLocation, pickUpLocation) > 0.01) {
-        // set initial walk progress
-        setWalkProgress(0);
+
+      if (isSameLocation(userLocation, pickUpLocation)) {
+        setWalkProgress(1);
       }
     }
   }, [whichComponent]);
@@ -281,63 +288,97 @@ export default function HomePage() {
   // to update the progress bar
   useEffect(() => {
     if (whichComponent == "handleRide") {
-      // update the walking progress if the pickup Location was not the user's starting location
-      if (
-        startLocation.latitude != 0 &&
-        calculateDistance(startLocation, pickUpLocation) > 0.0001
-      ) {
-        console.log("updating walk progress");
-        // there is a large enough distance that the user needs to walk
-        const wp = calculateProgress(
-          startLocation,
-          userLocation,
-          pickUpLocation
-        );
-        console.log("walk progress:", wp);
-        setWalkProgress(wp);
-      }
+      switch (rideStatus) {
+        case "WaitingForRide":
+          // update the walking progress if the pickup Location was not the user's starting location
+          if (startLocation.latitude != 0 && startLocation.longitude != 0) {
+            // there is a large enough distance that the user needs to walk
+            // calculate the progress of the user walking to the pickup location
+            if (isSameLocation(userLocation, pickUpLocation)) {
+              setWalkProgress(1);
+            } else {
+              const wp = calculateProgress(
+                startLocation,
+                userLocation,
+                pickUpLocation
+              );
+              setWalkProgress(wp);
+            }
+          }
+          // if the last time we checked the driverETA (which represented our place in the queue * 15),
+          // it was not 0, we are not first in queue.
+          if (driverETA !== 0) {
+            // then we can check whether the request is advancing in the queue
+            // use the request id to check the status of the ride in the queue
+            WebSocketService.send({
+              directive: "WAIT_TIME",
+              requestid,
+              requestedRide: {
+                pickUpLocation,
+                dropOffLocation,
+              },
+            });
+          }
+          break;
+        case "DriverEnRoute":
+          // update the walking progress if the pickup Location was not the user's starting location
+          if (startLocation.latitude != 0 && startLocation.longitude != 0) {
+            // there is a large enough distance that the user needs to walk
+            // calculate the progress of the user walking to the pickup location
+            if (isSameLocation(userLocation, pickUpLocation)) {
+              setWalkProgress(1);
+            } else {
+              const wp = calculateProgress(
+                startLocation,
+                userLocation,
+                pickUpLocation
+              );
+              console.log("walk progress: ", wp);
+              setWalkProgress(wp);
+            }
+          }
 
-      // a driver has not accepted, but if we are on the handleRide component
-      // we know a ride has been requested
-      // use the request id to check the status of the ride in the queue
-      if (driverLocation.latitude == 0 && driverLocation.longitude == 0) {
-        // if the last time we checked the driverETA (which represented our place in the queue * 15),
-        // it was not 0, we are not first in queue.
-        if (driverETA !== 0) {
-          // then we can check whether the request is advancing in the queue
-          WebSocketService.send({
-            directive: "WAIT_TIME",
-            requestid,
-            requestedRide: {
-              pickUpLocation,
-              dropOffLocation,
-            },
-          });
-        }
-      } else {
-        console.log(
-          "distance",
-          calculateDistance(driverLocation, pickUpLocation)
-        );
-        // the driver has accepted our ride
-        if (
-          calculateDistance(driverLocation, pickUpLocation) < 0.0001 &&
-          rideStatus == "DriverEnRoute"
-        ) {
-          // check if the driver has arrived
-          setRideStatus("DriverArrived");
-        } else {
-          // else check their progress in reaching the student
-          WebSocketService.send({
-            directive: "WAIT_TIME",
-            driverLocation,
-            requestid,
-            requestedRide: {
-              pickUpLocation,
-              dropOffLocation,
-            },
-          });
-        }
+          // the driver has accepted the ride  and they are on their way
+          // check if the driver has arrived at the pickup location
+          if (isSameLocation(driverLocation, pickUpLocation)) {
+            setRideStatus("DriverArrived");
+          } else {
+            // else check their ETA in reaching the student
+            WebSocketService.send({
+              directive: "WAIT_TIME",
+              driverLocation,
+              requestid,
+              requestedRide: {
+                pickUpLocation,
+                dropOffLocation,
+              },
+            });
+          }
+          break;
+        case "DriverArrived":
+          // driver arrived. hopefully walk progress is 1
+          break;
+        case "RideInProgress":
+          // if the ride is currently happening
+          // walk progress should be set to 1
+          setWalkProgress(1);
+
+          // update the progress of the ride
+          setRideProgress(
+            calculateProgress(pickUpLocation, driverLocation, dropOffLocation)
+          );
+
+          // check if the driver has reached the dropoff location
+          if (isSameLocation(driverLocation, dropOffLocation)) {
+            setRideStatus("RideCompleted");
+            setRideProgress(1); // set the ride progress to 1 to show the user they have arrived
+          }
+          break;
+        case "RideCompleted":
+          // the ride is completed
+          break;
+        default:
+          break;
       }
     }
   }, [userLocation, driverLocation, driverETA]);
@@ -369,29 +410,9 @@ export default function HomePage() {
         latitude: driverResp.latitude,
         longitude: driverResp.longitude,
       });
-
-      // check if the driver has arrived at the pickup location
-      // (aka the driver is a negligible distance from the pickup location)
-      console.log("distance", calculateDistance(driverResp, pickUpLocation));
-      if (calculateDistance(driverResp, pickUpLocation) < 0.0001) {
-        setRideStatus("DriverArrived");
-      }
-
-      // if the ride is currently happening
-      if (rideStatus == "RideInProgress") {
-        // check the progress of the ride
-        setRideProgress(
-          calculateProgress(pickUpLocation, driverLocation, dropOffLocation)
-        );
-
-        // check if the driver has reached the dropoff location
-        if (
-          calculateDistance(driverResp, dropOffLocation) < 0.0001 ||
-          calculateDistance(driverLocation, dropOffLocation) < 0.0001
-        ) {
-          setRideStatus("RideCompleted");
-        }
-      }
+    } else {
+      // something went wrong
+      console.log("Location response error: ", message);
     }
   };
 
@@ -452,8 +473,8 @@ export default function HomePage() {
       longitude: 0,
     });
 
-    // set walk progress back to -1
-    setWalkProgress(-1);
+    // set walk progress back to 0
+    setWalkProgress(0);
     // set ride progress back to 0
     setRideProgress(0);
   };
@@ -481,7 +502,13 @@ export default function HomePage() {
         boldText: "requested",
       });
     } else {
+      const errorMessage = message as ErrorResponse;
       console.log("Request ride error: ", message);
+      setNotifState({
+        text: errorMessage.error,
+        color: "#FFCBCB",
+        boldText: "error",
+      });
       // go back to request ride
       setWhichComponent("rideReq");
     }
@@ -535,6 +562,7 @@ export default function HomePage() {
       <View>
         {/* map component */}
         <Map
+          ref={mapRef}
           pickUpLocation={pickUpLocation}
           dropOffLocation={dropOffLocation}
           driverLocation={driverLocation}
@@ -542,9 +570,7 @@ export default function HomePage() {
           status={rideStatus}
         />
         {/* profile pop-up modal */}
-        <View
-          style={styles.modalContainer}
-        >
+        <View style={styles.modalContainer}>
           <Profile
             isVisible={profileVisible}
             onClose={() => setProfileVisible(false)}
@@ -582,9 +608,7 @@ export default function HomePage() {
         </View>
 
         {/* faq pop-up modal */}
-        <View
-          style={styles.modalContainer}
-        >
+        <View style={styles.modalContainer}>
           <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
         </View>
         {/* notification component */}
@@ -598,6 +622,39 @@ export default function HomePage() {
               boldText={notifState.boldText}
             />
           )}
+        </View>
+
+        {/* Side Bar */}
+        <View
+          style={{
+            position: "absolute",
+            bottom: 340,
+            left: 10,
+            alignItems: "flex-start",
+          }}
+        >
+          {/* Recenter Button */}
+          <Pressable
+            style={{
+              backgroundColor: "#4b2e83",
+              width: 35,
+              height: 35,
+              borderRadius: 50,
+              borderWidth: 3,
+              borderColor: "white",
+              justifyContent: "center",
+              alignItems: "center",
+              marginBottom: 10,
+              shadowOpacity: 0.3,
+              left: 2,
+            }}
+            onPress={recenter}
+          >
+            <Ionicons name="locate" size={20} color="white" />
+          </Pressable>
+
+          {/* Side map legend */}
+          <Legend />
         </View>
 
         {/* Figure out which component to render */}
@@ -667,8 +724,15 @@ export default function HomePage() {
   );
 }
 
-// Helper function to calculate the progress of the user walking to the pickup location
-// or the progress of the ride from the pickup location to the dropoff location
+/**
+ * Helper function to calculate the progress of the user walking to the pickup location
+ * or the progress of the ride from the pickup location to the dropoff location
+
+ * @param start 
+ * @param current 
+ * @param dest 
+ * @returns 
+ */
 const calculateProgress = (
   start: { latitude: number; longitude: number },
   current: { latitude: number; longitude: number },
@@ -676,8 +740,14 @@ const calculateProgress = (
 ): number => {
   // calculate the distance between the two coordinates
   const distance = calculateDistance(start, dest);
-  const currentDistance = calculateDistance(start, current);
+  // the distance between the current location and the destination
+  // is the remaining distance to the destination
+  // use this to calc progress because the user may not be
+  // walking in a straight line from the start location
+  const remaining = calculateDistance(current, dest);
+  const currentDistance = distance - remaining;
   console.log(
+    "PROGRESS",
     "current distance:",
     currentDistance,
     "total distance:",

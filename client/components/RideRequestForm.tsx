@@ -125,7 +125,6 @@ export default function RideRequestForm({
       return;
     }
     if (value === "Current Location") {
-      console.log("here");
       setConfirmationModalVisible(true);
     } else {
       // we clicked a normal location
@@ -312,7 +311,7 @@ export default function RideRequestForm({
         </View>
         {/* Autocomplete Suggestions */}
         <View style={{ flex: 1, height: 100 }}>
-          <ScrollView style={{ paddingBottom: 350 }}>
+          <ScrollView style={{ paddingBottom: 400 }}>
             {data
               .filter((item) => {
                 if (currentQuery == "dropoff") {

@@ -42,8 +42,8 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   status,
   pickUpLocation,
   dropOffLocation,
-  // pickUpAddress,
-  // dropOffAddress,
+  pickUpAddress,
+  dropOffAddress,
   walkProgress,
   rideProgress,
   walkDuration,
@@ -66,6 +66,11 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
       if (status == "DriverEnRoute") {
         setNotificationState({
           text: "Your driver is on their way!",
+          color: "#C9FED0",
+        });
+      } else if (status == "RideCompleted") {
+        setNotificationState({
+          text: "You have arrived!",
           color: "#C9FED0",
         });
       }
@@ -109,18 +114,34 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   };
 
   let progress = 0;
-  if (walkProgress >= 0) {
-    // change the walkProgress that was in the interval [0,1] ot [0,0.45]
-    walkProgress = walkProgress * 0.45;
-    // change the rideProgress that was in the interval [0,1] ot [0,0.55]
-    rideProgress = rideProgress * 0.55;
 
-    // the total progress is the sum of the walking and driving progress
-    progress = walkProgress + rideProgress;
+  if (status == "RideInProgress") {
+    // when ride is in progress
+    // progress = 0.45 + (dist from driver+student to dropoff) / (dist from pickup to dropoff)
+    const driving =
+      rideProgress * 0.55 + // translated ride progress from 0 - 0.55
+      0.45; // walking is done
+
+    const newProgress = Math.max(progress, driving); // Make sure the progress bar always increases
+
+    progress = Math.min(newProgress, 1); // Make sure the progress is not greater than 1
+  } else if (status == "RideCompleted") {
+    // When ride is completed
+    // progress = 1
+    progress = 1; // Make sure the progress is not greater than 1
   } else {
-    progress = rideProgress;
+    // When ride is not in progress, the user can only walk to the pickup location
+    // progress = (dist from user to pickup) / (dist from start to pickup)
+
+    const walking = walkProgress * 0.45; // walk progress translated from 0 - 0.45
+    const newProgress = Math.max(progress, walking); // Make sure the progress bar always increases
+
+    // The max progress is 0.45
+    progress = Math.min(newProgress, 0.45); // Make sure the progress is not greater than 0.45
   }
-  console.log("progress", progress);
+
+  // height expansion
+  const [expanded, setExpanded] = useState(false); // if the progress bar is expanded or not
 
   return (
     <View style={styles.progressContainer}>
@@ -142,7 +163,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
           <TouchableOpacity onPress={() => setFAQVisible(true)}>
             <Ionicons
               name="information-circle-outline"
-              size={20}
+              size={25}
               color="black"
               position="absolute"
               right={0}
@@ -165,7 +186,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
           </View>
         )}
       </View>
-      {/* Progress Bar */}
+      {/* Progress Bar Top Labels */}
       <View
         style={[
           styles.progressBarBottom,
@@ -174,21 +195,41 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             : {},
         ]}
       >
-        {/* Walk and Ride Duration*/}
-        {walkProgress >= 0 ? (
-          <View style={{ flexDirection: "row", paddingBottom: 10 }}>
-            <TouchableOpacity onPress={openNavigation}>
-              <Text
-                style={{
-                  fontSize: 12,
-                  fontWeight: "bold",
-                  textDecorationLine: "underline",
-                }}
-              >
-                {walkDuration} min Walk
-              </Text>
-            </TouchableOpacity>
-            <View style={{ width: 100 }} />
+        {/* If walking is needed show Walk and Ride Duration*/}
+        <View style={{ flexDirection: "row", paddingBottom: 10 }}>
+          {/* Open walking directions in native maps */}
+          <TouchableOpacity
+            onPress={
+              walkProgress < 1
+                ? openNavigation
+                : () =>
+                    alert(
+                      "You are already at the pickup location! Walking directions are not needed :)"
+                    )
+            }
+          >
+            <View style={{ height: 12 }} />
+            <Text
+              style={{
+                alignSelf: "baseline",
+                fontSize: 12,
+                fontWeight: "bold",
+                textDecorationLine: "underline",
+              }}
+            >
+              {walkDuration} min Walk
+            </Text>
+          </TouchableOpacity>
+          <View style={{ width: 100 }} />
+          {/* Descriptor above the progress bar ( __ min Ride) */}
+          <View
+            style={{
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              left: -20,
+            }}
+          >
             <Text
               style={{
                 fontSize: 12,
@@ -197,23 +238,25 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             >
               {rideDuration} min Ride
             </Text>
+            {/* Show more or less details about the ride */}
+            <Pressable onPress={() => setExpanded(!expanded)}>
+              <Text
+                style={[
+                  styles.locationText,
+                  { textDecorationLine: "underline" },
+                ]}
+              >
+                {expanded ? "(Less Details)" : "(More Details)"}
+              </Text>
+            </Pressable>
           </View>
-        ) : (
-          <Text style={styles.rideTimeText}>{rideDuration} min Ride</Text>
-        )}
-
+        </View>
+        {/* Actual Progress Bar */}
         <View style={styles.progressBarWrapper}>
-          {/* show white circle if walking needed */}
-          {walkProgress >= 0 && (
-            <View style={[styles.circleStart, { backgroundColor: "white" }]} />
-          )}
-          {/* move purple circle to middle if walking needed */}
-          <View
-            style={[
-              styles.circleStart,
-              ...(walkProgress >= 0 ? [{ left: 130 }] : []),
-            ]}
-          />
+          {/* show white circle */}
+          <View style={[styles.circleStart, { backgroundColor: "white" }]} />
+          {/* move purple circle to middle */}
+          <View style={[styles.circleStart, { left: 130 }]} />
           {/* Progress Bar */}
           <ProgressBar
             progress={progress}
@@ -225,30 +268,50 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
 
         {/* Locations Text */}
         <View style={styles.locationsContainer}>
-          {/* Start and Pickup Location */}
-          {walkProgress >= 0 ? (
-            <View>
-              <View style={{ position: "absolute", left: 10, width: 80 }}>
-                <Text style={styles.locationTitle}>Start</Text>
-              </View>
-              <View style={{ position: "absolute", left: 140, width: 100 }}>
-                <Text style={styles.locationTitle}>Pickup</Text>
-                <Text style={styles.locationText}>{pickUpLocation}</Text>
-                {/* <Text style={{fontSize: 10}}>{pickUpAddress}</Text> */}
-              </View>
+          {/* show Start and Pickup Location */}
+          <View style={{ flexDirection: "row", maxWidth: "50%" }}>
+            <View style={{ alignSelf: "flex-start" }}>
+              <Text style={styles.locationTitle}>Start</Text>
             </View>
-          ) : (
-            <View style={styles.pickUpContainer}>
+            <View
+              style={{
+                left: 60,
+                width: 100,
+                alignItems: "center",
+              }}
+            >
               <Text style={styles.locationTitle}>Pickup</Text>
-              <Text style={styles.locationText}>{pickUpLocation}</Text>
-              {/* <Text style={{fontSize: 10}}>{pickUpAddress}</Text> */}
+              {/* If expanded, show location name and address */}
+              {expanded && (
+                <View style={{ alignItems: "center" }}>
+                  <Text
+                    style={[styles.locationSubtitle, { textAlign: "center" }]}
+                  >
+                    {pickUpLocation}
+                  </Text>
+                  <Text style={{ fontSize: 10, textAlign: "center" }}>
+                    {pickUpAddress}21qz
+                  </Text>
+                </View>
+              )}
             </View>
-          )}
+          </View>
           {/* Dropoff Location */}
-          <View style={styles.dropOffContainer}>
+          <View style={[styles.dropOffContainer, { maxWidth: "30%" }]}>
             <Text style={styles.locationTitle}>Dropoff</Text>
-            <Text style={styles.locationText}>{dropOffLocation}</Text>
-            {/* <Text style={{fontSize: 10}}>{dropOffAddress}</Text> */}
+            {expanded && (
+              <View style={{ alignItems: "flex-end" }}>
+                {/* If expanded, show location name and address */}
+                <Text style={[styles.locationSubtitle, { textAlign: "right" }]}>
+                  {dropOffLocation}
+                </Text>
+                <Text
+                  style={{ fontSize: 10, marginBottom: 5, textAlign: "right" }}
+                >
+                  {dropOffAddress}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       </View>
@@ -304,7 +367,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             ]}
             onPress={goHome}
           >
-            <Text style={styles.buttonText}>Go Back Home</Text>
+            <Text style={styles.buttonText}>Back To HomePage</Text>
           </Pressable>
         </View>
       )}
