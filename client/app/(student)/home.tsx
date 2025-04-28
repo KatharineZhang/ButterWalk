@@ -6,6 +6,7 @@ import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
 import {
   DistanceResponse,
+  ErrorResponse,
   LocationResponse,
   RequestRideResponse,
   User,
@@ -197,10 +198,7 @@ export default function HomePage() {
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
   // A number between 0 and 1 that represents the progress of the user
-  // walking to the pickup location will be -1 if the user clicked
-  // "Current Location" on the ride request form
-  // and therefore will not need to walk
-  const [walkProgress, setWalkProgress] = useState(-1);
+  const [walkProgress, setWalkProgress] = useState(0);
   // A number between 0 and 1 that represents the progress of the
   // ride from the pickup location to the dropoff location
   const [rideProgress, setRideProgress] = useState(0);
@@ -278,11 +276,9 @@ export default function HomePage() {
     } else if (whichComponent == "handleRide") {
       // if we are handling the ride, check if walking is needed by setting start location
       setStartLocation(userLocation);
-      // if the start location is not the pickup location
-      // the user must walk
-      if (!isSameLocation(userLocation, pickUpLocation)) {
-        // set initial walk progress
-        setWalkProgress(0);
+
+      if (isSameLocation(userLocation, pickUpLocation)) {
+        setWalkProgress(1);
       }
     }
   }, [whichComponent]);
@@ -295,19 +291,19 @@ export default function HomePage() {
       switch (rideStatus) {
         case "WaitingForRide":
           // update the walking progress if the pickup Location was not the user's starting location
-          if (
-            startLocation.latitude != 0 &&
-            startLocation.longitude != 0 &&
-            !isSameLocation(userLocation, pickUpLocation)
-          ) {
+          if (startLocation.latitude != 0 && startLocation.longitude != 0) {
             // there is a large enough distance that the user needs to walk
             // calculate the progress of the user walking to the pickup location
-            const wp = calculateProgress(
-              startLocation,
-              userLocation,
-              pickUpLocation
-            );
-            setWalkProgress(wp);
+            if (isSameLocation(userLocation, pickUpLocation)) {
+              setWalkProgress(1);
+            } else {
+              const wp = calculateProgress(
+                startLocation,
+                userLocation,
+                pickUpLocation
+              );
+              setWalkProgress(wp);
+            }
           }
           // if the last time we checked the driverETA (which represented our place in the queue * 15),
           // it was not 0, we are not first in queue.
@@ -326,19 +322,20 @@ export default function HomePage() {
           break;
         case "DriverEnRoute":
           // update the walking progress if the pickup Location was not the user's starting location
-          if (
-            startLocation.latitude != 0 &&
-            startLocation.longitude != 0 &&
-            !isSameLocation(userLocation, pickUpLocation)
-          ) {
+          if (startLocation.latitude != 0 && startLocation.longitude != 0) {
             // there is a large enough distance that the user needs to walk
             // calculate the progress of the user walking to the pickup location
-            const wp = calculateProgress(
-              startLocation,
-              userLocation,
-              pickUpLocation
-            );
-            setWalkProgress(wp);
+            if (isSameLocation(userLocation, pickUpLocation)) {
+              setWalkProgress(1);
+            } else {
+              const wp = calculateProgress(
+                startLocation,
+                userLocation,
+                pickUpLocation
+              );
+              console.log("walk progress: ", wp);
+              setWalkProgress(wp);
+            }
           }
 
           // the driver has accepted the ride  and they are on their way
@@ -364,12 +361,8 @@ export default function HomePage() {
         case "RideInProgress":
           // if the ride is currently happening
           // walk progress should be set to 1
-          if (
-            startLocation.latitude != 0 &&
-            startLocation.longitude != 0
-          ){
           setWalkProgress(1);
-          }
+
           // update the progress of the ride
           setRideProgress(
             calculateProgress(pickUpLocation, driverLocation, dropOffLocation)
@@ -480,8 +473,8 @@ export default function HomePage() {
       longitude: 0,
     });
 
-    // set walk progress back to -1
-    setWalkProgress(-1);
+    // set walk progress back to 0
+    setWalkProgress(0);
     // set ride progress back to 0
     setRideProgress(0);
   };
@@ -509,7 +502,13 @@ export default function HomePage() {
         boldText: "requested",
       });
     } else {
+      const errorMessage = message as ErrorResponse;
       console.log("Request ride error: ", message);
+      setNotifState({
+        text: errorMessage.error,
+        color: "#FFCBCB",
+        boldText: "error",
+      });
       // go back to request ride
       setWhichComponent("rideReq");
     }
@@ -571,9 +570,7 @@ export default function HomePage() {
           status={rideStatus}
         />
         {/* profile pop-up modal */}
-        <View
-          style={styles.modalContainer}
-        >
+        <View style={styles.modalContainer}>
           <Profile
             isVisible={profileVisible}
             onClose={() => setProfileVisible(false)}
@@ -611,9 +608,7 @@ export default function HomePage() {
         </View>
 
         {/* faq pop-up modal */}
-        <View
-          style={styles.modalContainer}
-        >
+        <View style={styles.modalContainer}>
           <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
         </View>
         {/* notification component */}
@@ -747,7 +742,7 @@ const calculateProgress = (
   const distance = calculateDistance(start, dest);
   // the distance between the current location and the destination
   // is the remaining distance to the destination
-  // use this to calc progress because the user may not be 
+  // use this to calc progress because the user may not be
   // walking in a straight line from the start location
   const remaining = calculateDistance(current, dest);
   const currentDistance = distance - remaining;
