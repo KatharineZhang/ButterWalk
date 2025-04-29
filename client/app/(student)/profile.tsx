@@ -4,7 +4,7 @@ import { Redirect } from "expo-router";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { User } from "../../../server/src/api";
-import WebsocketService from "../../services/WebSocketService";
+// import WebsocketService from "../../services/WebSocketService";
 import { Ionicons } from "@expo/vector-icons";
 
 // Profile component that displays a list of frequently asked questions
@@ -63,7 +63,7 @@ function Profile({ isVisible, onClose, user }: ProfileProps) {
   // Profile signout behavior
   if (signedIn === false) {
     // disconnect user from the websocket connection
-    WebsocketService.send({ directive: "DISCONNECT" });
+    // WebsocketService.send({ directive: "DISCONNECT" });
     return (
       <Redirect
         href={{
