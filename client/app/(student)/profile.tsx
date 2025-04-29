@@ -67,7 +67,7 @@ function Profile({ isVisible, onClose, user }: ProfileProps) {
     return (
       <Redirect
         href={{
-          pathname: "/driverOrstudent",
+          pathname: "/",
         }}
       />
     );

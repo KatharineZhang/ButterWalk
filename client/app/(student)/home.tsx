@@ -302,7 +302,8 @@ export default function HomePage() {
       // handleDistance();
     } else if (whichComponent == "handleRide") {
       // if we are handling the ride, check if walking is needed by setting start location
-      setStartLocation(userLocation);
+      setStartLocation({ latitude: 47.656356249513586, longitude: -122.3068807109975 });
+      setUserLocation({ latitude: 47.656356249513586, longitude: -122.3068807109975 });
       // if the start location is not the pickup location
       // the user must walk
       if (!isSameLocation(userLocation, pickUpLocation)) {
