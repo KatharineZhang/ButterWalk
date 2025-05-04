@@ -140,6 +140,34 @@ export type RequestRideResponse = {
   requestid: string;
 };
 
+/**
+ * Represents a response provided by the server given to a driver
+ * who wants to view a ride, contains information about the ride
+ * request they are being provided and the associated student
+ * who requested the ride, or rideExists is false if there are
+ * not rides to be returned.
+ */
+export type ViewRideRequestResponse = {
+  response: "VIEW_RIDE_REQUEST";
+  rideExists: boolean;
+  view?: {
+    rideRequest: RideRequest;
+    user: User;
+  }
+}
+
+/**
+ * After a driver views a ride request checked out to them temporarily
+ * by the broker, they choose to accept/deny/report etc, and after
+ * doing so are returned a response of this type indicating the successful
+ * or unsuccesful assignment of the ride to them.
+ */
+export type ViewChoiceResponse = {
+  response: "VIEW_CHOICE";
+  providedView: ViewRideRequestResponse;
+  success: boolean;
+}
+
 export type WaitTimeResponse = {
   response: "WAIT_TIME";
   rideDuration: number;
@@ -320,21 +348,86 @@ export type Feedback = {
   rideOrApp: "RIDE" | "APP";
 };
 
-// CREATE TABLE RideRequests (requestid int PRIMARY KEY, netid varchar(20) REFERENCES Users(netid),
-// driverid varchar(20) REFERENCES Drivers(driverid),
-// completedAt smalldatetime, locationFrom geography, locationTo geography, numRiders int,
-// completedAt smalldatetime, locationFrom geography, locationTo geography, numRiders int,
-// status int); –- -1 for canceled, 0 for requested, 1 for accepted, 2 for completed
+/**
+ * RideRequest represents a students request for a ride, with all the information necessary
+ * to rank, assign, and complete a ride.
+ * 
+ * Optional parameters are new additions for the ride request broker system.
+ */
 export type RideRequest = {
-  // requestid created and stored in the database, we can't store it here
-  // requestid created and stored in the database, we can't store it here
+  /**
+   * ID of this request (?)
+   */
+  requestId?: string;
+  /**
+   * Student UW netid (uniquely identifies a student).
+   * - A given student should only have one active ride request at a time (meaning
+   * any netid should only be associated with one ride request that is either requested,
+   * accepted, in transit, or being viewed).
+   */
   netid: string;
+  /**
+   * ID that uniquely identified a driver.
+   * - Any given driver should only be associated with one active ride request at 
+   * a time (meaning any driverid should only be associated with one ride request that
+   * is either accepted, in transit, or being viewed).
+   * - `null` indicates the ride request is unassigned.
+   */
   driverid: string | null;
+  /**
+   * The time that this ride request was requested by the student.
+   */
+  requestedAt?: Timestamp
+  /**
+   * The time that the ride associated with this request was completed.
+   */
   completedAt: Timestamp | null;
+  /**
+   * The pick up location.
+   */
   locationFrom: string; // TODO: should these be coordinates or location names?
+  /**
+   * The drop off location.
+   */
   locationTo: string;
+  /**
+   * Most recent location at the time of the ride request.
+   * - Potentially used to calculate the earliest pick up time of the student
+   * based on their distance from the pick up location, may need to be updated
+   * accordingly or ignored after a certain amount of time.
+   */
+  studentLocation?: string;
+  /**
+   * The number of students in the ride
+   */
   numRiders: number;
-  status: "CANCELED" | "REQUESTED" | "ACCEPTED" | "COMPLETED";
+  /**
+   * Status of the ride request.
+   * - `CANCELED`: The ride request was canceled for any reason (could indicate
+   * cancellation by the student, cancellation by the driver, or an error).
+   * - `REQUESTED`: The ride request is waiting in the queue: the student who
+   * made the ride request is waiting for a driver to accept their ride. This
+   * is the only state which indicates that the ride is part of the "pool", and
+   * should be passed as an option to the ranking algorithm to be viewed by a driver.
+   * - `VIEWING`: The ride has been checked out temporarily from the queue
+   * to be accepted to denied by a potential driver (This is new behavior
+   * implemented for the ride request broker system).
+   * - `ACCEPTED`: **SHOULD BE DEPRECATED ASAP** Represents that a ride request
+   * is either in progress or has been accepted by a driver who has not yet
+   * picked up the student. Does not have the necessary level of granularity to
+   * handle cancellation edge cases or ride request broker behavior.
+   * - `AWAITING PICK UP`: The ride request was accepted by a driver after being
+   * checked out to them for viewing and is in the pick up stage, i.e. the driver
+   * is driving to go pick up the student, the student is waiting to be picked up,
+   * or the driver is waiting at the pick up location to pick up the student (This
+   * is new behavior for the ride request broker).
+   * - `DRIVING`: The student has been picked up by the driver and the ride is in
+   * progress (new behavior for the ride request broker). 
+   * - `COMPLETED`: The student was dropped off after completion of the ride.
+   */
+  status: 
+    "CANCELED" | "REQUESTED" | "VIEWING" | "ACCEPTED" | 
+    "AWAITING PICK UP" | "DRIVING" | "COMPLETED";
 };
 
 // CREATE TABLE ProblematicUsers (netid varchar(20) REFERENCES Users(netid) PRIMARY KEY,

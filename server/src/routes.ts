@@ -21,6 +21,8 @@ import {
   ProfileResponse,
   User,
   DistanceResponse,
+  ViewRideRequestResponse,
+  ViewChoiceResponse
 } from "./api";
 import {
   acceptRideRequest,
@@ -212,8 +214,17 @@ export const requestRide = async (
   netid: string,
   from: string,
   to: string,
-  numRiders: number
+  numRiders: number,
+  rideRequest?: RideRequest
 ): Promise<RequestRideResponse | ErrorResponse> => {
+  if (rideRequest != null) {
+    /**
+     * TODO(connor): Ride Request broker version of `requestRide`
+     * 
+     * 1. Add the new ride request to the database
+     * 2. return the proper response on success or failure
+     */
+  }
   if (!phoneNum || !from || !to || numRiders <= 0) {
     return {
       response: "ERROR",
@@ -246,6 +257,80 @@ export const requestRide = async (
     queueLock.release();
   }
 };
+
+/**
+ * Returns "YES" or "NO" depending on if there are currently rides in the pool.
+ * Used by the ride request broker, called when a driver opens the application.
+ */
+export const ridesExist = async (): Promise<"YES" | "NO" | ErrorResponse> => {
+  /**
+   * TODO(connor): Check if rides exist and return appropriately
+   */
+}
+
+/**
+ * Temporarily checks out a ride request to a driver, who can choose to either accept
+ * or decline the ride reqeust they are granted. 
+ * @param driverId The ID of the driver who is going to view a ride and either accept
+ * or deny it after having viewed it.
+ * @param driverLocation The current location of the driver associated with driverId.
+ * @returns a ViewRideRequestResponse with all of the information the driver needs
+ * to accept or deny the request, or an ErrorResponse if there was some recoverable
+ * problem.
+ */
+export const viewRide = async (
+  driverId: string,
+  driverLocation: string
+): Promise<ViewRideRequestResponse | ErrorResponse> => {
+  /**
+   * TODO(connor): viewRide ride request broker implementation
+   * 
+   * 1. Poll the database for all rides with `STATUS == REQUESTED`
+   * 2. Pass "pool" of all awaiting rides to the blackbox/ranking algorithm,
+   *    or return something else if no rides are available.
+   * 3. Update the top ranked ride in the database to have `STATUS = VIEWING`
+   * 4. Return that rides information to the driver
+   */
+}
+
+export const handleDriverViewChoice = async (
+  driverId: string,
+  providedview: ViewRideRequestResponse,
+  decision: "ACCEPT" | "DENY" | "REPORT" | "TIMEOUT" | "ERROR"
+): Promise<ViewChoiceResponse | ErrorResponse> => {
+  /**
+   * TODO(connor): handleDriverViewChoice ride request broker implementation
+   */
+  if (decision === "ACCEPT") {
+    /**
+     * Change the status of the ride request with the given
+     * rideRequestId to be `AWAITING PICK UP`, or `ACCEPTED`,
+     * assigning the ride to the given driver
+     */
+  } else if (decision === "DENY") {
+    /**
+     * Change the status of the ride request with the given
+     * id back to `REQUESTED`, returning it to the pool.
+     */
+  } else if (decision === "REPORT") {
+    /**
+     * Handle report/blacklist behavior, remove ride request
+     * from the pool.
+     */
+  } else if (decision === "TIMEOUT") {
+    /**
+     * Change the status of the ride request with the given id
+     * back to `REQUESTED`, returning it to the pool.
+     */
+  } else if (decision === "ERROR") {
+    /**
+     * Change the status of the ride request with the given id
+     * back to `REQUESTED`, returning it to the pool. Do any
+     * additional logging or error handling for unexpected
+     * behavior.
+     */
+  }
+}
 
 /* Pops the next ride request in the queue and assigns it to the driver. 
 This call will update the database to add the driver id to the specific request 
@@ -331,7 +416,15 @@ And if there driver needs to be notified, the json object returned TO THE DRIVER
 export const cancelRide = async (
   netid: string,
   role: "STUDENT" | "DRIVER"
+  returnRequestToQueue?: boolean
 ): Promise<CancelResponse | ErrorResponse> => {
+  /**
+   * TODO(connor): Update this for the new RRB system
+   * 1. Handle edge cancellation cases in websocket routes (i.e. driver cancel vs student cancel,
+   * status of ride during cancel, error out, etc.)
+   * 2. If `returnRequestToQueue`, update the ride associated with the given netid to
+   * have status=REQUESTED, otherwise remove from the queue
+   */
   if (!netid) {
     return {
       response: "ERROR",
@@ -388,6 +481,10 @@ export const cancelRide = async (
 export const completeRide = async (
   requestid: string
 ): Promise<CompleteResponse | ErrorResponse> => {
+  /**
+   * TODO(connor): Change this to do the ride completion step in the ride request broker
+   * Change the status of the given `requestid` to COMPLETED
+   */
   if (!requestid) {
     return {
       response: "ERROR",
