@@ -628,7 +628,7 @@ export default function HomePage() {
         <View
           style={{
             position: "absolute",
-            bottom: 340,
+            bottom: 350,
             left: 10,
             alignItems: "flex-start",
           }}
