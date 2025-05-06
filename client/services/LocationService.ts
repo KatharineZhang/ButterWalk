@@ -12,7 +12,7 @@ export type LocationName =
 
 type LocationType = {
   // currently these are the locations we support
-  name: LocationName;
+  name: string;
   latitude: number;
   longitude: number;
 };

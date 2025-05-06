@@ -1,3 +1,5 @@
+import { calculateDistance } from "@/app/(student)/map";
+
 type Coordinates = {
   latitude: number;
   longitude: number;
@@ -178,8 +180,8 @@ export class BuildingService {
     {
       name: "Clark Hall (CLK)",
       location: {
-        latitude: 47.6551,
-        longitude: -122.3086,
+        latitude: 47.65766208767907,
+        longitude: -122.30483765553268,
       },
     },
     {
@@ -241,8 +243,8 @@ export class BuildingService {
     {
       name: "Denny Hall (DEN)",
       location: {
-        latitude: 47.6566,
-        longitude: -122.309,
+        latitude: 47.65849324441406,
+        longitude: -122.30882263356827,
       },
     },
     {
@@ -346,8 +348,8 @@ export class BuildingService {
     {
       name: "Gerberding Hall (GRB)",
       location: {
-        latitude: 47.6565,
-        longitude: -122.309,
+        latitude: 47.65525981617203,
+        longitude: -122.3095360992912,
       },
     },
     {
@@ -407,10 +409,10 @@ export class BuildingService {
       },
     },
     {
-      name: "Hall Health Center (HLL)",
+      name: "Hall Health Center (HHC)",
       location: {
-        latitude: 47.6563,
-        longitude: -122.308,
+        latitude: 47.65617873341951,
+        longitude: -122.30432295610464,
       },
     },
     {
@@ -789,5 +791,31 @@ export class BuildingService {
       }
     }
     return building.back;
+  }
+
+  static closestBuilding(coord: {
+    latitude: number;
+    longitude: number;
+  }): Building | null {
+    const zone = BuildingService.Buildings.filter((building) => {
+      // Check if the coordinates are within 0.002 degrees of the building's location
+      return (
+        Math.abs(coord.latitude - building.location.latitude) < 0.002 ||
+        Math.abs(coord.longitude - building.location.longitude) < 0.002
+      );
+    });
+
+    if (zone.length > 0) {
+      return zone.reduce((prev, curr) => {
+        // If no previous building, return the current one
+        if (!prev) return curr;
+        // Else, find the building closest to the coordinates
+        const prevDistance = calculateDistance(coord, prev.location);
+        const currDistance = calculateDistance(coord, curr.location);
+        return prevDistance < currDistance ? prev : curr;
+      });
+    } else {
+      return null;
+    }
   }
 }
