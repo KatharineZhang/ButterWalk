@@ -18,6 +18,9 @@ import BottomSheet from "@gorhom/bottom-sheet";
 import { ScrollView } from "react-native-gesture-handler";
 import SegmentedProgressBar from "./SegmentedProgressBar";
 
+import { Zone } from "../services/ZoneService";
+import { BuildingService } from "@/services/campus";
+
 type RideRequestFormProps = {
   pickUpLocationChanged: (location: ValidLocationType) => void;
   dropOffLocationChanged: (location: ValidLocationType) => void;
@@ -69,11 +72,28 @@ export default function RideRequestForm({
     }
   }, []);
 
+  const purple_zone = new Zone([
+    { latitude: 47.666588, longitude: -122.311439 },
+    { latitude: 47.667353, longitude: -122.316263 },
+    { latitude: 47.652854, longitude: -122.316942 },
+    { latitude: 47.648566, longitude: -122.304858 },
+    { latitude: 47.660993, longitude: -122.301405 },
+    { latitude: 47.661138, longitude: -122.311331 },
+  ]);
+  // these coordinates are from gpt lol, they are probs wrong
+  const campus_zone = new Zone([
+    { latitude: 47.6686, longitude: -122.3185 }, // Top Left (near 45th St)
+    { latitude: 47.6686, longitude: -122.2957 }, // Top Right (near Montlake Blvd)
+    { latitude: 47.6464, longitude: -122.2957 }, // Bottom Right (near Husky Stadium, lower campus)
+    { latitude: 47.6464, longitude: -122.3185 }, // Bottom Left (south of 45th)
+  ]);
+
   // Confirmation Modal
   const [confirmationModalVisible, setConfirmationModalVisible] =
     useState(false);
 
-  //
+  
+  // TODO: make sure that either pick-up or drop-off are in campus api
   const goToNumberRiders = () => {
     if (location == "" || destination == "") {
       alert("Please specify a pickup and dropoff location!");
@@ -119,20 +139,34 @@ export default function RideRequestForm({
   };
 
   // check that does not allow location and destination to be the same
+  // TEMP CHECK HERE: to make sure in correct zones
+
   const handleSetLocation = (value: DropDownType) => {
     if (value === destination) {
       alert("Pickup location and destination cannot be the same!");
       return;
     }
+  
     if (value === "Current Location") {
+      if (!purple_zone.isPointInside(userLocation)) {
+        alert("Please select a pickup location within the purple zone!");
+        return;
+      }
       console.log("here");
       setConfirmationModalVisible(true);
     } else {
       // we clicked a normal location
+      const buildingCoordinates = BuildingService.getBuildingCoordinates(value);
+      if (!purple_zone.isPointInside(buildingCoordinates as unknown as Coordinate)) {
+        alert("Please select a pickup location within the purple zone!");
+        console.log(value);
+        return;
+      }
       setLocation(value);
       pickUpLocationChanged(value as LocationName);
     }
   };
+  
 
   const handleSetDestination = (value: DropDownType) => {
     if (value === location) {
@@ -145,6 +179,12 @@ export default function RideRequestForm({
       );
       return;
     }
+    const buildingCoordinates = BuildingService.getBuildingCoordinates(value);
+      if (!purple_zone.isPointInside(buildingCoordinates as unknown as Coordinate)) {
+        alert("Please select a drop-off location within the purple zone!");
+        console.log(value);
+        return;
+      }
     setDestination(value);
     dropOffLocationChanged(value as LocationName);
   };
