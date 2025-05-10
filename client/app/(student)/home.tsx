@@ -13,9 +13,7 @@ import {
   WaitTimeResponse,
   WebSocketResponse,
 } from "../../../server/src/api";
-import RideRequestForm, {
-  ValidLocationType,
-} from "@/components/RideRequestForm";
+import RideRequestForm from "@/components/RideRequestForm";
 import { LocationName, LocationService } from "@/services/LocationService";
 import ConfirmRide from "@/components/ConfirmRide";
 import FAQ from "./faq";
@@ -104,10 +102,8 @@ export default function HomePage() {
   }>({ latitude: 0, longitude: 0 });
 
   // many components use the location name, so we store it here
-  const [pickUpLocationName, setPickUpLocationName] =
-    useState<ValidLocationType>("" as ValidLocationType);
-  const [dropOffLocationName, setDropOffLocationName] =
-    useState<ValidLocationType>("" as ValidLocationType);
+  const [pickUpLocationName, setPickUpLocationName] = useState<string>("");
+  const [dropOffLocationName, setDropOffLocationName] = useState<string>("");
   const [numPassengers, setNumPassengers] = useState(1);
 
   // user clicked on request ride button on ride request form
@@ -236,14 +232,14 @@ export default function HomePage() {
   // figure out coordinates from pickup and dropoff location names
   // clicked in the ride request form
   useEffect(() => {
-      // get the coordinates of the pickup location
+    // get the coordinates of the pickup location
     if (pickUpLocationName !== "") {
       setPickUpLocation(
         BuildingService.getBuildingCoordinates(pickUpLocationName)
       );
     }
 
-    if (dropOffLocationName != ("" as ValidLocationType)) {
+    if (dropOffLocationName != "") {
       // get the coordinates of the dropoff location
       setDropOffLocation(
         LocationService.getLatAndLong(dropOffLocationName as LocationName)
@@ -270,6 +266,7 @@ export default function HomePage() {
         origin: [userLocation],
         destination: [pickUpLocation],
         mode: "walking",
+        tag: "walkToPickup",
       });
     } else if (whichComponent == "handleRide") {
       // if we are handling the ride, check if walking is needed by setting start location
@@ -456,8 +453,8 @@ export default function HomePage() {
       latitude: 0,
       longitude: 0,
     });
-    setPickUpLocationName("" as ValidLocationType);
-    setDropOffLocationName("" as ValidLocationType);
+    setPickUpLocationName("");
+    setDropOffLocationName("");
     setNumPassengers(1);
     setRequestID("");
     setPickUpAddress("");
@@ -546,10 +543,12 @@ export default function HomePage() {
   const handleDistance = (message: WebSocketResponse) => {
     if ("response" in message && message.response === "DISTANCE") {
       const distanceResp = message as DistanceResponse;
-      const walkSeconds =
-        distanceResp.apiResponse.rows[0].elements[0].duration.value;
-      setWalkDuration(Math.floor(walkSeconds / 60)); // convert seconds to minutes
-      setWalkAddress(distanceResp.apiResponse.origin_addresses[0]);
+      if (distanceResp.tag === "walkToPickup") {
+        const walkSeconds =
+          distanceResp.apiResponse.rows[0].elements[0].duration.value;
+        setWalkDuration(Math.floor(walkSeconds / 60)); // convert seconds to minutes
+        setWalkAddress(distanceResp.apiResponse.origin_addresses[0]);
+      }
     } else {
       console.log("Distance response error: ", message);
     }
@@ -626,7 +625,7 @@ export default function HomePage() {
         <View
           style={{
             position: "absolute",
-            bottom: 350,
+            bottom: 400,
             left: 10,
             alignItems: "flex-start",
           }}
@@ -667,6 +666,7 @@ export default function HomePage() {
                 rideRequested={rideRequested}
                 startingState={startingState}
                 setFAQVisible={setFAQVisible}
+                setNotificationState={setNotifState}
               />
             </View>
           ) : whichComponent === "confirmRide" ? (
@@ -744,14 +744,5 @@ const calculateProgress = (
   // walking in a straight line from the start location
   const remaining = calculateDistance(current, dest);
   const currentDistance = distance - remaining;
-  console.log(
-    "PROGRESS",
-    "current distance:",
-    currentDistance,
-    "total distance:",
-    distance,
-    "fraction:",
-    currentDistance / distance
-  );
   return currentDistance / distance; // remaining distance
 };

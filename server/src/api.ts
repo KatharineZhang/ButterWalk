@@ -83,6 +83,7 @@ export type WebSocketMessage =
       origin: { latitude: number; longitude: number }[];
       destination: { latitude: number; longitude: number }[];
       mode: "driving" | "walking";
+      tag: string; // used to identify the response
     };
 
 // TEMP FIX
@@ -216,6 +217,7 @@ export type ErrorResponse = {
 
 export type DistanceResponse = {
   response: "DISTANCE";
+  tag: string;
   apiResponse: DistanceMatrixResponse;
 };
 export type DistanceMatrixResponse = {

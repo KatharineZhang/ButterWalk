@@ -5,7 +5,7 @@ type Coordinates = {
   longitude: number;
 };
 
-type Building = {
+export type Building = {
   name: string;
   location: Coordinates;
   front?: Coordinates;
@@ -797,7 +797,7 @@ export class BuildingService {
     latitude: number;
     longitude: number;
   }): Building | null {
-    const zone = BuildingService.Buildings.filter((building) => {
+    const zone: Building[] = BuildingService.Buildings.filter((building) => {
       // Check if the coordinates are within 0.002 degrees of the building's location
       return (
         Math.abs(coord.latitude - building.location.latitude) < 0.002 ||
@@ -818,4 +818,39 @@ export class BuildingService {
       return null;
     }
   }
+
+  static topThreeClosestBuildings(coord: {
+    latitude: number;
+    longitude: number;
+  }): ComparableBuilding[] | null {
+    const comparableBuildings: ComparableBuilding[] = [];
+    BuildingService.Buildings.forEach((building) => {
+      const distance = calculateDistance(coord, building.location);
+      const walkDuration = Math.round(distance / 1.4); // Assuming an average walking speed of 1.4 m/s
+      comparableBuildings.push({ building, distance, walkDuration });
+    });
+
+    // Sort the buildings by distance
+    comparableBuildings.sort(compareBuildings);
+    return comparableBuildings.slice(0, 3);
+  }
+}
+
+export type ComparableBuilding = {
+  building: Building;
+  distance: number;
+  walkDuration: number;
+};
+
+/**
+ * Compare two buildings based on their distance from a given point.
+ * @param a - The first building to compare.
+ * @param b - The second building to compare.
+ * @returns A negative number if a is closer, a positive number if b is closer, and 0 if they are equidistant.
+ */
+export function compareBuildings(
+  a: ComparableBuilding,
+  b: ComparableBuilding
+): number {
+  return a.distance - b.distance;
 }
