@@ -627,7 +627,10 @@ export default function HomePage() {
         <View
           style={{
             position: "absolute",
-            bottom: whichComponent == "waitForRide" || whichComponent == "handleRide"? 350: bottom,
+            bottom:
+              whichComponent == "waitForRide" || whichComponent == "handleRide"
+                ? 350
+                : bottom,
             left: 10,
             alignItems: "flex-start",
           }}

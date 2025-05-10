@@ -48,58 +48,148 @@ export default function RideRequestForm({
   startingState,
   setFAQVisible,
   setNotificationState,
-  updateSideBarHeight
+  updateSideBarHeight,
 }: RideRequestFormProps) {
+  /* STATE */
   // user input states for form
-  const [location, setLocation] = useState(""); // the chosen pickup
-  const [destination, setDestination] = useState(""); // the chosen dropoff
+  const [chosenPickup, setChosenPickup] = useState(""); // the chosen pickup
+  const [chosenDropoff, setChosenDropoff] = useState(""); // the chosen dropoff
   const [numRiders, setNumRiders] = useState(1);
 
-  // show the number of riders component or no
+  // which panel to show
   const [whichPanel, setWhichPanel] = useState<
     "RideReq" | "NumberRiders" | "LocationSuggestions"
   >("RideReq");
-  // const [showNumberRiders, setShowNumberRiders] = useState(false);
 
   // Bottom Sheet Reference needed to expand the bottom sheet
   const bottomSheetRef = useRef<BottomSheet>(null);
-
-  useEffect(() => {
-    // add the listener for the distance response
-    WebSocketService.addListener(handleDistanceTopThree, "DISTANCE");
-    // if there is a starting state,
-    // that means the user clicked back from the confirm ride component
-    // set the location and destination and show the number of riders panel
-    if (startingState) {
-      setLocationQuery(startingState.pickup);
-      setLocation(startingState.pickup);
-      setDestinationQuery(startingState.dropoff);
-      setDestination(startingState.dropoff);
-      setNumRiders(startingState.numRiders);
-      // show the number of riders modal
-      setWhichPanel("NumberRiders");
-    }
-    // cleanup function to remove the listener
-    return () => {
-      WebSocketService.removeListener(handleDistanceTopThree, "DISTANCE");
-    };
-  }, []);
 
   // Confirmation Modal
   const [confirmationModalVisible, setConfirmationModalVisible] =
     useState(false);
 
+  const [pickUpQuery, setPickUpQuery] = useState(""); // Typed in pickup query
+  const [dropOffQuery, setDropOffQuery] = useState(""); // typed in dropoff query
+
+  // which text box is currently being updated
+  const [currentQuery, setCurrentQuery] = useState<"pickup" | "dropoff">(
+    "pickup"
+  );
+
+  // if the user clicks current location on campus, give them the closest Building
+  const [closestBuilding, setClosestBuilding] = useState<string>("");
+  // if the user clicks current location when not in purple zone, give them suggestions
+  // useRef will allow of synchronous storage of these buildinsg
+  const topThreeBuildings = useRef<ComparableBuilding[]>([]);
+
+  // the set of results to show in the dropdown
+  // will be set to the campus api buidings on first render
+  let data: string[] = [];
+
+  /* METHODS */
+  // the user clicked a dropdown result
+  const handleSelection = (value: string) => {
+    if (currentQuery === "pickup") {
+      setPickUpQuery(value);
+      handleSetLocation(value);
+      //switch to dropoff
+      setCurrentQuery("dropoff");
+    } else {
+      setDropOffQuery(value);
+      handleSetDestination(value);
+    }
+  };
+
+  // user clicked a pickup dropdown
+  const handleSetLocation = (value: string) => {
+    // check that does not allow location and destination to be the same
+    if (value === chosenDropoff) {
+      alert("Pickup location and destination cannot be the same!");
+      return;
+    }
+    // the user clicked current location
+    // we now need to figure out what the closest location is
+    if (value === "Current Location") {
+      // check if user is in the purple zone
+      const insidePurpleZone = purple_zone.isPointInside(userLocation);
+      // if the user is outside the purple zone, get the three closest buildings
+      if (!insidePurpleZone) {
+        // call the campus api to get the 3 closest buildins
+        const comparableBuildings =
+          BuildingService.topThreeClosestBuildings(userLocation);
+        // if nothing was returned
+        if (comparableBuildings === null) {
+          // The method failed to get closest buildings
+          console.log("topThreeClosestBuildings failed");
+        } else {
+          // store our three closest buildings
+          topThreeBuildings.current = comparableBuildings;
+          // call the websocket to get the distance from the user
+          // to the three closest buildings
+          WebSocketService.send({
+            directive: "DISTANCE",
+            origin: [userLocation],
+            destination: comparableBuildings.map(
+              (building) => building.building.location
+            ),
+            mode: "walking",
+            tag: "topThreeClosestBuildings",
+          });
+        }
+      } else {
+        // the user is in the purple zone,
+        // so we need to snap the location to the closest building or street
+
+        // first try to get a closest building
+        const closestCampusBuilding =
+          BuildingService.closestBuilding(userLocation);
+        // if no building was close enough
+        if (closestCampusBuilding === null) {
+          // do location snapping
+          console.log("location snapping!");
+        } else {
+          // otherwise, store the closest building
+          setClosestBuilding(closestCampusBuilding.name);
+        }
+        // show the confirmation modal to let the user know where they are being snapped to
+        setConfirmationModalVisible(true);
+      }
+    } else {
+      // the user clicked a normal dropdown location
+      setChosenPickup(value);
+      pickUpLocationChanged(value);
+    }
+  };
+
+  // user clicked a destination dropdown
+  const handleSetDestination = (value: string) => {
+    if (value === chosenPickup) {
+      alert("Pickup location and dropoff location cannot be the same!");
+      return;
+    }
+    if (value === "Current Location") {
+      console.log(
+        "Something went wrong! can't set dropoff location to user location"
+      );
+      return;
+    }
+    setChosenDropoff(value);
+    dropOffLocationChanged(value);
+  };
+
   // go to the number of riders screen
+  // this is a method because we want to do some checks first
   const goToNumberRiders = () => {
-    if (location == "" || destination == "") {
+    if (chosenPickup == "" || chosenDropoff == "") {
       alert("Please specify a pickup and dropoff location!");
       return;
     }
 
-    const locationCoord = BuildingService.getBuildingCoordinates(location);
-    const destCoord = BuildingService.getBuildingCoordinates(destination);
+    const pickupCoordinates = BuildingService.getBuildingCoordinates(chosenPickup);
+    const dropoffCoordinates = BuildingService.getBuildingCoordinates(chosenDropoff);
 
     // TODO: for this to work, we need to finetune the purple zone
+    // to work with the pockets of purple zone
     // check that both locations are within the purple zone
     // if (
     //   !purple_zone.isPointInside(locationCoord) ||
@@ -112,168 +202,102 @@ export default function RideRequestForm({
     //   return;
     // }
 
-    // check that at least 1 location is on campus
+    // check that at least one location is on campus
     if (
-      !campus_zone.isPointInside(locationCoord) &&
-      !campus_zone.isPointInside(destCoord)
+      !campus_zone.isPointInside(pickupCoordinates) &&
+      !campus_zone.isPointInside(dropoffCoordinates)
     ) {
-      alert("Either the Pickup or Dropoff location must be on campus!");
+      alert("Either the pickup or dropoff location must be on campus!");
       return;
     }
     setWhichPanel("NumberRiders");
   };
 
-  /* FUZZY SEARCH BAR STUFF */
-
-  // Autocomplete for Location and Destination
-  const [locationQuery, setLocationQuery] = useState(""); // Location query
-  const [destinationQuery, setDestinationQuery] = useState(""); // Destination query
-
-  // which text box is currently being updated
-  const [currentQuery, setCurrentQuery] = useState<"pickup" | "dropoff">(
-    "pickup"
-  );
-
-  // if the user clicks current location on campus, give them the closest Building
-  const [closestBuilding, setClosestBuilding] = useState<string>("");
-  // if the user clicks current location when not in purple zone, give them suggestions
-  // useRef will allow of synchronous storage of these buildinsg
-  const topThreeBuildings = useRef<ComparableBuilding[]>([]);
-  // show the location suggestion component
-  // const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
-
-  const data: string[] = getBuildingNames();
-  data.unshift("Current Location"); // add current location to the beginning
-
-  const handleSelection = (value: string) => {
-    if (currentQuery === "pickup") {
-      setLocationQuery(value);
-      handleSetLocation(value);
-      //switch to dropoff
-      setCurrentQuery("dropoff");
-    } else {
-      setDestinationQuery(value);
-      handleSetDestination(value);
-    }
-  };
-
-  // user clicked a pickup dropdown
-  const handleSetLocation = (value: string) => {
-    // check that does not allow location and destination to be the same
-    if (value === destination) {
-      alert("Pickup location and destination cannot be the same!");
-      return;
-    }
-    if (value === "Current Location") {
-      // if the user is outside the purple zone, get the three closest buildings
-      const insidePurpleZone = purple_zone.isPointInside(userLocation);
-      if (!insidePurpleZone) {
-        const comparableBuildings =
-          BuildingService.topThreeClosestBuildings(userLocation);
-        if (comparableBuildings === null) {
-          // The method failed to get closest buildings
-          console.log("topThreeClosestBuildings failed");
-        } else {
-          // comparableBuildings as ComparableBuilding[]
-          // show the popup modal with the three closest buildings
-          topThreeBuildings.current = comparableBuildings;
-          // call the WebSocket service to get the distance to the three closest buildings
-          WebSocketService.send({
-            directive: "DISTANCE",
-            origin: [userLocation],
-            destination: comparableBuildings.map(
-              (building) => building.building.location
-            ),
-            mode: "walking",
-            tag: "topThreeClosestBuildings",
-          });
-        }
-      } else {
-        // the user is in the purple zone, so we need to snap the location to the closest building
-        const closestCampusBuilding =
-          BuildingService.closestBuilding(userLocation);
-        if (closestCampusBuilding === null) {
-          // do location snapping
-          console.log("location snapping!");
-        } else {
-          setClosestBuilding(closestCampusBuilding.name);
-        }
-        setConfirmationModalVisible(true);
-      }
-    } else {
-      // we clicked a normal location
-      setLocation(value);
-      pickUpLocationChanged(value);
-    }
-  };
-
-  // user clicked a destination dropdown
-  const handleSetDestination = (value: string) => {
-    if (value === location) {
-      alert("Pickup location and destination cannot be the same!");
-      return;
-    }
-    if (value === "Current Location") {
-      console.log(
-        "Something went wrong! can't set destination to user location"
-      );
-      return;
-    }
-    setDestination(value);
-    dropOffLocationChanged(value);
-  };
-
+  // the user clicked confirm on the confirmation modal
   const confirmPickUpLocation = () => {
-    setLocationQuery(closestBuilding);
-    setLocation(closestBuilding);
+    setPickUpQuery(closestBuilding);
+    setChosenPickup(closestBuilding);
     pickUpLocationChanged(closestBuilding);
     setConfirmationModalVisible(false);
   };
 
+  // the user clicked one of the suggested closest buildings
   const selectTopThreeBuilding = (buildingName: string) => {
-    setLocationQuery(buildingName);
-    setLocation(buildingName);
+    setPickUpQuery(buildingName);
+    setChosenPickup(buildingName);
     pickUpLocationChanged(buildingName);
     setWhichPanel("RideReq");
   };
 
+  // the user clicked back on the suggested closest buildings panel
   const hideLocationSuggestions = () => {
     setCurrentQuery("pickup");
-    setLocationQuery("");
+    setPickUpQuery("");
     setWhichPanel("RideReq");
   };
 
+  /* WEBSOCKET */
+  // handle the distance repsonse
   const handleDistanceTopThree = (message: WebSocketResponse) => {
     if ("response" in message && message.response === "DISTANCE") {
       const distanceResp = message as DistanceResponse;
+
+      // if this distance call is the one we were listening for
+      // (currently we only listen for topThreeClosestBuildings)
       if (distanceResp.tag === "topThreeClosestBuildings") {
-        // update the walk duration for the top three buildings
+        // update the walk duration for the top three buildings we previously stored
         const before = topThreeBuildings.current;
         const updatedBuildings = before.map((building, i) => {
           const walkSeconds =
             distanceResp.apiResponse.rows[0].elements[i].duration.value;
           const walkMinutes = Math.floor(walkSeconds / 60);
-
           return { ...building, walkDuration: walkMinutes };
         });
         topThreeBuildings.current = updatedBuildings;
 
-        // now we can show the location suggestions
+        // now that we have all the info, we can show the location suggestions panel
+        setWhichPanel("LocationSuggestions");
+        // send the user a notification
         setNotificationState({
           text: "You are not within service area.\nPlease select a nearby location that is.",
           color: "#FFEFB4",
         });
-        setWhichPanel("LocationSuggestions");
       }
     } else {
+      // the server sent us an error
       console.log("Distance response error: ", message);
     }
   };
 
-  /* FUZZY SEARCH BAR STUFF ENDS HERE */
+  /* USE EFFECTS */
+  // upon first render, set up the state
+  useEffect(() => {
+    // add the listener for the distance response
+    WebSocketService.addListener(handleDistanceTopThree, "DISTANCE");
 
-  useEffect(()=> {
-    switch(whichPanel){
+    data = getBuildingNames();
+    data.unshift("Current Location"); // add current location to the beginning
+    // if there is a starting state,
+    // that means the user clicked back from the confirm ride component
+    // set the location and destination and show the number of riders panel
+    if (startingState) {
+      setPickUpQuery(startingState.pickup);
+      setChosenPickup(startingState.pickup);
+      setDropOffQuery(startingState.dropoff);
+      setChosenDropoff(startingState.dropoff);
+      setNumRiders(startingState.numRiders);
+      // show the number of riders modal
+      setWhichPanel("NumberRiders");
+    }
+    // cleanup function to remove the listener
+    return () => {
+      WebSocketService.removeListener(handleDistanceTopThree, "DISTANCE");
+    };
+  }, []);
+
+  // modify the sidebar height based on the panel shown
+  useEffect(() => {
+    switch (whichPanel) {
       case "RideReq":
         updateSideBarHeight(350);
         break;
@@ -284,12 +308,12 @@ export default function RideRequestForm({
         updateSideBarHeight(400);
         break;
     }
-  }, [whichPanel])
+  }, [whichPanel]);
 
-  /* Animation stuffs */
+  /* ANIMATION */
   const fadeAnim = useState(new Animated.Value(0))[0];
 
-  // animation functions
+  // For each change to the number of riders, smoothen the animation
   const animateRiders = () => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -298,13 +322,15 @@ export default function RideRequestForm({
     }).start();
   };
 
-  // Handle increase/decrease of riders
+  // Handle increase of riders
   const handleIncreaseRiders = () => {
     if (numRiders < 4) {
       setNumRiders(numRiders + 1);
       animateRiders();
     }
   };
+
+  // Handle decrease of riders
   const handleDecreaseRiders = () => {
     if (numRiders > 1) {
       setNumRiders(numRiders - 1);
@@ -321,6 +347,8 @@ export default function RideRequestForm({
     bottomSheetRef.current?.expand();
   };
 
+  /* PANEL UI */
+  // the ride request panel
   const RideRequest: JSX.Element = (
     <View style={{ flex: 1, pointerEvents: "box-none" }}>
       <BottomDrawer bottomSheetRef={bottomSheetRef}>
@@ -401,8 +429,8 @@ export default function RideRequestForm({
                   setCurrentQuery("pickup");
                   expand();
                 }}
-                query={locationQuery}
-                setQuery={setLocationQuery}
+                query={pickUpQuery}
+                setQuery={setPickUpQuery}
                 placeholder="Pick Up Location"
                 data={data}
               />
@@ -411,8 +439,8 @@ export default function RideRequestForm({
                   setCurrentQuery("dropoff");
                   expand();
                 }}
-                query={destinationQuery}
-                setQuery={setDestinationQuery}
+                query={dropOffQuery}
+                setQuery={setDropOffQuery}
                 placeholder="Drop Off Location"
                 data={data}
               />
@@ -455,8 +483,8 @@ export default function RideRequestForm({
                     .toLowerCase()
                     .includes(
                       currentQuery == "pickup"
-                        ? locationQuery.toLowerCase()
-                        : destinationQuery
+                        ? pickUpQuery.toLowerCase()
+                        : dropOffQuery
                     ) ||
                   (currentQuery == "pickup" && item == "Current Location")
               )
@@ -508,6 +536,7 @@ export default function RideRequestForm({
     </View>
   );
 
+  // number of riders panel
   const NumberRiders: JSX.Element = (
     <View
       style={{
@@ -607,6 +636,7 @@ export default function RideRequestForm({
     </View>
   );
 
+  // top three locations suggestions panel
   const LocationSuggestions: JSX.Element = (
     <View
       style={{
@@ -719,6 +749,7 @@ export default function RideRequestForm({
     </View>
   );
 
+  // render the correct panel based on our state
   return whichPanel == "NumberRiders"
     ? NumberRiders
     : whichPanel == "LocationSuggestions"
