@@ -18,6 +18,14 @@ import BottomSheet from "@gorhom/bottom-sheet";
 import { ScrollView } from "react-native-gesture-handler";
 import SegmentedProgressBar from "./SegmentedProgressBar";
 import { BuildingService } from "@/services/campus";
+import {
+  WebSocketResponse,
+  SnapLocationResponse,
+  ErrorResponse,
+} from "../../server/src/api";
+import WebSocketService, {
+  WebsocketConnectMessage,
+} from "../services/WebSocketService";
 
 type RideRequestFormProps = {
   pickUpLocationChanged: (location: string) => void;
@@ -120,6 +128,24 @@ export default function RideRequestForm({
     }
   };
 
+  const handleSnapLocationQuery = (message: WebSocketResponse) => {
+    if ("response" in message && message.response == "SNAP") {
+      const snapResp = message as SnapLocationResponse;
+      if(snapResp.success) {
+
+        // TODO: is it setClosestLocation or setLocation?
+        setClosestLocation(
+          `(${snapResp.latitude}, ${snapResp.longitude})`
+        );
+      }
+    } else {
+      // there was a signin related error
+      const errorResp = message as ErrorResponse;
+
+      console.error("Error: ", errorResp.error);
+    }
+  };
+
   // check that does not allow location and destination to be the same
   const handleSetLocation = (value: DropDownType) => {
     if (value === destination) {
@@ -128,10 +154,36 @@ export default function RideRequestForm({
     }
     if (value === "Current Location") {
       const closestCampusBuilding = BuildingService.closestBuilding(userLocation);
+
+
       if (closestCampusBuilding === null) {
-        // do location snapping
         // TODO: call the websocket to get the snapped location coordinates
+        // TODO: am I doing this right? Is the flow of teh websocket correct?
+
+        // I can't put it in a useEffect because
+        // we don't want to call it every time the location changes. But a const
+        // might not work either because if a component re-renders due to state changes, 
+        // prop changes, or a parent component re-rendering, any function defined 
+        // within that component, including a const function, will be re-evaluated. 
+        // So we can maybe use a useCallback hook to memoize the function???
+
         console.log("location snapping!");
+        const connectWebSocket = async () => {
+          // call our new route
+          const msg: WebsocketConnectMessage = await WebSocketService.connect();
+          if (msg == "Connected Successfully") {
+            WebSocketService.send({
+              directive: "SNAP",
+              currLat: userLocation.latitude,
+              currLong: userLocation.longitude,
+            });
+          } else {
+            console.log("failed to connect!!!");
+          }
+        };
+        connectWebSocket();
+        WebSocketService.addListener(handleSnapLocationQuery, "SNAP");
+        
       } else {
         setClosestLocation(closestCampusBuilding.name);
       }

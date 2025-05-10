@@ -9,6 +9,7 @@ export type Command =
   | "FINISH_ACC"
   | "REQUEST_RIDE"
   | "ACCEPT_RIDE"
+  | "SNAP"
   | "CANCEL"
   | "COMPLETE"
   | "ADD_FEEDBACK"

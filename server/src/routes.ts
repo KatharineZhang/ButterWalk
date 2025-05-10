@@ -228,6 +228,7 @@ export const snapLocation = async (
     const snappedLat : number = snappedCoords.coordinates[0][0];
     const snappedLong : number = snappedCoords.coordinates[0][1];
     console.log("Snapped locations:", snappedLat, snappedLong);
+    
     return{
       response: "SNAP",
       success: true,
