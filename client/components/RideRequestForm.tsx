@@ -10,7 +10,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
 import AutocompleteInput from "./AutocompleteInput";
-import { LocationName } from "../services/LocationService";
 import { styles } from "../assets/styles";
 import BottomDrawer from "./BottomDrawer";
 import PopUpModal from "./PopUpModal";
@@ -138,7 +137,6 @@ export default function RideRequestForm({
   // show the location suggestion component
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
 
-  // data from LocationService.ts
   const data: string[] = getBuildingNames();
   data.unshift("Current Location"); // add current location to the beginning
 
@@ -200,7 +198,7 @@ export default function RideRequestForm({
     } else {
       // we clicked a normal location
       setLocation(value);
-      pickUpLocationChanged(value as LocationName);
+      pickUpLocationChanged(value);
     }
   };
 
@@ -217,7 +215,7 @@ export default function RideRequestForm({
       return;
     }
     setDestination(value);
-    dropOffLocationChanged(value as LocationName);
+    dropOffLocationChanged(value);
   };
 
   const confirmPickUpLocation = () => {
@@ -230,7 +228,7 @@ export default function RideRequestForm({
   const selectTopThreeBuilding = (buildingName: string) => {
     setLocationQuery(buildingName);
     setLocation(buildingName);
-    pickUpLocationChanged(buildingName as LocationName);
+    pickUpLocationChanged(buildingName);
     setShowLocationSuggestions(false);
   };
 
