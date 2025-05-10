@@ -51,7 +51,7 @@ export class BuildingService {
       },
     },
     {
-      name: "Arboretum Buildingsy",
+      name: "Arboretum Buildings",
       location: {
         latitude: 47.6553,
         longitude: -122.30583,

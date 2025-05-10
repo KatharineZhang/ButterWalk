@@ -83,17 +83,17 @@ export default function RideRequestForm({
   const topThreeBuildings = useRef<ComparableBuilding[]>([]);
 
   // the set of results to show in the dropdown
-  // will be set to the campus api buidings on first render
-  let data: string[] = [];
+  const data: string[] = getBuildingNames();
+  data.unshift("Current Location"); // add current location to the beginning
 
   /* METHODS */
   // the user clicked a dropdown result
   const handleSelection = (value: string) => {
     if (currentQuery === "pickup") {
       setPickUpQuery(value);
-      handleSetLocation(value);
       //switch to dropoff
       setCurrentQuery("dropoff");
+      handleSetLocation(value);
     } else {
       setDropOffQuery(value);
       handleSetDestination(value);
@@ -123,6 +123,21 @@ export default function RideRequestForm({
           console.log("topThreeClosestBuildings failed");
         } else {
           // store our three closest buildings
+          if (
+            topThreeBuildings.current.length > 0 &&
+            Math.abs(
+              topThreeBuildings.current[0].distance -
+                comparableBuildings[0].distance
+            ) < 0.2
+          ) {
+            // if the top three buildings are the same as before
+            // and the distance is the same, then
+            // we can assume the user is in the same location
+            // do not call the websocket again
+            checkIfTooFarAway();
+            return;
+          }
+          // otherwise, we have new buildings
           topThreeBuildings.current = comparableBuildings;
           // call the websocket to get the distance from the user
           // to the three closest buildings
@@ -185,8 +200,10 @@ export default function RideRequestForm({
       return;
     }
 
-    const pickupCoordinates = BuildingService.getBuildingCoordinates(chosenPickup);
-    const dropoffCoordinates = BuildingService.getBuildingCoordinates(chosenDropoff);
+    const pickupCoordinates =
+      BuildingService.getBuildingCoordinates(chosenPickup);
+    const dropoffCoordinates =
+      BuildingService.getBuildingCoordinates(chosenDropoff);
 
     // TODO: for this to work, we need to finetune the purple zone
     // to work with the pockets of purple zone
@@ -236,6 +253,35 @@ export default function RideRequestForm({
     setWhichPanel("RideReq");
   };
 
+  // check if the user is too far away to offer service
+  const checkIfTooFarAway = () => {
+    if (
+      topThreeBuildings.current.length > 0 &&
+      topThreeBuildings.current[0].walkDuration > 15
+    ) {
+      setNotificationState({
+        text: "You are too far from the servicable area.",
+        color: "#FFCBCB",
+      });
+      setTimeout(() => {
+        setNotificationState({ text: "", color: "" });
+      }, 6000);
+
+      setPickUpQuery("");
+      setChosenPickup("");
+      setCurrentQuery("pickup");
+      return;
+    }
+
+    // else, we can show the location suggestions panel
+    setWhichPanel("LocationSuggestions");
+    // send the user a notification
+    setNotificationState({
+      text: "You are not within service area.\nPlease select a nearby location that is.",
+      color: "#FFEFB4",
+    });
+  };
+
   /* WEBSOCKET */
   // handle the distance repsonse
   const handleDistanceTopThree = (message: WebSocketResponse) => {
@@ -254,14 +300,7 @@ export default function RideRequestForm({
           return { ...building, walkDuration: walkMinutes };
         });
         topThreeBuildings.current = updatedBuildings;
-
-        // now that we have all the info, we can show the location suggestions panel
-        setWhichPanel("LocationSuggestions");
-        // send the user a notification
-        setNotificationState({
-          text: "You are not within service area.\nPlease select a nearby location that is.",
-          color: "#FFEFB4",
-        });
+        checkIfTooFarAway();
       }
     } else {
       // the server sent us an error
@@ -275,8 +314,6 @@ export default function RideRequestForm({
     // add the listener for the distance response
     WebSocketService.addListener(handleDistanceTopThree, "DISTANCE");
 
-    data = getBuildingNames();
-    data.unshift("Current Location"); // add current location to the beginning
     // if there is a starting state,
     // that means the user clicked back from the confirm ride component
     // set the location and destination and show the number of riders panel
