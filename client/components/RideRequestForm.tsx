@@ -73,14 +73,14 @@ export default function RideRequestForm({
   const [confirmationModalVisible, setConfirmationModalVisible] =
     useState(false);
 
-  // 
+  //
   const goToNumberRiders = () => {
     if (location == "" || destination == "") {
       alert("Please specify a pickup and dropoff location!");
       return;
     }
     setShowNumberRiders(true);
-  }
+  };
 
   /* FUZZY SEARCH BAR STUFF */
 
@@ -125,7 +125,6 @@ export default function RideRequestForm({
       return;
     }
     if (value === "Current Location") {
-      console.log("here");
       setConfirmationModalVisible(true);
     } else {
       // we clicked a normal location
@@ -194,7 +193,7 @@ export default function RideRequestForm({
   };
 
   const RideRequest: JSX.Element = (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, pointerEvents: "box-none" }}>
       <BottomDrawer bottomSheetRef={bottomSheetRef}>
         <View style={styles.requestFormContainer}>
           <View>
@@ -303,7 +302,6 @@ export default function RideRequestForm({
               </Text>
               <TouchableOpacity
                 style={styles.modalCloseButton}
-                // onPress={handleSend}
                 onPress={goToNumberRiders}
               >
                 <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
@@ -313,7 +311,7 @@ export default function RideRequestForm({
         </View>
         {/* Autocomplete Suggestions */}
         <View style={{ flex: 1, height: 100 }}>
-          <ScrollView style={{ paddingBottom: 350 }}>
+          <ScrollView style={{ paddingBottom: 400 }}>
             {data
               .filter((item) => {
                 if (currentQuery == "dropoff") {
@@ -472,7 +470,10 @@ export default function RideRequestForm({
         }}
       >
         <Text style={{ fontStyle: "italic" }}>See ride details</Text>
-        <TouchableOpacity style={styles.modalCloseButton} onPress={() => rideRequested(numRiders)}>
+        <TouchableOpacity
+          style={styles.modalCloseButton}
+          onPress={() => rideRequested(numRiders)}
+        >
           <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
         </TouchableOpacity>
       </View>
