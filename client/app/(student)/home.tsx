@@ -27,6 +27,7 @@ import LoadingPageComp from "@/components/loadingPageComp";
 import Notification from "@/components/notification";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Legend from "@/components/Legend";
+import { BuildingService } from "@/services/campus";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -235,13 +236,10 @@ export default function HomePage() {
   // figure out coordinates from pickup and dropoff location names
   // clicked in the ride request form
   useEffect(() => {
-    if (pickUpLocationName === "Current Location") {
-      // we were given user coordinates not a location name
-      setPickUpLocation(userLocation);
-    } else {
       // get the coordinates of the pickup location
+    if (pickUpLocationName !== "") {
       setPickUpLocation(
-        LocationService.getLatAndLong(pickUpLocationName as LocationName)
+        BuildingService.getBuildingCoordinates(pickUpLocationName)
       );
     }
 
