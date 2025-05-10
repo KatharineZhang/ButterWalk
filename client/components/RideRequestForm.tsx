@@ -17,9 +17,14 @@ import PopUpModal from "./PopUpModal";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { ScrollView } from "react-native-gesture-handler";
 import SegmentedProgressBar from "./SegmentedProgressBar";
-import { BuildingService, ComparableBuilding } from "@/services/campus";
+import {
+  BuildingService,
+  ComparableBuilding,
+  getBuildingNames,
+} from "@/services/campus";
 import WebSocketService from "@/services/WebSocketService";
 import { DistanceResponse, WebSocketResponse } from "../../server/src/api";
+import { campus_zone, purple_zone } from "@/services/ZoneService";
 
 type RideRequestFormProps = {
   pickUpLocationChanged: (location: string) => void;
@@ -38,14 +43,16 @@ type RideRequestFormProps = {
 export default function RideRequestForm({
   pickUpLocationChanged,
   dropOffLocationChanged,
-  userLocation,
+  // userLocation,
   rideRequested,
   startingState,
   setFAQVisible,
   setNotificationState,
 }: RideRequestFormProps) {
+  const userLocation = {latitude: 47.66132384329313, longitude:-122.31394842987012}
+
   // user input states for form
-  const [location, setLocation] = useState(""); // the chosen pickup 
+  const [location, setLocation] = useState(""); // the chosen pickup
   const [destination, setDestination] = useState(""); // the chosen dropoff
   const [numRiders, setNumRiders] = useState(1);
 
@@ -84,6 +91,31 @@ export default function RideRequestForm({
       alert("Please specify a pickup and dropoff location!");
       return;
     }
+
+    const locationCoord = BuildingService.getBuildingCoordinates(location);
+    const destCoord = BuildingService.getBuildingCoordinates(destination);
+
+    // TODO: for this to work, we need to finetune the purple zone
+    // check that both locations are within the purple zone
+    // if (
+    //   !purple_zone.isPointInside(locationCoord) ||
+    //   !purple_zone.isPointInside(destCoord)
+    // ) {
+    //   // the pickup or dropoff is not in the purple zone
+    //   alert(
+    //     "Both the Pickup and Dropoff locations must be in the SafeTrip servicable area!"
+    //   );
+    //   return;
+    // }
+
+    // check that at least 1 location is on campus
+    if (
+      !campus_zone.isPointInside(locationCoord) &&
+      !campus_zone.isPointInside(destCoord)
+    ) {
+      alert("Either the Pickup or Dropoff location must be on campus!");
+      return;
+    }
     setShowNumberRiders(true);
   };
 
@@ -107,18 +139,8 @@ export default function RideRequestForm({
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
 
   // data from LocationService.ts
-
-  const data: string[] = [
-    "Current Location",
-    "HUB",
-    "Alder Hall",
-    "Communication Building",
-    "Flagpole",
-    "Meany Hall",
-    "IMA",
-    "Okanogan Lane",
-    "UW Tower",
-  ];
+  const data: string[] = getBuildingNames();
+  data.unshift("Current Location"); // add current location to the beginning
 
   const handleSelection = (value: string) => {
     if (currentQuery === "pickup") {
@@ -134,20 +156,20 @@ export default function RideRequestForm({
 
   // user clicked a pickup dropdown
   const handleSetLocation = (value: string) => {
-  // check that does not allow location and destination to be the same
+    // check that does not allow location and destination to be the same
     if (value === destination) {
       alert("Pickup location and destination cannot be the same!");
       return;
     }
     if (value === "Current Location") {
       // if the user is outside the purple zone, get the three closest buildings
-      const outside = true; // FIXXX
-      if (outside) {
+      const insidePurpleZone = purple_zone.isPointInside(userLocation);
+      if (!insidePurpleZone) {
         const comparableBuildings =
           BuildingService.topThreeClosestBuildings(userLocation);
         if (comparableBuildings === null) {
-          // do location snapping
-          console.log("something is wrong");
+          // The method failed to get closest buildings
+          console.log("topThreeClosestBuildings failed");
         } else {
           // comparableBuildings as ComparableBuilding[]
           // show the popup modal with the three closest buildings

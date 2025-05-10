@@ -14,7 +14,6 @@ import {
   WebSocketResponse,
 } from "../../../server/src/api";
 import RideRequestForm from "@/components/RideRequestForm";
-import { LocationName, LocationService } from "@/services/LocationService";
 import ConfirmRide from "@/components/ConfirmRide";
 import FAQ from "./faq";
 import { Ionicons } from "@expo/vector-icons";
@@ -242,7 +241,7 @@ export default function HomePage() {
     if (dropOffLocationName != "") {
       // get the coordinates of the dropoff location
       setDropOffLocation(
-        LocationService.getLatAndLong(dropOffLocationName as LocationName)
+        BuildingService.getBuildingCoordinates(dropOffLocationName)
       );
     }
   }, [pickUpLocationName, dropOffLocationName]);

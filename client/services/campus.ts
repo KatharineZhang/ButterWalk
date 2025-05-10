@@ -1,6 +1,6 @@
 import { calculateDistance } from "@/app/(student)/map";
 
-type Coordinates = {
+export type Coordinates = {
   latitude: number;
   longitude: number;
 };
@@ -162,14 +162,6 @@ export class BuildingService {
         longitude: -122.30583,
       },
     },
-
-    {
-      name: "Chemistry Library Building (CHL)",
-      location: {
-        latitude: 47.6553,
-        longitude: -122.30583,
-      },
-    },
     {
       name: "Child Learning & Care Center",
       location: {
@@ -210,13 +202,6 @@ export class BuildingService {
       location: {
         latitude: 47.6517,
         longitude: -122.3051,
-      },
-    },
-    {
-      name: "Bullitt Center (L191)",
-      location: {
-        latitude: 47.6553,
-        longitude: -122.30583,
       },
     },
     {
@@ -853,4 +838,8 @@ export function compareBuildings(
   b: ComparableBuilding
 ): number {
   return a.distance - b.distance;
+}
+
+export function getBuildingNames(): string[] {
+  return BuildingService.Buildings.map((b) => b.name);
 }
