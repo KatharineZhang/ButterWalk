@@ -212,6 +212,9 @@ export default function HomePage() {
     resetAllFields();
   };
 
+  /* LEGEND STATE */
+  const [bottom, setBottom] = useState(350);
+
   /* EFFECTS */
   useEffect(() => {
     // add the websocket listeners
@@ -624,7 +627,7 @@ export default function HomePage() {
         <View
           style={{
             position: "absolute",
-            bottom: 400,
+            bottom: whichComponent == "waitForRide" || whichComponent == "handleRide"? 350: bottom,
             left: 10,
             alignItems: "flex-start",
           }}
@@ -666,6 +669,7 @@ export default function HomePage() {
                 startingState={startingState}
                 setFAQVisible={setFAQVisible}
                 setNotificationState={setNotifState}
+                updateSideBarHeight={setBottom}
               />
             </View>
           ) : whichComponent === "confirmRide" ? (

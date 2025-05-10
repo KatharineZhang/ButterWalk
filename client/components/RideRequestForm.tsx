@@ -31,6 +31,7 @@ type RideRequestFormProps = {
   userLocation: { latitude: number; longitude: number };
   rideRequested: (numPassengers: number) => void;
   setFAQVisible: (visible: boolean) => void;
+  updateSideBarHeight: (bottom: number) => void;
   setNotificationState: (state: {
     text: string;
     color: string;
@@ -42,21 +43,23 @@ type RideRequestFormProps = {
 export default function RideRequestForm({
   pickUpLocationChanged,
   dropOffLocationChanged,
-  // userLocation,
+  userLocation,
   rideRequested,
   startingState,
   setFAQVisible,
   setNotificationState,
+  updateSideBarHeight
 }: RideRequestFormProps) {
-  const userLocation = {latitude: 47.66132384329313, longitude:-122.31394842987012}
-
   // user input states for form
   const [location, setLocation] = useState(""); // the chosen pickup
   const [destination, setDestination] = useState(""); // the chosen dropoff
   const [numRiders, setNumRiders] = useState(1);
 
   // show the number of riders component or no
-  const [showNumberRiders, setShowNumberRiders] = useState(false);
+  const [whichPanel, setWhichPanel] = useState<
+    "RideReq" | "NumberRiders" | "LocationSuggestions"
+  >("RideReq");
+  // const [showNumberRiders, setShowNumberRiders] = useState(false);
 
   // Bottom Sheet Reference needed to expand the bottom sheet
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -64,7 +67,9 @@ export default function RideRequestForm({
   useEffect(() => {
     // add the listener for the distance response
     WebSocketService.addListener(handleDistanceTopThree, "DISTANCE");
-    // if there is a starting state, set the location and destination
+    // if there is a starting state,
+    // that means the user clicked back from the confirm ride component
+    // set the location and destination and show the number of riders panel
     if (startingState) {
       setLocationQuery(startingState.pickup);
       setLocation(startingState.pickup);
@@ -72,7 +77,7 @@ export default function RideRequestForm({
       setDestination(startingState.dropoff);
       setNumRiders(startingState.numRiders);
       // show the number of riders modal
-      setShowNumberRiders(true);
+      setWhichPanel("NumberRiders");
     }
     // cleanup function to remove the listener
     return () => {
@@ -115,7 +120,7 @@ export default function RideRequestForm({
       alert("Either the Pickup or Dropoff location must be on campus!");
       return;
     }
-    setShowNumberRiders(true);
+    setWhichPanel("NumberRiders");
   };
 
   /* FUZZY SEARCH BAR STUFF */
@@ -135,7 +140,7 @@ export default function RideRequestForm({
   // useRef will allow of synchronous storage of these buildinsg
   const topThreeBuildings = useRef<ComparableBuilding[]>([]);
   // show the location suggestion component
-  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  // const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
 
   const data: string[] = getBuildingNames();
   data.unshift("Current Location"); // add current location to the beginning
@@ -229,13 +234,13 @@ export default function RideRequestForm({
     setLocationQuery(buildingName);
     setLocation(buildingName);
     pickUpLocationChanged(buildingName);
-    setShowLocationSuggestions(false);
+    setWhichPanel("RideReq");
   };
 
   const hideLocationSuggestions = () => {
     setCurrentQuery("pickup");
     setLocationQuery("");
-    setShowLocationSuggestions(false);
+    setWhichPanel("RideReq");
   };
 
   const handleDistanceTopThree = (message: WebSocketResponse) => {
@@ -258,7 +263,7 @@ export default function RideRequestForm({
           text: "You are not within service area.\nPlease select a nearby location that is.",
           color: "#FFEFB4",
         });
-        setShowLocationSuggestions(true);
+        setWhichPanel("LocationSuggestions");
       }
     } else {
       console.log("Distance response error: ", message);
@@ -266,6 +271,20 @@ export default function RideRequestForm({
   };
 
   /* FUZZY SEARCH BAR STUFF ENDS HERE */
+
+  useEffect(()=> {
+    switch(whichPanel){
+      case "RideReq":
+        updateSideBarHeight(350);
+        break;
+      case "NumberRiders":
+        updateSideBarHeight(310);
+        break;
+      case "LocationSuggestions":
+        updateSideBarHeight(400);
+        break;
+    }
+  }, [whichPanel])
 
   /* Animation stuffs */
   const fadeAnim = useState(new Animated.Value(0))[0];
@@ -511,7 +530,7 @@ export default function RideRequestForm({
         }}
       >
         {/* Back Button */}
-        <TouchableOpacity onPress={() => setShowNumberRiders(false)}>
+        <TouchableOpacity onPress={() => setWhichPanel("RideReq")}>
           <Ionicons name="arrow-back" size={30} color="#4B2E83" />
         </TouchableOpacity>
 
@@ -700,9 +719,9 @@ export default function RideRequestForm({
     </View>
   );
 
-  return showNumberRiders
+  return whichPanel == "NumberRiders"
     ? NumberRiders
-    : showLocationSuggestions
+    : whichPanel == "LocationSuggestions"
       ? LocationSuggestions
       : RideRequest;
 }
