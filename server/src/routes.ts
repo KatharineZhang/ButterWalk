@@ -215,12 +215,19 @@ export const snapLocation = async (
   }
 
   try {
-    // TODO: impelment MapBox here !!!!
+    // Documentation on how to use MapBox's map matching API:
+    // https://docs.mapbox.com/help/tutorials/get-started-map-matching-api/?step=5
 
+    // Set the profile
+    const commuteType = 'walking';
+    const newCoordFormat = `${currLong},${currLat}`;
+    const radius = '25'; // in meters
+    const snappedCoords = await getMatch(newCoordFormat, radius, commuteType);
 
     // these are temporary return values just to appease the red lines
-    const snappedLat : number = 0;
-    const snappedLong : number = 0;
+    const snappedLat : number = snappedCoords.coordinates[0][0];
+    const snappedLong : number = snappedCoords.coordinates[0][1];
+    console.log("Snapped locations:", snappedLat, snappedLong);
     return{
       response: "SNAP",
       success: true,
@@ -235,6 +242,33 @@ export const snapLocation = async (
     };
   }
 };
+
+
+// Make a Map Matching request
+async function getMatch(coordinates: string, radius: string, profile: string) {
+ 
+  // Create the query
+  // TODO: get access token
+  const query = await fetch(
+    `https://api.mapbox.com/matching/v5/mapbox/${profile}/${coordinates}?geometries=geojson&radiuses=${radius}&steps=false&access_token=${process.env.MAPBOX_SNAPPING_TOKEN}`,
+    { method: 'GET' }
+  );
+  const response = await query.json();
+  // Handle errors
+  if (response.code !== 'Ok') {
+    alert(
+      `${response.code} - ${response.message}.\n\nFor more information: https://docs.mapbox.com/api/navigation/map-matching/#map-matching-api-errors`
+    );
+    return;
+  }
+  // Get the coordinates from the response.
+  // TODO: figure out if it's in an array or not
+  const coords = response.matchings[0].geometry;
+  console.log(coords);
+  // Code from the next step will go here
+  return coords;
+}
+
 
 /* Adds a new ride request object to the queue using the parameters given. 
 Will add a new request to the database, populated with the fields passed in and a request status of 0.
