@@ -1,7 +1,6 @@
 import { styles } from "@/assets/styles";
 import {
   View,
-  Text,
   Image,
   useWindowDimensions,
   ImageSourcePropType,
