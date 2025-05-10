@@ -21,6 +21,7 @@ import {
   ProfileResponse,
   User,
   DistanceResponse,
+  SnapLocationResponse,
 } from "./api";
 import {
   acceptRideRequest,
@@ -195,6 +196,42 @@ export const finishAccCreation = async (
       response: "ERROR",
       error: `Error adding phone number or student number to database: ${(e as Error).message}.`,
       category: "FINISH_ACC",
+    };
+  }
+};
+
+
+export const snapLocation = async (
+  currLat: number,
+  currLong: number
+) : Promise<SnapLocationResponse | ErrorResponse> => {
+  // if currLat or currLong is not a number, return an error
+  if (!currLat || !currLong) {
+    return {
+      response: "ERROR",
+      error: "Missing or invalid location details.",
+      category: "SNAP",
+    };
+  }
+
+  try {
+    // TODO: impelment MapBox here !!!!
+
+
+    // these are temporary return values just to appease the red lines
+    const snappedLat : number = 0;
+    const snappedLong : number = 0;
+    return{
+      response: "SNAP",
+      success: true,
+      latitude: snappedLat,
+      longitude: snappedLong,
+    }
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error getting snap location: ${e}`,
+      category: "SNAP",
     };
   }
 };

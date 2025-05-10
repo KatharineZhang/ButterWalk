@@ -130,6 +130,7 @@ export default function RideRequestForm({
       const closestCampusBuilding = BuildingService.closestBuilding(userLocation);
       if (closestCampusBuilding === null) {
         // do location snapping
+        // TODO: call the websocket to get the snapped location coordinates
         console.log("location snapping!");
       } else {
         setClosestLocation(closestCampusBuilding.name);

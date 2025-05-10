@@ -6,6 +6,7 @@ import {
   blacklist,
   cancelRide,
   completeRide,
+  snapLocation,
   location,
   query,
   report,
@@ -25,6 +26,7 @@ import {
   WebSocketResponse,
   GoogleResponse,
   ErrorResponse,
+  SnapLocationResponse,
 } from "./api";
 
 export const handleWebSocketMessage = async (
@@ -119,6 +121,11 @@ export const handleWebSocketMessage = async (
         input.phoneNum,
         input.studentNum
       );
+      sendWebSocketMessage(ws, resp);
+      break;
+
+    case "SNAP":
+      resp = await snapLocation(input.currLat, input.currLong) as SnapLocationResponse;
       sendWebSocketMessage(ws, resp);
       break;
 

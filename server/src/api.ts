@@ -38,6 +38,11 @@ export type WebSocketMessage =
       studentNum: string;
     }
   | {
+      directive: "SNAP";
+      currLat: number;
+      currLong: number;
+    }
+  | {
       directive: "REQUEST_RIDE";
       phoneNum: string;
       netid: string;
@@ -97,6 +102,7 @@ export type WebSocketResponse =
   | GeneralResponse
   | SignInResponse
   | FinishAccCreationResponse
+  | SnapLocationResponse
   | RequestRideResponse
   | WaitTimeResponse
   | AcceptResponse
@@ -133,6 +139,13 @@ export type SignInResponse = {
 export type FinishAccCreationResponse = {
   response: "FINISH_ACC";
   success: boolean;
+};
+
+export type SnapLocationResponse = {
+  response: "SNAP";
+  success: boolean;
+  latitude: number;
+  longitude: number;
 };
 
 export type RequestRideResponse = {
@@ -204,6 +217,7 @@ export type ErrorResponse = {
     | "REPORT"
     | "BLACKLIST"
     | "WAIT_TIME"
+    | "SNAP"
     | "REQUEST_RIDE"
     | "ACCEPT_RIDE"
     | "CANCEL"
