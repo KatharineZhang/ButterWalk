@@ -666,7 +666,12 @@ const getDuration = async (
 > => {
   try {
     // all the api
-    const distResp = await distanceMatrix([origin], [destination], "driving");
+    const distResp = await distanceMatrix(
+      [origin],
+      [destination],
+      "driving",
+      "doesn't-matter"
+    );
 
     // check for an error
     if ("response" in distResp && distResp.response === "ERROR") {
@@ -728,7 +733,8 @@ const getDuration = async (
 export const distanceMatrix = async (
   origin: { latitude: number; longitude: number }[],
   destination: { latitude: number; longitude: number }[],
-  mode: "driving" | "walking"
+  mode: "driving" | "walking",
+  tag: string
 ): Promise<ErrorResponse | DistanceResponse> => {
   try {
     // convert from coordinate array to string
@@ -754,7 +760,7 @@ export const distanceMatrix = async (
 
     if (data.rows[0].elements[0].status === "OK") {
       // there are results so return response
-      return { response: "DISTANCE", apiResponse: data };
+      return { response: "DISTANCE", apiResponse: data, tag: tag };
     } else {
       // trigger the catch branch
       throw new Error(`Error fetching distance matrix info: ${data.status}`);

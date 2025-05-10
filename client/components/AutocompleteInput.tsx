@@ -1,14 +1,13 @@
 // Used for fuzze search in RideRequestForm component!
 import React from "react";
 import { View, StyleSheet, TextInput } from "react-native";
-import { DropDownType } from "./RideRequestForm";
 
 interface AutoCompleteInputProps {
   onPress: () => void;
   query: string;
   setQuery: (text: string) => void;
   placeholder: string;
-  data: DropDownType[];
+  data: string[];
 }
 
 const AutoCompleteInput: React.FC<AutoCompleteInputProps> = ({

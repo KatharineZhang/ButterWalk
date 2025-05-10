@@ -16,7 +16,7 @@ import {
   DriverAcceptResponse,
   WebSocketResponse,
 } from "../../../server/src/api";
-import { LocationName, LocationService } from "@/services/LocationService";
+import { BuildingService } from "@/services/campus";
 
 export default function App() {
   // Extract netid from Redirect URL from signin page
@@ -237,11 +237,11 @@ export default function App() {
       setRideInfo(driverAccept);
       setPickUpLocation(
         // get coordinates from location names
-        LocationService.getLatAndLong(driverAccept.location as LocationName)
+        BuildingService.getBuildingCoordinates(driverAccept.location)
       );
       setDropOffLocation(
         // get coordinates from location names
-        LocationService.getLatAndLong(driverAccept.destination as LocationName)
+        BuildingService.getBuildingCoordinates(driverAccept.destination)
       );
     }
   };
