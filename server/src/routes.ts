@@ -62,8 +62,6 @@ const handleToken = async (
       console.error("auth is null @106 routes.ts");
     } else {
       const token = authentication.accessToken;
-      console.log("access token", token);
-
       return getUserProfile(token);
     }
   }
@@ -677,7 +675,6 @@ const getDuration = async (
     }
 
     const data = (distResp as DistanceResponse).apiResponse;
-    console.log(data);
 
     // instantiate the response object
     const response: {
