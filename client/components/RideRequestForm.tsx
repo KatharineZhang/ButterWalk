@@ -30,7 +30,6 @@ import {
 import WebSocketService from "../services/WebSocketService";
 import { campus_zone, purple_zone } from "@/services/ZoneService";
 
-
 type RideRequestFormProps = {
   pickUpLocationNameChanged: (location: string) => void;
   dropOffLocationNameChanged: (location: string) => void;
@@ -52,18 +51,7 @@ type RideRequestFormProps = {
     boldText?: string;
   }) => void;
   startingState?: { pickup: string; dropoff: string; numRiders: number };
-  recentLocations: string[];
 };
-
-// the type of locations we can send to homepage
-//export type ValidLocationType = LocationName | `Current Location`;
-
-// What's in this component:
-// Ride Request Form which sends request to server and gets response back,
-// Cancel Ride button to cancel ride request,
-// fuzzy search for location and desination which uses autocomplete(buggy),
-// animation for rider icons,
-// This is a beefy component!
 
 export default function RideRequestForm({
   pickUpLocationNameChanged,
@@ -74,11 +62,14 @@ export default function RideRequestForm({
   rideRequested,
   startingState,
   setFAQVisible,
-  recentLocations,
   setNotificationState,
   updateSideBarHeight,
 }: RideRequestFormProps) {
   /* STATE */
+  const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
+    ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
+    : "";
+
   // user input states for form
   const [chosenPickup, setChosenPickup] = useState(""); // the chosen pickup name
   const [chosenDropoff, setChosenDropoff] = useState(""); // the chosen dropoff name
@@ -112,10 +103,13 @@ export default function RideRequestForm({
   const topThreeBuildings = useRef<ComparableBuilding[]>([]);
 
   // the set of results to show in the dropdown
-  //const data: string[] = getBuildingNames();
-  //data.unshift("Current Location"); // add current location to the beginning
-  const data: string[] = recentLocations;
-  console.log(recentLocations);
+  const data: string[] = getBuildingNames();
+  data.unshift("Current Location"); // add current location to the beginning
+
+  const [suggestions, setSuggestions] = useState<string[]>(() =>
+    ["Current Location", ...getBuildingNames()]
+  );
+
   /* METHODS */
   // the user clicked a dropdown result
   const handleSelection = (value: string) => {
@@ -129,6 +123,26 @@ export default function RideRequestForm({
       handleSetDestination(value);
     }
   };
+
+  async function resolveCoordinates(name: string) {
+    try {
+      // first try campus data
+      return BuildingService.getBuildingCoordinates(name);
+    } catch (_e) {
+      // not in campus.ts → fall back to Google Geocode
+      const res = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?` +
+          `address=${encodeURIComponent(name)}` +
+          `&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY}`
+      );
+      const json = await res.json();
+      if (json.results?.length) {
+        const { lat, lng } = json.results[0].geometry.location;
+        return { latitude: lat, longitude: lng };
+      }
+      throw new Error(`Couldn’t geocode “${name}”`);
+    }
+  }
 
   // user clicked a pickup dropdown
   const handleSetLocation = (value: string) => {
@@ -210,7 +224,12 @@ export default function RideRequestForm({
       // the user clicked a normal dropdown location
       setChosenPickup(value);
       pickUpLocationNameChanged(value);
-      pickUpLocationCoordChanged(BuildingService.getBuildingCoordinates(value));
+
+      resolveCoordinates(value)
+        .then(pickUpLocationCoordChanged)
+        .catch((err) =>
+          console.error("Location lookup failed", err.message)
+        );
     }
   };
 
@@ -228,7 +247,12 @@ export default function RideRequestForm({
     }
     setChosenDropoff(value);
     dropOffLocationNameChanged(value);
-    dropOffLocationCoordChanged(BuildingService.getBuildingCoordinates(value));
+
+    resolveCoordinates(value)
+      .then(dropOffLocationCoordChanged)
+      .catch((err) =>
+        console.error("Location lookup failed", err.message)
+      );
   };
 
   // go to the number of riders screen
@@ -423,6 +447,39 @@ export default function RideRequestForm({
     }
   }, [whichPanel]);
 
+  useEffect(() => {
+    if (currentQuery !== "pickup" || pickUpQuery.length < 3) {
+      // fewer than 3 chars then revert to static list
+      setSuggestions(["Current Location", ...getBuildingNames()]);
+      return;
+    }
+
+    const controller = new AbortController();
+    (async () => {
+      try {
+        // bias by userLocation, rank by distance
+        const url =
+          `https://maps.googleapis.com/maps/api/place/textsearch/json?` +
+          `query=${encodeURIComponent(pickUpQuery)}` +
+          `&location=${userLocation.latitude},${userLocation.longitude}` +
+          `&rankby=distance` +
+          `&key=${GOOGLE_MAPS_APIKEY}`;
+
+        const res = await fetch(url, { signal: controller.signal });
+        const json = await res.json();
+
+        if (Array.isArray(json.results)) {
+          const places = json.results.map((r: any) => r.name);
+          setSuggestions(["Current Location", ...places]);
+        }
+      } catch (e: any) {
+        console.error(e);
+      }
+    })();
+
+    return () => controller.abort();
+  }, [pickUpQuery, currentQuery, userLocation]);
+
   /* ANIMATION */
   const fadeAnim = useState(new Animated.Value(0))[0];
 
@@ -545,7 +602,7 @@ export default function RideRequestForm({
                 query={pickUpQuery}
                 setQuery={setPickUpQuery}
                 placeholder="Pick Up Location"
-                data={data}
+                data={suggestions}
               />
               <AutocompleteInput
                 onPress={() => {
@@ -555,7 +612,7 @@ export default function RideRequestForm({
                 query={dropOffQuery}
                 setQuery={setDropOffQuery}
                 placeholder="Drop Off Location"
-                data={data}
+                data={suggestions}
               />
             </View>
 
@@ -582,7 +639,7 @@ export default function RideRequestForm({
         {/* Autocomplete Suggestions */}
         <View style={{ flex: 1, height: 100 }}>
           <ScrollView style={{ paddingBottom: 400 }}>
-            {data
+            {suggestions
               .filter((item) => {
                 if (currentQuery == "dropoff") {
                   return item !== "Current Location";
