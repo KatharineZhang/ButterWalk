@@ -213,6 +213,14 @@ export const snapLocation = async (
     };
   }
 
+  if(typeof currLat !== "number" || typeof currLong !== "number") {
+    return {
+      response: "ERROR",
+      error: "latitude or longitude not the correct type.",
+      category: "SNAP",
+    };
+  }
+
   if(currLat < -90 || currLat > 90 || currLong < -180 || currLong > 180) {
     return {
       response: "ERROR",
@@ -220,6 +228,8 @@ export const snapLocation = async (
       category: "SNAP",
     };
   }
+
+  
 
   try {
     // Documentation on how to use MapBox's map matching API:
