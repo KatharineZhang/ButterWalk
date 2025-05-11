@@ -200,11 +200,10 @@ export const finishAccCreation = async (
   }
 };
 
-
 export const snapLocation = async (
   currLat: number,
   currLong: number
-) : Promise<SnapLocationResponse | ErrorResponse> => {
+): Promise<SnapLocationResponse | ErrorResponse> => {
   // if currLat or currLong is not a number, return an error
   if (!currLat || !currLong) {
     return {
@@ -219,24 +218,25 @@ export const snapLocation = async (
     // https://docs.mapbox.com/help/tutorials/get-started-map-matching-api/?step=5
 
     // Set the profile
-    const commuteType = 'walking';
+    const commuteType = "walking";
     const newCoordFormat = `${currLong},${currLat}`;
-    const radius = '25'; // in meters
+    const radius = "25"; // in meters
     const snappedInfo = await getMatch(newCoordFormat, radius, commuteType);
+    console.log("Snapped info:", snappedInfo);
 
     // these are temporary return values just to appease the red lines
-    const roadName = snappedInfo?.roadName;
-    const snappedLat : number = snappedInfo?.coords.coordinates[0][0];
-    const snappedLong : number = snappedInfo?.coords.coordinates[0][1];
+    const roadName: string = snappedInfo?.roadName;
+    const snappedLat: number = snappedInfo?.coords.coordinates[0][1];
+    const snappedLong: number = snappedInfo?.coords.coordinates[0][0];
     console.log("Snapped locations:", snappedLat, snappedLong);
-    
-    return{
+
+    return {
       response: "SNAP",
       success: true,
       roadName: roadName,
       latitude: snappedLat,
       longitude: snappedLong,
-    }
+    };
   } catch (e) {
     return {
       response: "ERROR",
@@ -246,20 +246,20 @@ export const snapLocation = async (
   }
 };
 
-
 // Make a Map Matching request
 async function getMatch(coordinates: string, radius: string, profile: string) {
- 
   // Create the query
   // TODO: get access token
+  console.log("in getMatch");
   const query = await fetch(
-    `https://api.mapbox.com/matching/v5/mapbox/${profile}/${coordinates}?geometries=geojson&radiuses=${radius}&steps=false&access_token=${process.env.MAPBOX_SNAPPING_TOKEN}`,
-    { method: 'GET' }
+    `https://api.mapbox.com/matching/v5/mapbox/${profile}/${coordinates};${coordinates}?geometries=geojson&radiuses=${radius};${radius}&steps=false&access_token=${process.env.MAPBOX_SNAPPING_TOKEN}`,
+    { method: "GET" }
   );
   const response = await query.json();
+  console.log("response from mapbox:", response);
   // Handle errors
-  if (response.code !== 'Ok') {
-    alert(
+  if (response.code !== "Ok") {
+    console.error(
       `${response.code} - ${response.message}.\n\nFor more information: https://docs.mapbox.com/api/navigation/map-matching/#map-matching-api-errors`
     );
     return;
@@ -269,9 +269,8 @@ async function getMatch(coordinates: string, radius: string, profile: string) {
   const coords = response.matchings[0].geometry;
   console.log(coords);
   // Code from the next step will go here
-  return {coords: coords, roadName: response.tracepoints[1].name};
+  return { coords: coords, roadName: response.tracepoints[1].name };
 }
-
 
 /* Adds a new ride request object to the queue using the parameters given. 
 Will add a new request to the database, populated with the fields passed in and a request status of 0.

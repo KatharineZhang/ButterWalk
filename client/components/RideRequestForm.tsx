@@ -122,6 +122,7 @@ export default function RideRequestForm({
     if (value === "Current Location") {
       // check if user is in the purple zone
       const insidePurpleZone = purple_zone.isPointInside(userLocation);
+      console.log("inside purple zone: ", insidePurpleZone);
       // if the user is outside the purple zone, get the three closest buildings
       if (!insidePurpleZone) {
         // call the campus api to get the 3 closest buildins
@@ -166,7 +167,7 @@ export default function RideRequestForm({
         // so we need to snap the location to the closest building or street
 
         // first try to get a closest building
-        const closestCampusBuilding =
+        const closestCampusBuilding = 
           BuildingService.closestBuilding(userLocation);
         // if no building was close enough
         if (closestCampusBuilding === null) {
@@ -183,9 +184,9 @@ export default function RideRequestForm({
         } else {
           // otherwise, store the closest building
           setClosestBuilding(closestCampusBuilding.name);
+          // show the confirmation modal to let the user know where they are being snapped to
+          setConfirmationModalVisible(true);
         }
-        // show the confirmation modal to let the user know where they are being snapped to
-        setConfirmationModalVisible(true);
       }
     } else {
       // the user clicked a normal dropdown location
@@ -336,6 +337,11 @@ export default function RideRequestForm({
       const snapResp = message as SnapLocationResponse;
       if(snapResp.success) {
         const roadName = snapResp.roadName;
+        if (roadName == ""){
+          pickUpLocationNameChanged("Current Location");
+          setChosenPickup("Current Location");
+          setPickUpQuery("Current Location");
+        } else {
         pickUpLocationNameChanged(roadName);
         // set the coordinates to the snapped location (send it back to home component)
         pickUpLocationCoordChanged(
@@ -343,6 +349,7 @@ export default function RideRequestForm({
         );
         setChosenPickup(roadName);
         setPickUpQuery(roadName);
+      }
       }
     } else {
       // there was a signin related error

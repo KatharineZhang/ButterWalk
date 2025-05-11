@@ -24,7 +24,6 @@ import LoadingPageComp from "@/components/loadingPageComp";
 import Notification from "@/components/notification";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Legend from "@/components/Legend";
-import { BuildingService } from "@/services/campus";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
