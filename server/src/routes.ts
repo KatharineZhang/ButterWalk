@@ -38,9 +38,14 @@ import {
   queryFeedback,
   db,
   getProfile,
+  addRideRequestToPool,
+  getRideRequests,
+  setRideRequestStatus,
+  setRideRequestDriver,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { Mutex } from "async-mutex";
+import { highestRank } from "./rankingAlgorithm";
 dotenv.config();
 
 // every time we access the queue and the database,
@@ -201,14 +206,19 @@ export const finishAccCreation = async (
   }
 };
 
-/* Adds a new ride request object to the queue using the parameters given. 
-Will add a new request to the database, populated with the fields passed in and a request status of 0.
-
-- Takes in a json object with the following format: 
-{ directive: "REQUEST_RIDE", phoneNum: string, netID: string, location: string, destination: string; numRiders: bigint }.
-
-- On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: “REQUEST_RIDE” }.
-- Returns a json object TO THE STUDENT in the form: { response: “REQUEST_RIDE”, requestid: string }. */
+/**
+ * Accepts a RideRequest (`rideRequest`) and attempts to add it to the pool of ride requests.
+ * Represents a student requesting a ride.
+ * if `rideRequest` is not passed, runs the deprecated version as follows:
+ *
+ * Adds a new ride request object to the queue using the parameters given. 
+ * Will add a new request to the database, populated with the fields passed in and a request status of 0.
+ *
+ * - Takes in a json object with the following format: 
+ * { directive: "REQUEST_RIDE", phoneNum: string, netID: string, location: string, destination: string; numRiders: bigint }.
+ * 
+ * - On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: “REQUEST_RIDE” }.
+ * - Returns a json object TO THE STUDENT in the form: { response: “REQUEST_RIDE”, requestid: string }. */
 export const requestRide = async (
   phoneNum: string,
   netid: string,
@@ -217,13 +227,25 @@ export const requestRide = async (
   numRiders: number,
   rideRequest?: RideRequest
 ): Promise<RequestRideResponse | ErrorResponse> => {
+  // when the rideRequest is passed, we are using the non-deprecated version
+  // of this call. deprecated version is included to not break everything for a bit
   if (rideRequest != null) {
-    /**
-     * TODO(connor): Ride Request broker version of `requestRide`
-     * 
-     * 1. Add the new ride request to the database
-     * 2. return the proper response on success or failure
-     */
+    try {
+      const requestid = await runTransaction(db, async (t) => {
+        return await addRideRequestToPool(t, rideRequest);
+      });
+      if (requestid != null) {
+        return { response: "REQUEST_RIDE", requestid };
+      }
+    } catch (e: unknown) {
+      // TODO(connor): introduce a debugging and logging utility and or proper error
+      // handling so this is not necessary.
+      return {
+        response: "ERROR",
+        error: `Error adding ride request to the database: ${e}`,
+        category: "REQUEST_RIDE",
+      };
+    }
   }
   if (!phoneNum || !from || !to || numRiders <= 0) {
     return {
@@ -262,10 +284,19 @@ export const requestRide = async (
  * Returns "YES" or "NO" depending on if there are currently rides in the pool.
  * Used by the ride request broker, called when a driver opens the application.
  */
-export const ridesExist = async (): Promise<"YES" | "NO" | ErrorResponse> => {
-  /**
-   * TODO(connor): Check if rides exist and return appropriately
-   */
+export const ridesExist = async (): Promise<boolean | ErrorResponse> => {
+  try {
+    return await runTransaction(db, async () => {
+      const rideRequests: RideRequest[] = await getRideRequests();
+      return rideRequests.length !== 0;
+    });
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error getting ride requests from the database: ${e}`,
+      category: "REQUEST_RIDE"
+    }
+  }
 }
 
 /**
@@ -282,46 +313,162 @@ export const viewRide = async (
   driverId: string,
   driverLocation: string
 ): Promise<ViewRideRequestResponse | ErrorResponse> => {
-  /**
-   * TODO(connor): viewRide ride request broker implementation
-   * 
-   * 1. Poll the database for all rides with `STATUS == REQUESTED`
-   * 2. Pass "pool" of all awaiting rides to the blackbox/ranking algorithm,
-   *    or return something else if no rides are available.
-   * 3. Update the top ranked ride in the database to have `STATUS = VIEWING`
-   * 4. Return that rides information to the driver
-   */
+  let associatedUser: User | null = null;
+  try {
+    const rideRequest: RideRequest | null = await runTransaction(db, async(t) => {
+      const rideRequests: RideRequest[] = await getRideRequests();
+      if (rideRequests.length === 0) {
+        return null;
+      }
+      const bestRequest: RideRequest = highestRank(rideRequests, driverId, driverLocation);
+      const userNetid = bestRequest.netid;
+      associatedUser = await getProfile(t, userNetid);
+      const id = bestRequest.requestId;
+      if (id === undefined) {
+        throw new Error(`Request did not have an ID, cannot complete viewing: ${bestRequest}`);
+      }
+      setRideRequestStatus(t, "VIEWING", id);
+      return bestRequest;
+    })
+    if (rideRequest === null) {
+      return {
+        response: "VIEW_RIDE_REQUEST",
+        rideExists: false
+      }
+    }
+    if (associatedUser === null) {
+        throw new Error(`Didn't find any User during view ride.`);
+      }
+    return {
+      response: "VIEW_RIDE_REQUEST",
+      rideExists: true,
+      view: {
+        rideRequest: rideRequest,
+        user: associatedUser
+      }
+    }
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Unknown problem during viewRide: ${e}`,
+      category: "VIEW_RIDE"
+    }
+  }
 }
 
+/**
+ * Handles the acceptance, rejection, reporting, timing out, or erroring
+ * of a ride request in the pool that was previously checked out to a 
+ * particular driver.
+ * @param driverId ID of the driver who viewed the given ride request
+ * @param providedview The view that was provided to the driver
+ * @param decision The driver's decision on the ride request
+ *  `ACCEPT` -> Accepts the ride request, ties to driver
+ */
 export const handleDriverViewChoice = async (
   driverId: string,
   providedview: ViewRideRequestResponse,
   decision: "ACCEPT" | "DENY" | "REPORT" | "TIMEOUT" | "ERROR"
 ): Promise<ViewChoiceResponse | ErrorResponse> => {
-  /**
-   * TODO(connor): handleDriverViewChoice ride request broker implementation
-   */
+  const requestId = providedview.view?.rideRequest.requestId;
+  if (typeof(requestId) !== "string") {
+    return {
+      response: "ERROR",
+      error: `Tried to handle view choice when provided view had undefined request id: ${providedview}`,
+      category: "VIEW_RIDE"
+    }
+  }
   if (decision === "ACCEPT") {
     /**
      * Change the status of the ride request with the given
      * rideRequestId to be `AWAITING PICK UP`, or `ACCEPTED`,
      * assigning the ride to the given driver
      */
+    try {
+      return await runTransaction(db, async(t) => {
+        setRideRequestStatus(t, "ACCEPTED", requestId);
+        setRideRequestDriver(t, requestId, driverId);
+        return {
+          response: "VIEW_CHOICE",
+          providedView: providedview,
+          success: true
+        }
+      })
+    } catch (e) {
+      return {
+        response: "ERROR",
+        error: `Unexpected Error during handleDriverViewChoie: ${e}`,
+        category: "VIEW_RIDE"
+      }
+    }
   } else if (decision === "DENY") {
     /**
      * Change the status of the ride request with the given
      * id back to `REQUESTED`, returning it to the pool.
      */
+    try {
+      return await runTransaction(db, async(t) => {
+        setRideRequestStatus(t, "REQUESTED", requestId);
+        return {
+          response: "VIEW_CHOICE",
+          providedView: providedview,
+          success: true
+        }
+      })
+    } catch (e) {
+      return {
+        response: "ERROR",
+        error: `Unexpected Error during handleDriverViewChoie: ${e}`,
+        category: "VIEW_RIDE"
+      }
+    }
   } else if (decision === "REPORT") {
     /**
      * Handle report/blacklist behavior, remove ride request
      * from the pool.
      */
+    try {
+      return await runTransaction(db, async(t) => {
+        const netid = providedview.view?.user.netid;
+        if (netid === undefined || netid === null) {
+          throw new Error(`Tried to blacklist a user with no netid`);
+        }
+        setRideRequestStatus(t, "CANCELED", requestId);
+        blacklistUser(t, netid)
+        return {
+          response: "VIEW_CHOICE",
+          providedView: providedview,
+          success: true
+        }
+      })
+    } catch (e) {
+      return {
+        response: "ERROR",
+        error: `Unexpected Error during handleDriverViewChoie: ${e}`,
+        category: "VIEW_RIDE"
+      }
+    }
   } else if (decision === "TIMEOUT") {
     /**
      * Change the status of the ride request with the given id
      * back to `REQUESTED`, returning it to the pool.
      */
+    try {
+      return await runTransaction(db, async(t) => {
+        setRideRequestStatus(t, "REQUESTED", requestId);
+        return {
+          response: "VIEW_CHOICE",
+          providedView: providedview,
+          success: true
+        }
+      })
+    } catch (e) {
+      return {
+        response: "ERROR",
+        error: `Unexpected Error during handleDriverViewChoie: ${e}`,
+        category: "VIEW_RIDE"
+      }
+    }
   } else if (decision === "ERROR") {
     /**
      * Change the status of the ride request with the given id
@@ -329,10 +476,31 @@ export const handleDriverViewChoice = async (
      * additional logging or error handling for unexpected
      * behavior.
      */
+    // TODO(connor): implement some debugging or logging as noted before so this is not necessary
+    console.log(`Error response in handleDriverViewChoice`);
+    try {
+      return await runTransaction(db, async(t) => {
+        setRideRequestStatus(t, "REQUESTED", requestId);
+        return {
+          response: "VIEW_CHOICE",
+          providedView: providedview,
+          success: true
+        }
+      })
+    } catch (e) {
+      return {
+        response: "ERROR",
+        error: `Unexpected Error during handleDriverViewChoie: ${e}`,
+        category: "VIEW_RIDE"
+      }
+    }
+  } else {
+    throw new Error(`decision: ${decision} was not a valid string.`);
   }
 }
 
-/* Pops the next ride request in the queue and assigns it to the driver. 
+/* !!!DEPRECATED!!!
+Pops the next ride request in the queue and assigns it to the driver. 
 This call will update the database to add the driver id to the specific request 
 and change the status of the request to 1 (accepted). 
 
@@ -416,30 +584,7 @@ And if there driver needs to be notified, the json object returned TO THE DRIVER
 export const cancelRide = async (
   netid: string,
   role: "STUDENT" | "DRIVER"
-  returnRequestToQueue?: boolean
 ): Promise<CancelResponse | ErrorResponse> => {
-  /**
-   * TODO(connor): Update this for the new RRB system
-   * 1. Handle edge cancellation cases in websocket routes (i.e. driver cancel vs student cancel,
-   * status of ride during cancel, error out, etc.)
-   * 2. If `returnRequestToQueue`, update the ride associated with the given netid to
-   * have status=REQUESTED, otherwise remove from the queue
-   */
-  if (!netid) {
-    return {
-      response: "ERROR",
-      error: "Missing required fields.",
-      category: "CANCEL",
-    };
-  }
-
-  queueLock.acquire();
-  // can't do this in the transaction unfortuntely, so lock instead
-  if (role === "STUDENT") {
-    // get rid of any pending requests in the local queue that have the same netid
-    rideReqQueue.remove(netid);
-  }
-
   try {
     return await runTransaction(db, async (transaction) => {
       const otherid = await cancelRideRequest(transaction, netid, role);
@@ -464,8 +609,6 @@ export const cancelRide = async (
       error: `Error canceling ride request: ${e}`,
       category: "CANCEL",
     };
-  } finally {
-    queueLock.release();
   }
 };
 
@@ -481,35 +624,27 @@ export const cancelRide = async (
 export const completeRide = async (
   requestid: string
 ): Promise<CompleteResponse | ErrorResponse> => {
-  /**
-   * TODO(connor): Change this to do the ride completion step in the ride request broker
-   * Change the status of the given `requestid` to COMPLETED
-   */
-  if (!requestid) {
-    return {
-      response: "ERROR",
-      error: "Missing required fields.",
-      category: "COMPLETE",
-    };
-  }
-  // set the specific request status to 2 in the database
-  // if there is an error, return { success: false, error: 'Error completing ride request.'};
   try {
-    return await runTransaction(db, async (transaction) => {
-      const netids = await completeRideRequest(transaction, requestid);
+    return await runTransaction(db, async(t) => {
+      const netids = await completeRideRequest(t, requestid)
       return {
         response: "COMPLETE",
-        info: { response: "COMPLETE", success: true },
-        netids: netids,
-      };
-    });
+        info: {
+          response: "COMPLETE",
+          success: true
+        },
+        netids: {
+          student: netids.student,
+          driver: netids.driver
+        }
+      }
+    })
   } catch (e) {
-    // if there is an error, return { success: false, error: 'Error completing ride request.'};
     return {
       response: "ERROR",
-      error: `Error completing ride request: ${e}`,
-      category: "COMPLETE",
-    };
+      error: `Unexpected Error during completeRide: ${e}`,
+      category: "COMPLETE"
+    }
   }
 };
 

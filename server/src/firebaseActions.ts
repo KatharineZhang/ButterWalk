@@ -92,38 +92,117 @@ export async function finishCreatingUser(
   }
 }
 
+// DEPRECATED
 // REQUEST RIDE - Add a ride request to the database
-export async function addRideRequest(
-  transaction: Transaction,
-  netid: string,
-  location: string,
-  destination: string,
-  numRiders: number
+// export async function addRideRequest(
+//   transaction: Transaction,
+//   netid: string,
+//   location: string,
+//   destination: string,
+//   numRiders: number
+// ): Promise<string> {
+//   // make sure there are no pending rides in the database by this user
+//   const queryExistingRide = query(
+//     rideRequestsCollection,
+//     where("netid", "==", netid),
+//     where("status", "in", ["REQUESTED", "ACCEPTED"])
+//   );
+//   const inDatabase = await getDocs(queryExistingRide); // get the document by netid
+//   //  check if user is in problematicUsers table
+//   if (inDatabase.size > 0) {
+//     throw new Error(`${netid} already has a pending ride`);
+//   }
+//   const rideRequest: RideRequest = {
+//     netid,
+//     driverid: null,
+//     completedAt: null,
+//     locationFrom: location,
+//     locationTo: destination,
+//     numRiders,
+//     status: "REQUESTED",
+//   };
+//   // make a new document and let the db decide the key
+//   const docRef = doc(rideRequestsCollection);
+//   await transaction.set(docRef, rideRequest);
+//   return docRef.id;
+// }
+
+/**
+ * Adds a new ride request to the database/pool, always with the status 'REQUESTED'
+ * @param t The transaction running
+ * @param rideRequest the ride request to add to the database
+ * @returns the docid supplied by firebase
+ */
+export async function addRideRequestToPool(
+  t: Transaction, 
+  rideRequest: RideRequest
 ): Promise<string> {
   // make sure there are no pending rides in the database by this user
   const queryExistingRide = query(
     rideRequestsCollection,
-    where("netid", "==", netid),
+    where("netid", "==", rideRequest.netid),
     where("status", "in", ["REQUESTED", "ACCEPTED"])
   );
   const inDatabase = await getDocs(queryExistingRide); // get the document by netid
   //  check if user is in problematicUsers table
   if (inDatabase.size > 0) {
-    throw new Error(`${netid} already has a pending ride`);
+    throw new Error(`${rideRequest.netid} already has a pending ride`);
   }
-  const rideRequest: RideRequest = {
-    netid,
-    driverid: null,
-    completedAt: null,
-    locationFrom: location,
-    locationTo: destination,
-    numRiders,
-    status: "REQUESTED",
-  };
-  // make a new document and let the db decide the key
+  rideRequest.completedAt = null;
+  rideRequest.driverid = null;
+  rideRequest.requestedAt = Timestamp.now();
+  rideRequest.status = "REQUESTED";
   const docRef = doc(rideRequestsCollection);
-  await transaction.set(docRef, rideRequest);
+  t.set(docRef, rideRequest);
   return docRef.id;
+}
+
+/**
+ * Used for the ride request pool, returns all currently REQUESTED
+ * ride requests.
+ * @returns a list of RideRequests with status "REQUESTED"
+ */
+export async function getRideRequests(): Promise<RideRequest[]> {
+  const queryRides = query(
+    rideRequestsCollection,
+    where("status", "==", "REQUESTED")
+  );
+  const inDatabase = await getDocs(queryRides);
+  const rideRequests: RideRequest[] = [];
+  inDatabase.forEach(el => {
+    const rideRequest = el.data();
+    // TODO(connor): Type validation
+    rideRequests.push(rideRequest as RideRequest);
+  })
+  return rideRequests;
+}
+
+/**
+ * Updates the status of the provided ride request to the provided status
+ * @param status The status to change to
+ * @param rideRequestId The ride request to chagne
+ */
+export async function setRideRequestStatus(
+  t: Transaction,
+  status: "CANCELED" | "REQUESTED" | "VIEWING" | "ACCEPTED" | 
+          "AWAITING PICK UP" | "DRIVING" | "COMPLETED",
+  rideRequestId: string
+) {
+  t.update(doc(rideRequestsCollection, rideRequestId), { status: status});
+}
+
+/**
+ * Set the driver id of a ride request
+ * @param t The associated transaction
+ * @param rideRequestId the ride request to update
+ * @param driverId the id of the driver
+ */
+export async function setRideRequestDriver(
+  t: Transaction,
+  rideRequestId: string,
+  driverId: string
+) {
+  t.update(doc(rideRequestsCollection, rideRequestId), { driverid: driverId});
 }
 
 // ACCEPT RIDE - Update a ride request to accepted

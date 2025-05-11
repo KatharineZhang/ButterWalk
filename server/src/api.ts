@@ -239,7 +239,8 @@ export type ErrorResponse = {
     | "QUERY"
     | "PROFILE"
     | "DISTANCE"
-    | "FINISH_ACC";
+    | "FINISH_ACC"
+    | "VIEW_RIDE";
 };
 
 export type DistanceResponse = {
