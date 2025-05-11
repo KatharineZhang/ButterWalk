@@ -10,29 +10,53 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
 import AutocompleteInput from "./AutocompleteInput";
-import { LocationName } from "../services/LocationService";
 import { styles } from "../assets/styles";
 import BottomDrawer from "./BottomDrawer";
 import PopUpModal from "./PopUpModal";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { ScrollView } from "react-native-gesture-handler";
 import SegmentedProgressBar from "./SegmentedProgressBar";
-
-import WebSocketService from "@/services/WebSocketService";
+import {
+  BuildingService,
+  ComparableBuilding,
+  getBuildingNames,
+} from "@/services/campus";
+import {
+  WebSocketResponse,
+  SnapLocationResponse,
+  ErrorResponse,
+  DistanceResponse,
+} from "../../server/src/api";
+import WebSocketService from "../services/WebSocketService";
+import { campus_zone, purple_zone } from "@/services/ZoneService";
 
 
 type RideRequestFormProps = {
-  pickUpLocationChanged: (location: ValidLocationType) => void;
-  dropOffLocationChanged: (location: ValidLocationType) => void;
+  pickUpLocationNameChanged: (location: string) => void;
+  dropOffLocationNameChanged: (location: string) => void;
+  pickUpLocationCoordChanged: (location: {
+    latitude: number;
+    longitude: number;
+  }) => void;
+  dropOffLocationCoordChanged: (location: {
+    latitude: number;
+    longitude: number;
+  }) => void;
   userLocation: { latitude: number; longitude: number };
   rideRequested: (numPassengers: number) => void;
   setFAQVisible: (visible: boolean) => void;
+  updateSideBarHeight: (bottom: number) => void;
+  setNotificationState: (state: {
+    text: string;
+    color: string;
+    boldText?: string;
+  }) => void;
   startingState?: { pickup: string; dropoff: string; numRiders: number };
   recentLocations: string[];
 };
 
 // the type of locations we can send to homepage
-export type ValidLocationType = LocationName | `Current Location`;
+//export type ValidLocationType = LocationName | `Current Location`;
 
 // What's in this component:
 // Ride Request Form which sends request to server and gets response back,
@@ -42,126 +66,367 @@ export type ValidLocationType = LocationName | `Current Location`;
 // This is a beefy component!
 
 export default function RideRequestForm({
-  pickUpLocationChanged,
-  dropOffLocationChanged,
+  pickUpLocationNameChanged,
+  dropOffLocationNameChanged,
+  pickUpLocationCoordChanged,
+  dropOffLocationCoordChanged,
   userLocation,
   rideRequested,
   startingState,
   setFAQVisible,
   recentLocations,
+  setNotificationState,
+  updateSideBarHeight,
 }: RideRequestFormProps) {
+  /* STATE */
   // user input states for form
-  const [location, setLocation] = useState("");
-  const [destination, setDestination] = useState("");
+  const [chosenPickup, setChosenPickup] = useState(""); // the chosen pickup name
+  const [chosenDropoff, setChosenDropoff] = useState(""); // the chosen dropoff name
   const [numRiders, setNumRiders] = useState(1);
 
-  const [showNumberRiders, setShowNumberRiders] = useState(false);
+  // which panel to show
+  const [whichPanel, setWhichPanel] = useState<
+    "RideReq" | "NumberRiders" | "LocationSuggestions"
+  >("RideReq");
 
   // Bottom Sheet Reference needed to expand the bottom sheet
   const bottomSheetRef = useRef<BottomSheet>(null);
-
-  useEffect(() => {
-    if (startingState) {
-      setLocationQuery(startingState.pickup);
-      setLocation(startingState.pickup);
-      setDestinationQuery(startingState.dropoff);
-      setDestination(startingState.dropoff);
-      setNumRiders(startingState.numRiders);
-      // show the number of riders modal
-      setShowNumberRiders(true);
-    }
-  }, []);
 
   // Confirmation Modal
   const [confirmationModalVisible, setConfirmationModalVisible] =
     useState(false);
 
-  //
-  const goToNumberRiders = () => {
-    if (location == "" || destination == "") {
-      alert("Please specify a pickup and dropoff location!");
-      return;
-    }
-    setShowNumberRiders(true);
-  };
+  // what the user types in
+  const [pickUpQuery, setPickUpQuery] = useState(""); // Typed in pickup query
+  const [dropOffQuery, setDropOffQuery] = useState(""); // typed in dropoff query
 
-  /* FUZZY SEARCH BAR STUFF */
-
-  // Autocomplete for Location and Destination
-  const [locationQuery, setLocationQuery] = useState(""); // Location query
-  const [destinationQuery, setDestinationQuery] = useState(""); // Destination query
-
+  // which text box is currently being updated
   const [currentQuery, setCurrentQuery] = useState<"pickup" | "dropoff">(
     "pickup"
   );
 
-  // data from LocationService.ts
+  // if the user clicks current location on campus, give them the closest Building
+  const [closestBuilding, setClosestBuilding] = useState<string>("");
+  // if the user clicks current location when not in purple zone, give them suggestions
+  // useRef will allow of synchronous storage of these buildinsg
+  const topThreeBuildings = useRef<ComparableBuilding[]>([]);
 
+  // the set of results to show in the dropdown
+  //const data: string[] = getBuildingNames();
+  //data.unshift("Current Location"); // add current location to the beginning
   const data: string[] = recentLocations;
   console.log(recentLocations);
-
-  
-
-  //dropdowntype is default type for the drop down menu, is shown when user is NOT typing 
-  //once user starts typing, use autocomplete search query and pass value into the handleSelection function
-  // this function is called when the user selects a location from the dropdown
-
-
+  /* METHODS */
+  // the user clicked a dropdown result
   const handleSelection = (value: string) => {
     if (currentQuery === "pickup") {
-      setLocationQuery(value);
-      handleSetLocation(value);
+      setPickUpQuery(value);
       //switch to dropoff
       setCurrentQuery("dropoff");
+      handleSetLocation(value);
     } else {
-      setDestinationQuery(value);
+      setDropOffQuery(value);
       handleSetDestination(value);
     }
   };
 
-  // check that does not allow location and destination to be the same
+  // user clicked a pickup dropdown
   const handleSetLocation = (value: string) => {
-    if (value === destination) {
+    // check that does not allow location and destination to be the same
+    if (value === chosenDropoff) {
       alert("Pickup location and destination cannot be the same!");
       return;
     }
+    // the user clicked current location
+    // we now need to figure out what the closest location is
     if (value === "Current Location") {
-      setConfirmationModalVisible(true);
+      // check if user is in the purple zone
+      const insidePurpleZone = purple_zone.isPointInside(userLocation);
+      console.log("inside purple zone: ", insidePurpleZone);
+      // if the user is outside the purple zone, get the three closest buildings
+      if (!insidePurpleZone) {
+        // call the campus api to get the 3 closest buildins
+        const comparableBuildings =
+          BuildingService.topThreeClosestBuildings(userLocation);
+        // if nothing was returned
+        if (comparableBuildings === null) {
+          // The method failed to get closest buildings
+          console.log("topThreeClosestBuildings failed");
+        } else {
+          // store our three closest buildings
+          if (
+            topThreeBuildings.current.length > 0 &&
+            Math.abs(
+              topThreeBuildings.current[0].distance -
+                comparableBuildings[0].distance
+            ) < 0.2
+          ) {
+            // if the top three buildings are the same as before
+            // and the distance is the same, then
+            // we can assume the user is in the same location
+            // do not call the websocket again
+            checkIfTooFarAway();
+            return;
+          }
+          // otherwise, we have new buildings
+          topThreeBuildings.current = comparableBuildings;
+          // call the websocket to get the distance from the user
+          // to the three closest buildings
+          WebSocketService.send({
+            directive: "DISTANCE",
+            origin: [userLocation],
+            destination: comparableBuildings.map(
+              (building) => building.building.location
+            ),
+            mode: "walking",
+            tag: "topThreeClosestBuildings",
+          });
+        }
+      } else {
+        // the user is in the purple zone,
+        // so we need to snap the location to the closest building or street
+
+        // first try to get a closest building
+        const closestCampusBuilding =
+          BuildingService.closestBuilding(userLocation);
+        // if no building was close enough
+        if (closestCampusBuilding === null) {
+          console.log("location snapping!");
+          // call our new route
+
+          WebSocketService.send({
+            directive: "SNAP",
+            currLat: userLocation.latitude,
+            currLong: userLocation.longitude,
+          });
+        } else {
+          // otherwise, store the closest building
+          setClosestBuilding(closestCampusBuilding.name);
+          // show the confirmation modal to let the user know where they are being snapped to
+          setConfirmationModalVisible(true);
+        }
+      }
     } else {
-      // we clicked a normal location
-      setLocation(value);
-      pickUpLocationChanged(value as LocationName);
+      // the user clicked a normal dropdown location
+      setChosenPickup(value);
+      pickUpLocationNameChanged(value);
+      pickUpLocationCoordChanged(BuildingService.getBuildingCoordinates(value));
     }
   };
 
+  // user clicked a destination dropdown
   const handleSetDestination = (value: string) => {
-    if (value === location) {
-      alert("Pickup location and destination cannot be the same!");
+    if (value === chosenPickup) {
+      alert("Pickup location and dropoff location cannot be the same!");
       return;
     }
     if (value === "Current Location") {
       console.log(
-        "Something went wrong! can't set destination to user location"
+        "Something went wrong! can't set dropoff location to user location"
       );
       return;
     }
-    setDestination(value);
-    dropOffLocationChanged(value as LocationName);
+    setChosenDropoff(value);
+    dropOffLocationNameChanged(value);
+    dropOffLocationCoordChanged(BuildingService.getBuildingCoordinates(value));
   };
 
+  // go to the number of riders screen
+  // this is a method because we want to do some checks first
+  const goToNumberRiders = () => {
+    if (chosenPickup == "" || chosenDropoff == "") {
+      alert("Please specify a pickup and dropoff location!");
+      return;
+    }
+
+    const pickupCoordinates =
+      BuildingService.getBuildingCoordinates(chosenPickup);
+    const dropoffCoordinates =
+      BuildingService.getBuildingCoordinates(chosenDropoff);
+
+    // TODO: for this to work, we need to finetune the purple zone
+    // to work with the pockets of purple zone
+    // check that both locations are within the purple zone
+    // if (
+    //   !purple_zone.isPointInside(locationCoord) ||
+    //   !purple_zone.isPointInside(destCoord)
+    // ) {
+    //   // the pickup or dropoff is not in the purple zone
+    //   alert(
+    //     "Both the Pickup and Dropoff locations must be in the SafeTrip servicable area!"
+    //   );
+    //   return;
+    // }
+
+    // check that at least one location is on campus
+    if (
+      !campus_zone.isPointInside(pickupCoordinates) &&
+      !campus_zone.isPointInside(dropoffCoordinates)
+    ) {
+      alert("Either the pickup or dropoff location must be on campus!");
+      return;
+    }
+    setWhichPanel("NumberRiders");
+  };
+
+  // the user clicked confirm on the confirmation modal
   const confirmPickUpLocation = () => {
-    console.log("RIDE REQ USER LOC:" + JSON.stringify(userLocation));
-    setLocation(JSON.stringify(userLocation));
-    pickUpLocationChanged("Current Location");
+    setPickUpQuery(closestBuilding);
+    setChosenPickup(closestBuilding);
+    pickUpLocationNameChanged(closestBuilding);
+    pickUpLocationCoordChanged(
+      BuildingService.getBuildingCoordinates(closestBuilding)
+    );
     setConfirmationModalVisible(false);
   };
 
-  /* FUZZY SEARCH BAR STUFF ENDS HERE */
+  // the user clicked one of the suggested closest buildings
+  const selectTopThreeBuilding = (buildingName: string) => {
+    setPickUpQuery(buildingName);
+    setChosenPickup(buildingName);
+    pickUpLocationNameChanged(buildingName);
+    pickUpLocationCoordChanged(
+      BuildingService.getBuildingCoordinates(closestBuilding)
+    );
+    setWhichPanel("RideReq");
+  };
 
-  /* Animation stuffs */
+  // the user clicked back on the suggested closest buildings panel
+  const hideLocationSuggestions = () => {
+    setCurrentQuery("pickup");
+    setPickUpQuery("");
+    setWhichPanel("RideReq");
+  };
+
+  // check if the user is too far away to offer service
+  const checkIfTooFarAway = () => {
+    if (
+      topThreeBuildings.current.length > 0 &&
+      topThreeBuildings.current[0].walkDuration > 15
+    ) {
+      setNotificationState({
+        text: "You are too far from the servicable area.",
+        color: "#FFCBCB",
+      });
+      setTimeout(() => {
+        setNotificationState({ text: "", color: "" });
+      }, 6000);
+
+      setPickUpQuery("");
+      setChosenPickup("");
+      setCurrentQuery("pickup");
+      return;
+    }
+
+    // else, we can show the location suggestions panel
+    setWhichPanel("LocationSuggestions");
+    // send the user a notification
+    setNotificationState({
+      text: "You are not within service area.\nPlease select a nearby location that is.",
+      color: "#FFEFB4",
+    });
+  };
+
+  /* WEBSOCKET */
+  // handle the distance repsonse
+  const handleDistanceTopThree = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "DISTANCE") {
+      const distanceResp = message as DistanceResponse;
+
+      // if this distance call is the one we were listening for
+      // (currently we only listen for topThreeClosestBuildings)
+      if (distanceResp.tag === "topThreeClosestBuildings") {
+        // update the walk duration for the top three buildings we previously stored
+        const before = topThreeBuildings.current;
+        const updatedBuildings = before.map((building, i) => {
+          const walkSeconds =
+            distanceResp.apiResponse.rows[0].elements[i].duration.value;
+          const walkMinutes = Math.floor(walkSeconds / 60);
+          return { ...building, walkDuration: walkMinutes };
+        });
+        topThreeBuildings.current = updatedBuildings;
+        checkIfTooFarAway();
+      }
+    } else {
+      // the server sent us an error
+      console.log("Distance response error: ", message);
+    }
+  };
+
+  const handleSnapLocationQuery = (message: WebSocketResponse) => {
+    if ("response" in message && message.response == "SNAP") {
+      const snapResp = message as SnapLocationResponse;
+      if (snapResp.success) {
+        const roadName = snapResp.roadName;
+        if (roadName == "") {
+          pickUpLocationNameChanged("Current Location");
+          setChosenPickup("Current Location");
+          setPickUpQuery("Current Location");
+        } else {
+          pickUpLocationNameChanged(roadName);
+          // set the coordinates to the snapped location (send it back to home component)
+          pickUpLocationCoordChanged({
+            latitude: snapResp.latitude,
+            longitude: snapResp.longitude,
+          });
+          setChosenPickup(roadName);
+          setPickUpQuery(roadName);
+        }
+      }
+    } else {
+      // there was a signin related error
+      const errorResp = message as ErrorResponse;
+
+      console.error("Error: ", errorResp.error);
+    }
+  };
+
+  /* USE EFFECTS */
+  // upon first render, set up the state
+  useEffect(() => {
+    // add the listener for the distance response
+    WebSocketService.addListener(handleDistanceTopThree, "DISTANCE");
+
+    // listen for the snap location response
+    WebSocketService.addListener(handleSnapLocationQuery, "SNAP");
+
+    // if there is a starting state,
+    // that means the user clicked back from the confirm ride component
+    // set the location and destination and show the number of riders panel
+    if (startingState) {
+      setPickUpQuery(startingState.pickup);
+      setChosenPickup(startingState.pickup);
+      setDropOffQuery(startingState.dropoff);
+      setChosenDropoff(startingState.dropoff);
+      setNumRiders(startingState.numRiders);
+      // show the number of riders modal
+      setWhichPanel("NumberRiders");
+    }
+    // cleanup function to remove the listener
+    return () => {
+      WebSocketService.removeListener(handleDistanceTopThree, "DISTANCE");
+    };
+  }, []);
+
+  // modify the sidebar height based on the panel shown
+  useEffect(() => {
+    switch (whichPanel) {
+      case "RideReq":
+        updateSideBarHeight(350);
+        break;
+      case "NumberRiders":
+        updateSideBarHeight(310);
+        break;
+      case "LocationSuggestions":
+        updateSideBarHeight(400);
+        break;
+    }
+  }, [whichPanel]);
+
+  /* ANIMATION */
   const fadeAnim = useState(new Animated.Value(0))[0];
 
-  // animation functions
+  // For each change to the number of riders, smoothen the animation
   const animateRiders = () => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -170,13 +435,15 @@ export default function RideRequestForm({
     }).start();
   };
 
-  // Handle increase/decrease of riders
+  // Handle increase of riders
   const handleIncreaseRiders = () => {
     if (numRiders < 4) {
       setNumRiders(numRiders + 1);
       animateRiders();
     }
   };
+
+  // Handle decrease of riders
   const handleDecreaseRiders = () => {
     if (numRiders > 1) {
       setNumRiders(numRiders - 1);
@@ -193,6 +460,8 @@ export default function RideRequestForm({
     bottomSheetRef.current?.expand();
   };
 
+  /* PANEL UI */
+  // the ride request panel
   const RideRequest: JSX.Element = (
     <View style={{ flex: 1, pointerEvents: "box-none" }}>
       <BottomDrawer bottomSheetRef={bottomSheetRef}>
@@ -273,8 +542,8 @@ export default function RideRequestForm({
                   setCurrentQuery("pickup");
                   expand();
                 }}
-                query={locationQuery}
-                setQuery={setLocationQuery}
+                query={pickUpQuery}
+                setQuery={setPickUpQuery}
                 placeholder="Pick Up Location"
                 data={data}
               />
@@ -283,8 +552,8 @@ export default function RideRequestForm({
                   setCurrentQuery("dropoff");
                   expand();
                 }}
-                query={destinationQuery}
-                setQuery={setDestinationQuery}
+                query={dropOffQuery}
+                setQuery={setDropOffQuery}
                 placeholder="Drop Off Location"
                 data={data}
               />
@@ -327,8 +596,8 @@ export default function RideRequestForm({
                     .toLowerCase()
                     .includes(
                       currentQuery == "pickup"
-                        ? locationQuery.toLowerCase()
-                        : destinationQuery
+                        ? pickUpQuery.toLowerCase()
+                        : dropOffQuery
                     ) ||
                   (currentQuery == "pickup" && item == "Current Location")
               )
@@ -358,7 +627,6 @@ export default function RideRequestForm({
           </ScrollView>
         </View>
       </BottomDrawer>
-      {/* confirmation modal TODO: REMOVE???*/}
       <PopUpModal
         type="half"
         isVisible={confirmationModalVisible}
@@ -367,8 +635,7 @@ export default function RideRequestForm({
           <View style={{ padding: 20 }}>
             <Text style={styles.formHeader}>Confirm Pickup Location</Text>
             <Text style={styles.description}>
-              Are you sure you want to set your pickup location to your current
-              location?
+              Setting your pickup location to: {closestBuilding}
             </Text>
             <Pressable
               onPress={confirmPickUpLocation}
@@ -382,6 +649,7 @@ export default function RideRequestForm({
     </View>
   );
 
+  // number of riders panel
   const NumberRiders: JSX.Element = (
     <View
       style={{
@@ -404,7 +672,7 @@ export default function RideRequestForm({
         }}
       >
         {/* Back Button */}
-        <TouchableOpacity onPress={() => setShowNumberRiders(false)}>
+        <TouchableOpacity onPress={() => setWhichPanel("RideReq")}>
           <Ionicons name="arrow-back" size={30} color="#4B2E83" />
         </TouchableOpacity>
 
@@ -481,5 +749,123 @@ export default function RideRequestForm({
     </View>
   );
 
-  return showNumberRiders ? NumberRiders : RideRequest;
+  // top three locations suggestions panel
+  const LocationSuggestions: JSX.Element = (
+    <View
+      style={{
+        position: "absolute",
+        bottom: 0,
+        width: "100%",
+        backgroundColor: "white",
+        padding: 16,
+        borderRadius: 10,
+      }}
+    >
+      <View style={{ height: 5 }} />
+      {/* Header */}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginHorizontal: 2,
+          paddingBottom: 20,
+          borderBottomColor: "#ccc",
+          borderBottomWidth: 1,
+        }}
+      >
+        {/* Back Button */}
+        <TouchableOpacity onPress={() => hideLocationSuggestions()}>
+          <Ionicons name="arrow-back" size={30} color="#4B2E83" />
+        </TouchableOpacity>
+
+        {/* Title */}
+        <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+          Suggested Pick Up Locations
+        </Text>
+
+        {/* faq button */}
+        <TouchableOpacity onPress={() => setFAQVisible(true)}>
+          <Ionicons name="information-circle-outline" size={25} color="black" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={{ height: 20 }} />
+
+      {/* Top Three Closest Buildings */}
+      {topThreeBuildings.current.map((comparable, index) => (
+        <View
+          style={{
+            alignItems: "center",
+            justifyContent: "center",
+            paddingVertical: 16,
+            paddingHorizontal: 24,
+            height: 79,
+            borderRadius: 10,
+            borderWidth: 2,
+            borderColor: "#4B2E83",
+            marginBottom: 10,
+          }}
+          key={index}
+        >
+          <TouchableOpacity
+            style={{ alignItems: "center", justifyContent: "center" }}
+            onPress={() => {
+              selectTopThreeBuilding(comparable.building.name);
+            }}
+          >
+            {/* Name of the building */}
+            <Text style={{ fontSize: 18, color: "#4B2E83" }}>
+              {comparable.building.name}
+            </Text>
+            <View style={{ height: 8 }} />
+
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {/* Description Text */}
+              <Text
+                style={{
+                  fontSize: 15,
+                  color: "#4B2E83",
+                  fontStyle: "italic",
+                  fontWeight: "bold",
+                }}
+              >
+                {comparable.walkDuration}{" "}
+              </Text>
+              <Text
+                style={{ fontSize: 15, color: "#4B2E83", fontStyle: "italic" }}
+              >
+                min walk{" "}
+              </Text>
+              {index == 0 && (
+                <Text
+                  style={{
+                    fontSize: 15,
+                    color: "#4B2E83",
+                    fontStyle: "italic",
+                  }}
+                >
+                  - closest
+                </Text>
+              )}
+            </View>
+          </TouchableOpacity>
+        </View>
+      ))}
+      <View style={{ height: 10 }} />
+    </View>
+  );
+
+  // render the correct panel based on our state
+  return whichPanel == "NumberRiders"
+    ? NumberRiders
+    : whichPanel == "LocationSuggestions"
+      ? LocationSuggestions
+      : RideRequest;
 }

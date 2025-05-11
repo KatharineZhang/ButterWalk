@@ -1,9 +1,11 @@
-type Coordinates = {
+import { calculateDistance } from "@/app/(student)/map";
+
+export type Coordinates = {
   latitude: number;
   longitude: number;
 };
 
-type Building = {
+export type Building = {
   name: string;
   location: Coordinates;
   front?: Coordinates;
@@ -49,7 +51,7 @@ export class BuildingService {
       },
     },
     {
-      name: "Arboretum Buildingsy",
+      name: "Arboretum Buildings",
       location: {
         latitude: 47.6553,
         longitude: -122.30583,
@@ -160,14 +162,6 @@ export class BuildingService {
         longitude: -122.30583,
       },
     },
-
-    {
-      name: "Chemistry Library Building (CHL)",
-      location: {
-        latitude: 47.6553,
-        longitude: -122.30583,
-      },
-    },
     {
       name: "Child Learning & Care Center",
       location: {
@@ -178,8 +172,8 @@ export class BuildingService {
     {
       name: "Clark Hall (CLK)",
       location: {
-        latitude: 47.6551,
-        longitude: -122.3086,
+        latitude: 47.65766208767907,
+        longitude: -122.30483765553268,
       },
     },
     {
@@ -218,13 +212,6 @@ export class BuildingService {
       },
     },
     {
-      name: "Bullitt Center (L191)",
-      location: {
-        latitude: 47.6553,
-        longitude: -122.30583,
-      },
-    },
-    {
       name: "Dempsey Hall (DEM)",
       location: {
         latitude: 47.6599,
@@ -241,8 +228,8 @@ export class BuildingService {
     {
       name: "Denny Hall (DEN)",
       location: {
-        latitude: 47.6566,
-        longitude: -122.309,
+        latitude: 47.65849324441406,
+        longitude: -122.30882263356827,
       },
     },
     {
@@ -346,8 +333,8 @@ export class BuildingService {
     {
       name: "Gerberding Hall (GRB)",
       location: {
-        latitude: 47.6565,
-        longitude: -122.309,
+        latitude: 47.65525981617203,
+        longitude: -122.3095360992912,
       },
     },
     {
@@ -407,10 +394,10 @@ export class BuildingService {
       },
     },
     {
-      name: "Hall Health Center (HLL)",
+      name: "Hall Health Center (HHC)",
       location: {
-        latitude: 47.6563,
-        longitude: -122.308,
+        latitude: 47.65617873341951,
+        longitude: -122.30432295610464,
       },
     },
     {
@@ -791,4 +778,69 @@ export class BuildingService {
     }
     return building.back;
   }
+
+  static closestBuilding(coord: {
+    latitude: number;
+    longitude: number;
+  }): Building | null {
+    const zone: Building[] = BuildingService.Buildings.filter((building) => {
+      // Check if the coordinates are within 0.002 degrees of the building's location
+      return (
+        Math.abs(coord.latitude - building.location.latitude) < 0.002 ||
+        Math.abs(coord.longitude - building.location.longitude) < 0.002
+      );
+    });
+
+    if (zone.length > 0) {
+      return zone.reduce((prev, curr) => {
+        // If no previous building, return the current one
+        if (!prev) return curr;
+        // Else, find the building closest to the coordinates
+        const prevDistance = calculateDistance(coord, prev.location);
+        const currDistance = calculateDistance(coord, curr.location);
+        return prevDistance < currDistance ? prev : curr;
+      });
+    } else {
+      return null;
+    }
+  }
+
+  static topThreeClosestBuildings(coord: {
+    latitude: number;
+    longitude: number;
+  }): ComparableBuilding[] | null {
+    const comparableBuildings: ComparableBuilding[] = [];
+    BuildingService.Buildings.forEach((building) => {
+      const distance = calculateDistance(coord, building.location);
+      const walkDuration = Math.round(distance / 1.4); // Assuming an average walking speed of 1.4 m/s
+      comparableBuildings.push({ building, distance, walkDuration });
+    });
+
+    // Sort the buildings by distance
+    comparableBuildings.sort(compareBuildings);
+    return comparableBuildings.slice(0, 3);
+  }
+}
+
+export type ComparableBuilding = {
+  building: Building;
+  distance: number;
+  walkDuration: number;
+};
+
+/**
+ * Compare two buildings based on their distance from a given point.
+ * @param a - The first building to compare.
+ * @param b - The second building to compare.
+ * @returns A negative number if a is closer, a positive number if b is closer, and 0 if they are equidistant.
+ */
+export function compareBuildings(
+  a: ComparableBuilding,
+  b: ComparableBuilding
+): number {
+  return a.distance - b.distance;
+}
+
+export function getBuildingNames(): string[] {
+  return BuildingService.Buildings.map((b) => b.name);
 }

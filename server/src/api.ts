@@ -9,6 +9,7 @@ export type Command =
   | "FINISH_ACC"
   | "REQUEST_RIDE"
   | "ACCEPT_RIDE"
+  | "SNAP"
   | "CANCEL"
   | "COMPLETE"
   | "ADD_FEEDBACK"
@@ -38,6 +39,11 @@ export type WebSocketMessage =
       preferredName: string;
       phoneNum: string;
       studentNum: string;
+    }
+  | {
+      directive: "SNAP";
+      currLat: number;
+      currLong: number;
     }
   | {
       directive: "REQUEST_RIDE";
@@ -85,6 +91,7 @@ export type WebSocketMessage =
       origin: { latitude: number; longitude: number }[];
       destination: { latitude: number; longitude: number }[];
       mode: "driving" | "walking";
+      tag: string; // used to identify the response
     };
 
 // TEMP FIX
@@ -99,6 +106,7 @@ export type WebSocketResponse =
   | GeneralResponse
   | SignInResponse
   | FinishAccCreationResponse
+  | SnapLocationResponse
   | RequestRideResponse
   | WaitTimeResponse
   | AcceptResponse
@@ -142,6 +150,14 @@ export type SignInResponse = {
 export type FinishAccCreationResponse = {
   response: "FINISH_ACC";
   success: boolean;
+};
+
+export type SnapLocationResponse = {
+  response: "SNAP";
+  success: boolean;
+  roadName: string;
+  latitude: number;
+  longitude: number;
 };
 
 export type RequestRideResponse = {
@@ -213,6 +229,7 @@ export type ErrorResponse = {
     | "REPORT"
     | "BLACKLIST"
     | "WAIT_TIME"
+    | "SNAP"
     | "REQUEST_RIDE"
     | "ACCEPT_RIDE"
     | "CANCEL"
@@ -227,6 +244,7 @@ export type ErrorResponse = {
 
 export type DistanceResponse = {
   response: "DISTANCE";
+  tag: string;
   apiResponse: DistanceMatrixResponse;
 };
 export type DistanceMatrixResponse = {
