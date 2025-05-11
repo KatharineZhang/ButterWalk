@@ -9,7 +9,7 @@ describe("routes", function () {
     return;
   }
 
-  const websocket = new WebSocket(`ws://${IP_ADDRESS}:8080/api/`);
+  const websocket = new WebSocket(`wss://${IP_ADDRESS}:8080/api/`);
 
   // TODO: set up fake db environment
   // TODO: finish implementing tests

@@ -39,7 +39,7 @@ class WebSocketService {
       return Promise.resolve("Failed to Connect");
     }
 
-    this.websocket = new WebSocket(`ws://${IP_ADDRESS}:8080/api/`);
+    this.websocket = new WebSocket(`wss://${IP_ADDRESS}:8080/api/`);
 
     if (this.websocket == null) {
       console.error("WEBSOCKET: Failed to create WebSocket");
