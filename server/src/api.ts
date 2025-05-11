@@ -83,6 +83,33 @@ export type WebSocketMessage =
       origin: { latitude: number; longitude: number }[];
       destination: { latitude: number; longitude: number }[];
       mode: "driving" | "walking";
+    }
+  // new directive for the ride request broker, which sends back a message
+  // of type RidesExistResponse on success. Intended for use with driver
+  // sign on: When the driver opens the app they will only be able to view
+  // a ride to potentially accept when this directive gives back True.
+  | {
+      directive: "RIDES_EXIST";
+    }
+  // new directive that will check out the highest ranking ride request to
+  // a driver so they can accept/deny/report etc.
+  | {
+      directive: "VIEW_RIDE";
+      driverId: string;
+      driverLocation: { latitude: number; longitude: number };
+    }
+  // new directive that handles the drivers decision after viewing a particular ride
+  // request.
+  // ACCEPT -> accept the ride. Assigns the ride to the driver, begin pick up.
+  // DENY -> Deny the ride request without reporting, returns the req to the pool
+  // REPORT -> Deny the request, remove it from the pool, blacklist the student
+  // TIMEOUT -> Driver didn't decide anything fast enough, return to pool
+  // ERROR -> Unexpected problem, return request to queue
+  | {
+      directive: "VIEW_DECISION";
+      driverId: string;
+      view: ViewRideRequestResponse;
+      decision: "ACCEPT" | "DENY" | "REPORT" | "TIMEOUT" | "ERROR";
     };
 
 // TEMP FIX
@@ -107,7 +134,10 @@ export type WebSocketResponse =
   | QueryResponse
   | ProfileResponse
   | DistanceResponse
-  | ErrorResponse;
+  | ErrorResponse
+  | RidesExistResponse
+  | ViewRideRequestResponse
+  | ViewChoiceResponse;
 
 export type GeneralResponse = {
   response:
@@ -153,8 +183,8 @@ export type ViewRideRequestResponse = {
   view?: {
     rideRequest: RideRequest;
     user: User;
-  }
-}
+  };
+};
 
 /**
  * After a driver views a ride request checked out to them temporarily
@@ -166,7 +196,7 @@ export type ViewChoiceResponse = {
   response: "VIEW_CHOICE";
   providedView: ViewRideRequestResponse;
   success: boolean;
-}
+};
 
 export type WaitTimeResponse = {
   response: "WAIT_TIME";
@@ -180,6 +210,11 @@ export type AcceptResponse = {
   response: "ACCEPT_RIDE";
   student: { response: "ACCEPT_RIDE"; success: true }; // of type GeneralResponse
   driver: DriverAcceptResponse;
+};
+
+export type RidesExistResponse = {
+  response: "RIDES_EXIST";
+  ridesExist: boolean;
 };
 
 export type DriverAcceptResponse = {
@@ -285,45 +320,47 @@ export type GoogleUserInfo = {
 };
 
 // Server Types and Data Structures
+
 export type localRideRequest = {
   requestid: string;
   netid: string;
 };
 
-class RideRequestQueue {
-  private items: localRideRequest[];
+// DEPRECATED
+// class RideRequestQueue {
+//   private items: localRideRequest[];
 
-  constructor() {
-    this.items = [];
-  }
+//   constructor() {
+//     this.items = [];
+//   }
 
-  // return all the items in the queue
-  get = (): localRideRequest[] => {
-    return this.items;
-  };
-  // adding to the back of the queue
-  add = (item: localRideRequest): void => {
-    this.items.push(item);
-  };
-  // removing from the front of the queue
-  pop = (): localRideRequest | undefined => {
-    return this.items.shift();
-  };
-  // returns size of queue
-  size = (): number => {
-    return this.items.length;
-  };
-  // returns first item of queue without removing it
-  peek = (): localRideRequest => {
-    return this.items[0];
-  };
+//   // return all the items in the queue
+//   get = (): localRideRequest[] => {
+//     return this.items;
+//   };
+//   // adding to the back of the queue
+//   add = (item: localRideRequest): void => {
+//     this.items.push(item);
+//   };
+//   // removing from the front of the queue
+//   pop = (): localRideRequest | undefined => {
+//     return this.items.shift();
+//   };
+//   // returns size of queue
+//   size = (): number => {
+//     return this.items.length;
+//   };
+//   // returns first item of queue without removing it
+//   peek = (): localRideRequest => {
+//     return this.items[0];
+//   };
 
-  remove = (netid: string): void => {
-    this.items = this.items.filter((item) => item.netid !== netid);
-  };
-}
+//   remove = (netid: string): void => {
+//     this.items = this.items.filter((item) => item.netid !== netid);
+//   };
+// }
 
-export const rideReqQueue = new RideRequestQueue(); // rideRequests Queue
+// export const rideReqQueue = new RideRequestQueue(); // rideRequests Queue
 
 // Database Types
 
@@ -352,7 +389,7 @@ export type Feedback = {
 /**
  * RideRequest represents a students request for a ride, with all the information necessary
  * to rank, assign, and complete a ride.
- * 
+ *
  * Optional parameters are new additions for the ride request broker system.
  */
 export type RideRequest = {
@@ -369,7 +406,7 @@ export type RideRequest = {
   netid: string;
   /**
    * ID that uniquely identified a driver.
-   * - Any given driver should only be associated with one active ride request at 
+   * - Any given driver should only be associated with one active ride request at
    * a time (meaning any driverid should only be associated with one ride request that
    * is either accepted, in transit, or being viewed).
    * - `null` indicates the ride request is unassigned.
@@ -378,7 +415,7 @@ export type RideRequest = {
   /**
    * The time that this ride request was requested by the student.
    */
-  requestedAt?: Timestamp
+  requestedAt?: Timestamp;
   /**
    * The time that the ride associated with this request was completed.
    */
@@ -423,12 +460,17 @@ export type RideRequest = {
    * or the driver is waiting at the pick up location to pick up the student (This
    * is new behavior for the ride request broker).
    * - `DRIVING`: The student has been picked up by the driver and the ride is in
-   * progress (new behavior for the ride request broker). 
+   * progress (new behavior for the ride request broker).
    * - `COMPLETED`: The student was dropped off after completion of the ride.
    */
-  status: 
-    "CANCELED" | "REQUESTED" | "VIEWING" | "ACCEPTED" | 
-    "AWAITING PICK UP" | "DRIVING" | "COMPLETED";
+  status:
+    | "CANCELED"
+    | "REQUESTED"
+    | "VIEWING"
+    | "ACCEPTED"
+    | "AWAITING PICK UP"
+    | "DRIVING"
+    | "COMPLETED";
 };
 
 // CREATE TABLE ProblematicUsers (netid varchar(20) REFERENCES Users(netid) PRIMARY KEY,

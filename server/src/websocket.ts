@@ -1,7 +1,6 @@
 import WebSocketServer from "ws";
 import { clients, refreshClient } from "./index";
 import {
-  acceptRide,
   addFeedback,
   blacklist,
   cancelRide,
@@ -16,16 +15,20 @@ import {
   googleAuth,
   profile,
   distanceMatrix,
+  ridesExist,
+  viewRide,
+  handleDriverViewChoice,
 } from "./routes";
 import {
-  AcceptResponse,
   CancelResponse,
   CompleteResponse,
   WebSocketMessage,
   WebSocketResponse,
   GoogleResponse,
   ErrorResponse,
+  RideRequest,
 } from "./api";
+import { Timestamp } from "firebase/firestore";
 
 export const handleWebSocketMessage = async (
   ws: WebSocketServer,
@@ -122,32 +125,75 @@ export const handleWebSocketMessage = async (
       sendWebSocketMessage(ws, resp);
       break;
 
-    case "REQUEST_RIDE":
-      resp = await requestRide(
-        input.phoneNum,
-        input.netid,
-        input.location,
-        input.destination,
-        input.numRiders
-      );
+    case "REQUEST_RIDE": {
+      const rideRequest: RideRequest = {
+        netid: input.netid,
+        driverid: null,
+        requestedAt: Timestamp.now(),
+        completedAt: null,
+        locationFrom: input.location,
+        locationTo: input.destination,
+        numRiders: input.numRiders,
+        status: "REQUESTED",
+      };
+      resp = await requestRide(rideRequest);
       // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
       break;
+    }
 
+    // ACCEPT_RIDE is DEPRECATED
     case "ACCEPT_RIDE":
-      resp = await acceptRide(input.driverid);
-      if ("driver" in resp && "student" in resp) {
-        const acceptResponse = resp as AcceptResponse;
-        // send response back to client (the driver)
-        sendWebSocketMessage(ws, acceptResponse.driver);
+      // If you get this error, you need to update the function calling it to send a "VIEW_DECISION" message
+      // to the websocket, which allows for a driver to accept a ride. This is part of the updated user
+      // journey where drivers temporarily "check out" a ride from the pool and can decide to accept, deny,
+      // report, and etc.
+      // If you don't know what this comment is talking about, talk to Connor Olson
+      throw new Error(
+        "DEPRECATED. This method does not use the temporary assignment of ride viewing and the ride broker system, and only supports the in-server-state ride request queue, which no longer exists."
+      );
 
-        // send response back to corresponding client (the student)
-        sendMessageToNetid(acceptResponse.driver.netid, acceptResponse.student);
+    // new directive for the ride request broker, which sends back a message
+    // of type RidesExistResponse on success. Intended for use with driver
+    // sign on: When the driver opens the app they will only be able to view
+    // a ride to potentially accept when this directive gives back True.
+    case "RIDES_EXIST": {
+      const thereIsARide: boolean | ErrorResponse = await ridesExist();
+      if (typeof thereIsARide === "boolean") {
+        sendWebSocketMessage(ws, {
+          response: "RIDES_EXIST",
+          ridesExist: thereIsARide,
+        });
       } else {
-        // the ErrorResponse case, send only to driver
-        sendWebSocketMessage(ws, resp);
+        sendWebSocketMessage(ws, thereIsARide);
       }
       break;
+    }
+
+    // new directive that will check out the highest ranking ride request to
+    // a driver so they can accept/deny/report etc.
+    case "VIEW_RIDE": {
+      const res = await viewRide(input.driverId, input.driverLocation);
+      sendWebSocketMessage(ws, res);
+      break;
+    }
+
+    // new directive that handles the drivers decision after viewing a particular ride
+    // request.
+    // ACCEPT -> accept the ride. Assigns the ride to the driver, begin pick up.
+    // DENY -> Deny the ride request without reporting, returns the req to the pool
+    // REPORT -> Deny the request, remove it from the pool, blacklist the student
+    // TIMEOUT -> Driver didn't decide anything fast enough, return to pool
+    // ERROR -> Unexpected problem, return request to queue
+    case "VIEW_DECISION": {
+      const res = await handleDriverViewChoice(
+        input.driverId,
+        input.view,
+        input.decision
+      );
+      sendWebSocketMessage(ws, res);
+      break;
+    }
 
     case "CANCEL":
       resp = await cancelRide(input.netid, input.role);
