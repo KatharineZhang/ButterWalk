@@ -235,11 +235,7 @@ export const snapLocation = async (
     // Documentation on how to use MapBox's map matching API:
     // https://docs.mapbox.com/help/tutorials/get-started-map-matching-api/?step=5
 
-    // Set the profile
-    const commuteType = "walking";
-    const newCoordFormat = `${currLong},${currLat}`;
-    const radius = "25"; // in meters
-    const snappedInfo = await getMatch(newCoordFormat, radius, commuteType);
+    const snappedInfo = await getMatch(currLat, currLong);
     console.log("Snapped info:", snappedInfo);
 
     // these are temporary return values just to appease the red lines
@@ -265,14 +261,23 @@ export const snapLocation = async (
 };
 
 // Make a Map Matching request
-async function getMatch(coordinates: string, radius: string, profile: string) {
+async function getMatch(lat: number, long: number) {
+  const safeLat = encodeURIComponent(lat.toString());
+  const safeLong = encodeURIComponent(long.toString());
+  const coord = `${safeLong},${safeLat}`;
+  const radius = "25"; // in meters
+  const profile = "walking";
+
   // Create the query
-  // TODO: get access token
+  const base = `https://api.mapbox.com/matching/v5/mapbox/${profile}/${coord};${coord}`;
+  const url = new URL(base);
+  url.searchParams.set("geometries", "geojson");
+  url.searchParams.set("radiuses", `${radius};${radius}`);
+  url.searchParams.set("steps", "false");
+  url.searchParams.set("access_token", process.env.MAPBOX_SNAPPING_TOKEN);
+
   console.log("in getMatch");
-  const query = await fetch(
-    `https://api.mapbox.com/matching/v5/mapbox/${profile}/${coordinates};${coordinates}?geometries=geojson&radiuses=${radius};${radius}&steps=false&access_token=${process.env.MAPBOX_SNAPPING_TOKEN}`,
-    { method: "GET" }
-  );
+  const query = await fetch(url.toString(), { method: "GET" });
   const response = await query.json();
   console.log("response from mapbox:", response);
   // Handle errors
