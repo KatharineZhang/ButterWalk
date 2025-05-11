@@ -125,7 +125,10 @@ export const handleWebSocketMessage = async (
       break;
 
     case "SNAP":
-      resp = await snapLocation(input.currLat, input.currLong) as SnapLocationResponse;
+      resp = (await snapLocation(
+        input.currLat,
+        input.currLong
+      )) as SnapLocationResponse;
       sendWebSocketMessage(ws, resp);
       break;
 

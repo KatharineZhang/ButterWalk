@@ -25,7 +25,7 @@ import {
   WebSocketResponse,
   SnapLocationResponse,
   ErrorResponse,
-  DistanceResponse
+  DistanceResponse,
 } from "../../server/src/api";
 import WebSocketService from "../services/WebSocketService";
 import { campus_zone, purple_zone } from "@/services/ZoneService";
@@ -33,8 +33,14 @@ import { campus_zone, purple_zone } from "@/services/ZoneService";
 type RideRequestFormProps = {
   pickUpLocationNameChanged: (location: string) => void;
   dropOffLocationNameChanged: (location: string) => void;
-  pickUpLocationCoordChanged: (location: {latitude: number, longitude: number}) => void;
-  dropOffLocationCoordChanged: (location: {latitude: number, longitude: number}) => void;
+  pickUpLocationCoordChanged: (location: {
+    latitude: number;
+    longitude: number;
+  }) => void;
+  dropOffLocationCoordChanged: (location: {
+    latitude: number;
+    longitude: number;
+  }) => void;
   userLocation: { latitude: number; longitude: number };
   rideRequested: (numPassengers: number) => void;
   setFAQVisible: (visible: boolean) => void;
@@ -167,20 +173,18 @@ export default function RideRequestForm({
         // so we need to snap the location to the closest building or street
 
         // first try to get a closest building
-        const closestCampusBuilding = 
+        const closestCampusBuilding =
           BuildingService.closestBuilding(userLocation);
         // if no building was close enough
         if (closestCampusBuilding === null) {
-
           console.log("location snapping!");
           // call our new route
-          
+
           WebSocketService.send({
             directive: "SNAP",
             currLat: userLocation.latitude,
             currLong: userLocation.longitude,
           });
-
         } else {
           // otherwise, store the closest building
           setClosestBuilding(closestCampusBuilding.name);
@@ -211,7 +215,6 @@ export default function RideRequestForm({
     setChosenDropoff(value);
     dropOffLocationNameChanged(value);
     dropOffLocationCoordChanged(BuildingService.getBuildingCoordinates(value));
-
   };
 
   // go to the number of riders screen
@@ -257,7 +260,9 @@ export default function RideRequestForm({
     setPickUpQuery(closestBuilding);
     setChosenPickup(closestBuilding);
     pickUpLocationNameChanged(closestBuilding);
-    pickUpLocationCoordChanged(BuildingService.getBuildingCoordinates(closestBuilding));
+    pickUpLocationCoordChanged(
+      BuildingService.getBuildingCoordinates(closestBuilding)
+    );
     setConfirmationModalVisible(false);
   };
 
@@ -266,7 +271,9 @@ export default function RideRequestForm({
     setPickUpQuery(buildingName);
     setChosenPickup(buildingName);
     pickUpLocationNameChanged(buildingName);
-    pickUpLocationCoordChanged(BuildingService.getBuildingCoordinates(closestBuilding));
+    pickUpLocationCoordChanged(
+      BuildingService.getBuildingCoordinates(closestBuilding)
+    );
     setWhichPanel("RideReq");
   };
 
@@ -335,21 +342,22 @@ export default function RideRequestForm({
   const handleSnapLocationQuery = (message: WebSocketResponse) => {
     if ("response" in message && message.response == "SNAP") {
       const snapResp = message as SnapLocationResponse;
-      if(snapResp.success) {
+      if (snapResp.success) {
         const roadName = snapResp.roadName;
-        if (roadName == ""){
+        if (roadName == "") {
           pickUpLocationNameChanged("Current Location");
           setChosenPickup("Current Location");
           setPickUpQuery("Current Location");
         } else {
-        pickUpLocationNameChanged(roadName);
-        // set the coordinates to the snapped location (send it back to home component)
-        pickUpLocationCoordChanged(
-          {latitude: snapResp.latitude, longitude: snapResp.longitude}
-        );
-        setChosenPickup(roadName);
-        setPickUpQuery(roadName);
-      }
+          pickUpLocationNameChanged(roadName);
+          // set the coordinates to the snapped location (send it back to home component)
+          pickUpLocationCoordChanged({
+            latitude: snapResp.latitude,
+            longitude: snapResp.longitude,
+          });
+          setChosenPickup(roadName);
+          setPickUpQuery(roadName);
+        }
       }
     } else {
       // there was a signin related error
