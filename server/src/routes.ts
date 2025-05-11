@@ -213,6 +213,14 @@ export const snapLocation = async (
     };
   }
 
+  if(currLat < -90 || currLat > 90 || currLong < -180 || currLong > 180) {
+    return {
+      response: "ERROR",
+      error: "Invalid latitude or longitude.",
+      category: "SNAP",
+    };
+  }
+
   try {
     // Documentation on how to use MapBox's map matching API:
     // https://docs.mapbox.com/help/tutorials/get-started-map-matching-api/?step=5
