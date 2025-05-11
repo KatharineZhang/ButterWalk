@@ -4,7 +4,7 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 
 interface BottomDrawerProps {
   children: React.ReactNode;
-  bottomSheetRef: React.RefObject<BottomSheet>; // pass a reference to the bottom sheet for expansion
+  bottomSheetRef: React.RefObject<BottomSheet | null>; // pass a reference to the bottom sheet for expansion
 }
 
 const BottomDrawer: React.FC<BottomDrawerProps> = ({

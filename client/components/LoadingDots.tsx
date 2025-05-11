@@ -37,7 +37,7 @@ function LoadingDots({
   components = null,
 }: LoadingDotsProps): React.JSX.Element {
   const [animations, setAnimations] = useState<Animated.Value[]>([]);
-  const [reverse, setReverse] = useState(false);
+  const reverse = useRef(false);
 
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -53,7 +53,7 @@ function LoadingDots({
 
   useEffect(() => {
     if (animations.length === 0) return;
-    loadingAnimation(animations, reverse);
+    loadingAnimation(animations, reverse.current);
     appearAnimation();
   }, [animations]);
 
@@ -96,13 +96,13 @@ function LoadingDots({
     Animated.parallel(
       nodes.map((node, index) => floatAnimation(node, reverseY, index * 100))
     ).start(() => {
-      setReverse(!reverse);
+      reverse.current = !reverse.current;
     });
   }
 
   useEffect(() => {
     if (animations.length === 0) return;
-    loadingAnimation(animations, reverse);
+    loadingAnimation(animations, reverse.current);
   }, [reverse, animations]);
 
   return (
