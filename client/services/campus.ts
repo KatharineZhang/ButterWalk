@@ -753,6 +753,7 @@ export class BuildingService {
     },
   ];
 
+// change this to server side 
   static getBuildingCoordinates(buildingName: string): Coordinates {
     const building = BuildingService.Buildings.find(
       (building) => building.name === buildingName

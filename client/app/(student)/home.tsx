@@ -8,6 +8,7 @@ import {
   DistanceResponse,
   ErrorResponse,
   LocationResponse,
+  RecentLocationResponse,
   RequestRideResponse,
   User,
   WaitTimeResponse,
@@ -115,6 +116,9 @@ export default function HomePage() {
     setNumPassengers(numPassengers);
     setWhichComponent("confirmRide");
   };
+
+  // the user's recent locations that will be displayed in the dropdown
+  const [recentLocations, setRecentLocations] = useState<string[]>([]);
 
   /* PROFILE STATE AND METHODS */
   const [profileVisible, setProfileVisible] = useState(false);
@@ -227,9 +231,12 @@ export default function HomePage() {
     WebSocketService.addListener(handleCompleteOrCancel, "COMPLETE");
     WebSocketService.addListener(handleWaitTime, "WAIT_TIME");
     WebSocketService.addListener(handleDistance, "DISTANCE");
+    WebSocketService.addListener(handleRecentLocationResponse, "RECENT_LOCATIONS");
 
     // get the user's profile on first render
     sendProfile();
+    // get the user's locations on first render
+    sendRecentLocation();
   }, []);
 
   // figure out coordinates from pickup and dropoff location names
@@ -398,6 +405,23 @@ export default function HomePage() {
       console.log("Profile response error: ", message);
     }
   };
+  
+  // WEBSOCKET -- RECENT_LOCATION
+  const sendRecentLocation = async () =>{
+    WebSocketService.send({
+      directive: "RECENT_LOCATIONS",
+      netid: netid,
+    })
+  }
+
+  const handleRecentLocationResponse = (message: WebSocketResponse) => {
+    if (message.response === "RECENT_LOCATIONS") {
+      setRecentLocations(message.locations as string[]);
+    } else {
+      // something went wrong
+      console.log("Recent location response error: ", message);
+    }
+  }
 
   // WEBSOCKET -- LOCATION
   // listen for any LOCATION messages from the server about the driver's location
@@ -669,6 +693,7 @@ export default function HomePage() {
                 rideRequested={rideRequested}
                 startingState={startingState}
                 setFAQVisible={setFAQVisible}
+                recentLocations={recentLocations}
               />
             </View>
           ) : whichComponent === "confirmRide" ? (

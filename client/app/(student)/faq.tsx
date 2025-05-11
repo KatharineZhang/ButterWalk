@@ -84,6 +84,11 @@ const faqContent: AccordionProps[] = [
     content:
       "Our service is completely free for UW students and staff members! Please make sure you have your UW ID to confirm your identity at pickup.",
   },
+  {
+    title: "How can I change my profile name?",
+    content:
+      "You need to go to your UW google account then Profile Info and change your name in the nickname field",
+  },
 ];
 
 export default FAQ;

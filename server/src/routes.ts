@@ -21,6 +21,7 @@ import {
   ProfileResponse,
   User,
   DistanceResponse,
+  RecentLocationResponse,
 } from "./api";
 import {
   acceptRideRequest,
@@ -36,6 +37,7 @@ import {
   queryFeedback,
   db,
   getProfile,
+  getRecentLocations,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { Mutex } from "async-mutex";
@@ -68,6 +70,7 @@ const handleToken = async (
   console.log("error with response", response);
   return { message: "Error signing in: Make sure you're using your UW email." };
 };
+
 
 // gets the user profile information using the token from google auth
 // returns us the user info if the user is a UW student and signin is successful
@@ -120,6 +123,8 @@ directive: "SIGNIN", phoneNum: string, netID: string, name: string, studentNum: 
 
 - On error, returns the json object in the form:  { response: “ERROR”, success: false, error: string, category: “SIGNIN” }. 
 - Returns a json object TO THE STUDENT in the form: { response: “SIGNIN”, success: true }. */
+// Removed duplicate declaration of fetchRecentLocations
+
 export const signIn = async (
   netid: string,
   firstName: string,
@@ -860,6 +865,40 @@ export const profile = async (
       response: "ERROR",
       error: `Error getting profile: ${e}`,
       category: "PROFILE",
+    };
+  }
+};
+
+/*testing get recent locations*/
+export const fetchRecentLocations = async (
+  netid: string
+): Promise<RecentLocationResponse | ErrorResponse> => {
+  if (!netid) {
+    return {
+      response: "ERROR",
+      error: "Missing netid.",
+      category: "RECENT_LOCATIONS",
+    };
+  }
+
+  try {
+    return await runTransaction(db, async (transaction) => {
+      // Create a mock user object with the netid
+      const user: User = { netid, firstName: "", lastName: "", phoneNumber: null, studentNumber: null, studentOrDriver: "STUDENT" };
+
+      // Fetch recent locations using the function in firebaseActions
+      const locations = await getRecentLocations(user);
+
+      return {
+        response: "RECENT_LOCATIONS",
+        locations,
+      };
+    });
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error fetching recent locations: ${(e as Error).message}`,
+      category: "RECENT_LOCATIONS",
     };
   }
 };

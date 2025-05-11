@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import { useEffect, useRef, useState } from "react";
+import { JSX, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,9 @@ import BottomSheet from "@gorhom/bottom-sheet";
 import { ScrollView } from "react-native-gesture-handler";
 import SegmentedProgressBar from "./SegmentedProgressBar";
 
+import WebSocketService from "@/services/WebSocketService";
+
+
 type RideRequestFormProps = {
   pickUpLocationChanged: (location: ValidLocationType) => void;
   dropOffLocationChanged: (location: ValidLocationType) => void;
@@ -25,12 +28,11 @@ type RideRequestFormProps = {
   rideRequested: (numPassengers: number) => void;
   setFAQVisible: (visible: boolean) => void;
   startingState?: { pickup: string; dropoff: string; numRiders: number };
+  recentLocations: string[];
 };
 
 // the type of locations we can send to homepage
 export type ValidLocationType = LocationName | `Current Location`;
-// the type of locations we can show in the dropdown
-export type DropDownType = LocationName | "Current Location";
 
 // What's in this component:
 // Ride Request Form which sends request to server and gets response back,
@@ -46,6 +48,7 @@ export default function RideRequestForm({
   rideRequested,
   startingState,
   setFAQVisible,
+  recentLocations,
 }: RideRequestFormProps) {
   // user input states for form
   const [location, setLocation] = useState("");
@@ -94,19 +97,17 @@ export default function RideRequestForm({
 
   // data from LocationService.ts
 
-  const data: DropDownType[] = [
-    "Current Location",
-    "HUB",
-    "Alder Hall",
-    "Communication Building",
-    "Flagpole",
-    "Meany Hall",
-    "IMA",
-    "Okanogan Lane",
-    "UW Tower",
-  ];
+  const data: string[] = recentLocations;
+  console.log(recentLocations);
 
-  const handleSelection = (value: DropDownType) => {
+  
+
+  //dropdowntype is default type for the drop down menu, is shown when user is NOT typing 
+  //once user starts typing, use autocomplete search query and pass value into the handleSelection function
+  // this function is called when the user selects a location from the dropdown
+
+
+  const handleSelection = (value: string) => {
     if (currentQuery === "pickup") {
       setLocationQuery(value);
       handleSetLocation(value);
@@ -119,7 +120,7 @@ export default function RideRequestForm({
   };
 
   // check that does not allow location and destination to be the same
-  const handleSetLocation = (value: DropDownType) => {
+  const handleSetLocation = (value: string) => {
     if (value === destination) {
       alert("Pickup location and destination cannot be the same!");
       return;
@@ -133,7 +134,7 @@ export default function RideRequestForm({
     }
   };
 
-  const handleSetDestination = (value: DropDownType) => {
+  const handleSetDestination = (value: string) => {
     if (value === location) {
       alert("Pickup location and destination cannot be the same!");
       return;
