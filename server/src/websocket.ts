@@ -247,7 +247,12 @@ export const handleWebSocketMessage = async (
       break;
 
     case "DISTANCE":
-      resp = await distanceMatrix(input.origin, input.destination, input.mode);
+      resp = await distanceMatrix(
+        input.origin,
+        input.destination,
+        input.mode,
+        input.tag
+      );
       // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
       break;
