@@ -711,16 +711,16 @@ export class BuildingService {
     {
       name: "Odegaard Library",
       location: {
-        latitude: 47.657212074889294,
-        longitude: -122.30487145010869,
+        latitude: 47.65634961334056,
+        longitude: -122.30997957702249,
       },
       front: {
-        latitude: 42.5432,
-        longitude: -119.332,
+        latitude: 47.65634961334056,
+        longitude: -122.30997957702249,
       },
       back: {
-        latitude: 42.4339,
-        longitude: -119.332,
+        latitude: 47.65659357022611,
+        longitude: -122.31088334118108,
       },
     },
     {
@@ -812,13 +812,6 @@ export class BuildingService {
       location: {
         latitude: 47.64980328360169,
         longitude: -122.3105142259068,
-      },
-    },
-    {
-      name: "Odegaard Library (OUG)",
-      location: {
-        latitude: 47.65728952141696,
-        longitude: -122.31044947193205,
       },
     },
     {
@@ -1194,6 +1187,86 @@ export class BuildingService {
       return null;
     }
   }
+
+  static closestBuildingEntrance(
+    closestBuilding: string,
+    coord: {
+      latitude: number;
+      longitude: number;
+    }
+  ): "front" | "back" | null {
+    // find the closest building
+    const building = BuildingService.Buildings.find(
+      (building) => building.name === closestBuilding
+    );
+    if (!building) {
+      return null;
+    }
+    const options: {
+      description: "front" | "back" | null;
+      coord: Coordinates;
+      distance: number;
+    }[] = [{ description: null, coord: building.location, distance: 0 }];
+    if (building.front) {
+      options.push({
+        description: "front",
+        coord: building.front,
+        distance: 0,
+      });
+    }
+    if (building.back) {
+      options.push({ description: "back", coord: building.back, distance: 0 });
+    }
+
+    if (options.length == 1) {
+      return null;
+    }
+
+    options.forEach((option) => {
+      option.distance = calculateDistance(coord, option.coord);
+    });
+
+    // reduce the options to the closest one
+    const closestOption = options.reduce((prev, curr) => {
+      if (!prev) return curr;
+      // Else, find the building closest to the coordinates
+      const prevDistance = prev.distance;
+      const currDistance = curr.distance;
+      return prevDistance < currDistance ? prev : curr;
+    });
+    return closestOption.description;
+  }
+
+  static getClosestBuildingEntranceCoordinates = (
+    closestBuilding: string,
+    coord: {
+      latitude: number;
+      longitude: number;
+    }
+  ): Coordinates => {
+    const building = BuildingService.Buildings.find(
+      (building) => building.name === closestBuilding
+    );
+    if (!building) {
+      throw new Error(`Building ${closestBuilding} not found`);
+    }
+
+    const entrance = BuildingService.closestBuildingEntrance(
+      closestBuilding,
+      coord
+    );
+    console.log("The closest entrance:", entrance ? entrance : "generic");
+    if (!entrance) {
+      return building.location;
+    }
+    if (entrance == "front" && building.front) {
+      return building.front;
+    } else if (entrance == "back" && building.back) {
+      return building.back;
+    }
+    // If no entrance is found, return the building's location
+    return building.location;
+  };
 
   static topThreeClosestBuildings(coord: {
     latitude: number;

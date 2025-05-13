@@ -195,7 +195,7 @@ export default function RideRequestForm({
       // the user clicked a normal dropdown location
       setChosenPickup(value);
       pickUpLocationNameChanged(value);
-      pickUpLocationCoordChanged(BuildingService.getBuildingCoordinates(value));
+      pickUpLocationCoordChanged(BuildingService.getClosestBuildingEntranceCoordinates(value, userLocation));
     }
   };
 
@@ -213,7 +213,7 @@ export default function RideRequestForm({
     }
     setChosenDropoff(value);
     dropOffLocationNameChanged(value);
-    dropOffLocationCoordChanged(BuildingService.getBuildingCoordinates(value));
+    dropOffLocationCoordChanged(BuildingService.getClosestBuildingEntranceCoordinates(value, userLocation));
   };
 
   // go to the number of riders screen
@@ -258,7 +258,7 @@ export default function RideRequestForm({
     setChosenPickup(closestBuilding);
     pickUpLocationNameChanged(closestBuilding);
     pickUpLocationCoordChanged(
-      BuildingService.getBuildingCoordinates(closestBuilding)
+      BuildingService.getClosestBuildingEntranceCoordinates(closestBuilding, userLocation)
     );
     setConfirmationModalVisible(false);
   };
@@ -269,7 +269,7 @@ export default function RideRequestForm({
     setChosenPickup(buildingName);
     pickUpLocationNameChanged(buildingName);
     pickUpLocationCoordChanged(
-      BuildingService.getBuildingCoordinates(closestBuilding)
+      BuildingService.getClosestBuildingEntranceCoordinates(closestBuilding, userLocation)
     );
     setWhichPanel("RideReq");
   };
