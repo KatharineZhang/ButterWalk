@@ -28,7 +28,7 @@ import {
   DistanceResponse,
 } from "../../server/src/api";
 import WebSocketService from "../services/WebSocketService";
-import { campus_zone, purple_zone } from "@/services/ZoneService";
+import { CampusZone, PurpleZone } from "@/services/ZoneService";
 
 type RideRequestFormProps = {
   pickUpLocationNameChanged: (location: string) => void;
@@ -127,7 +127,7 @@ export default function RideRequestForm({
     // we now need to figure out what the closest location is
     if (value === "Current Location") {
       // check if user is in the purple zone
-      const insidePurpleZone = purple_zone.isPointInside(userLocation);
+      const insidePurpleZone = PurpleZone.isPointInside(userLocation);
       console.log("inside purple zone: ", insidePurpleZone);
       // if the user is outside the purple zone, get the three closest buildings
       if (!insidePurpleZone) {
@@ -246,8 +246,8 @@ export default function RideRequestForm({
 
     // check that at least one location is on campus
     if (
-      !campus_zone.isPointInside(pickupCoordinates) &&
-      !campus_zone.isPointInside(dropoffCoordinates)
+      !CampusZone.isPointInside(pickupCoordinates) &&
+      !CampusZone.isPointInside(dropoffCoordinates)
     ) {
       alert("Either the pickup or dropoff location must be on campus!");
       return;
