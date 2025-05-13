@@ -230,27 +230,6 @@ export default function HomePage() {
     sendProfile();
   }, []);
 
-  // TODO: remove
-  // // figure out coordinates from pickup and dropoff location names
-  // // clicked in the ride request form
-  // useEffect(() => {
-  //   // get the coordinates of the pickup location
-  //   if (pickUpLocationName !== "") {
-  //     // TODO: PARSE THE SNAP STRING TO GET THE ROAD NAME AND LAT/LONG
-  //     // setPickUpLocation() <-- this holds the lat/long to send to Map
-  //     setPickUpLocation(
-  //       BuildingService.getBuildingCoordinates(pickUpLocationName)
-  //     );
-  //   }
-
-  //   if (dropOffLocationName != "") {
-  //     // get the coordinates of the dropoff location
-  //     setDropOffLocation(
-  //       BuildingService.getBuildingCoordinates(dropOffLocationName)
-  //     );
-  //   }
-  // }, [pickUpLocationName, dropOffLocationName]);
-
   // logic that should happen when the component FIRST changes
   // currently only handles wait time when the confirm ride component is shown
   useEffect(() => {
@@ -486,7 +465,6 @@ export default function HomePage() {
       const reqMessage = message as RequestRideResponse;
       setRequestID(reqMessage.requestid);
 
-      // TODO: REDUNDANT? IDK WHY IT WASN'T UPDATING START LOCATION FROM HERE
       // set the startLocation to figure out if the user needs to walk
       setStartLocation(userLocation);
 
@@ -542,8 +520,6 @@ export default function HomePage() {
   };
 
   // WEBSOCKET -- DISTANCE
-  // TODO: WE CANNOT ASSUME ALL DISTANCE RESPONSES
-  // ARE FOR WALKING DURATION EVENTUALLY...(FAKE DIJKSTRAS)
   const handleDistance = (message: WebSocketResponse) => {
     if ("response" in message && message.response === "DISTANCE") {
       const distanceResp = message as DistanceResponse;

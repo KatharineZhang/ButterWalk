@@ -11,7 +11,6 @@ export type Building = {
   front?: Coordinates;
   back?: Coordinates;
 };
-//'Merrill Hall (NMH)','Microsoft Bldg 99 (L260)','Miller Hall (MLR)','Molecular Engineering & Sciences Building (MOL/NAN)','More Hall (MOR)','Mueller Hall (MUE)','Music Building (MUS)','Nordheim Court  (NC)','North Physics Laboratory (NP)','North Physics Laboratory Cyclotron Shop (NPS)','Oak Hall (OAK)','Ocean Research Building 2 (OR2)','Ocean Sciences Building (OCN)','Oceanography Buildings (OCE)','Odegaard Library (OUG)','PACCAR Hall (PCAR)','Padelford Hall (PDL)','Parrington Hall (PAR)','Patricia Bracelin Steel Memorial Building (STE)','Paul G. Allen Center for Computer Science & Engineering (CSE)','Pavilion Pool (PVP)','Physics-Astronomy Auditorium (PAA)','Physics-Astronomy Building (PAB)','Physics-Astronomy Tower (PAT)','Pioneer Building (L257)','Plant Operations Annexes (POA)','Plant Operations/Services Buildings (POB)','Poplar Hall (POP)','Portage Bay Building (PBB)','Power Plant (PWR)','Publications Services Building (PSV)','Purchasing and Accounting Building (PCH)','Rainier Tower (RAIN)','Raitt Hall (RAI)','Roberts Hall (ROB)','Romero House (ROM)','Roosevelt II (QUC)','Samuel E. Kelly Ethnic Cultural Center (ECC)','Savery Hall (SAV)','Schmitz Hall (SMZ)','Sieg Hall (SIG)','Skinner Building (MTA)','Smith Hall (SMI)','Social Work/Speech and Hearing Sciences Building (SWS)','Softball Performance Center (SBPC)','South Campus Center (SOCC)','Southwest Maintenance Building (URC)','Springbrook Building (X152)','Stadium (STD)','Stevens Court (SCA)','Student Union Building (HUB)','Suzzallo Library (SUZ)','Swedish First Hill (SWH)','Terry Hall (TEH)','Theodor Jacobsen Observatory (OBS)','Thomson Hall (THO)','Transportation Services Building (TSB)','University District Building (UDB)','University Facilities Annexes/Building 1 (UF)','University of Washington Club (Faculty Center) (FAC)','Urban Horticulture Field House (UHF)','USGS Western Fisheries Research Center (WFRC)','UW Medical Center (UWMC)','UW Police Department (UWPD)','UW Tower Buildings (UWT)','Washington Dental Service Building for Early Childhood Oral Health (SP5)','Waterfront Activities Center (WAC)','West Campus Utility Plant (WCUP)','Wilcox Hall (WIL)','William H. Foege Bioeng/Genome (BIOE/GNOM)','William H. Gates Hall (LAW)','Willow Hall (WLW)','Wilson Annex (WLA)','Wilson Ceramic Laboratory (WCL)','Winkenwerder Annex (WNX)','Winkenwerder Forest Sciences Laboratory (WFS)'
 
 export class BuildingService {
   public static Buildings: Building[] = [
@@ -51,17 +50,10 @@ export class BuildingService {
       },
     },
     {
-      name: "Arboretum Buildings",
-      location: {
-        latitude: 47.6553,
-        longitude: -122.30583,
-      },
-    },
-    {
       name: "Architecture Hall",
       location: {
-        latitude: 47.6553,
-        longitude: -122.30583,
+        latitude: 47.65476785743224,
+        longitude: -122.31079793813925,
       },
     },
     {
@@ -158,8 +150,8 @@ export class BuildingService {
     {
       name: "Chemistry Library Building (CHL)",
       location: {
-        latitude: 47.6553,
-        longitude: -122.30583,
+        latitude: 47.65378892266391,
+        longitude: -122.30999668906585,
       },
     },
     {
@@ -202,13 +194,6 @@ export class BuildingService {
       location: {
         latitude: 47.6517,
         longitude: -122.3051,
-      },
-    },
-    {
-      name: "Bullitt Center (L191)",
-      location: {
-        latitude: 47.6553,
-        longitude: -122.30583,
       },
     },
     {
@@ -736,6 +721,412 @@ export class BuildingService {
       back: {
         latitude: 42.4339,
         longitude: -119.332,
+      },
+    },
+    {
+      name: "Husky Union Building (HUB)",
+      location: {
+        latitude: 47.65557006903249,
+        longitude: -122.30509195160619,
+      },
+    },
+    {
+      name: "Merrill Hall (NMH)",
+      location: {
+        latitude: 47.65814969059562,
+        longitude: -122.290368498205,
+      },
+    },
+    {
+      name: "Miller Hall (MLR)",
+      location: {
+        latitude: 47.657807962873434,
+        longitude: -122.306026449184,
+      },
+    },
+    {
+      name: "Molecular Engineering & Sciences Building (MOL/NAN)",
+      location: {
+        latitude: 47.65453487152259,
+        longitude: -122.31002169142221,
+      },
+    },
+    {
+      name: "More Hall (MOR)",
+      location: {
+        latitude: 47.65319404929506,
+        longitude: -122.30458384918728,
+      },
+    },
+    {
+      name: "Mueller Hall (MUE)",
+      location: {
+        latitude: 47.65288363537156,
+        longitude: -122.30492130315712,
+      },
+    },
+    {
+      name: "Music Building (MUS)",
+      location: {
+        latitude: 47.658099611452734,
+        longitude: -122.30581029521397,
+      },
+    },
+    {
+      name: "Nordheim Court  (NC)",
+      location: {
+        latitude: 47.666236179345134,
+        longitude: -122.30069903329965,
+      },
+    },
+    {
+      name: "North Physics Laboratory Cyclotron Shop (NPS)",
+      location: {
+        latitude: 47.65995968002903,
+        longitude: -122.30282241055644,
+      },
+    },
+    {
+      name: "Oak Hall (OAK)",
+      location: {
+        latitude: 47.66012915214022,
+        longitude: -122.30548676399066,
+      },
+    },
+    {
+      name: "Ocean Research Building 2 (OR2)",
+      location: {
+        latitude: 47.652787864565134,
+        longitude: -122.31411121056114,
+      },
+    },
+    {
+      name: "Ocean Sciences Building (OCN)",
+      location: {
+        latitude: 47.651746001238045,
+        longitude: -122.31252329521845,
+      },
+    },
+    {
+      name: "Oceanography Buildings (OCE)",
+      location: {
+        latitude: 47.64980328360169,
+        longitude: -122.3105142259068,
+      },
+    },
+    {
+      name: "Odegaard Library (OUG)",
+      location: {
+        latitude: 47.65728952141696,
+        longitude: -122.31044947193205,
+      },
+    },
+    {
+      name: "PACCAR Hall (PCAR)",
+      location: {
+        latitude: 47.660418312890464,
+        longitude: -122.30871273383909,
+      },
+    },
+    {
+      name: "Padelford Hall (PDL)",
+      location: {
+        latitude: 47.65775470142478,
+        longitude: -122.30410819521447,
+      },
+    },
+    {
+      name: "Parrington Hall (PAR)",
+      location: {
+        latitude: 47.657941449076496,
+        longitude: -122.31028425658796,
+      },
+    },
+    {
+      name: "Paul G. Allen Center for Computer Science & Engineering (CSE)",
+      location: {
+        latitude: 47.65384968984444,
+        longitude: -122.30569544124735,
+      },
+    },
+    {
+      name: "Pavilion Pool (PVP)",
+      location: {
+        latitude: 47.6524032134732,
+        longitude: -122.30117035659183,
+      },
+    },
+    {
+      name: "Physics-Astronomy Auditorium (PAA)",
+      location: {
+        latitude: 47.65330784074122,
+        longitude: -122.31079073682409,
+      },
+    },
+    {
+      name: "Physics-Astronomy Building (PAB)",
+      location: {
+        latitude: 47.65428843475653,
+        longitude: -122.3109326184996,
+      },
+    },
+    {
+      name: "Physics-Astronomy Tower (PAC)",
+      location: {
+        latitude: 47.653794015152364,
+        longitude: -122.31209527139897,
+      },
+    },
+    {
+      name: "Plant Operations Annexes (POA)",
+      location: {
+        latitude: 47.654536517615334,
+        longitude: -122.30336596445449,
+      },
+    },
+    {
+      name: "Plant Operations/Services Buildings (POB)",
+      location: {
+        latitude: 47.65474110810627,
+        longitude: -122.30374688097734,
+      },
+    },
+    {
+      name: "Poplar Hall (POP)",
+      location: {
+        latitude: 47.656533620151336,
+        longitude: -122.31397478285919,
+      },
+    },
+    {
+      name: "Portage Bay Building (PBB)",
+      location: {
+        latitude: 47.64937905622626,
+        longitude: -122.30913513382093,
+      },
+    },
+    {
+      name: "Power Plant (PWR)",
+      location: {
+        latitude: 47.654358601060174,
+        longitude: -122.30352751056017,
+      },
+    },
+    {
+      name: "Publications Services Building (PSV)",
+      location: {
+        latitude: 47.655854984494454,
+        longitude: -122.32038615658944,
+      },
+    },
+    {
+      name: "Purchasing and Accounting Building (PCH)",
+      location: {
+        latitude: 47.654683450440395,
+        longitude: -122.31346795217506,
+      },
+    },
+    {
+      name: "Raitt Hall (RAI)",
+      location: {
+        latitude: 47.65859027760579,
+        longitude: -122.3069384338401,
+      },
+    },
+    {
+      name: "Roberts Hall (ROB)",
+      location: {
+        latitude: 47.65275755509363,
+        longitude: -122.30519528727855,
+      },
+    },
+    {
+      name: "Samuel E. Kelly Ethnic Cultural Center (ECC)",
+      location: {
+        latitude: 47.6554992435552,
+        longitude: -122.31512736399365,
+      },
+    },
+    {
+      name: "Savery Hall (SAV)",
+      location: {
+        latitude: 47.65748901550832,
+        longitude: -122.30843475658817,
+      },
+    },
+    {
+      name: "Schmitz Hall (SMZ)",
+      location: {
+        latitude: 47.65738062000494,
+        longitude: -122.31230370315413,
+      },
+    },
+    {
+      name: "Sieg Hall (SIG)",
+      location: {
+        latitude: 47.655466688793155,
+        longitude: -122.3061786338422,
+      },
+    },
+    {
+      name: "Smith Hall (SMI)",
+      location: {
+        latitude: 47.65683703988756,
+        longitude: -122.30754965658868,
+      },
+    },
+    {
+      name: "Social Work/Speech and Hearing Sciences Building (SWS)",
+      location: {
+        latitude: 47.65777627579022,
+        longitude: -122.31221046452751,
+      },
+    },
+    {
+      name: "South Campus Center (SOCC)",
+      location: {
+        latitude: 47.649633038660625,
+        longitude: -122.31082977608236,
+      },
+    },
+    {
+      name: "Husky Stadium",
+      location: {
+        latitude: 47.65106889764651,
+        longitude: -122.30182471796667,
+      },
+    },
+    {
+      name: "Stevens Court (SCA)",
+      location: {
+        latitude: 47.65529315235987,
+        longitude: -122.31641061796378,
+      },
+    },
+    {
+      name: "Suzzallo Library (SUZ)",
+      location: {
+        latitude: 47.656232251958706,
+        longitude: -122.307971487276,
+      },
+    },
+    {
+      name: "Terry Hall (TEH)",
+      location: {
+        latitude: 47.65629245142558,
+        longitude: -122.31698785658907,
+      },
+    },
+    {
+      name: "Theodor Jacobsen Observatory (OBS)",
+      location: {
+        latitude: 47.661098744278554,
+        longitude: -122.30931807192934,
+      },
+    },
+    {
+      name: "Thomson Hall (THO)",
+      location: {
+        latitude: 47.65733333405035,
+        longitude: -122.3059066179624,
+      },
+    },
+    {
+      name: "Transportation Services Building (TSB)",
+      location: {
+        latitude: 47.657014271660294,
+        longitude: -122.31357819521486,
+      },
+    },
+    {
+      name: "University District Building (UDB)",
+      location: {
+        latitude: 47.66176794366154,
+        longitude: -122.31616701055518,
+      },
+    },
+    {
+      name: "Urban Horticulture Field House (UHF)",
+      location: {
+        latitude: 47.65697518480286,
+        longitude: -122.28882870195274,
+      },
+    },
+    {
+      name: "UW Medical Center",
+      location: {
+        latitude: 47.649524836354146,
+        longitude: -122.3065380491895,
+      },
+    },
+    {
+      name: "UW Police Department (UWPD)",
+      location: {
+        latitude: 47.65481014108997,
+        longitude: -122.31198985712525,
+      },
+    },
+    {
+      name: "UW Tower Buildings (UWT)",
+      location: {
+        latitude: 47.66100647916501,
+        longitude: -122.31474117192913,
+      },
+    },
+    {
+      name: "Waterfront Activities Center (WAC)",
+      location: {
+        latitude: 47.649192269278025,
+        longitude: -122.3000729026244,
+      },
+    },
+    {
+      name: "West Campus Utility Plant (WCUP)",
+      location: {
+        latitude: 47.653934789808865,
+        longitude: -122.31295836452982,
+      },
+    },
+    {
+      name: "Wilcox Hall (WIL)",
+      location: {
+        latitude: 47.65225045950721,
+        longitude: -122.30451352590491,
+      },
+    },
+    {
+      name: "William H. Gates Hall (LAW)",
+      location: {
+        latitude: 47.65955749149573,
+        longitude: -122.31087157193016,
+      },
+    },
+    {
+      name: "Willow Hall (WLW)",
+      location: {
+        latitude: 47.66048043806377,
+        longitude: -122.3047698793338,
+      },
+    },
+    {
+      name: "Wilson Annex (WLA)",
+      location: {
+        latitude: 47.65179525332432,
+        longitude: -122.30498709521834,
+      },
+    },
+    {
+      name: "Wilson Ceramic Laboratory (WCL)",
+      location: {
+        latitude: 47.65255161345785,
+        longitude: -122.30515204865256,
+      },
+    },
+    {
+      name: "Winkenwerder Forest Sciences Laboratory (WFS)",
+      location: {
+        latitude: 47.6518032532712,
+        longitude: -122.30685782590521,
       },
     },
   ];

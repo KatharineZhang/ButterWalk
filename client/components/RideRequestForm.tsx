@@ -128,7 +128,6 @@ export default function RideRequestForm({
     if (value === "Current Location") {
       // check if user is in the purple zone
       const insidePurpleZone = PurpleZone.isPointInside(userLocation);
-      console.log("inside purple zone: ", insidePurpleZone);
       // if the user is outside the purple zone, get the three closest buildings
       if (!insidePurpleZone) {
         // call the campus api to get the 3 closest buildins
@@ -230,19 +229,17 @@ export default function RideRequestForm({
     const dropoffCoordinates =
       BuildingService.getBuildingCoordinates(chosenDropoff);
 
-    // TODO: for this to work, we need to finetune the purple zone
-    // to work with the pockets of purple zone
     // check that both locations are within the purple zone
-    // if (
-    //   !purple_zone.isPointInside(locationCoord) ||
-    //   !purple_zone.isPointInside(destCoord)
-    // ) {
-    //   // the pickup or dropoff is not in the purple zone
-    //   alert(
-    //     "Both the Pickup and Dropoff locations must be in the SafeTrip servicable area!"
-    //   );
-    //   return;
-    // }
+    if (
+      !PurpleZone.isPointInside(pickupCoordinates) ||
+      !PurpleZone.isPointInside(dropoffCoordinates)
+    ) {
+      // the pickup or dropoff is not in the purple zone
+      alert(
+        "Both the Pickup and Dropoff locations must be in the SafeTrip servicable area!"
+      );
+      return;
+    }
 
     // check that at least one location is on campus
     if (
