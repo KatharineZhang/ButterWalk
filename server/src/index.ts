@@ -1,7 +1,7 @@
 import express, { Express } from "express";
 import bodyParser from "body-parser";
 import WebSocketServer from "ws";
-import http from "http";
+import https from "https";
 import { v4 as uuidv4 } from "uuid";
 import { handleWebSocketMessage } from "./websocket";
 
@@ -9,7 +9,7 @@ const app: Express = express();
 app.use(bodyParser.json());
 
 //Make a new websocket server on 8080
-const server = http.createServer(app);
+const server = https.createServer(app);
 server.listen(8080, () => {
   console.log("WEBSOCKET: HTTP server listening on port 8080");
 });
