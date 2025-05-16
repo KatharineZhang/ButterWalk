@@ -13,7 +13,8 @@ import {
   where,
   WhereFilterOp,
 } from "firebase/firestore";
-import { Feedback, ProblematicUser, RideRequest, User } from "./api";
+import { Feedback, RecentLocation, ProblematicUser, RideRequest, User } from "./api";
+import { location } from "./routes";
 
 export const db = getFirestore(app);
 
@@ -24,9 +25,22 @@ const usersCollection = collection(db, "Users");
 const rideRequestsCollection = collection(db, "RideRequests");
 const problematicUsersCollection = collection(db, "ProblematicUsers");
 const feedbackCollection = collection(db, "Feedback");
+const recentlocationsCollection = collection(db, "RecentLocations");
 
 // SIGN IN - Adds a user to the database if they are not problematic
 // this is a completely NEW USER
+export async function getRecentLocations(user: User){
+  const docRef = doc(recentlocationsCollection, user.netid);
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    const data = docSnap.data() as RecentLocation;
+    return data.locations;
+  } else {
+    console.log("Document does not exist");
+    return [];
+  }
+}
+
 export async function createUser(transaction: Transaction, user: User) {
   // check if the user is in the problematicUsers table with a blacklisted status
   const isProblematic = doc(db, "ProblematicUsers", user.netid);
@@ -42,6 +56,31 @@ export async function createUser(transaction: Transaction, user: User) {
   // use the net id of the user as the document id
   const docRef = doc(usersCollection, user.netid);
   const docSnap = await transaction.get(docRef);
+  const docLocation = doc(recentlocationsCollection, user.netid);
+  const docSnapLocation = await transaction.get(docLocation);
+  const campusLocations: string[] = [
+    "Alder Hall" ,
+    "Allen Library" ,
+    "Bagley Hall" ,
+    "Bloedel Hall" ,
+    "Cedar  Apartments " ,
+    "Chemistry Building (CHB)" ,
+    "Dempsey Hall (DEM)" ,
+    "Denny Hall (DEN)" ,
+    "Elm Hall (ELM)" ,
+    "Engineering Library (ELB)" ,
+    "Founders Hall (FNDR)" ,
+    "Fluke Hall (FLK)" ,
+    "Gould Hall (GLD)" ,
+    "Hitchcock Hall (HIT)" ,
+    "Husky Union Building (HUB)" ,
+  ];
+
+  const location:  RecentLocation ={
+    netid: user.netid,
+    locations: [],
+  }
+  transaction.set(docLocation, location);
   if (docSnap.exists()) {
     const data = docSnap.data() as User;
     if (data.phoneNumber === null && data.studentNumber === null) {
@@ -52,8 +91,9 @@ export async function createUser(transaction: Transaction, user: User) {
       return true;
     }
   } else {
-    // User does NOT exist in the database
-    await transaction.set(docRef, user);
+    console.log("User does NOT exist in the database");
+    transaction.set(docLocation, campusLocations);
+    console.log("Document does not exist, so added default campuslocations");
     return false;
   }
 }
@@ -192,6 +232,9 @@ export async function completeRideRequest(
 ) {
   const docRef = doc(rideRequestsCollection, requestid); // get the document by id
   const docSnap = await transaction.get(docRef);
+ 
+  
+  
   if (docSnap.exists() && docSnap.data().status != "ACCEPTED") {
     throw new Error(
       "Only can complete a ride that is 'ACCEPTED' not " + docSnap.data().status
@@ -203,11 +246,44 @@ export async function completeRideRequest(
     throw new Error("Document data is undefined");
   }
   const netids = { student: data.netid, driver: data.driverid };
+  const docLoc = doc(recentlocationsCollection, netids.student);
+  const docSnapLoc = await transaction.get(docLoc);
+  // console.log("docSnapLoc: ", docSnapLoc);
+  // console.log("it exists: ", docSnapLoc.exists());
+  // console.log("netID: ", netids.student);
+  let oldLocations: string[] = [];
+  if (docSnapLoc.exists()) {
+    console.log("Document exists");
+    const dataLoc = docSnapLoc.data() as RecentLocation;
+    oldLocations.push(...dataLoc.locations);
 
-  transaction.update(docRef, {
-    completedAt: Timestamp.now(),
-    status: "COMPLETED",
-  });
+    oldLocations = oldLocations.filter(
+      (location) => location !== data.locationTo);
+
+    oldLocations = oldLocations.filter(
+      (location) => location !== data.locationFrom);
+
+    const newLocationTo = data.locationTo;
+    const newLocationFrom = data.locationFrom;
+    oldLocations.unshift(newLocationTo);
+    oldLocations.unshift(newLocationFrom);
+
+    oldLocations.slice(0, 20);
+    
+    transaction.update(docLoc, {
+      locations: oldLocations,
+    })
+  
+    transaction.update(docRef, {
+      completedAt: Timestamp.now(),
+      status: "COMPLETED",
+    });
+    
+    console.log("Document updated with new locations"+ oldLocations);
+  } else {
+    console.log("Document does not exist");
+  }
+    
 
   return netids;
 }

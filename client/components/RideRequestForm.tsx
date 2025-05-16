@@ -30,6 +30,7 @@ import {
 import WebSocketService from "../services/WebSocketService";
 import { campus_zone, purple_zone } from "@/services/ZoneService";
 
+
 type RideRequestFormProps = {
   pickUpLocationNameChanged: (location: string) => void;
   dropOffLocationNameChanged: (location: string) => void;
@@ -51,7 +52,18 @@ type RideRequestFormProps = {
     boldText?: string;
   }) => void;
   startingState?: { pickup: string; dropoff: string; numRiders: number };
+  recentLocations: string[];
 };
+
+// the type of locations we can send to homepage
+//export type ValidLocationType = LocationName | `Current Location`;
+
+// What's in this component:
+// Ride Request Form which sends request to server and gets response back,
+// Cancel Ride button to cancel ride request,
+// fuzzy search for location and desination which uses autocomplete(buggy),
+// animation for rider icons,
+// This is a beefy component!
 
 export default function RideRequestForm({
   pickUpLocationNameChanged,
@@ -62,6 +74,7 @@ export default function RideRequestForm({
   rideRequested,
   startingState,
   setFAQVisible,
+  recentLocations,
   setNotificationState,
   updateSideBarHeight,
 }: RideRequestFormProps) {
@@ -99,9 +112,10 @@ export default function RideRequestForm({
   const topThreeBuildings = useRef<ComparableBuilding[]>([]);
 
   // the set of results to show in the dropdown
-  const data: string[] = getBuildingNames();
-  data.unshift("Current Location"); // add current location to the beginning
-
+  //const data: string[] = getBuildingNames();
+  //data.unshift("Current Location"); // add current location to the beginning
+  const data: string[] = recentLocations;
+  console.log(recentLocations);
   /* METHODS */
   // the user clicked a dropdown result
   const handleSelection = (value: string) => {
