@@ -16,7 +16,7 @@ import {
 } from "../../../server/src/api";
 import { LocationName, LocationService } from "@/services/LocationService";
 
-export default function App() {
+export default function Map() {
   // Extract netid from Redirect URL from signin page
   const { netid } = useLocalSearchParams();
 

@@ -44,12 +44,9 @@ const Login = () => {
   if (signedIn) {
     return (
       <Redirect
-        href={{
-          pathname: "/(driver)/map",
-          params: {
-            netid: netid != "" ? netid.replace("@uw.edu", "") : "driver-netID",
-          },
-        }}
+        href={`/(driver)/home?netid=${encodeURIComponent(
+          netid !== "" ? netid.replace("@uw.edu", "") : "driver-netID"
+        )}`}
       />
     );
   }
