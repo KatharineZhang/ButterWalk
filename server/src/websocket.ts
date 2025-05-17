@@ -28,7 +28,6 @@ import {
   GoogleResponse,
   ErrorResponse,
   SnapLocationResponse,
-  RecentLocationResponse,
 } from "./api";
 
 export const handleWebSocketMessage = async (
@@ -261,14 +260,10 @@ export const handleWebSocketMessage = async (
       // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
       break;
-
-    // TESTING, POTENTIALLY BROKEN CODE
     case "RECENT_LOCATIONS":
       resp = await fetchRecentLocations(input.netid);
       sendWebSocketMessage(ws, resp);
       break;
-
-
     default:
       console.log(`WEBSOCKET: Unknown directive: ${input}`);
       break;
