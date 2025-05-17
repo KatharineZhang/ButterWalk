@@ -51,6 +51,12 @@ export const fetchGooglePlaceSuggestions = async (
 ): Promise<string[]> => {
   // If the query is the same as the previous one, return the cached results
   if (levensteinDistance(query, previousQuery) < 3) {
+    console.log(
+      "google place search cached results for query:",
+      query,
+      "previous query:",
+      previousQuery
+    );
     return previousResults;
   }
   try {

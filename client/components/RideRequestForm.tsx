@@ -387,7 +387,6 @@ export default function RideRequestForm({
   // TODO: CHECK W TEAM
   const enterPressed = async () => {
     const text = currentQuery == "pickup" ? pickUpQuery : dropOffQuery;
-    console.log("enter pressed: ", text);
     if (text.length > 3) {
       setPlaceSearchResults(
         await fetchGooglePlaceSuggestions(
