@@ -2,6 +2,7 @@
 import { styles } from "@/assets/styles";
 import Accordion, { AccordionProps } from "@/components/Accordian";
 import PopUpModal from "@/components/PopUpModal";
+import { JSX } from "react";
 import { Text, ScrollView, View } from "react-native";
 
 // FAQ component that displays a list of frequently asked questions

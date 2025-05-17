@@ -228,7 +228,10 @@ export default function HomePage() {
     WebSocketService.addListener(handleCompleteOrCancel, "COMPLETE");
     WebSocketService.addListener(handleWaitTime, "WAIT_TIME");
     WebSocketService.addListener(handleDistance, "DISTANCE");
-    WebSocketService.addListener(handleRecentLocationResponse, "RECENT_LOCATIONS");
+    WebSocketService.addListener(
+      handleRecentLocationResponse,
+      "RECENT_LOCATIONS"
+    );
 
     // get the user's profile on first render
     sendProfile();
@@ -382,14 +385,14 @@ export default function HomePage() {
       console.log("Profile response error: ", message);
     }
   };
-  
+
   // WEBSOCKET -- RECENT_LOCATION
-  const sendRecentLocation = async () =>{
+  const sendRecentLocation = async () => {
     WebSocketService.send({
       directive: "RECENT_LOCATIONS",
       netid: netid,
-    })
-  }
+    });
+  };
 
   const handleRecentLocationResponse = (message: WebSocketResponse) => {
     if (message.response === "RECENT_LOCATIONS") {
@@ -398,7 +401,7 @@ export default function HomePage() {
       // something went wrong
       console.log("Recent location response error: ", message);
     }
-  }
+  };
 
   // WEBSOCKET -- LOCATION
   // listen for any LOCATION messages from the server about the driver's location

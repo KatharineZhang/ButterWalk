@@ -20,6 +20,7 @@ const BottomDrawer: React.FC<BottomDrawerProps> = ({
         ref={bottomSheetRef}
         snapPoints={snapPoints}
         enablePanDownToClose={false}
+        enableOverDrag={false}
         index={0}
       >
         <BottomSheetView style={styles.contentContainer}>
