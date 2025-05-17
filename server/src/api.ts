@@ -244,6 +244,8 @@ export type ErrorResponse = {
 
 export type DistanceResponse = {
   response: "DISTANCE";
+  // The tag is used to identify different distance requests.
+  // Whatever the client sends, the server will send back and the client can use it to identify the response
   tag: string;
   apiResponse: DistanceMatrixResponse;
 };
