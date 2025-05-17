@@ -262,6 +262,7 @@ export const handleWebSocketMessage = async (
       break;
     case "RECENT_LOCATIONS":
       resp = await fetchRecentLocations(input.netid);
+      // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
       break;
     default:

@@ -3,7 +3,6 @@ import { app } from "./firebaseConfig";
 import {
   collection,
   doc,
-  getDoc,
   getDocs,
   getFirestore,
   query,
@@ -33,9 +32,12 @@ const feedbackCollection = collection(db, "Feedback");
 const recentlocationsCollection = collection(db, "RecentLocations");
 
 // RECENT_LOCATIONS - get the recent locations of a user
-export async function getRecentLocations(user: User) {
-  const docRef = doc(recentlocationsCollection, user.netid);
-  const docSnap = await getDoc(docRef);
+export async function getRecentLocations(
+  transaction: Transaction,
+  netid: string
+) {
+  const docRef = doc(recentlocationsCollection, netid);
+  const docSnap = await transaction.get(docRef);
   if (docSnap.exists()) {
     const data = docSnap.data() as RecentLocation;
     return data.locations;
@@ -50,7 +52,7 @@ export async function getRecentLocations(user: User) {
 export async function createUser(transaction: Transaction, user: User) {
   // check if the user is in the problematicUsers table with a blacklisted status
   const isProblematic = doc(db, "ProblematicUsers", user.netid);
-  const problematicDoc = await getDoc(isProblematic);
+  const problematicDoc = await transaction.get(isProblematic);
   if (
     problematicDoc.exists() &&
     problematicDoc.data().category === "BLACKLISTED"
