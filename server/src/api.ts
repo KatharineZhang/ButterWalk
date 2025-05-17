@@ -20,10 +20,12 @@ export type Command =
   | "QUERY"
   | "PROFILE"
   | "DISTANCE"
-  | "ERROR";
+  | "ERROR"
+  | "RECENT_LOCATIONS";
 
 // Input types
 export type WebSocketMessage =
+  | { directive: "RECENT_LOCATIONS"; netid: string }
   | { directive: "DISCONNECT" }
   | { directive: "CONNECT"; netid: string; role: "STUDENT" | "DRIVER" } // TODO: REMOVE THIS ONCE BYPASS SIGNIN IS REMOVED
   | {
@@ -115,7 +117,13 @@ export type WebSocketResponse =
   | QueryResponse
   | ProfileResponse
   | DistanceResponse
-  | ErrorResponse;
+  | ErrorResponse
+  | RecentLocationResponse;
+
+export type RecentLocationResponse = {
+  response : "RECENT_LOCATIONS";
+  locations: string[];
+}
 
 export type GeneralResponse = {
   response:
@@ -130,6 +138,7 @@ export type GeneralResponse = {
     | "ACCEPT_RIDE";
   success: true;
 };
+
 
 export type SignInResponse = {
   response: "SIGNIN";
@@ -228,7 +237,9 @@ export type ErrorResponse = {
     | "QUERY"
     | "PROFILE"
     | "DISTANCE"
-    | "FINISH_ACC";
+    | "FINISH_ACC"
+    | "RECENT_LOCATIONS";
+
 };
 
 export type DistanceResponse = {
@@ -365,3 +376,9 @@ export type ProblematicUser = {
   reason: string;
   category: "REPORTED" | "BLACKLISTED";
 };
+
+
+export type RecentLocation = {
+  netid: string;
+  locations: string[];
+}

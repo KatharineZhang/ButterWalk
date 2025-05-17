@@ -29,6 +29,7 @@ import {
 } from "../../server/src/api";
 import WebSocketService from "../services/WebSocketService";
 import { CampusZone, PurpleZone } from "@/services/ZoneService";
+import {calculateDistance} from "../app/(student)/map";
 
 type RideRequestFormProps = {
   pickUpLocationNameChanged: (location: string) => void;
@@ -51,6 +52,7 @@ type RideRequestFormProps = {
     boldText?: string;
   }) => void;
   startingState?: { pickup: string; dropoff: string; numRiders: number };
+  recentLocations: string[];
 };
 
 export default function RideRequestForm({
@@ -62,6 +64,7 @@ export default function RideRequestForm({
   rideRequested,
   startingState,
   setFAQVisible,
+  recentLocations,
   setNotificationState,
   updateSideBarHeight,
 }: RideRequestFormProps) {
@@ -99,10 +102,107 @@ export default function RideRequestForm({
   const topThreeBuildings = useRef<ComparableBuilding[]>([]);
 
   // the set of results to show in the dropdown
-  const data: string[] = getBuildingNames();
-  data.unshift("Current Location"); // add current location to the beginning
+  const data: string[] = (() => {
+    if (currentQuery == "pickup" && pickUpQuery.trim() !== "") {
+      return ["Current Location", ...getBuildingNames()];
+      // append to end of list with results from google place search autocomplete call?
+    } else if (currentQuery == "dropoff" && dropOffQuery.trim() !== ""){
+      return ["Current Location", ...getBuildingNames()];
+    } else{
+      return ["Current Location", ...recentLocations];
+    }
+    
+  })();
 
+  // the user clicked a location suggestion
+  const [suggestions, setSuggestions] = useState<string[]>(() => data);
+  //fetches the google places API key from the environment variables
+  const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
+    ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
+    : "";
+
+  //polygone coordinates for the purple zone that NEED TO BE UPDATED
+  const polygonCoordinates = [
+    { latitude: 47.666588, longitude: -122.311439 },
+    { latitude: 47.667353, longitude: -122.316263 },
+    { latitude: 47.652854, longitude: -122.316942 },
+    { latitude: 47.648566, longitude: -122.304858 },
+    { latitude: 47.660993, longitude: -122.301405 },
+    { latitude: 47.661138, longitude: -122.311331 },
+  ];
+  // calculates the polygon's center using the coordinate points given by polygonCoordinates
+  const calculatePolygonCenter = (coordinates: { latitude: number; longitude: number }[]) => {
+      const totalPoints = coordinates.length;
+      const center = coordinates.reduce(
+        (acc, point) => {
+          acc.latitude += point.latitude;
+          acc.longitude += point.longitude;
+          return acc;
+        },
+        { latitude: 0, longitude: 0 }
+      );
+    
+      return {
+        latitude: center.latitude / totalPoints,
+        longitude: center.longitude / totalPoints,
+      };
+    };
+  
+    // Calculate radius of given polygon
+    const calculatePolygonRadius = (
+      center: { latitude: number; longitude: number },
+      coordinates: { latitude: number; longitude: number }[]
+    ) => {
+      return Math.max(
+        ...coordinates.map((point) => calculateDistance(center, point))
+      );
+    };
+
+    const isPointInsidePolygon = (
+      point: { latitude: number; longitude: number },
+      polygon: { latitude: number; longitude: number }[]
+    ): boolean => {
+      let inside = false;
+      const x = point.latitude;
+      const y = point.longitude;
+    
+      for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i].latitude,
+          yi = polygon[i].longitude;
+        const xj = polygon[j].latitude,
+          yj = polygon[j].longitude;
+    
+        const intersect =
+          yi > y !== yj > y &&
+          x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+        if (intersect) inside = !inside;
+      }
+    
+      return inside;
+    };
+
+  
   /* METHODS */
+  async function resolveCoordinates(name: string) {
+    try {
+      // Try from local dataset first
+      return BuildingService.getBuildingCoordinates(name);
+    } catch {
+      // Fallback: use Google Geocode API
+      const res = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?` +
+          `address=${encodeURIComponent(name)}` +
+          `&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY}` 
+      );
+      const json = await res.json();
+      if (json.results?.length) {
+        const { lat, lng } = json.results[0].geometry.location;
+        return { latitude: lat, longitude: lng };
+      }
+      throw new Error(`Couldn’t geocode “${name}”`);
+    }
+  }
+
   // the user clicked a dropdown result
   const handleSelection = (value: string) => {
     if (currentQuery === "pickup") {
@@ -192,10 +292,15 @@ export default function RideRequestForm({
         }
       }
     } else {
-      // the user clicked a normal dropdown location
+      // the user clicked from recent location dropdown location
       setChosenPickup(value);
       pickUpLocationNameChanged(value);
-      pickUpLocationCoordChanged(BuildingService.getClosestBuildingEntranceCoordinates(value, userLocation));
+      // pickUpLocationCoordChanged(BuildingService.getClosestBuildingEntranceCoordinates(value, userLocation));
+      resolveCoordinates(value)
+        .then(pickUpLocationCoordChanged)
+        .catch((err) =>
+          console.error("Location lookup failed", err.message)
+        );
     }
   };
 
@@ -213,7 +318,12 @@ export default function RideRequestForm({
     }
     setChosenDropoff(value);
     dropOffLocationNameChanged(value);
-    dropOffLocationCoordChanged(BuildingService.getClosestBuildingEntranceCoordinates(value, userLocation));
+    // dropOffLocationCoordChanged(BuildingService.getClosestBuildingEntranceCoordinates(value, userLocation));
+    resolveCoordinates(value)
+      .then(dropOffLocationCoordChanged)
+      .catch((err) =>
+        console.error("Location lookup failed", err.message)
+      );
   };
 
   // go to the number of riders screen
@@ -406,6 +516,65 @@ export default function RideRequestForm({
     }
   }, [whichPanel]);
 
+  
+  useEffect(() => {
+    if (currentQuery !== "pickup" || pickUpQuery.length < 3) {
+      // Fewer than 3 characters, revert to static list
+      setSuggestions(["Current Location", ...getBuildingNames()]);
+      return;
+    }
+  
+    const center = calculatePolygonCenter(polygonCoordinates);
+    const radius = calculatePolygonRadius(center, polygonCoordinates) * 1609.34;
+  
+    const controller = new AbortController();
+  
+    (async () => {
+      try {
+        const url =
+          `https://maps.googleapis.com/maps/api/place/textsearch/json?` +
+          `query=${encodeURIComponent(pickUpQuery)}` +
+          `&location=${center.latitude},${center.longitude}` +
+          `&radius=${radius}` +
+          `&key=${GOOGLE_MAPS_API_KEY}`;
+  
+        const res = await fetch(url, { signal: controller.signal });
+        const json = await res.json();
+  
+        if (Array.isArray(json.results)) {
+          // Post-filter results to ensure they are inside the polygon
+          type GooglePlaceResult = {
+            name: string;
+            geometry: {
+              location: {
+                lat: number;
+                lng: number;
+              };
+            };
+          };
+
+          const places = (json.results as GooglePlaceResult[])
+            .map((r) => ({
+              name: r.name,
+              location: {
+                latitude: r.geometry.location.lat,
+                longitude: r.geometry.location.lng,
+              },
+            }))
+            .filter((place) =>
+              isPointInsidePolygon(place.location, polygonCoordinates)
+            )
+            .map((place) => place.name);
+  
+          setSuggestions(["Current Location", ...places]);
+        }
+      } catch (e: unknown) {
+        console.error(e);
+      }
+    })();
+  
+    return () => controller.abort();
+  }, [pickUpQuery, currentQuery, userLocation]);
   /* ANIMATION */
   const fadeAnim = useState(new Animated.Value(0))[0];
 
@@ -528,7 +697,7 @@ export default function RideRequestForm({
                 query={pickUpQuery}
                 setQuery={setPickUpQuery}
                 placeholder="Pick Up Location"
-                data={data}
+                data={suggestions}
               />
               <AutocompleteInput
                 onPress={() => {
@@ -538,9 +707,56 @@ export default function RideRequestForm({
                 query={dropOffQuery}
                 setQuery={setDropOffQuery}
                 placeholder="Drop Off Location"
-                data={data}
+                data={suggestions}
               />
             </View>
+            {/* Autocomplete Suggestions */}
+        <View style={{ flex: 1, height: 100 }}>
+          <ScrollView style={{ paddingBottom: 400 }}>
+            {suggestions
+              .filter((item) => {
+                if (currentQuery == "dropoff") {
+                  return item !== "Current Location";
+                } else {
+                  return true;
+                }
+              })
+              .filter(
+                (item) =>
+                  item
+                    .toLowerCase()
+                    .includes(
+                      currentQuery == "pickup"
+                        ? pickUpQuery.toLowerCase()
+                        : dropOffQuery
+                    ) ||
+                  (currentQuery == "pickup" && item == "Current Location")
+              )
+              .map((item) => (
+                <TouchableOpacity
+                  onPress={() => handleSelection(item)}
+                  key={item}
+                  style={{
+                    padding: 16,
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#ccc",
+                    flexDirection: "row",
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                  }}
+                >
+                  <Image
+                    source={require("@/assets/images/dropdown-location.png")}
+                    style={{ width: 35, height: 35 }}
+                  />
+                  <View style={{ width: 10 }} />
+                  <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+                    {item}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+          </ScrollView>
+        </View>
 
             {/* Next Button */}
             <View
@@ -565,7 +781,7 @@ export default function RideRequestForm({
         {/* Autocomplete Suggestions */}
         <View style={{ flex: 1, height: 100 }}>
           <ScrollView style={{ paddingBottom: 400 }}>
-            {data
+            {suggestions
               .filter((item) => {
                 if (currentQuery == "dropoff") {
                   return item !== "Current Location";
