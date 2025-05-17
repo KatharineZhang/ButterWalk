@@ -1,12 +1,13 @@
-import { BuildingService } from "./campus";
+import { BuildingService, Coordinates } from "./BuildingService";
 import { PurpleZone } from "./ZoneService";
 
-//fetches the google places API key from the environment variables
+// Fetch the google places API key from the environment variables
 const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
   ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
   : "";
 
-export type GooglePlaceResult = {
+// Type of the Google Place API response
+type GooglePlaceResult = {
   business_status: string;
   formatted_address: string;
   geometry: {
@@ -50,17 +51,16 @@ export const fetchGooglePlaceSuggestions = async (
 ): Promise<string[]> => {
   // If the query is the same as the previous one, return the cached results
   if (levensteinDistance(query, previousQuery) < 3) {
-    console.log("too close:", query, previousQuery);
     return previousResults;
   }
   try {
-    console.log("google place search", number++);
+    console.log("google place search iteration:", number++);
     previousQuery = query;
     const url =
       `https://maps.googleapis.com/maps/api/place/textsearch/json?` +
       `query=${encodeURIComponent(query)}` +
-      `&location=47.65979,-122.30564` +
-      `&radius=1859` +
+      `&location=47.65979,-122.30564` + // Source: trust me bro - Snigdha (https://www.calcmaps.com/map-radius/)
+      `&radius=1859` + // but basically its just a radius around the purple zone area
       `&key=${GOOGLE_MAPS_API_KEY}`;
 
     const res = await fetch(url);
@@ -83,16 +83,24 @@ export const fetchGooglePlaceSuggestions = async (
       return previousResults;
     }
   } catch (e: unknown) {
-    console.log(e);
+    console.log("GOOGLE PLACE SEARCH ERROR", e);
   }
   previousResults = [];
   return [];
 };
 
-export async function resolveCoordinates(
+/**
+ * Find the closest building entrance coordinates to a given name and the user's location.
+ * If the name is not found in the local building dataset,
+ * it will use the Google Geocode API to get the coordinates.
+ * @param name of the location to find coordinates for
+ * @param userLocation needed to find the closest building entrance
+ * @returns
+ */
+export async function findCoordinatesOfLocationName(
   name: string,
   userLocation: { latitude: number; longitude: number }
-) {
+): Promise<Coordinates> {
   try {
     // Try from local dataset first
     return BuildingService.getClosestBuildingEntranceCoordinates(

@@ -320,7 +320,6 @@ export default function HomePage() {
                 userLocation,
                 pickUpLocation
               );
-              console.log("walk progress: ", wp);
               setWalkProgress(wp);
             }
           }
@@ -436,17 +435,17 @@ export default function HomePage() {
         // show the notification based on the response
         if (message.response === "CANCEL") {
           setNotifState({
-          text: "Ride successfully canceled",
-          color: "#FFCBCB",
-          boldText: "canceled",
-        });
-      } else {
+            text: "Ride successfully canceled",
+            color: "#FFCBCB",
+            boldText: "canceled",
+          });
+        } else {
           setNotifState({
             text: "Ride successfully completed!",
             color: "#C9FED0",
             boldText: "completed",
           });
-      }
+        }
       } else {
         setNotifState({
           text: "Your ride was canceled— timer ran out",

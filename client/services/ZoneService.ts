@@ -1,4 +1,4 @@
-import { Coordinates } from "./campus";
+import { Coordinates } from "./BuildingService";
 
 // represents a polygon of map region
 export class Zone {

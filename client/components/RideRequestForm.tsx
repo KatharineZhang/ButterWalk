@@ -20,7 +20,7 @@ import {
   BuildingService,
   ComparableBuilding,
   getBuildingNames,
-} from "@/services/campus";
+} from "@/services/BuildingService";
 import {
   WebSocketResponse,
   SnapLocationResponse,
@@ -31,7 +31,7 @@ import WebSocketService from "../services/WebSocketService";
 import { CampusZone, PurpleZone } from "@/services/ZoneService";
 import {
   fetchGooglePlaceSuggestions,
-  resolveCoordinates,
+  findCoordinatesOfLocationName,
 } from "@/services/GooglePlacesServices";
 
 type RideRequestFormProps = {
@@ -74,18 +74,21 @@ export default function RideRequestForm({
   /* STATE */
   // user input states for form
   const [chosenPickup, setChosenPickup] = useState(""); // the chosen pickup name
+  // coordinates of the chosen pickup location
   const [pickupCoordinates, setPickupCoordinates] = useState({
     latitude: userLocation.latitude,
     longitude: userLocation.longitude,
-  }); // the chosen pickup coordinates
+  });
   const [chosenDropoff, setChosenDropoff] = useState(""); // the chosen dropoff name
+  // the chosen dropoff coordinates
   const [dropoffCoordinates, setDropoffCoordinates] = useState({
     latitude: userLocation.latitude,
     longitude: userLocation.longitude,
-  }); // the chosen dropoff coordinates
+  });
+  // the number of riders
   const [numRiders, setNumRiders] = useState(1);
 
-  // which panel to show
+  // which panel in the ride request family of screens to show
   const [whichPanel, setWhichPanel] = useState<
     "RideReq" | "NumberRiders" | "LocationSuggestions"
   >("RideReq");
@@ -97,7 +100,7 @@ export default function RideRequestForm({
   const [confirmationModalVisible, setConfirmationModalVisible] =
     useState(false);
 
-  // what the user types in
+  // what the user types in to the text boxes
   const [pickUpQuery, setPickUpQuery] = useState(""); // Typed in pickup query
   const [dropOffQuery, setDropOffQuery] = useState(""); // typed in dropoff query
 
@@ -112,12 +115,13 @@ export default function RideRequestForm({
   // useRef will allow of synchronous storage of these buildinsg
   const topThreeBuildings = useRef<ComparableBuilding[]>([]);
 
-  // the user clicked a location suggestion
+  // the user clicked a dropdown location
   const allBuildings = getBuildingNames();
   const [campusAPIResults, setCampusAPIResults] = useState<string[]>([]);
   const [placeSearchResults, setPlaceSearchResults] = useState<string[]>([]);
 
   // the user clicked a dropdown result
+  // figure out if it was a pickup or dropoff and call the right function
   const handleSelection = (value: string) => {
     if (currentQuery === "pickup") {
       setPickUpQuery(value);
@@ -208,9 +212,11 @@ export default function RideRequestForm({
     } else {
       // the user clicked from recent location dropdown location
       setChosenPickup(value);
-      pickUpLocationNameChanged(value);
-      const pickupCoord = await resolveCoordinates(value, userLocation);
+      const pickupCoord = await findCoordinatesOfLocationName(value, userLocation);
       setPickupCoordinates(pickupCoord);
+
+      // tell the home page that the pickup location has changed
+      pickUpLocationNameChanged(value);
       pickUpLocationCoordChanged(pickupCoord);
     }
   };
@@ -228,65 +234,12 @@ export default function RideRequestForm({
       return;
     }
     setChosenDropoff(value);
+    const dropoffCoord = await findCoordinatesOfLocationName(value, userLocation);
+    setDropoffCoordinates(dropoffCoord);
+
+    // tell the home page that the dropoff location has changed
     dropOffLocationNameChanged(value);
-    const dropoffCoord = await resolveCoordinates(value, userLocation);
-      setDropoffCoordinates(dropoffCoord);
-      dropOffLocationCoordChanged(dropoffCoord);
-  };
-
-  // go to the number of riders screen
-  // this is a method because we want to do some checks first
-  const goToNumberRiders = () => {
-    if (chosenPickup == "" || chosenDropoff == "") {
-      alert("Please specify a pickup and dropoff location!");
-      return;
-    }
-
-    // check that at least one location is on campus
-    if (
-      !CampusZone.isPointInside(pickupCoordinates) &&
-      !CampusZone.isPointInside(dropoffCoordinates)
-    ) {
-      alert("Either the pickup or dropoff location must be on campus!");
-      return;
-    }
-    setWhichPanel("NumberRiders");
-  };
-
-  // the user clicked confirm on the confirmation modal
-  const confirmPickUpLocation = () => {
-    setPickUpQuery(closestBuilding);
-    setChosenPickup(closestBuilding);
-    pickUpLocationNameChanged(closestBuilding);
-    const pickupCoord = BuildingService.getClosestBuildingEntranceCoordinates(
-      closestBuilding,
-      userLocation
-    );
-    setPickupCoordinates(pickupCoord);
-    pickUpLocationCoordChanged(pickupCoord);
-    setConfirmationModalVisible(false);
-  };
-
-  // the user clicked one of the suggested closest buildings
-  const selectTopThreeBuilding = (buildingName: string) => {
-    setPickUpQuery(buildingName);
-    setChosenPickup(buildingName);
-    pickUpLocationNameChanged(buildingName);
-    const pickupCoord = 
-      BuildingService.getClosestBuildingEntranceCoordinates(
-        closestBuilding,
-        userLocation
-      )
-    setPickupCoordinates(pickupCoord);
-    pickUpLocationCoordChanged(pickupCoord);
-    setWhichPanel("RideReq");
-  };
-
-  // the user clicked back on the suggested closest buildings panel
-  const hideLocationSuggestions = () => {
-    setCurrentQuery("pickup");
-    setPickUpQuery("");
-    setWhichPanel("RideReq");
+    dropOffLocationCoordChanged(dropoffCoord);
   };
 
   // check if the user is too far away to offer service
@@ -318,6 +271,63 @@ export default function RideRequestForm({
     });
   };
 
+  /* SCREEN NAVIGATION FUNCTIONS */
+
+  // go to the number of riders screen
+  // this is a method because we want to do some checks first
+  const goToNumberRiders = () => {
+    if (chosenPickup == "" || chosenDropoff == "") {
+      alert("Please specify a pickup and dropoff location!");
+      return;
+    }
+
+    // Both location should be in the purple zone
+    // check that at least one location is on campus
+    if (
+      !CampusZone.isPointInside(pickupCoordinates) &&
+      !CampusZone.isPointInside(dropoffCoordinates)
+    ) {
+      alert("Either the pickup or dropoff location must be on campus!");
+      return;
+    }
+    setWhichPanel("NumberRiders");
+  };
+
+  // the user clicked confirm on the confirmation modal
+  const confirmPickUpLocation = () => {
+    setPickUpQuery(closestBuilding);
+    setChosenPickup(closestBuilding);
+    pickUpLocationNameChanged(closestBuilding);
+    const pickupCoord = BuildingService.getClosestBuildingEntranceCoordinates(
+      closestBuilding,
+      userLocation
+    );
+    setPickupCoordinates(pickupCoord);
+    pickUpLocationCoordChanged(pickupCoord);
+    setConfirmationModalVisible(false);
+  };
+
+  // the user clicked one of the suggested closest buildings
+  const selectTopThreeBuilding = (buildingName: string) => {
+    setPickUpQuery(buildingName);
+    setChosenPickup(buildingName);
+    pickUpLocationNameChanged(buildingName);
+    const pickupCoord = BuildingService.getClosestBuildingEntranceCoordinates(
+      closestBuilding,
+      userLocation
+    );
+    setPickupCoordinates(pickupCoord);
+    pickUpLocationCoordChanged(pickupCoord);
+    setWhichPanel("RideReq");
+  };
+
+  // the user clicked back on the suggested closest buildings panel
+  const hideLocationSuggestions = () => {
+    setCurrentQuery("pickup");
+    setPickUpQuery("");
+    setWhichPanel("RideReq");
+  };
+
   /* WEBSOCKET */
   // handle the distance repsonse
   const handleDistanceTopThree = (message: WebSocketResponse) => {
@@ -344,6 +354,7 @@ export default function RideRequestForm({
     }
   };
 
+  // handle the snap location response
   const handleSnapLocationQuery = (message: WebSocketResponse) => {
     if ("response" in message && message.response == "SNAP") {
       const snapResp = message as SnapLocationResponse;
@@ -377,10 +388,14 @@ export default function RideRequestForm({
   const enterPressed = async () => {
     const text = currentQuery == "pickup" ? pickUpQuery : dropOffQuery;
     console.log("enter pressed: ", text);
-     if (text.length > 3) {
-      setPlaceSearchResults(await fetchGooglePlaceSuggestions(currentQuery == "pickup" ? pickUpQuery : dropOffQuery));
-     }
-  }
+    if (text.length > 3) {
+      setPlaceSearchResults(
+        await fetchGooglePlaceSuggestions(
+          currentQuery == "pickup" ? pickUpQuery : dropOffQuery
+        )
+      );
+    }
+  };
 
   /* USE EFFECTS */
   // upon first render, set up the state
@@ -424,8 +439,12 @@ export default function RideRequestForm({
     }
   }, [whichPanel]);
 
+  // update the campus API suggestions based on the user's query
   useEffect(() => {
-    if (currentQuery == "pickup" && pickUpQuery == "" || currentQuery == "dropoff" && dropOffQuery == "") {
+    if (
+      (currentQuery == "pickup" && pickUpQuery == "") ||
+      (currentQuery == "dropoff" && dropOffQuery == "")
+    ) {
       setCampusAPIResults([]);
       setPlaceSearchResults([]);
       return;
@@ -628,9 +647,11 @@ export default function RideRequestForm({
             </View>
           </View>
         </View>
-        {/* Campus API Autocomplete Suggestions */}
+        {/* Autocomplete Suggestions */}
+
         <View style={{ flex: 1, height: 100 }}>
           <ScrollView style={{ paddingBottom: 400 }}>
+            {/* Add the Current Location to the Top of the results*/}
             {currentQuery == "pickup" && (
               <TouchableOpacity
                 onPress={() => handleSelection("Current Location")}
@@ -666,6 +687,7 @@ export default function RideRequestForm({
                 </Text>
               </TouchableOpacity>
             )}
+            {/* Then render any campus API results*/}
             {campusAPIResults.map((item) => (
               <TouchableOpacity
                 onPress={() => handleSelection(item)}
@@ -703,6 +725,7 @@ export default function RideRequestForm({
                 </View>
               </TouchableOpacity>
             ))}
+            {/* Then show the place search results */}
             {placeSearchResults
               .filter((item) => !campusAPIResults.includes(item))
               .map((item) => (
@@ -738,7 +761,10 @@ export default function RideRequestForm({
                   </View>
                 </TouchableOpacity>
               ))}
-              {placeSearchResults.length == 0 && campusAPIResults.length == 0 && 
+            {/* If there are no campuse or place search results or the user hasn't typed anything yet,
+            show the recent locations results*/}
+            {placeSearchResults.length == 0 &&
+              campusAPIResults.length == 0 &&
               recentLocations.map((item) => (
                 <TouchableOpacity
                   onPress={() => handleSelection(item)}
@@ -775,6 +801,7 @@ export default function RideRequestForm({
           </ScrollView>
         </View>
       </BottomDrawer>
+      {/* Confirmation Modal */}
       <PopUpModal
         type="half"
         isVisible={confirmationModalVisible}

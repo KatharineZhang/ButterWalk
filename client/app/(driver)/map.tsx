@@ -16,7 +16,7 @@ import {
   DriverAcceptResponse,
   WebSocketResponse,
 } from "../../../server/src/api";
-import { resolveCoordinates } from "@/services/GooglePlacesServices";
+import { findCoordinatesOfLocationName } from "@/services/GooglePlacesServices";
 
 export default function App() {
   // Extract netid from Redirect URL from signin page
@@ -235,8 +235,12 @@ export default function App() {
       const driverAccept = message as DriverAcceptResponse;
       // update state
       setRideInfo(driverAccept);
-      setPickUpLocation(await resolveCoordinates(driverAccept.location, userLocation));
-      setDropOffLocation(await resolveCoordinates(driverAccept.destination, userLocation));
+      setPickUpLocation(
+        await findCoordinatesOfLocationName(driverAccept.location, userLocation)
+      );
+      setDropOffLocation(
+        await findCoordinatesOfLocationName(driverAccept.destination, userLocation)
+      );
     }
   };
 

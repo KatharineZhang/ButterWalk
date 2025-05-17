@@ -12,6 +12,13 @@ export type Building = {
   back?: Coordinates;
 };
 
+// Helper type to help calculate closest buildings
+export type ComparableBuilding = {
+  building: Building;
+  distance: number;
+  walkDuration: number;
+};
+
 export class BuildingService {
   public static Buildings: Building[] = [
     {
@@ -1125,6 +1132,12 @@ export class BuildingService {
   ];
 
   // change this to server side
+  /**
+   * Get the coordinates of a building by its name. Throws an error if the building is not found.
+   *
+   * @param buildingName
+   * @returns
+   */
   static getBuildingCoordinates(buildingName: string): Coordinates {
     const building = BuildingService.Buildings.find(
       (building) => building.name === buildingName
@@ -1135,6 +1148,12 @@ export class BuildingService {
     return building.location;
   }
 
+  /**
+   * Get the coordinates of a building's front by its name. Throws an error if the building is not found or if it does not have a front.
+   *
+   * @param buildingName
+   * @returns
+   */
   static getBuildingFrontCoordinates(buildingName: string): Coordinates {
     const building = BuildingService.Buildings.find(
       (building) => building.name === buildingName
@@ -1149,6 +1168,12 @@ export class BuildingService {
     return building.front;
   }
 
+  /**
+   * Get the coordinates of a building's back by its name. Throws an error if the building is not found or if it does not have a back.
+   *
+   * @param buildingName
+   * @returns
+   */
   static getBuildingBackCoordinates(buildingName: string): Coordinates {
     const building = BuildingService.Buildings.find(
       (building) => building.name === buildingName
@@ -1163,6 +1188,12 @@ export class BuildingService {
     return building.back;
   }
 
+  /**
+   * Get the closes building to the user based on their coordinates.
+   *
+   * @param coord user location
+   * @returns
+   */
   static closestBuilding(coord: {
     latitude: number;
     longitude: number;
@@ -1189,6 +1220,14 @@ export class BuildingService {
     }
   }
 
+  /**
+   * HELPER FUNCTION to closestBuildingEntranceCoordinates
+   * Find the closest building entrance based on the user's coordinates and the building specified
+   *
+   * @param closestBuilding
+   * @param coord user locations
+   * @returns
+   */
   static closestBuildingEntrance(
     closestBuilding: string,
     coord: {
@@ -1238,6 +1277,13 @@ export class BuildingService {
     return closestOption.description;
   }
 
+  /**
+   * Get the closest building entrance's coordinates based on the user's coordinates and the building specified
+   *
+   * @param closestBuilding
+   * @param coord
+   * @returns
+   */
   static getClosestBuildingEntranceCoordinates = (
     closestBuilding: string,
     coord: {
@@ -1269,6 +1315,12 @@ export class BuildingService {
     return building.location;
   };
 
+  /**
+   * Get the top three closest buildings to the user based on their coordinates.
+   *
+   * @param coord user location
+   * @returns
+   */
   static topThreeClosestBuildings(coord: {
     latitude: number;
     longitude: number;
@@ -1286,12 +1338,6 @@ export class BuildingService {
   }
 }
 
-export type ComparableBuilding = {
-  building: Building;
-  distance: number;
-  walkDuration: number;
-};
-
 /**
  * Compare two buildings based on their distance from a given point.
  * @param a - The first building to compare.
@@ -1305,6 +1351,11 @@ export function compareBuildings(
   return a.distance - b.distance;
 }
 
+/**
+ * Returns the names of all buildings in the BuildingService.
+ *
+ * @returns
+ */
 export function getBuildingNames(): string[] {
   return BuildingService.Buildings.map((b) => b.name);
 }
