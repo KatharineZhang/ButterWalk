@@ -431,13 +431,22 @@ export default function HomePage() {
       // go back to ride request component
       setWhichComponent("rideReq");
 
-      // set the notif state based on the reason
+      // set the notif state based on the reason for cancellation
       if (cancelReason.current === "button") {
-        setNotifState({
+        // show the notification based on the response
+        if (message.response === "CANCEL") {
+          setNotifState({
           text: "Ride successfully canceled",
           color: "#FFCBCB",
           boldText: "canceled",
         });
+      } else {
+          setNotifState({
+            text: "Ride successfully completed!",
+            color: "#C9FED0",
+            boldText: "completed",
+          });
+      }
       } else {
         setNotifState({
           text: "Your ride was canceled— timer ran out",
