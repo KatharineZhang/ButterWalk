@@ -157,13 +157,14 @@ export const handleWebSocketMessage = async (
       break;
     }
 
-    // TODO(connor): Undeprecate by wrapping the functionality of soft and hard assignment
     case "ACCEPT_RIDE": {
       const resView = await viewRide(input.driverid, null);
       if (resView.response === "ERROR") {
+        console.log("A");
         sendWebSocketMessage(ws, resView);
         break;
-      } else if (!resView.rideExists) {
+      } else if (resView.rideExists === false) {
+        console.log("B");
         sendWebSocketMessage(ws, {
           response: "ERROR",
           error: "No rides available to accept",
@@ -172,6 +173,7 @@ export const handleWebSocketMessage = async (
         break;
       }
       if (resView.response === "VIEW_RIDE" && resView.rideExists) {
+        console.log("C");
         const resAccept = await handleDriverViewChoice(
           input.driverid,
           resView,
@@ -188,6 +190,7 @@ export const handleWebSocketMessage = async (
           resAccept.providedView.view?.rideRequest.locationTo === undefined ||
           resAccept.providedView.view?.rideRequest.numRiders === undefined
         ) {
+          console.log("D");
           sendWebSocketMessage(ws, {
             response: "ERROR",
             error: "Missing field during AcceptResponse",
@@ -195,6 +198,7 @@ export const handleWebSocketMessage = async (
           });
           break;
         }
+        console.log("E");
         const dar: DriverAcceptResponse = {
           response: "ACCEPT_RIDE",
           netid: resAccept.providedView.view?.rideRequest.netid,

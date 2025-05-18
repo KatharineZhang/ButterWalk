@@ -232,23 +232,11 @@ export async function setRideRequestDriver(
   netid: string,
   driverid: string
 ) {
-  t.set(
-    doc(rideRequestsCollection, netid),
-    { driverid: driverid },
-    { merge: true }
-  );
-}
-
-// ACCEPT RIDE - Update a ride request to accepted
-export async function acceptRideRequest(
-  transaction: Transaction,
-  requestid: string,
-  driverid: string
-) {
-  const docRef = doc(rideRequestsCollection, requestid); // get the document by id
-  const docSnap = await transaction.get(docRef);
-  await transaction.update(docRef, { driverid, status: "ACCEPTED" });
-  return docSnap.data() as RideRequest; // return the updated document data
+  const res = query(rideRequestsCollection, where("netid", "==", netid));
+  const snapshot = await getDocs(res);
+  snapshot.forEach(async (doc) => {
+    await updateDoc(doc.ref, { driverid: driverid });
+  });
 }
 
 // CANCEL RIDE - Update a ride request to canceled

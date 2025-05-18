@@ -16,6 +16,9 @@
 // expect any other test to modify anything during the duration of the test.
 // note 2: Jest will complain that there is a hanging operation after the tests
 // run, this is only an error with the test set up, not the things being testes.
+// note 3: tests might also fail if anyone else is connected to the firstore
+// and unrelated ride requests are in the RideRequests collection, it is expected
+// to be empty (no active requests) when the tests are run
 
 import { clients, server, wss } from "..";
 import { describe, expect, test } from "@jest/globals";
@@ -353,7 +356,7 @@ describe("Websocket Integration", () => {
     expect(inDatabase.docs[0].get("status")).toBe("VIEWING");
     const msg = {
       directive: "VIEW_DECISION",
-      driverid: "9999999",
+      driverid: "7777777",
       view: {
         view: {
           rideRequest: {
@@ -386,6 +389,7 @@ describe("Websocket Integration", () => {
     const updatedInDatabase = await getDocs(queryExistingRide);
     expect(updatedInDatabase.size).toBe(1);
     expect(updatedInDatabase.docs[0].get("status")).toBe("ACCEPTED");
+    expect(updatedInDatabase.docs[0].get("netid")).toBe("3333333");
   });
 
   test("ACCEPT_RIDE wrapper sets the accepted ride to ACCEPTED when a ride is available", async () => {
@@ -394,7 +398,7 @@ describe("Websocket Integration", () => {
     ws.send(
       JSON.stringify({
         directive: "ACCEPT_RIDE",
-        driverid: "9999999",
+        driverid: "6666666",
       })
     );
     await setTimeout(1000);
@@ -410,6 +414,7 @@ describe("Websocket Integration", () => {
     const inDatabase = await getDocs(queryExistingRide);
     expect(inDatabase.size).toBe(1);
     expect(inDatabase.docs[0].get("status")).toBe("ACCEPTED");
+    expect(inDatabase.docs[0].get("netid")).toBe("3333333");
   });
 
   test("ACCEPT_RIDE gives an error when no rides available", async () => {
@@ -421,6 +426,9 @@ describe("Websocket Integration", () => {
     );
     await setTimeout(1000);
     expect(lastMsg.response).toBe("ERROR");
+    const queryExistingRide = query(rideRequestsCollection);
+    const inDatabase = await getDocs(queryExistingRide);
+    expect(inDatabase.size).toBe(0);
   });
 
   // The following tests not written because their functionality is not planned
