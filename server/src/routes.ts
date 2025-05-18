@@ -278,10 +278,8 @@ async function getMatch(lat: number, long: number) {
   url.searchParams.set("steps", "false");
   url.searchParams.set("access_token", process.env.MAPBOX_SNAPPING_TOKEN);
 
-  console.log("in getMatch");
   const query = await fetch(url.toString(), { method: "GET" });
   const response = await query.json();
-  console.log("response from mapbox:", response);
   // Handle errors
   if (response.code !== "Ok") {
     console.error(
@@ -290,11 +288,34 @@ async function getMatch(lat: number, long: number) {
     return;
   }
   // Get the coordinates from the response.
-  // TODO: figure out if it's in an array or not
   const coords = response.matchings[0].geometry;
   console.log(coords);
+
+  // check if we have a valid road name
+  let roadName = response.tracepoints[1].name;
+  if (roadName.length < 1) {
+    // there was no road name, so we need to use the reverse geocoding API
+    // to get the name of the street
+    const geoCodingBase = `https://api.mapbox.com/search/geocode/v6/reverse`;
+    const geoCodingUrl = new URL(geoCodingBase);
+    geoCodingUrl.searchParams.set("longitude", `${safeLong}`); // from the coordinates
+    geoCodingUrl.searchParams.set("latitude", `${safeLat}`);
+    geoCodingUrl.searchParams.set("types", "street"); // get the street name
+    geoCodingUrl.searchParams.set(
+      "access_token",
+      process.env.MAPBOX_SNAPPING_TOKEN
+    );
+    const query = await fetch(geoCodingUrl.toString(), { method: "GET" });
+    const response = await query.json();
+    console.log("response from mapbox:", response.features[0].properties);
+
+    if (response.features.length > 0) {
+      roadName = response.features[0].properties.name;
+    }
+    // else we give up and just return the empty string
+  }
   // Code from the next step will go here
-  return { coords: coords, roadName: response.tracepoints[1].name };
+  return { coords: coords, roadName };
 }
 
 /* Adds a new ride request object to the queue using the parameters given. 
