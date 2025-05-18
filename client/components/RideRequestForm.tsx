@@ -19,6 +19,7 @@ import SegmentedProgressBar from "./SegmentedProgressBar";
 import {
   BuildingService,
   ComparableBuilding,
+  Coordinates,
   getBuildingNames,
 } from "@/services/BuildingService";
 import {
@@ -32,6 +33,7 @@ import { CampusZone, PurpleZone } from "@/services/ZoneService";
 import {
   fetchGooglePlaceSuggestions,
   findCoordinatesOfLocationName,
+  PlaceSearchResult,
 } from "@/services/GooglePlacesServices";
 
 type RideRequestFormProps = {
@@ -118,7 +120,9 @@ export default function RideRequestForm({
   // the user clicked a dropdown location
   const allBuildings = getBuildingNames();
   const [campusAPIResults, setCampusAPIResults] = useState<string[]>([]);
-  const [placeSearchResults, setPlaceSearchResults] = useState<string[]>([]);
+  const [placeSearchResults, setPlaceSearchResults] = useState<
+    PlaceSearchResult[]
+  >([]);
 
   // the user clicked a dropdown result
   // figure out if it was a pickup or dropoff and call the right function
@@ -212,10 +216,20 @@ export default function RideRequestForm({
     } else {
       // the user clicked from recent location dropdown location
       setChosenPickup(value);
-      const pickupCoord = await findCoordinatesOfLocationName(
-        value,
-        userLocation
+      let pickupCoord: Coordinates;
+
+      // check if the clicked locations was a place search result
+      const placeSearchOptionClicked = placeSearchResults.find(
+        (item) => item.name === value
       );
+      if (placeSearchOptionClicked) {
+        // if it was, we can just use the coordinates attached to it
+        pickupCoord = placeSearchOptionClicked.coordinates;
+      } else {
+        // otherwise the clicked location was a campus API result or a recent location
+        // we need to do extra work to find the coordinates
+        pickupCoord = await findCoordinatesOfLocationName(value, userLocation);
+      }
       setPickupCoordinates(pickupCoord);
 
       // tell the home page that the pickup location has changed
@@ -237,10 +251,21 @@ export default function RideRequestForm({
       return;
     }
     setChosenDropoff(value);
-    const dropoffCoord = await findCoordinatesOfLocationName(
-      value,
-      userLocation
+    let dropoffCoord: Coordinates;
+
+    // check if the clicked locations was a place search result
+    const placeSearchOptionClicked = placeSearchResults.find(
+      (item) => item.name === value
     );
+    if (placeSearchOptionClicked) {
+      // if it was, we can just use the coordinates attached to it
+      dropoffCoord = placeSearchOptionClicked.coordinates;
+    } else {
+      // otherwise the clicked location was a campus API result or a recent location
+      // we need to do extra work to find the coordinates
+      dropoffCoord = await findCoordinatesOfLocationName(value, userLocation);
+    }
+    
     setDropoffCoordinates(dropoffCoord);
 
     // tell the home page that the dropoff location has changed
@@ -477,7 +502,6 @@ export default function RideRequestForm({
           (currentQuery == "pickup" && item == "Current Location") // if the current query is pickup, we want to include current location
       );
     setCampusAPIResults(filteredBuildings);
-
   }, [dropOffQuery, pickUpQuery]);
 
   /* ANIMATION */
@@ -717,11 +741,11 @@ export default function RideRequestForm({
             ))}
             {/* Then show the place search results */}
             {placeSearchResults
-              .filter((item) => !campusAPIResults.includes(item))
+              .filter((item) => !campusAPIResults.includes(item.name))
               .map((item) => (
                 <TouchableOpacity
-                  onPress={() => handleSelection(item)}
-                  key={item}
+                  onPress={() => handleSelection(item.name)}
+                  key={item.name}
                   style={{
                     padding: 16,
                     borderBottomWidth: 1,
@@ -746,7 +770,7 @@ export default function RideRequestForm({
                   <View style={{ width: 10 }} />
                   <View style={{ maxWidth: "80%" }}>
                     <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                      {item}
+                      {item.name}
                     </Text>
                   </View>
                 </TouchableOpacity>

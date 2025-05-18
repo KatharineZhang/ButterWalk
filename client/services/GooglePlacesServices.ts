@@ -7,7 +7,7 @@ const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
   : "";
 
 // Type of the Google Place API response
-type GooglePlaceResult = {
+type GooglePlaceSearchResponse = {
   business_status: string;
   formatted_address: string;
   geometry: {
@@ -35,6 +35,11 @@ type GooglePlaceResult = {
   user_ratings_total?: number;
 };
 
+export type PlaceSearchResult = {
+  name: string;
+  coordinates: { latitude: number; longitude: number };
+};
+
 // We don't want GooglePlaceResult.types to incluse these tags
 const GooglePlaceSearchBadLocationTypes = [
   "bar",
@@ -47,7 +52,7 @@ const GooglePlaceSearchBadLocationTypes = [
 let number = 0; // keep track of the number of times we have called the API
 // This is used to cache the results of the Google Place API
 let previousQuery = "";
-let previousResults: string[] = [];
+let previousResults: PlaceSearchResult[] = [];
 
 /**
  * Fetch Google Place Autocomplete suggestions based on user input.
@@ -58,7 +63,7 @@ let previousResults: string[] = [];
  */
 export const fetchGooglePlaceSuggestions = async (
   query: string
-): Promise<string[]> => {
+): Promise<PlaceSearchResult[]> => {
   // If the query is basically the same as the previous one, return the cached results
   if (levensteinDistance(query, previousQuery) < 3) {
     console.log(
@@ -84,7 +89,7 @@ export const fetchGooglePlaceSuggestions = async (
 
     if (Array.isArray(json.results)) {
       // Post-filter results to ensure they are inside the polygon
-      const places = (json.results as GooglePlaceResult[])
+      const places = (json.results as GooglePlaceSearchResponse[])
         .map((r) => ({
           name: r.name,
           location: {
@@ -101,7 +106,7 @@ export const fetchGooglePlaceSuggestions = async (
             GooglePlaceSearchBadLocationTypes.includes(type)
           );
         })
-        .map((place) => place.name);
+        .map((place) => ({ name: place.name, coordinates: place.location }));
       // remove duplicates from places
       previousResults = Array.from(new Set(places));
       return previousResults;
@@ -139,6 +144,7 @@ export async function findCoordinatesOfLocationName(
         `&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY}`
     );
     const json = await res.json();
+
     if (json.results?.length) {
       const { lat, lng } = json.results[0].geometry.location;
       return { latitude: lat, longitude: lng };
