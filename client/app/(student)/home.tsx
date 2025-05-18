@@ -8,7 +8,6 @@ import {
   DistanceResponse,
   ErrorResponse,
   LocationResponse,
-  RecentLocationResponse,
   RequestRideResponse,
   User,
   WaitTimeResponse,
@@ -229,34 +228,16 @@ export default function HomePage() {
     WebSocketService.addListener(handleCompleteOrCancel, "COMPLETE");
     WebSocketService.addListener(handleWaitTime, "WAIT_TIME");
     WebSocketService.addListener(handleDistance, "DISTANCE");
-    WebSocketService.addListener(handleRecentLocationResponse, "RECENT_LOCATIONS");
+    WebSocketService.addListener(
+      handleRecentLocationResponse,
+      "RECENT_LOCATIONS"
+    );
 
     // get the user's profile on first render
     sendProfile();
     // get the user's locations on first render
     sendRecentLocation();
   }, []);
-
-  // TODO: remove
-  // // figure out coordinates from pickup and dropoff location names
-  // // clicked in the ride request form
-  // useEffect(() => {
-  //   // get the coordinates of the pickup location
-  //   if (pickUpLocationName !== "") {
-  //     // TODO: PARSE THE SNAP STRING TO GET THE ROAD NAME AND LAT/LONG
-  //     // setPickUpLocation() <-- this holds the lat/long to send to Map
-  //     setPickUpLocation(
-  //       BuildingService.getBuildingCoordinates(pickUpLocationName)
-  //     );
-  //   }
-
-  //   if (dropOffLocationName != "") {
-  //     // get the coordinates of the dropoff location
-  //     setDropOffLocation(
-  //       BuildingService.getBuildingCoordinates(dropOffLocationName)
-  //     );
-  //   }
-  // }, [pickUpLocationName, dropOffLocationName]);
 
   // logic that should happen when the component FIRST changes
   // currently only handles wait time when the confirm ride component is shown
@@ -339,7 +320,6 @@ export default function HomePage() {
                 userLocation,
                 pickUpLocation
               );
-              console.log("walk progress: ", wp);
               setWalkProgress(wp);
             }
           }
@@ -404,14 +384,14 @@ export default function HomePage() {
       console.log("Profile response error: ", message);
     }
   };
-  
+
   // WEBSOCKET -- RECENT_LOCATION
-  const sendRecentLocation = async () =>{
+  const sendRecentLocation = async () => {
     WebSocketService.send({
       directive: "RECENT_LOCATIONS",
       netid: netid,
-    })
-  }
+    });
+  };
 
   const handleRecentLocationResponse = (message: WebSocketResponse) => {
     if (message.response === "RECENT_LOCATIONS") {
@@ -420,7 +400,7 @@ export default function HomePage() {
       // something went wrong
       console.log("Recent location response error: ", message);
     }
-  }
+  };
 
   // WEBSOCKET -- LOCATION
   // listen for any LOCATION messages from the server about the driver's location
@@ -450,13 +430,22 @@ export default function HomePage() {
       // go back to ride request component
       setWhichComponent("rideReq");
 
-      // set the notif state based on the reason
+      // set the notif state based on the reason for cancellation
       if (cancelReason.current === "button") {
-        setNotifState({
-          text: "Ride successfully canceled",
-          color: "#FFCBCB",
-          boldText: "canceled",
-        });
+        // show the notification based on the response
+        if (message.response === "CANCEL") {
+          setNotifState({
+            text: "Ride successfully canceled",
+            color: "#FFCBCB",
+            boldText: "canceled",
+          });
+        } else {
+          setNotifState({
+            text: "Ride successfully completed!",
+            color: "#C9FED0",
+            boldText: "completed",
+          });
+        }
       } else {
         setNotifState({
           text: "Your ride was canceled— timer ran out",
@@ -510,7 +499,6 @@ export default function HomePage() {
       const reqMessage = message as RequestRideResponse;
       setRequestID(reqMessage.requestid);
 
-      // TODO: REDUNDANT? IDK WHY IT WASN'T UPDATING START LOCATION FROM HERE
       // set the startLocation to figure out if the user needs to walk
       setStartLocation(userLocation);
 
@@ -566,8 +554,6 @@ export default function HomePage() {
   };
 
   // WEBSOCKET -- DISTANCE
-  // TODO: WE CANNOT ASSUME ALL DISTANCE RESPONSES
-  // ARE FOR WALKING DURATION EVENTUALLY...(FAKE DIJKSTRAS)
   const handleDistance = (message: WebSocketResponse) => {
     if ("response" in message && message.response === "DISTANCE") {
       const distanceResp = message as DistanceResponse;

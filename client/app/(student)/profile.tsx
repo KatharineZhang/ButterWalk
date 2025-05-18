@@ -1,7 +1,7 @@
 import { styles } from "@/assets/styles";
 import PopUpModal from "@/components/PopUpModal";
 import { Redirect } from "expo-router";
-import { useState } from "react";
+import { JSX, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { User } from "../../../server/src/api";
 import WebsocketService from "../../services/WebSocketService";
@@ -50,12 +50,20 @@ function Profile({ isVisible, onClose, user }: ProfileProps) {
           Student Number: {user.studentNumber}
         </Text>
       </View>
-      <View style={styles.profileItemContainer}>
-        <Text style={styles.profileItem}>Role: {user.studentOrDriver}</Text>
-      </View>
-      <View style={{ height: 10 }} />
-      <Pressable style={styles.button} onPress={() => setSignedIn(false)}>
-        <Text style={{ color: "#FFFffF", fontSize: 16 }}>Sign Out</Text>
+      <View style={{ height: 30 }} />
+      <Pressable
+        style={{
+          borderColor: "red",
+          borderWidth: 2,
+          width: "100%",
+          height: 50,
+          justifyContent: "center",
+          alignItems: "center",
+          borderRadius: 10,
+        }}
+        onPress={() => setSignedIn(false)}
+      >
+        <Text style={{ color: "red", fontSize: 16 }}>Sign Out</Text>
       </Pressable>
     </View>
   );

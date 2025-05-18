@@ -72,7 +72,6 @@ const handleToken = async (
   return { message: "Error signing in: Make sure you're using your UW email." };
 };
 
-
 // gets the user profile information using the token from google auth
 // returns us the user info if the user is a UW student and signin is successful
 //     as a JSON object in the form:
@@ -218,7 +217,7 @@ export const snapLocation = async (
     };
   }
 
-  if(typeof currLat !== "number" || typeof currLong !== "number") {
+  if (typeof currLat !== "number" || typeof currLong !== "number") {
     return {
       response: "ERROR",
       error: "latitude or longitude not the correct type.",
@@ -226,15 +225,13 @@ export const snapLocation = async (
     };
   }
 
-  if(currLat < -90 || currLat > 90 || currLong < -180 || currLong > 180) {
+  if (currLat < -90 || currLat > 90 || currLong < -180 || currLong > 180) {
     return {
       response: "ERROR",
       error: "Invalid latitude or longitude.",
       category: "SNAP",
     };
   }
-
-  
 
   try {
     // Documentation on how to use MapBox's map matching API:
@@ -985,11 +982,8 @@ export const fetchRecentLocations = async (
 
   try {
     return await runTransaction(db, async (transaction) => {
-      // Create a mock user object with the netid
-      const user: User = { netid, firstName: "", lastName: "", phoneNumber: null, studentNumber: null, studentOrDriver: "STUDENT" };
-
       // Fetch recent locations using the function in firebaseActions
-      const locations = await getRecentLocations(user);
+      const locations = await getRecentLocations(transaction, netid);
 
       return {
         response: "RECENT_LOCATIONS",
