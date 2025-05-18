@@ -10,6 +10,7 @@ import {
   QueryConstraint,
   Timestamp,
   Transaction,
+  updateDoc,
   where,
   WhereFilterOp,
 } from "firebase/firestore";
@@ -20,7 +21,7 @@ export const db = getFirestore(app);
 // GREAT RESOURCE FOR BASIC FIRESTORE WORK: https://www.youtube.com/watch?v=kwVbKV0ZFEs
 
 // Our tables / collections in the database
-const usersCollection = collection(db, "Users");
+export const usersCollection = collection(db, "Users");
 const rideRequestsCollection = collection(db, "RideRequests");
 const problematicUsersCollection = collection(db, "ProblematicUsers");
 const feedbackCollection = collection(db, "Feedback");
@@ -145,7 +146,7 @@ export async function getRideRequests(): Promise<RideRequest[]> {
 /**
  * Updates the status of the provided ride request to the provided status
  * @param status The status to change to
- * @param rideRequestId The ride request to chagne
+ * @param netid The netid of the user with the ride request to change
  */
 export async function setRideRequestStatus(
   t: Transaction,
@@ -157,23 +158,31 @@ export async function setRideRequestStatus(
     | "AWAITING PICK UP"
     | "DRIVING"
     | "COMPLETED",
-  rideRequestId: string
+  netid: string
 ) {
-  t.update(doc(rideRequestsCollection, rideRequestId), { status: status });
+  const res = query(rideRequestsCollection, where("netid", "==", netid));
+  const snapshot = await getDocs(res);
+  snapshot.forEach(async (doc) => {
+    await updateDoc(doc.ref, { status: status });
+  });
 }
 
 /**
  * Set the driver id of a ride request
  * @param t The associated transaction
- * @param rideRequestId the ride request to update
- * @param driverId the id of the driver
+ * @param netid netid of the student who owns the ride request to update
+ * @param driverid the id of the driver
  */
 export async function setRideRequestDriver(
   t: Transaction,
-  rideRequestId: string,
-  driverId: string
+  netid: string,
+  driverid: string
 ) {
-  t.update(doc(rideRequestsCollection, rideRequestId), { driverid: driverId });
+  t.set(
+    doc(rideRequestsCollection, netid),
+    { driverid: driverid },
+    { merge: true }
+  );
 }
 
 // ACCEPT RIDE - Update a ride request to accepted
@@ -384,10 +393,14 @@ export async function getProfile(
   transaction: Transaction,
   netid: string
 ): Promise<User> {
-  const docRef = doc(usersCollection, netid);
-  const docSnap = await transaction.get(docRef);
-  if (!docSnap.exists()) {
-    throw new Error(`User with netid: ${netid} does not exist`);
+  const queryUsers = query(usersCollection, where("netid", "==", netid));
+  const inDatabase = await getDocs(queryUsers);
+  if (inDatabase.size != 1) {
+    throw new Error(`There were ${inDatabase.size} users with netid: ${netid}`);
   }
-  return docSnap.data() as User;
+  const userData = inDatabase.docs[0].data();
+  if (userData === undefined) {
+    throw new Error();
+  }
+  return userData as User;
 }

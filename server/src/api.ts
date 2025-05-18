@@ -95,7 +95,7 @@ export type WebSocketMessage =
   // a driver so they can accept/deny/report etc.
   | {
       directive: "VIEW_RIDE";
-      driverId: string;
+      driverid: string;
       driverLocation: { latitude: number; longitude: number };
     }
   // new directive that handles the drivers decision after viewing a particular ride
@@ -107,7 +107,7 @@ export type WebSocketMessage =
   // ERROR -> Unexpected problem, return request to queue
   | {
       directive: "VIEW_DECISION";
-      driverId: string;
+      driverid: string;
       view: ViewRideRequestResponse;
       decision: "ACCEPT" | "DENY" | "REPORT" | "TIMEOUT" | "ERROR";
     };
@@ -137,7 +137,7 @@ export type WebSocketResponse =
   | ErrorResponse
   | RidesExistResponse
   | ViewRideRequestResponse
-  | ViewChoiceResponse;
+  | ViewDecisionResponse;
 
 export type GeneralResponse = {
   response:
@@ -178,7 +178,7 @@ export type RequestRideResponse = {
  * not rides to be returned.
  */
 export type ViewRideRequestResponse = {
-  response: "VIEW_RIDE_REQUEST";
+  response: "VIEW_RIDE";
   rideExists: boolean;
   view?: {
     rideRequest: RideRequest;
@@ -192,8 +192,8 @@ export type ViewRideRequestResponse = {
  * doing so are returned a response of this type indicating the successful
  * or unsuccesful assignment of the ride to them.
  */
-export type ViewChoiceResponse = {
-  response: "VIEW_CHOICE";
+export type ViewDecisionResponse = {
+  response: "VIEW_DECISION";
   providedView: ViewRideRequestResponse;
   success: boolean;
 };
@@ -325,42 +325,6 @@ export type localRideRequest = {
   requestid: string;
   netid: string;
 };
-
-// DEPRECATED
-// class RideRequestQueue {
-//   private items: localRideRequest[];
-
-//   constructor() {
-//     this.items = [];
-//   }
-
-//   // return all the items in the queue
-//   get = (): localRideRequest[] => {
-//     return this.items;
-//   };
-//   // adding to the back of the queue
-//   add = (item: localRideRequest): void => {
-//     this.items.push(item);
-//   };
-//   // removing from the front of the queue
-//   pop = (): localRideRequest | undefined => {
-//     return this.items.shift();
-//   };
-//   // returns size of queue
-//   size = (): number => {
-//     return this.items.length;
-//   };
-//   // returns first item of queue without removing it
-//   peek = (): localRideRequest => {
-//     return this.items[0];
-//   };
-
-//   remove = (netid: string): void => {
-//     this.items = this.items.filter((item) => item.netid !== netid);
-//   };
-// }
-
-// export const rideReqQueue = new RideRequestQueue(); // rideRequests Queue
 
 // Database Types
 

@@ -19,7 +19,7 @@ import {
   User,
   DistanceResponse,
   ViewRideRequestResponse,
-  ViewChoiceResponse,
+  ViewDecisionResponse,
 } from "./api";
 import {
   addFeedbackToDb,
@@ -253,7 +253,7 @@ export const ridesExist = async (): Promise<boolean | ErrorResponse> => {
 /**
  * Temporarily checks out a ride request to a driver, who can choose to either accept
  * or decline the ride reqeust they are granted.
- * @param driverId The ID of the driver who is going to view a ride and either accept
+ * @param driverid The ID of the driver who is going to view a ride and either accept
  * or deny it after having viewed it.
  * @param driverLocation The current location of the driver associated with driverId.
  * @returns a ViewRideRequestResponse with all of the information the driver needs
@@ -261,11 +261,11 @@ export const ridesExist = async (): Promise<boolean | ErrorResponse> => {
  * problem.
  */
 export const viewRide = async (
-  driverId: string,
+  driverid: string,
   driverLocation: {
     latitude: number;
     longitude: number;
-  }
+  } | null // only accepts null to support `ACCEPT_RIDE`, which should be deprectated asap.
 ): Promise<ViewRideRequestResponse | ErrorResponse> => {
   let associatedUser: User | null = null;
   try {
@@ -278,24 +278,18 @@ export const viewRide = async (
         }
         const bestRequest: RideRequest = highestRank(
           rideRequests,
-          driverId,
+          driverid,
           driverLocation
         );
         const userNetid = bestRequest.netid;
         associatedUser = await getProfile(t, userNetid);
-        const id = bestRequest.requestId;
-        if (id === undefined) {
-          throw new Error(
-            `Request did not have an ID, cannot complete viewing: ${bestRequest}`
-          );
-        }
-        setRideRequestStatus(t, "VIEWING", id);
+        setRideRequestStatus(t, "VIEWING", associatedUser.netid);
         return bestRequest;
       }
     );
     if (rideRequest === null) {
       return {
-        response: "VIEW_RIDE_REQUEST",
+        response: "VIEW_RIDE",
         rideExists: false,
       };
     }
@@ -303,7 +297,7 @@ export const viewRide = async (
       throw new Error(`Didn't find any User during view ride.`);
     }
     return {
-      response: "VIEW_RIDE_REQUEST",
+      response: "VIEW_RIDE",
       rideExists: true,
       view: {
         rideRequest: rideRequest,
@@ -323,21 +317,21 @@ export const viewRide = async (
  * Handles the acceptance, rejection, reporting, timing out, or erroring
  * of a ride request in the pool that was previously checked out to a
  * particular driver.
- * @param driverId ID of the driver who viewed the given ride request
+ * @param driverid ID of the driver who viewed the given ride request
  * @param providedview The view that was provided to the driver
  * @param decision The driver's decision on the ride request
  *  `ACCEPT` -> Accepts the ride request, ties to driver
  */
 export const handleDriverViewChoice = async (
-  driverId: string,
+  driverid: string,
   providedview: ViewRideRequestResponse,
   decision: "ACCEPT" | "DENY" | "REPORT" | "TIMEOUT" | "ERROR"
-): Promise<ViewChoiceResponse | ErrorResponse> => {
-  const requestId = providedview.view?.rideRequest.requestId;
-  if (typeof requestId !== "string") {
+): Promise<ViewDecisionResponse | ErrorResponse> => {
+  const requestNetid = providedview.view?.rideRequest.netid;
+  if (typeof requestNetid !== "string") {
     return {
       response: "ERROR",
-      error: `Tried to handle view choice when provided view had undefined request id: ${providedview}`,
+      error: `Tried to handle view choice when provided view had undefined netid: ${requestNetid}`,
       category: "VIEW_RIDE",
     };
   }
@@ -349,10 +343,10 @@ export const handleDriverViewChoice = async (
      */
     try {
       return await runTransaction(db, async (t) => {
-        setRideRequestStatus(t, "ACCEPTED", requestId);
-        setRideRequestDriver(t, requestId, driverId);
+        setRideRequestStatus(t, "ACCEPTED", requestNetid);
+        setRideRequestDriver(t, requestNetid, driverid);
         return {
-          response: "VIEW_CHOICE",
+          response: "VIEW_DECISION",
           providedView: providedview,
           success: true,
         };
@@ -371,9 +365,9 @@ export const handleDriverViewChoice = async (
      */
     try {
       return await runTransaction(db, async (t) => {
-        setRideRequestStatus(t, "REQUESTED", requestId);
+        setRideRequestStatus(t, "REQUESTED", requestNetid);
         return {
-          response: "VIEW_CHOICE",
+          response: "VIEW_DECISION",
           providedView: providedview,
           success: true,
         };
@@ -396,10 +390,10 @@ export const handleDriverViewChoice = async (
         if (netid === undefined || netid === null) {
           throw new Error(`Tried to blacklist a user with no netid`);
         }
-        setRideRequestStatus(t, "CANCELED", requestId);
+        setRideRequestStatus(t, "CANCELED", requestNetid);
         blacklistUser(t, netid);
         return {
-          response: "VIEW_CHOICE",
+          response: "VIEW_DECISION",
           providedView: providedview,
           success: true,
         };
@@ -418,9 +412,9 @@ export const handleDriverViewChoice = async (
      */
     try {
       return await runTransaction(db, async (t) => {
-        setRideRequestStatus(t, "REQUESTED", requestId);
+        setRideRequestStatus(t, "REQUESTED", requestNetid);
         return {
-          response: "VIEW_CHOICE",
+          response: "VIEW_DECISION",
           providedView: providedview,
           success: true,
         };
@@ -439,13 +433,11 @@ export const handleDriverViewChoice = async (
      * additional logging or error handling for unexpected
      * behavior.
      */
-    // TODO(connor): implement some debugging or logging as noted before so this is not necessary
-    console.log(`Error response in handleDriverViewChoice`);
     try {
       return await runTransaction(db, async (t) => {
-        setRideRequestStatus(t, "REQUESTED", requestId);
+        setRideRequestStatus(t, "REQUESTED", requestNetid);
         return {
-          response: "VIEW_CHOICE",
+          response: "VIEW_DECISION",
           providedView: providedview,
           success: true,
         };

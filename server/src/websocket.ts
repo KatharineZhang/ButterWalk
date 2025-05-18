@@ -27,6 +27,8 @@ import {
   GoogleResponse,
   ErrorResponse,
   RideRequest,
+  AcceptResponse,
+  DriverAcceptResponse,
 } from "./api";
 import { Timestamp } from "firebase/firestore";
 
@@ -38,6 +40,7 @@ export const handleWebSocketMessage = async (
   let resp;
   let client;
 
+  //TODO(connor): setup debug and logging utility so this can be compiled away in prod
   console.log(`WEBSOCKET: Received message => ${message}`);
 
   try {
@@ -142,16 +145,64 @@ export const handleWebSocketMessage = async (
       break;
     }
 
-    // ACCEPT_RIDE is DEPRECATED
-    case "ACCEPT_RIDE":
-      // If you get this error, you need to update the function calling it to send a "VIEW_DECISION" message
-      // to the websocket, which allows for a driver to accept a ride. This is part of the updated user
-      // journey where drivers temporarily "check out" a ride from the pool and can decide to accept, deny,
-      // report, and etc.
-      // If you don't know what this comment is talking about, talk to Connor Olson
-      throw new Error(
-        "DEPRECATED. This method does not use the temporary assignment of ride viewing and the ride broker system, and only supports the in-server-state ride request queue, which no longer exists."
-      );
+    // TODO(connor): Undeprecate by wrapping the functionality of soft and hard assignment
+    case "ACCEPT_RIDE": {
+      const resView = await viewRide(input.driverid, null);
+      if (resView.response === "ERROR") {
+        sendWebSocketMessage(ws, resView);
+        break;
+      } else if (!resView.rideExists) {
+        sendWebSocketMessage(ws, {
+          response: "ERROR",
+          error: "No rides available to accept",
+          category: "ACCEPT_RIDE",
+        });
+        break;
+      }
+      if (resView.response === "VIEW_RIDE" && resView.rideExists) {
+        const resAccept = await handleDriverViewChoice(
+          input.driverid,
+          resView,
+          "ACCEPT"
+        );
+        if (resAccept.response === "ERROR") {
+          sendWebSocketMessage(ws, resAccept);
+          break;
+        }
+        // Artificially consturct an AcceptResponse to support old API
+        if (
+          resAccept.providedView.view?.rideRequest.netid === undefined ||
+          resAccept.providedView.view?.rideRequest.locationFrom === undefined ||
+          resAccept.providedView.view?.rideRequest.locationTo === undefined ||
+          resAccept.providedView.view?.rideRequest.numRiders === undefined
+        ) {
+          sendWebSocketMessage(ws, {
+            response: "ERROR",
+            error: "Missing field during AcceptResponse",
+            category: "ACCEPT_RIDE",
+          });
+          break;
+        }
+        const dar: DriverAcceptResponse = {
+          response: "ACCEPT_RIDE",
+          netid: resAccept.providedView.view?.rideRequest.netid,
+          location: resAccept.providedView.view?.rideRequest.locationFrom,
+          destination: resAccept.providedView.view?.rideRequest.locationTo,
+          numRiders: resAccept.providedView.view?.rideRequest.numRiders,
+          requestid: "NULL", // This is actually not supplied by firestore to the caller for some reason, never exists (?)
+        };
+        const res: AcceptResponse = {
+          response: "ACCEPT_RIDE",
+          student: {
+            response: "ACCEPT_RIDE",
+            success: true,
+          },
+          driver: dar,
+        };
+        sendWebSocketMessage(ws, res);
+      }
+      break;
+    }
 
     // new directive for the ride request broker, which sends back a message
     // of type RidesExistResponse on success. Intended for use with driver
@@ -173,7 +224,7 @@ export const handleWebSocketMessage = async (
     // new directive that will check out the highest ranking ride request to
     // a driver so they can accept/deny/report etc.
     case "VIEW_RIDE": {
-      const res = await viewRide(input.driverId, input.driverLocation);
+      const res = await viewRide(input.driverid, input.driverLocation);
       sendWebSocketMessage(ws, res);
       break;
     }
@@ -187,7 +238,7 @@ export const handleWebSocketMessage = async (
     // ERROR -> Unexpected problem, return request to queue
     case "VIEW_DECISION": {
       const res = await handleDriverViewChoice(
-        input.driverId,
+        input.driverid,
         input.view,
         input.decision
       );
