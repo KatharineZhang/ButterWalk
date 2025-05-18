@@ -15,11 +15,11 @@ export default function RootLayout() {
       />
       <Stack.Screen
         name="(driver)"
-        options={{ headerTitle: "Driver Side", headerShown: false }}
+        options={{ headerTitle: "UW Driver", headerShown: false }}
       />
       <Stack.Screen
         name="(student)"
-        options={{ headerTitle: "Student Side", headerShown: false }}
+        options={{ headerTitle: "UW Student", headerShown: false }}
       />
     </Stack>
   );

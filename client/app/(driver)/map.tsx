@@ -239,7 +239,10 @@ export default function App() {
         await findCoordinatesOfLocationName(driverAccept.location, userLocation)
       );
       setDropOffLocation(
-        await findCoordinatesOfLocationName(driverAccept.destination, userLocation)
+        await findCoordinatesOfLocationName(
+          driverAccept.destination,
+          userLocation
+        )
       );
     }
   };

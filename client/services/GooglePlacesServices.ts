@@ -35,7 +35,17 @@ type GooglePlaceResult = {
   user_ratings_total?: number;
 };
 
-let number = 0;
+// We don't want GooglePlaceResult.types to incluse these tags
+const GooglePlaceSearchBadLocationTypes = [
+  "bar",
+  "casino",
+  "drugstore",
+  "liquor_store",
+  "night_club",
+];
+
+let number = 0; // keep track of the number of times we have called the API
+// This is used to cache the results of the Google Place API
 let previousQuery = "";
 let previousResults: string[] = [];
 
@@ -49,7 +59,7 @@ let previousResults: string[] = [];
 export const fetchGooglePlaceSuggestions = async (
   query: string
 ): Promise<string[]> => {
-  // If the query is the same as the previous one, return the cached results
+  // If the query is basically the same as the previous one, return the cached results
   if (levensteinDistance(query, previousQuery) < 3) {
     console.log(
       "google place search cached results for query:",
@@ -81,8 +91,16 @@ export const fetchGooglePlaceSuggestions = async (
             latitude: r.geometry.location.lat,
             longitude: r.geometry.location.lng,
           },
+          types: r.types,
         }))
+        // filter to places inside the purple zone
         .filter((place) => PurpleZone.isPointInside(place.location))
+        // filter out places that could potentially serve alcohol
+        .filter((place) => {
+          return !place.types.some((type) =>
+            GooglePlaceSearchBadLocationTypes.includes(type)
+          );
+        })
         .map((place) => place.name);
       // remove duplicates from places
       previousResults = Array.from(new Set(places));

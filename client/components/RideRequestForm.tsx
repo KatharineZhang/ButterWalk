@@ -212,7 +212,10 @@ export default function RideRequestForm({
     } else {
       // the user clicked from recent location dropdown location
       setChosenPickup(value);
-      const pickupCoord = await findCoordinatesOfLocationName(value, userLocation);
+      const pickupCoord = await findCoordinatesOfLocationName(
+        value,
+        userLocation
+      );
       setPickupCoordinates(pickupCoord);
 
       // tell the home page that the pickup location has changed
@@ -234,7 +237,10 @@ export default function RideRequestForm({
       return;
     }
     setChosenDropoff(value);
-    const dropoffCoord = await findCoordinatesOfLocationName(value, userLocation);
+    const dropoffCoord = await findCoordinatesOfLocationName(
+      value,
+      userLocation
+    );
     setDropoffCoordinates(dropoffCoord);
 
     // tell the home page that the dropoff location has changed

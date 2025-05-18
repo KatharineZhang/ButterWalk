@@ -233,14 +233,13 @@ export const styles = StyleSheet.create({
     margin: 10,
     padding: 10,
     borderRadius: 10,
-    borderColor: "#C1C1C1",
+    borderColor: "#4B2E83",
     borderWidth: 2,
+    alignSelf: "center",
     alignItems: "center",
-    justifyContent: "center",
-    maxWidth: 300
+    width: "100%",
   },
   signInGoogleLogo: {
-    marginRight: 10,
     width: 30,
     height: 30,
   },
@@ -462,6 +461,7 @@ export const styles = StyleSheet.create({
   },
   accordianContainer: {
     paddingVertical: 15,
+    marginVertical: 5,
     borderRadius: 10,
     alignContent: "center",
     justifyContent: "center",
@@ -476,6 +476,7 @@ export const styles = StyleSheet.create({
     borderRadius: 5,
   },
   accordianHeaderText: {
+    maxWidth: "90%",
     fontSize: 16,
     fontWeight: "bold",
     textTransform: "capitalize",

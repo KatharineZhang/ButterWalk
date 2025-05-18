@@ -48,6 +48,13 @@ function FAQ({ isVisible, onClose }: FAQProps) {
 // FAQ data
 const faqContent: AccordionProps[] = [
   {
+    title: "Why can't I get picked up from Earl's?",
+    content:
+      "Earl's and other locations that serve alcohol are not allowed to be used as pickup or drop-off points. " +
+      "Your driver can refuse to give you a ride if you come from these locations or are intoxicated. " +
+      "Please be respectful of our drivers and the service we provide.",
+  },
+  {
     title: "What are the hours of service?",
     content:
       "The hours of operation are listed below:" +
@@ -88,7 +95,7 @@ const faqContent: AccordionProps[] = [
   {
     title: "How can I change my profile name?",
     content:
-      "You need to go to your UW google account then Profile Info and change your name in the nickname field",
+      "Since we draw information from your UW email, you need to go to your UW google account then Profile Info and change your name in the nickname field for it to update in the app.",
   },
 ];
 
