@@ -390,7 +390,6 @@ export default function RideRequestForm({
   };
 
   // ONLY CALL PLACE SEARCH WHEN THE USER PRESSES ENTER
-  // TODO: CHECK W TEAM
   const enterPressed = async () => {
     const text = currentQuery == "pickup" ? pickUpQuery : dropOffQuery;
     if (text.length > 3) {
@@ -479,20 +478,6 @@ export default function RideRequestForm({
       );
     setCampusAPIResults(filteredBuildings);
 
-    // TODO: REMOVE AFTER CHECK W TEAM
-    // if (currentQuery == "pickup" && pickUpQuery.length < 3 || currentQuery == "dropoff" && dropOffQuery.length < 3) {
-    //   // Fewer than 3 characters, don't do the google place search
-    //   return;
-    // }
-
-    // // get the google place API results;
-    // const controller = new AbortController();
-
-    // (async () => {
-    //   setPlaceSearchResults(await fetchGooglePlaceSuggestions(currentQuery == "pickup" ? pickUpQuery : dropOffQuery));
-    // })();
-
-    // return () => controller.abort();
   }, [dropOffQuery, pickUpQuery]);
 
   /* ANIMATION */
