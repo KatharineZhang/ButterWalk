@@ -3,7 +3,6 @@ import { app } from "./firebaseConfig";
 import {
   collection,
   doc,
-  getDoc,
   getDocs,
   getFirestore,
   query,
@@ -14,7 +13,13 @@ import {
   where,
   WhereFilterOp,
 } from "firebase/firestore";
-import { Feedback, ProblematicUser, RideRequest, User } from "./api";
+import {
+  Feedback,
+  RecentLocation,
+  ProblematicUser,
+  RideRequest,
+  User,
+} from "./api";
 
 export const db = getFirestore(app);
 
@@ -25,13 +30,30 @@ export const usersCollection = collection(db, "Users");
 const rideRequestsCollection = collection(db, "RideRequests");
 const problematicUsersCollection = collection(db, "ProblematicUsers");
 const feedbackCollection = collection(db, "Feedback");
+const recentlocationsCollection = collection(db, "RecentLocations");
+
+// RECENT_LOCATIONS - get the recent locations of a user
+export async function getRecentLocations(
+  transaction: Transaction,
+  netid: string
+) {
+  const docRef = doc(recentlocationsCollection, netid);
+  const docSnap = await transaction.get(docRef);
+  if (docSnap.exists()) {
+    const data = docSnap.data() as RecentLocation;
+    return data.locations;
+  } else {
+    console.log("Document does not exist");
+    return [];
+  }
+}
 
 // SIGN IN - Adds a user to the database if they are not problematic
 // this is a completely NEW USER
 export async function createUser(transaction: Transaction, user: User) {
   // check if the user is in the problematicUsers table with a blacklisted status
   const isProblematic = doc(db, "ProblematicUsers", user.netid);
-  const problematicDoc = await getDoc(isProblematic);
+  const problematicDoc = await transaction.get(isProblematic);
   if (
     problematicDoc.exists() &&
     problematicDoc.data().category === "BLACKLISTED"
@@ -43,6 +65,37 @@ export async function createUser(transaction: Transaction, user: User) {
   // use the net id of the user as the document id
   const docRef = doc(usersCollection, user.netid);
   const docSnap = await transaction.get(docRef);
+
+  // make a new document for the user in the locations table
+  // use the net id of the user as the document id
+  const docLocationRef = doc(recentlocationsCollection, user.netid);
+  // populate their redent locatiosn with our default recent locations
+  const campusLocations: string[] = [
+    "Alder Hall",
+    "Allen Library",
+    "Bagley Hall",
+    "Bloedel Hall",
+    "Cedar  Apartments ",
+    "Chemistry Building (CHB)",
+    "Dempsey Hall (DEM)",
+    "Denny Hall (DEN)",
+    "Elm Hall (ELM)",
+    "Engineering Library (ELB)",
+    "Founders Hall (FNDR)",
+    "Fluke Hall (FLK)",
+    "Gould Hall (GLD)",
+    "Hitchcock Hall (HIT)",
+    "Husky Union Building (HUB)",
+  ];
+
+  // add the user to the locations table
+  // const location: RecentLocation = {
+  //   netid: user.netid,
+  //   locations: [],
+  // };
+  // transaction.set(docLocation, location);
+
+  // continue with the user creation
   if (docSnap.exists()) {
     const data = docSnap.data() as User;
     if (data.phoneNumber === null && data.studentNumber === null) {
@@ -53,8 +106,9 @@ export async function createUser(transaction: Transaction, user: User) {
       return true;
     }
   } else {
-    // User does NOT exist in the database
-    await transaction.set(docRef, user);
+    console.log("User does NOT exist in the database");
+    transaction.set(docLocationRef, campusLocations);
+    console.log("Document does not exist, so added default campuslocations");
     return false;
   }
 }
@@ -249,8 +303,10 @@ export async function completeRideRequest(
   transaction: Transaction,
   requestid: string
 ) {
+  // get the ride request document by id
   const docRef = doc(rideRequestsCollection, requestid); // get the document by id
   const docSnap = await transaction.get(docRef);
+
   if (docSnap.exists() && docSnap.data().status != "ACCEPTED") {
     throw new Error(
       "Only can complete a ride that is 'ACCEPTED' not " + docSnap.data().status
@@ -258,16 +314,53 @@ export async function completeRideRequest(
   }
 
   const data = docSnap.data();
+
+  // if the ride request document does not exist, error out
   if (!data) {
-    throw new Error("Document data is undefined");
+    throw new Error("Ride Request data is undefined");
   }
   const netids = { student: data.netid, driver: data.driverid };
 
+  // update the recent locations of the student to include the pikup and dropoff locations
+  const docLoc = doc(recentlocationsCollection, netids.student);
+  const docSnapLoc = await transaction.get(docLoc);
+  let oldLocations: string[] = [];
+
+  // if the recent locations document does not exist, error out
+  if (!docSnapLoc.exists()) {
+    throw new Error(`${netids.student} does not exist in RecentLocations`);
+  }
+
+  // store the old locations in an array
+  const dataLoc = docSnapLoc.data() as RecentLocation;
+  oldLocations.push(...dataLoc.locations);
+
+  // if the current pickup and dropoff locations are already in the array,
+  // remove them to prevent duplicates
+  oldLocations = oldLocations.filter(
+    (location) => location !== data.locationTo
+  );
+  oldLocations = oldLocations.filter(
+    (location) => location !== data.locationFrom
+  );
+
+  // add the new pickup and dropoff locations to the front of the array
+  oldLocations.unshift(data.locationTo);
+  oldLocations.unshift(data.locationFrom);
+
+  // limit the array to 20 locations
+  oldLocations.slice(0, 20);
+
+  // update the document with the new locations in the locations table
+  transaction.update(docLoc, {
+    locations: oldLocations,
+  });
+
+  // mark the ride request as completed in the ride requests table
   transaction.update(docRef, {
     completedAt: Timestamp.now(),
     status: "COMPLETED",
   });
-
   return netids;
 }
 

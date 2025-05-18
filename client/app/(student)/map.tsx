@@ -13,6 +13,7 @@ import { styles } from "@/assets/styles";
 import { View, Image, Alert, Linking } from "react-native";
 import MapViewDirections from "react-native-maps-directions";
 import { Ionicons } from "@expo/vector-icons";
+import { PurpleZone } from "@/services/ZoneService";
 
 interface MapProps {
   pickUpLocation: { latitude: number; longitude: number };
@@ -98,16 +99,6 @@ const Map = forwardRef<MapRef, MapProps>(
 
     // used for map zooming
     const mapRef = useRef<MapView>(null);
-
-    // UW parameter
-    const polygonCoordinates = [
-      { latitude: 47.666588, longitude: -122.311439 },
-      { latitude: 47.667353, longitude: -122.316263 },
-      { latitude: 47.652854, longitude: -122.316942 },
-      { latitude: 47.648566, longitude: -122.304858 },
-      { latitude: 47.660993, longitude: -122.301405 },
-      { latitude: 47.661138, longitude: -122.311331 },
-    ];
 
     // STATE HOOKS
     useEffect(() => {
@@ -245,11 +236,15 @@ const Map = forwardRef<MapRef, MapProps>(
           }}
           userInterfaceStyle="light"
         >
-          <Polygon
-            coordinates={polygonCoordinates}
-            strokeColor="rgba(128, 0, 128, 0.5)" // Light purple color
-            fillColor="rgba(128, 0, 128, 0.2)" // Light purple transparent color
-          />
+          {/* show each segment of the purple zone on the map */}
+          {PurpleZone.zones.map((zone, index) => (
+            <Polygon
+              key={index}
+              coordinates={zone.coordinates}
+              strokeColor="rgba(128, 0, 128, 0.5)" // Light purple color
+              fillColor="rgba(128, 0, 128, 0.2)" // Light purple transparent color
+            />
+          ))}
           <Marker
             coordinate={{
               latitude: pickUpLocation.latitude,
@@ -321,20 +316,34 @@ const Map = forwardRef<MapRef, MapProps>(
           </Marker>
           {/* show the directions between the pickup and dropoff locations if they are valid
         if the ride is not currently happening / happened  */}
-          {status != "RideInProgress" &&
-            status != "RideCompleted" &&
-            pickUpLocation.latitude != 0 &&
-            dropOffLocation.latitude != 0 && (
-              <MapViewDirections
-                origin={pickUpLocation}
-                destination={dropOffLocation}
-                apikey={GOOGLE_MAPS_APIKEY}
-                strokeWidth={3}
-                strokeColor="#4B2E83"
-              />
-            )}
+          {status !== "RideInProgress" && status !== "RideCompleted"
+            ? userLocation.latitude === 0
+              ? pickUpLocation.latitude !== 0 &&
+                dropOffLocation.latitude !== 0 && (
+                  <MapViewDirections
+                    origin={pickUpLocation}
+                    destination={dropOffLocation}
+                    apikey={GOOGLE_MAPS_APIKEY}
+                    strokeWidth={3}
+                    strokeColor="#4B2E83"
+                  />
+                )
+              : userLocation.latitude !== 0 &&
+                pickUpLocation.latitude !== 0 &&
+                dropOffLocation.latitude !== 0 && (
+                  <MapViewDirections
+                    origin={userLocation}
+                    waypoints={[pickUpLocation]}
+                    destination={dropOffLocation}
+                    apikey={GOOGLE_MAPS_APIKEY}
+                    strokeWidth={3}
+                    strokeColor="#000000"
+                  />
+                )
+            : null}
 
-          {/* show the path of the ride if it is in progress */}
+          {/* show the path of the ride if it is in progress. 
+        Used to plot the path of the driver during the ride */}
           {status === "RideInProgress" && (
             <Polyline
               coordinates={ridePath}

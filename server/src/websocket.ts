@@ -5,6 +5,7 @@ import {
   blacklist,
   cancelRide,
   completeRide,
+  snapLocation,
   location,
   query,
   report,
@@ -18,6 +19,7 @@ import {
   ridesExist,
   viewRide,
   handleDriverViewChoice,
+  fetchRecentLocations,
 } from "./routes";
 import {
   CancelResponse,
@@ -29,6 +31,7 @@ import {
   RideRequest,
   AcceptResponse,
   DriverAcceptResponse,
+  SnapLocationResponse,
 } from "./api";
 import { Timestamp } from "firebase/firestore";
 
@@ -141,6 +144,15 @@ export const handleWebSocketMessage = async (
       };
       resp = await requestRide(rideRequest);
       // send response back to client (the student)
+      sendWebSocketMessage(ws, resp);
+      break;
+    }
+
+    case "SNAP": {
+      resp = (await snapLocation(
+        input.currLat,
+        input.currLong
+      )) as SnapLocationResponse;
       sendWebSocketMessage(ws, resp);
       break;
     }
@@ -337,11 +349,20 @@ export const handleWebSocketMessage = async (
       break;
 
     case "DISTANCE":
-      resp = await distanceMatrix(input.origin, input.destination, input.mode);
+      resp = await distanceMatrix(
+        input.origin,
+        input.destination,
+        input.mode,
+        input.tag
+      );
       // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
       break;
-
+    case "RECENT_LOCATIONS":
+      resp = await fetchRecentLocations(input.netid);
+      // send response back to client (the student)
+      sendWebSocketMessage(ws, resp);
+      break;
     default:
       console.log(`WEBSOCKET: Unknown directive: ${input}`);
       break;

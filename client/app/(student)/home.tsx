@@ -13,10 +13,7 @@ import {
   WaitTimeResponse,
   WebSocketResponse,
 } from "../../../server/src/api";
-import RideRequestForm, {
-  ValidLocationType,
-} from "@/components/RideRequestForm";
-import { LocationName, LocationService } from "@/services/LocationService";
+import RideRequestForm from "@/components/RideRequestForm";
 import ConfirmRide from "@/components/ConfirmRide";
 import FAQ from "./faq";
 import { Ionicons } from "@expo/vector-icons";
@@ -103,10 +100,8 @@ export default function HomePage() {
   }>({ latitude: 0, longitude: 0 });
 
   // many components use the location name, so we store it here
-  const [pickUpLocationName, setPickUpLocationName] =
-    useState<ValidLocationType>("" as ValidLocationType);
-  const [dropOffLocationName, setDropOffLocationName] =
-    useState<ValidLocationType>("" as ValidLocationType);
+  const [pickUpLocationName, setPickUpLocationName] = useState<string>("");
+  const [dropOffLocationName, setDropOffLocationName] = useState<string>("");
   const [numPassengers, setNumPassengers] = useState(1);
 
   // user clicked on request ride button on ride request form
@@ -115,6 +110,9 @@ export default function HomePage() {
     setNumPassengers(numPassengers);
     setWhichComponent("confirmRide");
   };
+
+  // the user's recent locations that will be displayed in the dropdown
+  const [recentLocations, setRecentLocations] = useState<string[]>([]);
 
   /* PROFILE STATE AND METHODS */
   const [profileVisible, setProfileVisible] = useState(false);
@@ -216,6 +214,9 @@ export default function HomePage() {
     resetAllFields();
   };
 
+  /* LEGEND STATE */
+  const [bottom, setBottom] = useState(350);
+
   /* EFFECTS */
   useEffect(() => {
     // add the websocket listeners
@@ -227,31 +228,16 @@ export default function HomePage() {
     WebSocketService.addListener(handleCompleteOrCancel, "COMPLETE");
     WebSocketService.addListener(handleWaitTime, "WAIT_TIME");
     WebSocketService.addListener(handleDistance, "DISTANCE");
+    WebSocketService.addListener(
+      handleRecentLocationResponse,
+      "RECENT_LOCATIONS"
+    );
 
     // get the user's profile on first render
     sendProfile();
+    // get the user's locations on first render
+    sendRecentLocation();
   }, []);
-
-  // figure out coordinates from pickup and dropoff location names
-  // clicked in the ride request form
-  useEffect(() => {
-    if (pickUpLocationName === "Current Location") {
-      // we were given user coordinates not a location name
-      setPickUpLocation(userLocation);
-    } else {
-      // get the coordinates of the pickup location
-      setPickUpLocation(
-        LocationService.getLatAndLong(pickUpLocationName as LocationName)
-      );
-    }
-
-    if (dropOffLocationName != ("" as ValidLocationType)) {
-      // get the coordinates of the dropoff location
-      setDropOffLocation(
-        LocationService.getLatAndLong(dropOffLocationName as LocationName)
-      );
-    }
-  }, [pickUpLocationName, dropOffLocationName]);
 
   // logic that should happen when the component FIRST changes
   // currently only handles wait time when the confirm ride component is shown
@@ -272,6 +258,7 @@ export default function HomePage() {
         origin: [userLocation],
         destination: [pickUpLocation],
         mode: "walking",
+        tag: "walkToPickup",
       });
     } else if (whichComponent == "handleRide") {
       // if we are handling the ride, check if walking is needed by setting start location
@@ -333,7 +320,6 @@ export default function HomePage() {
                 userLocation,
                 pickUpLocation
               );
-              console.log("walk progress: ", wp);
               setWalkProgress(wp);
             }
           }
@@ -399,6 +385,23 @@ export default function HomePage() {
     }
   };
 
+  // WEBSOCKET -- RECENT_LOCATION
+  const sendRecentLocation = async () => {
+    WebSocketService.send({
+      directive: "RECENT_LOCATIONS",
+      netid: netid,
+    });
+  };
+
+  const handleRecentLocationResponse = (message: WebSocketResponse) => {
+    if (message.response === "RECENT_LOCATIONS") {
+      setRecentLocations(message.locations as string[]);
+    } else {
+      // something went wrong
+      console.log("Recent location response error: ", message);
+    }
+  };
+
   // WEBSOCKET -- LOCATION
   // listen for any LOCATION messages from the server about the driver's location
   const handleLocation = (message: WebSocketResponse) => {
@@ -427,13 +430,22 @@ export default function HomePage() {
       // go back to ride request component
       setWhichComponent("rideReq");
 
-      // set the notif state based on the reason
+      // set the notif state based on the reason for cancellation
       if (cancelReason.current === "button") {
-        setNotifState({
-          text: "Ride successfully canceled",
-          color: "#FFCBCB",
-          boldText: "canceled",
-        });
+        // show the notification based on the response
+        if (message.response === "CANCEL") {
+          setNotifState({
+            text: "Ride successfully canceled",
+            color: "#FFCBCB",
+            boldText: "canceled",
+          });
+        } else {
+          setNotifState({
+            text: "Ride successfully completed!",
+            color: "#C9FED0",
+            boldText: "completed",
+          });
+        }
       } else {
         setNotifState({
           text: "Your ride was canceled— timer ran out",
@@ -458,8 +470,8 @@ export default function HomePage() {
       latitude: 0,
       longitude: 0,
     });
-    setPickUpLocationName("" as ValidLocationType);
-    setDropOffLocationName("" as ValidLocationType);
+    setPickUpLocationName("");
+    setDropOffLocationName("");
     setNumPassengers(1);
     setRequestID("");
     setPickUpAddress("");
@@ -487,7 +499,6 @@ export default function HomePage() {
       const reqMessage = message as RequestRideResponse;
       setRequestID(reqMessage.requestid);
 
-      // TODO: REDUNDANT? IDK WHY IT WASN'T UPDATING START LOCATION FROM HERE
       // set the startLocation to figure out if the user needs to walk
       setStartLocation(userLocation);
 
@@ -543,15 +554,15 @@ export default function HomePage() {
   };
 
   // WEBSOCKET -- DISTANCE
-  // TODO: WE CANNOT ASSUME ALL DISTANCE RESPONSES
-  // ARE FOR WALKING DURATION EVENTUALLY...(FAKE DIJKSTRAS)
   const handleDistance = (message: WebSocketResponse) => {
     if ("response" in message && message.response === "DISTANCE") {
       const distanceResp = message as DistanceResponse;
-      const walkSeconds =
-        distanceResp.apiResponse.rows[0].elements[0].duration.value;
-      setWalkDuration(Math.floor(walkSeconds / 60)); // convert seconds to minutes
-      setWalkAddress(distanceResp.apiResponse.origin_addresses[0]);
+      if (distanceResp.tag === "walkToPickup") {
+        const walkSeconds =
+          distanceResp.apiResponse.rows[0].elements[0].duration.value;
+        setWalkDuration(Math.floor(walkSeconds / 60)); // convert seconds to minutes
+        setWalkAddress(distanceResp.apiResponse.origin_addresses[0]);
+      }
     } else {
       console.log("Distance response error: ", message);
     }
@@ -628,7 +639,10 @@ export default function HomePage() {
         <View
           style={{
             position: "absolute",
-            bottom: 340,
+            bottom:
+              whichComponent == "waitForRide" || whichComponent == "handleRide"
+                ? 350
+                : bottom,
             left: 10,
             alignItems: "flex-start",
           }}
@@ -663,12 +677,17 @@ export default function HomePage() {
             <View style={styles.homePageComponentContainer}>
               {/* ride request form component */}
               <RideRequestForm
-                pickUpLocationChanged={setPickUpLocationName}
-                dropOffLocationChanged={setDropOffLocationName}
+                pickUpLocationNameChanged={setPickUpLocationName}
+                dropOffLocationNameChanged={setDropOffLocationName}
+                pickUpLocationCoordChanged={setPickUpLocation}
+                dropOffLocationCoordChanged={setDropOffLocation}
                 userLocation={userLocation}
                 rideRequested={rideRequested}
                 startingState={startingState}
                 setFAQVisible={setFAQVisible}
+                recentLocations={recentLocations}
+                setNotificationState={setNotifState}
+                updateSideBarHeight={setBottom}
               />
             </View>
           ) : whichComponent === "confirmRide" ? (
@@ -746,14 +765,5 @@ const calculateProgress = (
   // walking in a straight line from the start location
   const remaining = calculateDistance(current, dest);
   const currentDistance = distance - remaining;
-  console.log(
-    "PROGRESS",
-    "current distance:",
-    currentDistance,
-    "total distance:",
-    distance,
-    "fraction:",
-    currentDistance / distance
-  );
   return currentDistance / distance; // remaining distance
 };

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { styles } from "@/assets/styles";
+import { JSX } from "react";
 import { View, Modal, ScrollView, TouchableOpacity, Image } from "react-native";
 
 // the component that displays a list of frequently asked questions

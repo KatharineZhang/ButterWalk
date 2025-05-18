@@ -16,7 +16,7 @@ import {
   DriverAcceptResponse,
   WebSocketResponse,
 } from "../../../server/src/api";
-import { LocationName, LocationService } from "@/services/LocationService";
+import { findCoordinatesOfLocationName } from "@/services/GooglePlacesServices";
 
 export default function App() {
   // Extract netid from Redirect URL from signin page
@@ -230,18 +230,19 @@ export default function App() {
       driverid: netid as string,
     });
   };
-  const handleAccept = (message: WebSocketResponse) => {
+  const handleAccept = async (message: WebSocketResponse) => {
     if ("response" in message && message.response === "ACCEPT_RIDE") {
       const driverAccept = message as DriverAcceptResponse;
       // update state
       setRideInfo(driverAccept);
       setPickUpLocation(
-        // get coordinates from location names
-        LocationService.getLatAndLong(driverAccept.location as LocationName)
+        await findCoordinatesOfLocationName(driverAccept.location, userLocation)
       );
       setDropOffLocation(
-        // get coordinates from location names
-        LocationService.getLatAndLong(driverAccept.destination as LocationName)
+        await findCoordinatesOfLocationName(
+          driverAccept.destination,
+          userLocation
+        )
       );
     }
   };
