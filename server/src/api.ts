@@ -9,6 +9,7 @@ export type Command =
   | "FINISH_ACC"
   | "REQUEST_RIDE"
   | "ACCEPT_RIDE"
+  | "SNAP"
   | "CANCEL"
   | "COMPLETE"
   | "ADD_FEEDBACK"
@@ -19,10 +20,12 @@ export type Command =
   | "QUERY"
   | "PROFILE"
   | "DISTANCE"
-  | "ERROR";
+  | "ERROR"
+  | "RECENT_LOCATIONS";
 
 // Input types
 export type WebSocketMessage =
+  | { directive: "RECENT_LOCATIONS"; netid: string }
   | { directive: "DISCONNECT" }
   | { directive: "CONNECT"; netid: string; role: "STUDENT" | "DRIVER" } // TODO: REMOVE THIS ONCE BYPASS SIGNIN IS REMOVED
   | {
@@ -36,6 +39,11 @@ export type WebSocketMessage =
       preferredName: string;
       phoneNum: string;
       studentNum: string;
+    }
+  | {
+      directive: "SNAP";
+      currLat: number;
+      currLong: number;
     }
   | {
       directive: "REQUEST_RIDE";
@@ -83,6 +91,7 @@ export type WebSocketMessage =
       origin: { latitude: number; longitude: number }[];
       destination: { latitude: number; longitude: number }[];
       mode: "driving" | "walking";
+      tag: string; // used to identify the response
     };
 
 // TEMP FIX
@@ -97,6 +106,7 @@ export type WebSocketResponse =
   | GeneralResponse
   | SignInResponse
   | FinishAccCreationResponse
+  | SnapLocationResponse
   | RequestRideResponse
   | WaitTimeResponse
   | AcceptResponse
@@ -107,7 +117,13 @@ export type WebSocketResponse =
   | QueryResponse
   | ProfileResponse
   | DistanceResponse
-  | ErrorResponse;
+  | ErrorResponse
+  | RecentLocationResponse;
+
+export type RecentLocationResponse = {
+  response : "RECENT_LOCATIONS";
+  locations: string[];
+}
 
 export type GeneralResponse = {
   response:
@@ -123,6 +139,7 @@ export type GeneralResponse = {
   success: true;
 };
 
+
 export type SignInResponse = {
   response: "SIGNIN";
   success: true;
@@ -133,6 +150,14 @@ export type SignInResponse = {
 export type FinishAccCreationResponse = {
   response: "FINISH_ACC";
   success: boolean;
+};
+
+export type SnapLocationResponse = {
+  response: "SNAP";
+  success: boolean;
+  roadName: string;
+  latitude: number;
+  longitude: number;
 };
 
 export type RequestRideResponse = {
@@ -204,6 +229,7 @@ export type ErrorResponse = {
     | "REPORT"
     | "BLACKLIST"
     | "WAIT_TIME"
+    | "SNAP"
     | "REQUEST_RIDE"
     | "ACCEPT_RIDE"
     | "CANCEL"
@@ -211,11 +237,16 @@ export type ErrorResponse = {
     | "QUERY"
     | "PROFILE"
     | "DISTANCE"
-    | "FINISH_ACC";
+    | "FINISH_ACC"
+    | "RECENT_LOCATIONS";
+
 };
 
 export type DistanceResponse = {
   response: "DISTANCE";
+  // The tag is used to identify different distance requests.
+  // Whatever the client sends, the server will send back and the client can use it to identify the response
+  tag: string;
   apiResponse: DistanceMatrixResponse;
 };
 export type DistanceMatrixResponse = {
@@ -345,3 +376,9 @@ export type ProblematicUser = {
   reason: string;
   category: "REPORTED" | "BLACKLISTED";
 };
+
+
+export type RecentLocation = {
+  netid: string;
+  locations: string[];
+}

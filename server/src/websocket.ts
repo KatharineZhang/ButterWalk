@@ -6,6 +6,7 @@ import {
   blacklist,
   cancelRide,
   completeRide,
+  snapLocation,
   location,
   query,
   report,
@@ -16,6 +17,7 @@ import {
   googleAuth,
   profile,
   distanceMatrix,
+  fetchRecentLocations,
 } from "./routes";
 import {
   AcceptResponse,
@@ -25,6 +27,7 @@ import {
   WebSocketResponse,
   GoogleResponse,
   ErrorResponse,
+  SnapLocationResponse,
 } from "./api";
 
 export const handleWebSocketMessage = async (
@@ -119,6 +122,14 @@ export const handleWebSocketMessage = async (
         input.phoneNum,
         input.studentNum
       );
+      sendWebSocketMessage(ws, resp);
+      break;
+
+    case "SNAP":
+      resp = (await snapLocation(
+        input.currLat,
+        input.currLong
+      )) as SnapLocationResponse;
       sendWebSocketMessage(ws, resp);
       break;
 
@@ -240,11 +251,20 @@ export const handleWebSocketMessage = async (
       break;
 
     case "DISTANCE":
-      resp = await distanceMatrix(input.origin, input.destination, input.mode);
+      resp = await distanceMatrix(
+        input.origin,
+        input.destination,
+        input.mode,
+        input.tag
+      );
       // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
       break;
-
+    case "RECENT_LOCATIONS":
+      resp = await fetchRecentLocations(input.netid);
+      // send response back to client (the student)
+      sendWebSocketMessage(ws, resp);
+      break;
     default:
       console.log(`WEBSOCKET: Unknown directive: ${input}`);
       break;

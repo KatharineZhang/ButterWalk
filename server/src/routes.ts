@@ -21,6 +21,8 @@ import {
   ProfileResponse,
   User,
   DistanceResponse,
+  SnapLocationResponse,
+  RecentLocationResponse,
 } from "./api";
 import {
   acceptRideRequest,
@@ -36,6 +38,7 @@ import {
   queryFeedback,
   db,
   getProfile,
+  getRecentLocations,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { Mutex } from "async-mutex";
@@ -62,8 +65,6 @@ const handleToken = async (
       console.error("auth is null @106 routes.ts");
     } else {
       const token = authentication.accessToken;
-      console.log("access token", token);
-
       return getUserProfile(token);
     }
   }
@@ -122,6 +123,8 @@ directive: "SIGNIN", phoneNum: string, netID: string, name: string, studentNum: 
 
 - On error, returns the json object in the form:  { response: “ERROR”, success: false, error: string, category: “SIGNIN” }. 
 - Returns a json object TO THE STUDENT in the form: { response: “SIGNIN”, success: true }. */
+// Removed duplicate declaration of fetchRecentLocations
+
 export const signIn = async (
   netid: string,
   firstName: string,
@@ -200,6 +203,99 @@ export const finishAccCreation = async (
     };
   }
 };
+
+export const snapLocation = async (
+  currLat: number,
+  currLong: number
+): Promise<SnapLocationResponse | ErrorResponse> => {
+  // if currLat or currLong is not a number, return an error
+  if (!currLat || !currLong) {
+    return {
+      response: "ERROR",
+      error: "Missing or invalid location details.",
+      category: "SNAP",
+    };
+  }
+
+  if (typeof currLat !== "number" || typeof currLong !== "number") {
+    return {
+      response: "ERROR",
+      error: "latitude or longitude not the correct type.",
+      category: "SNAP",
+    };
+  }
+
+  if (currLat < -90 || currLat > 90 || currLong < -180 || currLong > 180) {
+    return {
+      response: "ERROR",
+      error: "Invalid latitude or longitude.",
+      category: "SNAP",
+    };
+  }
+
+  try {
+    // Documentation on how to use MapBox's map matching API:
+    // https://docs.mapbox.com/help/tutorials/get-started-map-matching-api/?step=5
+
+    const snappedInfo = await getMatch(currLat, currLong);
+    console.log("Snapped info:", snappedInfo);
+
+    // these are temporary return values just to appease the red lines
+    const roadName: string = snappedInfo?.roadName;
+    const snappedLat: number = snappedInfo?.coords.coordinates[0][1];
+    const snappedLong: number = snappedInfo?.coords.coordinates[0][0];
+    console.log("Snapped locations:", snappedLat, snappedLong);
+
+    return {
+      response: "SNAP",
+      success: true,
+      roadName: roadName,
+      latitude: snappedLat,
+      longitude: snappedLong,
+    };
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error getting snap location: ${e}`,
+      category: "SNAP",
+    };
+  }
+};
+
+// Make a Map Matching request
+async function getMatch(lat: number, long: number) {
+  const safeLat = encodeURIComponent(lat.toString());
+  const safeLong = encodeURIComponent(long.toString());
+  const coord = `${safeLong},${safeLat}`;
+  const radius = "25"; // in meters
+  const profile = "walking";
+
+  // Create the query
+  const base = `https://api.mapbox.com/matching/v5/mapbox/${profile}/${coord};${coord}`;
+  const url = new URL(base);
+  url.searchParams.set("geometries", "geojson");
+  url.searchParams.set("radiuses", `${radius};${radius}`);
+  url.searchParams.set("steps", "false");
+  url.searchParams.set("access_token", process.env.MAPBOX_SNAPPING_TOKEN);
+
+  console.log("in getMatch");
+  const query = await fetch(url.toString(), { method: "GET" });
+  const response = await query.json();
+  console.log("response from mapbox:", response);
+  // Handle errors
+  if (response.code !== "Ok") {
+    console.error(
+      `${response.code} - ${response.message}.\n\nFor more information: https://docs.mapbox.com/api/navigation/map-matching/#map-matching-api-errors`
+    );
+    return;
+  }
+  // Get the coordinates from the response.
+  // TODO: figure out if it's in an array or not
+  const coords = response.matchings[0].geometry;
+  console.log(coords);
+  // Code from the next step will go here
+  return { coords: coords, roadName: response.tracepoints[1].name };
+}
 
 /* Adds a new ride request object to the queue using the parameters given. 
 Will add a new request to the database, populated with the fields passed in and a request status of 0.
@@ -668,7 +764,12 @@ const getDuration = async (
 > => {
   try {
     // all the api
-    const distResp = await distanceMatrix([origin], [destination], "driving");
+    const distResp = await distanceMatrix(
+      [origin],
+      [destination],
+      "driving",
+      "doesn't-matter"
+    );
 
     // check for an error
     if ("response" in distResp && distResp.response === "ERROR") {
@@ -677,7 +778,6 @@ const getDuration = async (
     }
 
     const data = (distResp as DistanceResponse).apiResponse;
-    console.log(data);
 
     // instantiate the response object
     const response: {
@@ -731,7 +831,8 @@ const getDuration = async (
 export const distanceMatrix = async (
   origin: { latitude: number; longitude: number }[],
   destination: { latitude: number; longitude: number }[],
-  mode: "driving" | "walking"
+  mode: "driving" | "walking",
+  tag: string
 ): Promise<ErrorResponse | DistanceResponse> => {
   try {
     // convert from coordinate array to string
@@ -757,7 +858,7 @@ export const distanceMatrix = async (
 
     if (data.rows[0].elements[0].status === "OK") {
       // there are results so return response
-      return { response: "DISTANCE", apiResponse: data };
+      return { response: "DISTANCE", apiResponse: data, tag: tag };
     } else {
       // trigger the catch branch
       throw new Error(`Error fetching distance matrix info: ${data.status}`);
@@ -863,6 +964,37 @@ export const profile = async (
       response: "ERROR",
       error: `Error getting profile: ${e}`,
       category: "PROFILE",
+    };
+  }
+};
+
+/*testing get recent locations*/
+export const fetchRecentLocations = async (
+  netid: string
+): Promise<RecentLocationResponse | ErrorResponse> => {
+  if (!netid) {
+    return {
+      response: "ERROR",
+      error: "Missing netid.",
+      category: "RECENT_LOCATIONS",
+    };
+  }
+
+  try {
+    return await runTransaction(db, async (transaction) => {
+      // Fetch recent locations using the function in firebaseActions
+      const locations = await getRecentLocations(transaction, netid);
+
+      return {
+        response: "RECENT_LOCATIONS",
+        locations,
+      };
+    });
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error fetching recent locations: ${(e as Error).message}`,
+      category: "RECENT_LOCATIONS",
     };
   }
 };
