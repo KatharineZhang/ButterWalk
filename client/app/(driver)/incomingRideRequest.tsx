@@ -29,7 +29,7 @@ export default function IncomingRideRequest({
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Incoming Ride Request</Text>
-        <Text>Pickup: {requestInfo.pickupLocation}</Text>
+        <Text>Pickup: {"Pickup"}</Text>
         <Button title="Accept" onPress={handleAccept} />
       </View>
     );
@@ -46,7 +46,7 @@ export default function IncomingRideRequest({
       <Button
         title="Let's go"
         onPress={onLetsGo}
-        disabled={!driverAcceptInfo}
+        // disabled={!driverAcceptInfo}
       />
     </View>
   );

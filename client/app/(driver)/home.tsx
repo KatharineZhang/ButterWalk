@@ -75,16 +75,31 @@ export default function HomePage() {
       }
     }, []);
 
-  function handleAcceptRequest(): void {
-    throw new Error("Function not implemented.");
-  }
-
-  function handleLetsGo(): void {
-    throw new Error("Function not implemented.");
-  }
+    function handleAcceptRequest(): void {
+      // don’t do anything if we don’t yet have a request
+      if (!requestInfo) {
+        return;
+      }
+    
+      const payload = {
+        response: 'ACCEPT_RIDE' as const,
+        requestid: requestInfo.requestid,
+        driverNetid: netid,
+      };
+    
+      WebSocketService.send(payload as any);
+    }
+    
+    function handleLetsGo(): void {
+      // start drawing the route on the map
+      setShowRoute(true);
+    
+      // switch into the “enRoute” view
+      setWhichComponent('enRoute');
+    }    
 
     return (
-        <SafeAreaView>
+        <SafeAreaView style={{ flex: 1 }}>
             {/* put in params later */}
             <Map/>
             {whichComponent === "waitingForReq" && !shiftEnded ? (
@@ -104,7 +119,7 @@ export default function HomePage() {
             whichComponent === "enRoute" && requestInfo && !shiftEnded ? (
                 <View>
                     <Text>En Route to Pickup</Text>
-                    <Text>Pickup Location: {requestInfo.pickupLocation}</Text>
+                    <Text>Pickup Location: {"Pick up location"}</Text>
                 </View>
             ) :
             whichComponent === "endShift" && !shiftEnded ? (
