@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, Text, View } from "react-native";
 import Map from "./map";
 import { useLocalSearchParams } from "expo-router";
+import IncomingRideRequest from "./incomingRideRequest";
 
 export default function HomePage() {
     /* Driver netId prop passed in through sign in
@@ -32,30 +33,30 @@ export default function HomePage() {
     }, []);
 
     // state for incoming ride request
-    const [requestInfo, setRequestInfo] = useState<RequestRideResponse | null>(null);
-    const [receivedReq, setReceivedReq] = useState(false);
+  const [requestInfo, setRequestInfo] = useState<RequestRideResponse | null>(
+      null
+    );
+    const [driverAcceptInfo, setDriverAcceptInfo] = useState<
+      DriverAcceptResponse | null
+    >(null);
+    const [showRoute, setShowRoute] = useState(false);
 
     // use effect for incoming ride requests
     useEffect(() => {
-      WebSocketService.addListener(handleIncomingRequest, "REQUEST_RIDE");
+      const handleIncoming = (msg: WebSocketResponse) => {
+        if ("response" in msg && msg.response === "REQUEST_RIDE") {
+          const req = msg as RequestRideResponse;
+          setRequestInfo(req);
+          setDriverAcceptInfo(null); // reset any old accept
+          setWhichComponent("incomingReq");
+        }
+      };
 
-      return() => {
-        Web // finish code here
-      }
-    })
-
-    // WebSocket call that tells us a new ride has come in
-    const handleIncomingRequest = (message: WebSocketResponse) => {
-      if ("response" in message && message.response === "REQUEST_RIDE") {
-        const reqMessage = message as RequestRideResponse;
-        setRequestInfo(reqMessage);
-        setReceivedReq(true);
-        setWhichComponent("incomingReq");
-      } else {
-        console.log("Request ride error: ", message);
-        setWhichComponent("waitingForReq");
-      }
-    }
+      WebSocketService.addListener(handleIncoming, "REQUEST_RIDE");
+      return () => {
+        WebSocketService.removeListener(handleIncoming, "REQUEST_RIDE");
+      };
+    }, []);
     
     
     // Accept Ride Request Logic
@@ -74,6 +75,14 @@ export default function HomePage() {
       }
     }, []);
 
+  function handleAcceptRequest(): void {
+    throw new Error("Function not implemented.");
+  }
+
+  function handleLetsGo(): void {
+    throw new Error("Function not implemented.");
+  }
+
     return (
         <SafeAreaView>
             {/* put in params later */}
@@ -84,26 +93,15 @@ export default function HomePage() {
                 </View>
             ) : 
             whichComponent === "incomingReq" && requestInfo && !shiftEnded ? (
-                <View>
-                    <Text>Incoming Ride Request</Text>
-                    <Text>Pickup Location: {requestInfo.pickupLocation}</Text>
-                    <Text>Dropoff Location: {requestInfo.dropoffLocation}</Text>
-                    <Button title="Accept" onPress={() => setWhichComponent("acceptRideReq")} />
-                </View>
+              <IncomingRideRequest
+                requestInfo={requestInfo}
+                driverAcceptInfo={driverAcceptInfo}
+                onAccept={handleAcceptRequest}
+                onLetsGo={handleLetsGo}
+              />
             ) :
-            whichComponent === "acceptRideReq" && requestInfo && !shiftEnded ? (
-                <View>
-                    <Text>Accept Ride Request</Text>
-                    <Text>Passenger: {requestInfo.name}</Text>
-                    <Text>Pickup Location: {requestInfo.pickupLocation}</Text>
-                    <Text>Dropoff Location: {requestInfo.dropoffLocation}</Text>
-                    <Text>Travel Time to Pickup: {requestInfo.timeToPickup}</Text>
-                    <Text>Travel Time to Drop Off: {requestInfo.timeToDropoff}</Text>
-                    <Button title="Let's go" onPress={() => setWhichComponent("enRoute")} />
-                </View>
-            ) : 
             // change to enRouteToPickup and enRouteToDropoff
-            whichComponent === "enRoute" && !shiftEnded ? (
+            whichComponent === "enRoute" && requestInfo && !shiftEnded ? (
                 <View>
                     <Text>En Route to Pickup</Text>
                     <Text>Pickup Location: {requestInfo.pickupLocation}</Text>
