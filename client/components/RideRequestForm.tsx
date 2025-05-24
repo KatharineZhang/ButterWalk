@@ -28,13 +28,11 @@ import {
   ErrorResponse,
   DistanceResponse,
   LocationType,
+  PlaceSearchResponse,
+  PlaceSearchResult,
 } from "../../server/src/api";
 import WebSocketService from "../services/WebSocketService";
 import { CampusZone, PurpleZone } from "@/services/ZoneService";
-import {
-  fetchGooglePlaceSuggestions,
-  PlaceSearchResult,
-} from "@/services/GooglePlacesServices";
 
 type RideRequestFormProps = {
   pickUpLocationNameChanged: (location: string) => void;
@@ -432,15 +430,28 @@ export default function RideRequestForm({
     }
   };
 
-  // ONLY CALL PLACE SEARCH WHEN THE USER PRESSES ENTER
+  // handle the place search results
+  const handlePlaceSearchResults = (
+    message: WebSocketResponse
+  ) => {
+    if ("response" in message && message.response === "PLACE_SEARCH") {
+      const placeSearchResp = message as PlaceSearchResponse;
+      // update the place search results
+      // const res = placeSearchResp.results.filter((place) => PurpleZone.isPointInside(place.coordinates));
+      setPlaceSearchResults(placeSearchResp.results);
+    } else {
+      console.error("Error fetching place search results");
+    }
+  }
+
+  // Calls Place Search API when the user presses enter
   const enterPressed = async () => {
     const text = currentQuery == "pickup" ? pickUpQuery : dropOffQuery;
     if (text.length > 3) {
-      setPlaceSearchResults(
-        await fetchGooglePlaceSuggestions(
-          currentQuery == "pickup" ? pickUpQuery : dropOffQuery
-        )
-      );
+      WebSocketService.send({
+        directive: "PLACE_SEARCH",
+        query: text,
+      });
     }
   };
 
@@ -449,9 +460,10 @@ export default function RideRequestForm({
   useEffect(() => {
     // add the listener for the distance response
     WebSocketService.addListener(handleDistanceTopThree, "DISTANCE");
-
     // listen for the snap location response
     WebSocketService.addListener(handleSnapLocationQuery, "SNAP");
+    // listen for the place search results
+    WebSocketService.addListener(handlePlaceSearchResults, "PLACE_SEARCH");
 
     // if there is a starting state,
     // that means the user clicked back from the confirm ride component
