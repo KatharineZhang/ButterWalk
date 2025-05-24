@@ -27,12 +27,12 @@ import {
   SnapLocationResponse,
   ErrorResponse,
   DistanceResponse,
+  LocationType,
 } from "../../server/src/api";
 import WebSocketService from "../services/WebSocketService";
 import { CampusZone, PurpleZone } from "@/services/ZoneService";
 import {
   fetchGooglePlaceSuggestions,
-  findCoordinatesOfLocationName,
   PlaceSearchResult,
 } from "@/services/GooglePlacesServices";
 
@@ -57,7 +57,7 @@ type RideRequestFormProps = {
     boldText?: string;
   }) => void;
   startingState?: { pickup: string; dropoff: string; numRiders: number };
-  recentLocations: string[];
+  recentLocations: LocationType[];
 };
 
 export default function RideRequestForm({
@@ -222,13 +222,22 @@ export default function RideRequestForm({
       const placeSearchOptionClicked = placeSearchResults.find(
         (item) => item.name === value
       );
+      const recentLocOptionClicked = recentLocations.find(
+        (item) => item.name === value
+      );
       if (placeSearchOptionClicked) {
         // if it was, we can just use the coordinates attached to it
         pickupCoord = placeSearchOptionClicked.coordinates;
+      } else if (recentLocOptionClicked) {
+        // use the address to get the coordinates
+        pickupCoord = recentLocOptionClicked.coordinates;
       } else {
-        // otherwise the clicked location was a campus API result or a recent location
-        // we need to do extra work to find the coordinates
-        pickupCoord = await findCoordinatesOfLocationName(value, userLocation);
+        // otherwise the clicked location was a campus API result
+        pickupCoord =
+          await BuildingService.getClosestBuildingEntranceCoordinates(
+            value,
+            userLocation
+          );
       }
       setPickupCoordinates(pickupCoord);
 
@@ -257,15 +266,24 @@ export default function RideRequestForm({
     const placeSearchOptionClicked = placeSearchResults.find(
       (item) => item.name === value
     );
+    const recentLocOptionClicked = recentLocations.find(
+      (item) => item.name === value
+    );
     if (placeSearchOptionClicked) {
       // if it was, we can just use the coordinates attached to it
       dropoffCoord = placeSearchOptionClicked.coordinates;
+    } else if (recentLocOptionClicked) {
+      // use the address to get the coordinates
+      dropoffCoord = recentLocOptionClicked.coordinates;
     } else {
-      // otherwise the clicked location was a campus API result or a recent location
-      // we need to do extra work to find the coordinates
-      dropoffCoord = await findCoordinatesOfLocationName(value, userLocation);
+      // otherwise the clicked location was a campus API result
+      dropoffCoord =
+        await BuildingService.getClosestBuildingEntranceCoordinates(
+          value,
+          userLocation
+        );
     }
-    
+
     setDropoffCoordinates(dropoffCoord);
 
     // tell the home page that the dropoff location has changed
@@ -769,9 +787,16 @@ export default function RideRequestForm({
                   </View>
                   <View style={{ width: 10 }} />
                   <View style={{ maxWidth: "80%" }}>
-                    <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "bold",
+                        marginBottom: 5,
+                      }}
+                    >
                       {item.name}
                     </Text>
+                    <Text style={{ fontSize: 14 }}>{item.address}</Text>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -781,8 +806,8 @@ export default function RideRequestForm({
               campusAPIResults.length == 0 &&
               recentLocations.map((item) => (
                 <TouchableOpacity
-                  onPress={() => handleSelection(item)}
-                  key={item}
+                  onPress={() => handleSelection(item.name)}
+                  key={item.name}
                   style={{
                     padding: 16,
                     borderBottomWidth: 1,
@@ -806,9 +831,16 @@ export default function RideRequestForm({
                   </View>
                   <View style={{ width: 10 }} />
                   <View style={{ maxWidth: "80%" }}>
-                    <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                      {item}
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "bold",
+                        marginBottom: 5,
+                      }}
+                    >
+                      {item.name}
                     </Text>
+                    <Text style={{ fontSize: 14 }}>{item.address}</Text>
                   </View>
                 </TouchableOpacity>
               ))}

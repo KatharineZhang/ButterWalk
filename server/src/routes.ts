@@ -20,6 +20,7 @@ import {
   GoogleResponse,
   ProfileResponse,
   User,
+  LocationType,
   DistanceResponse,
   SnapLocationResponse,
   RecentLocationResponse,
@@ -308,8 +309,8 @@ Will add a new request to the database, populated with the fields passed in and 
 export const requestRide = async (
   phoneNum: string,
   netid: string,
-  from: string,
-  to: string,
+  from: LocationType,
+  to: LocationType,
   numRiders: number
 ): Promise<RequestRideResponse | ErrorResponse> => {
   if (!phoneNum || !from || !to || numRiders <= 0) {

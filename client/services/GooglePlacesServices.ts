@@ -1,4 +1,3 @@
-import { BuildingService, Coordinates } from "./BuildingService";
 import { PurpleZone } from "./ZoneService";
 
 // Fetch the google places API key from the environment variables
@@ -38,6 +37,7 @@ type GooglePlaceSearchResponse = {
 export type PlaceSearchResult = {
   name: string;
   coordinates: { latitude: number; longitude: number };
+  address: string;
 };
 
 // We don't want GooglePlaceResult.types to incluse these tags
@@ -49,7 +49,6 @@ const GooglePlaceSearchBadLocationTypes = [
   "night_club",
 ];
 
-let number = 0; // keep track of the number of times we have called the API
 // This is used to cache the results of the Google Place API
 let previousQuery = "";
 let previousResults: PlaceSearchResult[] = [];
@@ -75,7 +74,6 @@ export const fetchGooglePlaceSuggestions = async (
     return previousResults;
   }
   try {
-    console.log("google place search iteration:", number++);
     previousQuery = query;
     const url =
       `https://maps.googleapis.com/maps/api/place/textsearch/json?` +
@@ -97,6 +95,7 @@ export const fetchGooglePlaceSuggestions = async (
             longitude: r.geometry.location.lng,
           },
           types: r.types,
+          formatted_address: r.formatted_address,
         }))
         // filter to places inside the purple zone
         .filter((place) => PurpleZone.isPointInside(place.location))
@@ -106,7 +105,11 @@ export const fetchGooglePlaceSuggestions = async (
             GooglePlaceSearchBadLocationTypes.includes(type)
           );
         })
-        .map((place) => ({ name: place.name, coordinates: place.location }));
+        .map((place) => ({
+          name: place.name,
+          coordinates: place.location,
+          address: place.formatted_address,
+        }));
       // remove duplicates from places
       previousResults = Array.from(new Set(places));
       return previousResults;
@@ -117,41 +120,6 @@ export const fetchGooglePlaceSuggestions = async (
   previousResults = [];
   return [];
 };
-
-/**
- * Find the closest building entrance coordinates to a given name and the user's location.
- * If the name is not found in the local building dataset,
- * it will use the Google Geocode API to get the coordinates.
- * @param name of the location to find coordinates for
- * @param userLocation needed to find the closest building entrance
- * @returns
- */
-export async function findCoordinatesOfLocationName(
-  name: string,
-  userLocation: { latitude: number; longitude: number }
-): Promise<Coordinates> {
-  try {
-    // Try from local dataset first
-    return BuildingService.getClosestBuildingEntranceCoordinates(
-      name,
-      userLocation
-    );
-  } catch {
-    // Fallback: use Google Geocode API
-    const res = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?` +
-        `address=${encodeURIComponent(name)}` +
-        `&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY}`
-    );
-    const json = await res.json();
-
-    if (json.results?.length) {
-      const { lat, lng } = json.results[0].geometry.location;
-      return { latitude: lat, longitude: lng };
-    }
-    throw new Error(`Couldn’t geocode “${name}”`);
-  }
-}
 
 // Get the distance between two strings
 // (number of insertions and deletions of characters to get from one to another)

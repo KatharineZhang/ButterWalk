@@ -49,8 +49,8 @@ export type WebSocketMessage =
       directive: "REQUEST_RIDE";
       phoneNum: string;
       netid: string;
-      location: string;
-      destination: string;
+      location: LocationType;
+      destination: LocationType;
       numRiders: number;
     }
   | { directive: "ACCEPT_RIDE"; driverid: string }
@@ -121,9 +121,18 @@ export type WebSocketResponse =
   | RecentLocationResponse;
 
 export type RecentLocationResponse = {
-  response : "RECENT_LOCATIONS";
-  locations: string[];
-}
+  response: "RECENT_LOCATIONS";
+  locations: LocationType[];
+};
+
+export type LocationType = {
+  name: string;
+  address: string;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+};
 
 export type GeneralResponse = {
   response:
@@ -138,7 +147,6 @@ export type GeneralResponse = {
     | "ACCEPT_RIDE";
   success: true;
 };
-
 
 export type SignInResponse = {
   response: "SIGNIN";
@@ -182,8 +190,8 @@ export type AcceptResponse = {
 export type DriverAcceptResponse = {
   response: "ACCEPT_RIDE";
   netid: string;
-  location: string;
-  destination: string;
+  location: LocationType;
+  destination: LocationType;
   numRiders: number;
   requestid: string;
 };
@@ -239,7 +247,6 @@ export type ErrorResponse = {
     | "DISTANCE"
     | "FINISH_ACC"
     | "RECENT_LOCATIONS";
-
 };
 
 export type DistanceResponse = {
@@ -362,8 +369,8 @@ export type RideRequest = {
   netid: string;
   driverid: string | null;
   completedAt: Timestamp | null;
-  locationFrom: string; // TODO: should these be coordinates or location names?
-  locationTo: string;
+  locationFrom: LocationType;
+  locationTo: LocationType;
   numRiders: number;
   status: "CANCELED" | "REQUESTED" | "ACCEPTED" | "COMPLETED";
 };
@@ -377,8 +384,7 @@ export type ProblematicUser = {
   category: "REPORTED" | "BLACKLISTED";
 };
 
-
 export type RecentLocation = {
   netid: string;
-  locations: string[];
-}
+  locations: LocationType[];
+};
