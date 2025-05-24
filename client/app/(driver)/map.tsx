@@ -59,8 +59,16 @@ export default function App() {
   const [rideInfo, setRideInfo] = React.useState<DriverAcceptResponse>({
     response: "ACCEPT_RIDE",
     netid: "",
-    location: {name: "", address: "", coordinates: {latitude: 0, longitude: 0}},
-    destination: {name: "", address: "", coordinates: {latitude: 0, longitude: 0}},
+    location: {
+      name: "",
+      address: "",
+      coordinates: { latitude: 0, longitude: 0 },
+    },
+    destination: {
+      name: "",
+      address: "",
+      coordinates: { latitude: 0, longitude: 0 },
+    },
     numRiders: 0,
     requestid: "",
   });
@@ -234,13 +242,8 @@ export default function App() {
       const driverAccept = message as DriverAcceptResponse;
       // update state
       setRideInfo(driverAccept);
-      setPickUpLocation(
-        driverAccept.location.coordinates
-      );
-      setDropOffLocation(
-                driverAccept.destination.coordinates
-
-      );
+      setPickUpLocation(driverAccept.location.coordinates);
+      setDropOffLocation(driverAccept.destination.coordinates);
     }
   };
 
@@ -269,8 +272,16 @@ export default function App() {
       setRideInfo({
         response: "ACCEPT_RIDE",
         netid: "",
-            location: {name: "", address: "", coordinates: {latitude: 0, longitude: 0}},
-    destination: {name: "", address: "", coordinates: {latitude: 0, longitude: 0}},
+        location: {
+          name: "",
+          address: "",
+          coordinates: { latitude: 0, longitude: 0 },
+        },
+        destination: {
+          name: "",
+          address: "",
+          coordinates: { latitude: 0, longitude: 0 },
+        },
         numRiders: 0,
         requestid: "",
       });

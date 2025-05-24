@@ -430,20 +430,6 @@ export default function RideRequestForm({
     }
   };
 
-  // handle the place search results
-  const handlePlaceSearchResults = (
-    message: WebSocketResponse
-  ) => {
-    if ("response" in message && message.response === "PLACE_SEARCH") {
-      const placeSearchResp = message as PlaceSearchResponse;
-      // update the place search results
-      // const res = placeSearchResp.results.filter((place) => PurpleZone.isPointInside(place.coordinates));
-      setPlaceSearchResults(placeSearchResp.results);
-    } else {
-      console.error("Error fetching place search results");
-    }
-  }
-
   // Calls Place Search API when the user presses enter
   const enterPressed = async () => {
     const text = currentQuery == "pickup" ? pickUpQuery : dropOffQuery;
@@ -452,6 +438,17 @@ export default function RideRequestForm({
         directive: "PLACE_SEARCH",
         query: text,
       });
+    }
+  };
+
+  // handle the place search results
+  const handlePlaceSearchResults = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "PLACE_SEARCH") {
+      const placeSearchResp = message as PlaceSearchResponse;
+      // update the place search results
+      setPlaceSearchResults(placeSearchResp.results);
+    } else {
+      console.error("Error fetching place search results");
     }
   };
 
