@@ -20,6 +20,7 @@ import {
   viewRide,
   handleDriverViewChoice,
   fetchRecentLocations,
+  driverArrived,
 } from "./routes";
 import {
   CancelResponse,
@@ -29,8 +30,6 @@ import {
   GoogleResponse,
   ErrorResponse,
   RideRequest,
-  AcceptResponse,
-  DriverAcceptResponse,
   SnapLocationResponse,
 } from "./api";
 import { Timestamp } from "firebase/firestore";
@@ -157,69 +156,6 @@ export const handleWebSocketMessage = async (
       break;
     }
 
-    case "ACCEPT_RIDE": {
-      const resView = await viewRide(input.driverid, null);
-      if (resView.response === "ERROR") {
-        console.log("A");
-        sendWebSocketMessage(ws, resView);
-        break;
-      } else if (resView.rideExists === false) {
-        console.log("B");
-        sendWebSocketMessage(ws, {
-          response: "ERROR",
-          error: "No rides available to accept",
-          category: "ACCEPT_RIDE",
-        });
-        break;
-      }
-      if (resView.response === "VIEW_RIDE" && resView.rideExists) {
-        console.log("C");
-        const resAccept = await handleDriverViewChoice(
-          input.driverid,
-          resView,
-          "ACCEPT"
-        );
-        if (resAccept.response === "ERROR") {
-          sendWebSocketMessage(ws, resAccept);
-          break;
-        }
-        // Artificially consturct an AcceptResponse to support old API
-        if (
-          resAccept.providedView.view?.rideRequest.netid === undefined ||
-          resAccept.providedView.view?.rideRequest.locationFrom === undefined ||
-          resAccept.providedView.view?.rideRequest.locationTo === undefined ||
-          resAccept.providedView.view?.rideRequest.numRiders === undefined
-        ) {
-          console.log("D");
-          sendWebSocketMessage(ws, {
-            response: "ERROR",
-            error: "Missing field during AcceptResponse",
-            category: "ACCEPT_RIDE",
-          });
-          break;
-        }
-        console.log("E");
-        const dar: DriverAcceptResponse = {
-          response: "ACCEPT_RIDE",
-          netid: resAccept.providedView.view?.rideRequest.netid,
-          location: resAccept.providedView.view?.rideRequest.locationFrom,
-          destination: resAccept.providedView.view?.rideRequest.locationTo,
-          numRiders: resAccept.providedView.view?.rideRequest.numRiders,
-          requestid: "NULL", // This is actually not supplied by firestore to the caller for some reason, never exists (?)
-        };
-        const res: AcceptResponse = {
-          response: "ACCEPT_RIDE",
-          student: {
-            response: "ACCEPT_RIDE",
-            success: true,
-          },
-          driver: dar,
-        };
-        sendWebSocketMessage(ws, res);
-      }
-      break;
-    }
-
     // new directive for the ride request broker, which sends back a message
     // of type RidesExistResponse on success. Intended for use with driver
     // sign on: When the driver opens the app they will only be able to view
@@ -249,16 +185,52 @@ export const handleWebSocketMessage = async (
     // request.
     // ACCEPT -> accept the ride. Assigns the ride to the driver, begin pick up.
     // DENY -> Deny the ride request without reporting, returns the req to the pool
-    // REPORT -> Deny the request, remove it from the pool, blacklist the student
     // TIMEOUT -> Driver didn't decide anything fast enough, return to pool
     // ERROR -> Unexpected problem, return request to queue
     case "VIEW_DECISION": {
+      console.log(`here is the input: ${JSON.stringify(input)}`);
+      if (
+        input.decision !== "ACCEPT" &&
+        input.decision !== "DENY" &&
+        input.decision !== "ERROR" &&
+        input.decision !== "TIMEOUT"
+      ) {
+        throw new Error(
+          `input.decsion was ${input.decision}, not a legal type.`
+        );
+      }
       const res = await handleDriverViewChoice(
         input.driverid,
         input.view,
         input.decision
       );
+      if (res.response == "ERROR") {
+        sendWebSocketMessage(ws, res);
+      } else {
+        if (res.driver.providedView.rideRequest?.netid == undefined) {
+          throw new Error(
+            `Driver allowed to accept ride with no netid: ${input.view}`
+          );
+        }
+        sendWebSocketMessage(ws, res.driver);
+        if (res.student !== undefined) {
+          sendMessageToNetid(
+            res.driver.providedView.rideRequest?.netid,
+            res.student
+          );
+        }
+      }
       sendWebSocketMessage(ws, res);
+      break;
+    }
+
+    // Directive
+    case "DRIVER_ARRIVED": {
+      const res = await driverArrived(input.studentNetid);
+      sendWebSocketMessage(ws, res);
+      if (res.response == "DRIVER_ARRIVED" && res.success) {
+        sendMessageToNetid(input.studentNetid, res);
+      }
       break;
     }
 

@@ -22,6 +22,7 @@ import {
   ViewDecisionResponse,
   SnapLocationResponse,
   RecentLocationResponse,
+  DriverArrivedResponse,
 } from "./api";
 import {
   addFeedbackToDb,
@@ -358,7 +359,7 @@ export const viewRide = async (
   driverLocation: {
     latitude: number;
     longitude: number;
-  } | null // only accepts null to support `ACCEPT_RIDE`, which should be deprectated asap.
+  } | null //TODO(connor): remove null option, force for ranking
 ): Promise<ViewRideRequestResponse | ErrorResponse> => {
   let associatedUser: User | null = null;
   try {
@@ -392,10 +393,7 @@ export const viewRide = async (
     return {
       response: "VIEW_RIDE",
       rideExists: true,
-      view: {
-        rideRequest: rideRequest,
-        user: associatedUser,
-      },
+      rideRequest: rideRequest,
     };
   } catch (e) {
     return {
@@ -411,16 +409,16 @@ export const viewRide = async (
  * of a ride request in the pool that was previously checked out to a
  * particular driver.
  * @param driverid ID of the driver who viewed the given ride request
- * @param providedview The view that was provided to the driver
+ * @param providedView The view that was provided to the driver
  * @param decision The driver's decision on the ride request
  *  `ACCEPT` -> Accepts the ride request, ties to driver
  */
 export const handleDriverViewChoice = async (
   driverid: string,
-  providedview: ViewRideRequestResponse,
-  decision: "ACCEPT" | "DENY" | "REPORT" | "TIMEOUT" | "ERROR"
+  providedView: ViewRideRequestResponse,
+  decision: "ACCEPT" | "DENY" | "TIMEOUT" | "ERROR"
 ): Promise<ViewDecisionResponse | ErrorResponse> => {
-  const requestNetid = providedview.view?.rideRequest.netid;
+  const requestNetid = providedView.rideRequest?.netid;
   if (typeof requestNetid !== "string") {
     return {
       response: "ERROR",
@@ -431,17 +429,24 @@ export const handleDriverViewChoice = async (
   if (decision === "ACCEPT") {
     /**
      * Change the status of the ride request with the given
-     * rideRequestId to be `AWAITING PICK UP`, or `ACCEPTED`,
+     * rideRequestId to be `DRIVING TO PICK UP`,
      * assigning the ride to the given driver
      */
     try {
       return await runTransaction(db, async (t) => {
-        setRideRequestStatus(t, "ACCEPTED", requestNetid);
+        setRideRequestStatus(t, "DRIVING TO PICK UP", requestNetid);
         setRideRequestDriver(t, requestNetid, driverid);
         return {
           response: "VIEW_DECISION",
-          providedView: providedview,
-          success: true,
+          driver: {
+            response: "VIEW_DECISION",
+            providedView: providedView,
+            success: true,
+          },
+          student: {
+            response: "ACCEPT_RIDE",
+            success: true,
+          },
         };
       });
     } catch (e) {
@@ -461,40 +466,18 @@ export const handleDriverViewChoice = async (
         setRideRequestStatus(t, "REQUESTED", requestNetid);
         return {
           response: "VIEW_DECISION",
-          providedView: providedview,
-          success: true,
+          driver: {
+            response: "VIEW_DECISION",
+            providedView: providedView,
+            success: true,
+          },
+          student: undefined,
         };
       });
     } catch (e) {
       return {
         response: "ERROR",
-        error: `Unexpected Error during handleDriverViewChoie: ${e}`,
-        category: "VIEW_RIDE",
-      };
-    }
-  } else if (decision === "REPORT") {
-    /**
-     * Handle report/blacklist behavior, remove ride request
-     * from the pool.
-     */
-    try {
-      return await runTransaction(db, async (t) => {
-        const netid = providedview.view?.user.netid;
-        if (netid === undefined || netid === null) {
-          throw new Error(`Tried to blacklist a user with no netid`);
-        }
-        setRideRequestStatus(t, "CANCELED", requestNetid);
-        blacklistUser(t, netid);
-        return {
-          response: "VIEW_DECISION",
-          providedView: providedview,
-          success: true,
-        };
-      });
-    } catch (e) {
-      return {
-        response: "ERROR",
-        error: `Unexpected Error during handleDriverViewChoie: ${e}`,
+        error: `Unexpected Error during handleDriverViewChoice: ${e}`,
         category: "VIEW_RIDE",
       };
     }
@@ -508,14 +491,18 @@ export const handleDriverViewChoice = async (
         setRideRequestStatus(t, "REQUESTED", requestNetid);
         return {
           response: "VIEW_DECISION",
-          providedView: providedview,
-          success: true,
+          driver: {
+            response: "VIEW_DECISION",
+            providedView: providedView,
+            success: true,
+          },
+          student: undefined,
         };
       });
     } catch (e) {
       return {
         response: "ERROR",
-        error: `Unexpected Error during handleDriverViewChoie: ${e}`,
+        error: `Unexpected Error during handleDriverViewChocie: ${e}`,
         category: "VIEW_RIDE",
       };
     }
@@ -531,20 +518,52 @@ export const handleDriverViewChoice = async (
         setRideRequestStatus(t, "REQUESTED", requestNetid);
         return {
           response: "VIEW_DECISION",
-          providedView: providedview,
-          success: true,
+          driver: {
+            response: "VIEW_DECISION",
+            providedView: providedView,
+            success: true,
+          },
+          student: undefined,
         };
       });
     } catch (e) {
       return {
         response: "ERROR",
-        error: `Unexpected Error during handleDriverViewChoie: ${e}`,
+        error: `Unexpected Error during handleDriverViewChoice: ${e}`,
         category: "VIEW_RIDE",
       };
     }
   } else {
     throw new Error(`decision: ${decision} was not a valid string.`);
   }
+};
+
+/**
+ * Sets the status of the ride request associated with `netid`
+ * to be "DRIVER AT PICK UP" indicating that the driver has
+ * arrived at the pick up location
+ * @param netid netid of the student of the ride request
+ * @returns DriverArrivedResponse with .success = true on success,
+ * or an error response otherwise.
+ */
+export const driverArrived = async (
+  netid: string
+): Promise<ErrorResponse | DriverArrivedResponse> => {
+  try {
+    await runTransaction(db, async (t) => {
+      await setRideRequestStatus(t, "DRIVER AT PICK UP", netid);
+    });
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Unexpected Error during driverArrived: ${e}`,
+      category: "VIEW_RIDE",
+    };
+  }
+  return {
+    response: "DRIVER_ARRIVED",
+    success: true,
+  };
 };
 
 /* Allows the student to cancel a ride and updates the server and notifies the user. 

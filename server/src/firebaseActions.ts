@@ -19,6 +19,7 @@ import {
   ProblematicUser,
   RideRequest,
   User,
+  RideRequestStatus,
 } from "./api";
 
 export const db = getFirestore(app);
@@ -161,7 +162,13 @@ export async function addRideRequestToPool(
   const queryExistingRide = query(
     rideRequestsCollection,
     where("netid", "==", rideRequest.netid),
-    where("status", "in", ["REQUESTED", "ACCEPTED"])
+    where("status", "in", [
+      "REQUESTED",
+      "VIEWING",
+      "DRIVING TO PICK UP",
+      "DRIVER AT PICK UP",
+      "DRIVING TO DESTINATION",
+    ])
   );
   const inDatabase = await getDocs(queryExistingRide); // get the document by netid
   //  check if user is in problematicUsers table
@@ -204,14 +211,7 @@ export async function getRideRequests(): Promise<RideRequest[]> {
  */
 export async function setRideRequestStatus(
   t: Transaction,
-  status:
-    | "CANCELED"
-    | "REQUESTED"
-    | "VIEWING"
-    | "ACCEPTED"
-    | "AWAITING PICK UP"
-    | "DRIVING"
-    | "COMPLETED",
+  status: RideRequestStatus,
   netid: string
 ) {
   const res = query(rideRequestsCollection, where("netid", "==", netid));
@@ -267,12 +267,21 @@ export async function cancelRideRequest(
     const data = doc.data() as RideRequest;
 
     // only cancel requests that are not completed
-    if (data.status != "REQUESTED" && data.status != "ACCEPTED") {
+    if (
+      data.status != "REQUESTED" &&
+      data.status != "DRIVER AT PICK UP" &&
+      data.status != "DRIVING TO PICK UP" &&
+      data.status != "VIEWING"
+    ) {
       continue;
     }
 
-    if (data.status == "ACCEPTED") {
-      // if a request was accepted, notify the corresponding driver
+    if (
+      data.status === "DRIVING TO PICK UP" ||
+      data.status === "DRIVER AT PICK UP" ||
+      data.status === "VIEWING"
+    ) {
+      // If the cancalled request is being helped by a driver, notify the driver.
       if (role == "STUDENT") {
         otherid = data.driverid;
       } else {
@@ -280,7 +289,7 @@ export async function cancelRideRequest(
       }
     }
 
-    await transaction.update(doc.ref, { status: "CANCELLED" });
+    await setRideRequestStatus(transaction, "CANCELLED", netid);
   }
 
   return otherid; // return the driver id if there was a ride request that was accepted
@@ -295,9 +304,10 @@ export async function completeRideRequest(
   const docRef = doc(rideRequestsCollection, requestid); // get the document by id
   const docSnap = await transaction.get(docRef);
 
-  if (docSnap.exists() && docSnap.data().status != "ACCEPTED") {
+  if (docSnap.exists() && docSnap.data().status != "DRIVING TO DESTINATION") {
     throw new Error(
-      "Only can complete a ride that is 'ACCEPTED' not " + docSnap.data().status
+      "Only can complete a ride that is 'DRIVING TO DESTINATION' not " +
+        docSnap.data().status
     );
   }
 
@@ -391,7 +401,11 @@ export async function getOtherNetId(netid: string): Promise<string> {
   const queryNetid = query(
     rideRequestsCollection,
     where("netid", "==", netid),
-    where("status", "==", "ACCEPTED")
+    where("status", "in", [
+      "DRIVING TO PICK UP",
+      "DRIVER AT PICK UP",
+      "DRIVING TO DESTINATION",
+    ])
   );
   // if something is returned here, the user is a student
   // and the opposite user is the driver
@@ -410,7 +424,11 @@ export async function getOtherNetId(netid: string): Promise<string> {
   const queryDriver = query(
     rideRequestsCollection,
     where("driverid", "==", netid),
-    where("status", "==", "ACCEPTED")
+    where("status", "in", [
+      "DRIVING TO PICK UP",
+      "DRIVER AT PICK UP",
+      "DRIVING TO DESTINATION",
+    ])
   );
   docs = await getDocs(queryDriver);
   if (docs.size != 0) {

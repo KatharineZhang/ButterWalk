@@ -90,8 +90,8 @@ export type WebSocketMessage =
       directive: "DISTANCE";
       origin: { latitude: number; longitude: number }[];
       destination: { latitude: number; longitude: number }[];
-      mode: "driving" | "walking"
-      tag: string; // used to identify the response    
+      mode: "driving" | "walking";
+      tag: string; // used to identify the response
     }
   // new directive for the ride request broker, which sends back a message
   // of type RidesExistResponse on success. Intended for use with driver
@@ -120,6 +120,11 @@ export type WebSocketMessage =
       view: ViewRideRequestResponse;
       decision: "ACCEPT" | "DENY" | "REPORT" | "TIMEOUT" | "ERROR";
       tag: string; // used to identify the response
+    }
+  | {
+      directive: "DRIVER_ARRIVED";
+      driverid: string;
+      studentNetid: string;
     };
 
 // TEMP FIX
@@ -149,12 +154,14 @@ export type WebSocketResponse =
   | RidesExistResponse
   | ViewRideRequestResponse
   | ViewDecisionResponse
+  | ViewDecisionDriverResponse
+  | DriverArrivedResponse
   | RecentLocationResponse;
 
 export type RecentLocationResponse = {
-  response : "RECENT_LOCATIONS";
+  response: "RECENT_LOCATIONS";
   locations: string[];
-}
+};
 
 export type GeneralResponse = {
   response:
@@ -169,7 +176,6 @@ export type GeneralResponse = {
     | "ACCEPT_RIDE";
   success: true;
 };
-
 
 export type SignInResponse = {
   response: "SIGNIN";
@@ -206,22 +212,35 @@ export type RequestRideResponse = {
 export type ViewRideRequestResponse = {
   response: "VIEW_RIDE";
   rideExists: boolean;
-  view?: {
-    rideRequest: RideRequest;
-    user: User;
-  };
+  rideRequest?: RideRequest;
 };
 
 /**
  * After a driver views a ride request checked out to them temporarily
  * by the broker, they choose to accept/deny/report etc, and after
- * doing so are returned a response of this type indicating the successful
- * or unsuccesful assignment of the ride to them.
+ * doing so the handleDriverViewChoice method gives a response back
+ * to the driver based on what happened, and updates the student if
+ * they need to be updated (i.e. ride denied or accepted). undefined
+ * means do not send any response to the student.
  */
 export type ViewDecisionResponse = {
   response: "VIEW_DECISION";
+  student: GeneralResponse | undefined;
+  driver: ViewDecisionDriverResponse;
+};
+export type ViewDecisionDriverResponse = {
+  response: "VIEW_DECISION";
   providedView: ViewRideRequestResponse;
   success: boolean;
+};
+
+/**
+ * Response sent by DRIVER_ARRIVED directive
+ * on success
+ */
+export type DriverArrivedResponse = {
+  response: "DRIVER_ARRIVED";
+  success: true;
 };
 
 export type WaitTimeResponse = {
@@ -382,6 +401,29 @@ export type Feedback = {
 };
 
 /**
+ * Possible states of RideRequest.status
+ */
+export type RideRequestStatus =
+  // Cancelled for any reason
+  | "CANCELLED"
+  // Student is waiting for a driver to accept their ride
+  | "REQUESTED"
+  // Driver has temporarily checked out a ride that they
+  // can choose to accept or deny
+  | "VIEWING"
+  // Driver accepted the ride and is driving to the pick
+  // up location. Ride Request should have an associated
+  // driver id
+  | "DRIVING TO PICK UP"
+  // Driver arrived at pick up location
+  | "DRIVER AT PICK UP"
+  // Driver picked up the student and is driving with them
+  // to the student's chosen destination
+  | "DRIVING TO DESTINATION"
+  // Ride is complete
+  | "COMPLETED";
+
+/**
  * RideRequest represents a students request for a ride, with all the information necessary
  * to rank, assign, and complete a ride.
  *
@@ -458,14 +500,7 @@ export type RideRequest = {
    * progress (new behavior for the ride request broker).
    * - `COMPLETED`: The student was dropped off after completion of the ride.
    */
-  status:
-    | "CANCELED"
-    | "REQUESTED"
-    | "VIEWING"
-    | "ACCEPTED"
-    | "AWAITING PICK UP"
-    | "DRIVING"
-    | "COMPLETED";
+  status: RideRequestStatus;
 };
 
 // CREATE TABLE ProblematicUsers (netid varchar(20) REFERENCES Users(netid) PRIMARY KEY,
@@ -477,8 +512,7 @@ export type ProblematicUser = {
   category: "REPORTED" | "BLACKLISTED";
 };
 
-
 export type RecentLocation = {
   netid: string;
   locations: string[];
-}
+};

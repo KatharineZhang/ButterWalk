@@ -247,7 +247,7 @@ describe("Websocket Integration", () => {
   test("RIDES_EXIST returns true when there are rides with multiple status's including REQUSTED", async () => {
     await addDoc(rideRequestsCollection, {
       netid: "0000000",
-      driverid: "REQUESTED",
+      driverid: "928374_TEST",
       requestedAt: Timestamp.now(),
       completedAt: Timestamp.now(),
       locationFrom: "nodejs",
@@ -265,7 +265,7 @@ describe("Websocket Integration", () => {
       locationTo: "jest",
       studentLocation: "my puter",
       numRiders: 100,
-      status: "CANCELED",
+      status: "CANCELLED",
     });
     await addDoc(rideRequestsCollection, {
       netid: "1111111",
@@ -276,7 +276,7 @@ describe("Websocket Integration", () => {
       locationTo: "jest",
       studentLocation: "my puter",
       numRiders: 100,
-      status: "AWAITING_PICK_UP",
+      status: "DRIVING TO PICK UP",
     });
     await setTimeout(1000);
     ws.send(
@@ -320,7 +320,7 @@ describe("Websocket Integration", () => {
     await setTimeout(1000);
     expect(lastMsg.response).toBe("VIEW_RIDE");
     expect(lastMsg.rideExists).toBe(true);
-    expect(lastMsg.view.rideRequest.netid).toBe("3333333");
+    expect(lastMsg.rideRequest.netid).toBe("3333333");
     const queryExistingRide = query(
       rideRequestsCollection,
       where("netid", "in", ["3333333"])
@@ -330,7 +330,7 @@ describe("Websocket Integration", () => {
     expect(inDatabase.docs[0].get("status")).toBe("VIEWING");
   });
 
-  test("VIEW_DECSIION -- ACCEPT updates ride status and driverid of the ride", async () => {
+  test("VIEW_DECISION -- ACCEPT updates ride status and driverid of the ride", async () => {
     ws.send(MOCK_RR_MSG);
     await setTimeout(1000);
     ws.send(
@@ -346,7 +346,7 @@ describe("Websocket Integration", () => {
     await setTimeout(1000);
     expect(lastMsg.response).toBe("VIEW_RIDE");
     expect(lastMsg.rideExists).toBe(true);
-    expect(lastMsg.view.rideRequest.netid).toBe("3333333");
+    expect(lastMsg.rideRequest.netid).toBe("3333333");
     const queryExistingRide = query(
       rideRequestsCollection,
       where("netid", "in", ["3333333"])
@@ -358,26 +358,24 @@ describe("Websocket Integration", () => {
       directive: "VIEW_DECISION",
       driverid: "7777777",
       view: {
-        view: {
-          rideRequest: {
-            locationFrom: "MOCK_TEST_LOCATION",
-            status: "REQUESTED",
-            completedAt: null,
-            numRiders: 1,
-            requestedAt: Timestamp.now(), //incorrect timestamp, shouldn't matter though
-            locationTo: "MOCK_TEST_DESTINATION",
-            netid: "3333333",
-            driverid: null,
-          },
-          user: {
-            firstName: "first_name_3333333",
-            lastName: "last_name_3333333",
-            netid: "3333333",
-            phoneNumber: "333-111-1010",
-            preferredName: "test_user_3333333",
-            studentNumber: "3333333",
-            studentOrDriver: "STUDENT",
-          },
+        rideRequest: {
+          locationFrom: "MOCK_TEST_LOCATION",
+          status: "REQUESTED",
+          completedAt: null,
+          numRiders: 1,
+          requestedAt: Timestamp.now(), //incorrect timestamp, shouldn't matter though
+          locationTo: "MOCK_TEST_DESTINATION",
+          netid: "3333333",
+          driverid: null,
+        },
+        user: {
+          firstName: "first_name_3333333",
+          lastName: "last_name_3333333",
+          netid: "3333333",
+          phoneNumber: "333-111-1010",
+          preferredName: "test_user_3333333",
+          studentNumber: "3333333",
+          studentOrDriver: "STUDENT",
         },
       },
       decision: "ACCEPT",
@@ -385,50 +383,87 @@ describe("Websocket Integration", () => {
     ws.send(JSON.stringify(msg));
     await setTimeout(1000);
     expect(lastMsg.response).toBe("VIEW_DECISION");
-    expect(lastMsg.success).toBe(true);
+    expect(lastMsg.driver.success).toBe(true);
+    expect(lastMsg.student.success).toBe(true);
     const updatedInDatabase = await getDocs(queryExistingRide);
     expect(updatedInDatabase.size).toBe(1);
-    expect(updatedInDatabase.docs[0].get("status")).toBe("ACCEPTED");
+    expect(updatedInDatabase.docs[0].get("status")).toBe("DRIVING TO PICK UP");
     expect(updatedInDatabase.docs[0].get("netid")).toBe("3333333");
   });
 
-  test("ACCEPT_RIDE wrapper sets the accepted ride to ACCEPTED when a ride is available", async () => {
+  test("DRIVER_ARRIVED directive works as a part of the flow", async () => {
     ws.send(MOCK_RR_MSG);
     await setTimeout(1000);
     ws.send(
       JSON.stringify({
-        directive: "ACCEPT_RIDE",
-        driverid: "6666666",
+        directive: "VIEW_RIDE",
+        driverid: "9999999",
+        driverLocation: {
+          latitude: 1,
+          longitude: 2,
+        },
       })
     );
     await setTimeout(1000);
-    expect(lastMsg.response).toBe("ACCEPT_RIDE");
-    expect(lastMsg.student.response).toBe("ACCEPT_RIDE");
-    expect(lastMsg.student.success).toBe(true);
-    expect(lastMsg.driver.response).toBe("ACCEPT_RIDE");
-    expect(lastMsg.driver.netid).toBe("3333333");
+    expect(lastMsg.response).toBe("VIEW_RIDE");
+    expect(lastMsg.rideExists).toBe(true);
+    expect(lastMsg.rideRequest.netid).toBe("3333333");
     const queryExistingRide = query(
       rideRequestsCollection,
       where("netid", "in", ["3333333"])
     );
     const inDatabase = await getDocs(queryExistingRide);
     expect(inDatabase.size).toBe(1);
-    expect(inDatabase.docs[0].get("status")).toBe("ACCEPTED");
-    expect(inDatabase.docs[0].get("netid")).toBe("3333333");
-  });
-
-  test("ACCEPT_RIDE gives an error when no rides available", async () => {
-    ws.send(
-      JSON.stringify({
-        directive: "ACCEPT_RIDE",
-        driverid: "9999999",
-      })
-    );
+    expect(inDatabase.docs[0].get("status")).toBe("VIEWING");
+    const msg = {
+      directive: "VIEW_DECISION",
+      driverid: "7777777",
+      view: {
+        rideRequest: {
+          locationFrom: "MOCK_TEST_LOCATION",
+          status: "REQUESTED",
+          completedAt: null,
+          numRiders: 1,
+          requestedAt: Timestamp.now(), //incorrect timestamp, shouldn't matter though
+          locationTo: "MOCK_TEST_DESTINATION",
+          netid: "3333333",
+          driverid: null,
+        },
+        user: {
+          firstName: "first_name_3333333",
+          lastName: "last_name_3333333",
+          netid: "3333333",
+          phoneNumber: "333-111-1010",
+          preferredName: "test_user_3333333",
+          studentNumber: "3333333",
+          studentOrDriver: "STUDENT",
+        },
+      },
+      decision: "ACCEPT",
+    };
+    ws.send(JSON.stringify(msg));
     await setTimeout(1000);
-    expect(lastMsg.response).toBe("ERROR");
-    const queryExistingRide = query(rideRequestsCollection);
-    const inDatabase = await getDocs(queryExistingRide);
-    expect(inDatabase.size).toBe(0);
+    expect(lastMsg.response).toBe("VIEW_DECISION");
+    expect(lastMsg.driver.success).toBe(true);
+    expect(lastMsg.student.success).toBe(true);
+    const updatedInDatabase = await getDocs(queryExistingRide);
+    expect(updatedInDatabase.size).toBe(1);
+    expect(updatedInDatabase.docs[0].get("status")).toBe("DRIVING TO PICK UP");
+    expect(updatedInDatabase.docs[0].get("netid")).toBe("3333333");
+    // actual important part of this test
+    const driverArrivedMsg = {
+      directive: "DRIVER_ARRIVED",
+      driverid: "7777777",
+      studentNetid: "3333333",
+    };
+    ws.send(JSON.stringify(driverArrivedMsg));
+    await setTimeout(1000);
+    expect(lastMsg.response).toBe("DRIVER_ARRIVED");
+    expect(lastMsg.success).toBe(true);
+    const updatedAgain = await getDocs(queryExistingRide);
+    expect(updatedAgain.size).toBe(1);
+    expect(updatedAgain.docs[0].get("status")).toBe("DRIVER AT PICK UP");
+    expect(updatedAgain.docs[0].get("netid")).toBe("3333333");
   });
 
   // The following tests not written because their functionality is not planned
