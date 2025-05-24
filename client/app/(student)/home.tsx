@@ -8,6 +8,7 @@ import {
   DistanceResponse,
   ErrorResponse,
   LocationResponse,
+  LocationType,
   RequestRideResponse,
   User,
   WaitTimeResponse,
@@ -112,7 +113,7 @@ export default function HomePage() {
   };
 
   // the user's recent locations that will be displayed in the dropdown
-  const [recentLocations, setRecentLocations] = useState<string[]>([]);
+  const [recentLocations, setRecentLocations] = useState<LocationType[]>([]);
 
   /* PROFILE STATE AND METHODS */
   const [profileVisible, setProfileVisible] = useState(false);
@@ -150,8 +151,16 @@ export default function HomePage() {
       directive: "REQUEST_RIDE",
       phoneNum: user.phoneNumber as string,
       netid,
-      location: pickUpLocationName,
-      destination: dropOffLocationName,
+      location: {
+        name: pickUpLocationName,
+        address: pickUpAddress,
+        coordinates: pickUpLocation,
+      },
+      destination: {
+        name: dropOffLocationName,
+        address: dropOffAddress,
+        coordinates: dropOffLocation,
+      },
       numRiders: numPassengers,
     });
     // set the component to show to loading
@@ -395,7 +404,7 @@ export default function HomePage() {
 
   const handleRecentLocationResponse = (message: WebSocketResponse) => {
     if (message.response === "RECENT_LOCATIONS") {
-      setRecentLocations(message.locations as string[]);
+      setRecentLocations(message.locations as LocationType[]);
     } else {
       // something went wrong
       console.log("Recent location response error: ", message);

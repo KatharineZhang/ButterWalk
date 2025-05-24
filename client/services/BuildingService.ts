@@ -1302,7 +1302,7 @@ export class BuildingService {
       closestBuilding,
       coord
     );
-    console.log("The closest entrance:", entrance ? entrance : "generic");
+
     if (!entrance) {
       return building.location;
     }

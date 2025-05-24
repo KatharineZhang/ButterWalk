@@ -18,6 +18,7 @@ import {
   profile,
   distanceMatrix,
   fetchRecentLocations,
+  getPlaceSearchResults,
 } from "./routes";
 import {
   AcceptResponse,
@@ -265,6 +266,13 @@ export const handleWebSocketMessage = async (
       // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
       break;
+
+    case "PLACE_SEARCH":
+      resp = await getPlaceSearchResults(input.query);
+      // send response back to client (the student)
+      sendWebSocketMessage(ws, resp);
+      break;
+
     default:
       console.log(`WEBSOCKET: Unknown directive: ${input}`);
       break;
