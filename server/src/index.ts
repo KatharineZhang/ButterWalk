@@ -9,11 +9,11 @@ const app: Express = express();
 app.use(bodyParser.json());
 
 //Make a new websocket server on 8080
-const server = http.createServer(app);
+export const server = http.createServer(app);
 server.listen(8080, () => {
   console.log("WEBSOCKET: HTTP server listening on port 8080");
 });
-const wss = new WebSocketServer.Server({ server });
+
 export let clients: {
   websocketid: string;
   websocketInstance: WebSocketServer;
@@ -21,6 +21,7 @@ export let clients: {
   role: "STUDENT" | "DRIVER";
 }[] = [];
 
+export const wss = new WebSocketServer.Server({ server });
 wss.on("connection", (ws: WebSocketServer) => {
   const instanceId = uuidv4(); // generate a unique id for each websocket instance
 

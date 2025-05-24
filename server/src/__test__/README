@@ -1,0 +1,17 @@
+Do `npx jest` to run tests.
+
+https://jestjs.io/docs/getting-started
+https://kulshekhar.github.io/ts-jest/docs/
+
+Tests are set up with Jest to run in ts-node with the provided preset. Arguably, this is fragile
+and kind of fucked up, but it works *really* well for debugging which is the only reason I am writing
+tests right now. 
+
+Ideally, the entire server should use a general transipler (Babel + Webpack) to produce a standard output 
+with associations to the typed source code instead of using tsc, and tests should run on the distribution
+bundle as well as in ts-node. This requires additional work that I am not going to do right now.
+
+If you are writing tests and the above sounds like meaningless nonsense[1] talk to Connor Olson or just don't
+care and do whatever (up to you).
+
+[1] A well-adjusted understanding. Do not be concerned.
