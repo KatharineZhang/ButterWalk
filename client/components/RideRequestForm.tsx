@@ -576,7 +576,7 @@ export default function RideRequestForm({
                 backgroundColor: "#4B2E83",
                 position: "absolute",
                 zIndex: 3,
-                top: 90,
+                top: 120,
                 left: 13,
                 height: 15,
                 width: 15,
@@ -587,7 +587,7 @@ export default function RideRequestForm({
               style={{
                 zIndex: 3,
                 position: "absolute",
-                top: 112,
+                top: 142,
                 left: 19,
                 width: 2,
                 height: 40,
@@ -598,7 +598,7 @@ export default function RideRequestForm({
               style={{
                 position: "absolute",
                 zIndex: 3,
-                top: 157,
+                top: 187,
                 left: 10,
                 height: 20,
                 width: 20,
