@@ -537,8 +537,8 @@ export default function RideRequestForm({
   const RideRequest: JSX.Element = (
     <View style={{ flex: 1, pointerEvents: "box-none" }}>
       <BottomDrawer bottomSheetRef={bottomSheetRef}>
-        <View style={styles.requestFormContainer}>
-          <View>
+        <View style={[styles.requestFormContainer, { flex: 1 }]}>
+          <View style={{ flex: 1, width: "100%" }}>
             {/* Header */}
             <View
               style={{
@@ -547,6 +547,7 @@ export default function RideRequestForm({
                 alignItems: "center",
                 width: "90%",
                 marginHorizontal: 20,
+                marginBottom: 20,
               }}
             >
               <View style={{ width: 20 }} />
@@ -635,9 +636,12 @@ export default function RideRequestForm({
             {/* Next Button */}
             <View
               style={{
+                flex: 0.1,
                 alignItems: "center",
                 flexDirection: "row",
                 justifyContent: "flex-end",
+                width: "100%",
+                paddingHorizontal: 20,
               }}
             >
               <Text style={{ fontStyle: "italic" }}>

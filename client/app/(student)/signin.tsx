@@ -106,56 +106,73 @@ const Login = () => {
     />
   ) : (
     <SafeAreaView style={[styles.container, { padding: 20 }]}>
-      <Text style={{ fontSize: 25, fontWeight: "500", color: "#4B2E83" }}>
-        Welcome Student!
-      </Text>
-      <Image style={styles.signInbottomImageContainer} source={huskyCarImage} />
+      <View style={{ flex: 1, width: "100%", justifyContent: "space-between" }}>
+        {/* Main Content */}
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <Text
+            style={{
+              fontSize: 25,
+              fontWeight: "500",
+              color: "#4B2E83",
+              marginBottom: 20,
+            }}
+          >
+            Welcome Student!
+          </Text>
+          <Image
+            style={[styles.signInbottomImageContainer, { flex: 1 }]}
+            source={huskyCarImage}
+            resizeMode="contain"
+          />
+          <Text
+            style={{
+              fontSize: 20,
+              textAlign: "center",
+              fontWeight: "500",
+              color: "#4B2E83",
+              lineHeight: 30,
+              marginVertical: 20,
+            }}
+          >
+            Start your SafeTrip journey by signing in with your UW email
+          </Text>
 
-      <View style={{ height: "10%" }} />
-      <Text
-        style={{
-          fontSize: 20,
-          textAlign: "center",
-          fontWeight: "500",
-          color: "#4B2E83",
-          lineHeight: 30,
-        }}
-      >
-        {" "}
-        Start your SafeTrip journey by signing in with your UW email
-      </Text>
-      <View style={{ height: 20 }} />
+          <TouchableOpacity
+            style={{
+              borderColor: "#4B2E83",
+              borderWidth: 2,
+              height: 50,
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: 10,
+              width: "95%",
+              flexDirection: "row",
+            }}
+            onPress={() => promptAsync()}
+          >
+            <Image style={styles.signInGoogleLogo} source={logo} />
+            <Text style={{ fontWeight: "bold", fontSize: 17, marginLeft: 30 }}>
+              Sign in with UW Email
+            </Text>
+          </TouchableOpacity>
+          <Text style={{ color: "red", marginTop: 10 }}>{errMsg}</Text>
+        </View>
 
-      <TouchableOpacity
-        style={{
-          borderColor: "#4B2E83",
-          borderWidth: 2,
-          height: 50,
-          justifyContent: "center",
-          alignItems: "center",
-          borderRadius: 10,
-          width: "95%", // Make button full width
-          flexDirection: "row", // To align logo and text horizontally
-        }}
-        onPress={() => promptAsync()}
-      >
-        <Image style={styles.signInGoogleLogo} source={logo} />
-        <Text style={{ fontWeight: "bold", fontSize: 17, marginLeft: 30 }}>
-          Sign in with UW Email
-        </Text>
-      </TouchableOpacity>
-      <Text style={{ color: "red" }}>{errMsg}</Text>
-
-      {/* TEMPORARY Bypass Signin Button */}
-      <Pressable
-        style={[styles.signInButton, { position: "absolute", bottom: 40 }]}
-        onPress={() => {
-          setAccExists(false);
-          setNetid("student-netID");
-        }}
-      >
-        <Text style={styles.signInText}>Bypass Signin</Text>
-      </Pressable>
+        {/* TEMPORARY Bypass Button */}
+        <View style={{ paddingBottom: 20 }}>
+          <Pressable
+            style={styles.signInButton}
+            onPress={() => {
+              setAccExists(false);
+              setNetid("student-netID");
+            }}
+          >
+            <Text style={styles.signInText}>Bypass Signin</Text>
+          </Pressable>
+        </View>
+      </View>
     </SafeAreaView>
   );
 };
