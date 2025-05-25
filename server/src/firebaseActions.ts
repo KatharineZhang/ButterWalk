@@ -264,8 +264,12 @@ export async function completeRideRequest(
   );
 
   // add the new pickup and dropoff locations to the front of the array
-  oldLocations.unshift(data.locationTo);
-  oldLocations.unshift(data.locationFrom);
+  oldLocations.unshift(data.locationTo); // dropoff location
+  // only add the pickup location if it doesn't have an asterisk
+  // (the location will have an asterisk if the loaction is a snapped street)
+  if (!data.locationFrom.includes("*")) {
+    oldLocations.unshift(data.locationFrom); // pickup location
+  }
 
   // limit the array to 20 locations
   oldLocations.slice(0, 20);

@@ -405,22 +405,23 @@ export default function RideRequestForm({
   const handleSnapLocationQuery = (message: WebSocketResponse) => {
     if ("response" in message && message.response == "SNAP") {
       const snapResp = message as SnapLocationResponse;
+
       if (snapResp.success) {
         const roadName = snapResp.roadName;
         if (roadName == "") {
-          pickUpLocationNameChanged("Current Location");
-          setChosenPickup("Current Location");
-          setPickUpQuery("Current Location");
+          pickUpLocationNameChanged("Current Location"+"*");
+          setChosenPickup("Current Location"+"*");
+          setPickUpQuery("Current Location"+"*");
         } else {
-          pickUpLocationNameChanged(roadName);
-          // set the coordinates to the snapped location (send it back to home component)
+          pickUpLocationNameChanged(roadName+"*");
+          setChosenPickup(roadName+"*");
+          setPickUpQuery(roadName+"*");
+        }
+        // set the coordinates to the snapped location (send it back to home component)
           pickUpLocationCoordChanged({
             latitude: snapResp.latitude,
             longitude: snapResp.longitude,
           });
-          setChosenPickup(roadName);
-          setPickUpQuery(roadName);
-        }
       }
     } else {
       // there was a signin related error
