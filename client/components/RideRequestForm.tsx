@@ -521,11 +521,10 @@ export default function RideRequestForm({
           currentQuery == "pickup"
             ? pickUpQuery.toLowerCase()
             : dropOffQuery.toLowerCase();
-        // ff query is empty, show all results
         if (!query) return true;
-        // Match
+        // match if the building name STARTS WITH the query
         return (
-          item.toLowerCase().includes(query) ||
+          item.toLowerCase().startsWith(query) ||
           (currentQuery == "pickup" && item == "Current Location")
         );
       });
