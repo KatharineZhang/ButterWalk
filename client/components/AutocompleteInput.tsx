@@ -37,7 +37,6 @@ const AutoCompleteInput: React.FC<AutoCompleteInputProps> = ({
 
 const styles = StyleSheet.create({
   autocompleteContainer: {
-    position: "relative",
     zIndex: 100,
     paddingBottom: 7,
     width: "100%",

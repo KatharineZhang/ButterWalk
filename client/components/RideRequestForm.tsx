@@ -6,6 +6,7 @@ import {
   Pressable,
   Animated,
   TouchableOpacity,
+  useWindowDimensions,
 } from "react-native";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
@@ -409,19 +410,19 @@ export default function RideRequestForm({
       if (snapResp.success) {
         const roadName = snapResp.roadName;
         if (roadName == "") {
-          pickUpLocationNameChanged("Current Location"+"*");
-          setChosenPickup("Current Location"+"*");
-          setPickUpQuery("Current Location"+"*");
+          pickUpLocationNameChanged("Current Location" + "*");
+          setChosenPickup("Current Location" + "*");
+          setPickUpQuery("Current Location" + "*");
         } else {
-          pickUpLocationNameChanged(roadName+"*");
-          setChosenPickup(roadName+"*");
-          setPickUpQuery(roadName+"*");
+          pickUpLocationNameChanged(roadName + "*");
+          setChosenPickup(roadName + "*");
+          setPickUpQuery(roadName + "*");
         }
         // set the coordinates to the snapped location (send it back to home component)
-          pickUpLocationCoordChanged({
-            latitude: snapResp.latitude,
-            longitude: snapResp.longitude,
-          });
+        pickUpLocationCoordChanged({
+          latitude: snapResp.latitude,
+          longitude: snapResp.longitude,
+        });
       }
     } else {
       // there was a signin related error
@@ -482,16 +483,18 @@ export default function RideRequestForm({
   }, []);
 
   // modify the sidebar height based on the panel shown
+  const { height } = useWindowDimensions();
   useEffect(() => {
+    // Dynamically set sidebar height based on screen size
     switch (whichPanel) {
       case "RideReq":
-        updateSideBarHeight(350);
+        updateSideBarHeight(Math.round(height * 0.41));
         break;
       case "NumberRiders":
-        updateSideBarHeight(310);
+        updateSideBarHeight(Math.round(height * 0.36));
         break;
       case "LocationSuggestions":
-        updateSideBarHeight(400);
+        updateSideBarHeight(Math.round(height * 0.48));
         break;
     }
   }, [whichPanel]);
@@ -572,10 +575,11 @@ export default function RideRequestForm({
   /* PANEL UI */
   // the ride request panel
   const RideRequest: JSX.Element = (
-    <View style={{ flex: 1, pointerEvents: "box-none" }}>
+    <View style={{ flex: 1, pointerEvents: "box-none", width: "100%" }}>
       <BottomDrawer bottomSheetRef={bottomSheetRef}>
-        <View style={[styles.requestFormContainer, { flex: 1 }]}>
-          <View style={{ flex: 1, width: "100%" }}>
+        {/* The search box with shadow under it*/}
+        <View style={styles.requestFormContainer}>
+          <View style={{ flex: 1, width: "99%", }}>
             {/* Header */}
             <View
               style={{
@@ -587,7 +591,7 @@ export default function RideRequestForm({
                 marginBottom: 20,
               }}
             >
-              <View style={{ width: 20 }} />
+              <View style={{ width: "10%" }} />
               {/* Title */}
               <Text style={{ fontSize: 20, fontWeight: "bold" }}>
                 Choose Your Locations
@@ -674,20 +678,16 @@ export default function RideRequestForm({
             <View
               style={{
                 flex: 0.1,
-                alignItems: "center",
-                flexDirection: "row",
                 justifyContent: "flex-end",
-                width: "100%",
-                paddingHorizontal: 20,
               }}
             >
-              <Text style={{ fontStyle: "italic" }}>
-                Choose # of passengers
-              </Text>
               <TouchableOpacity
-                style={styles.modalCloseButton}
+                style={{ flexDirection: "row",alignItems: "center",marginVertical: 10, justifyContent: "flex-end"}}
                 onPress={goToNumberRiders}
               >
+                 <Text style={{ fontStyle: "italic" }}>
+                Choose # of passengers
+              </Text>
                 <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
               </TouchableOpacity>
             </View>
@@ -695,8 +695,8 @@ export default function RideRequestForm({
         </View>
         {/* Autocomplete Suggestions */}
 
-        <View style={{ flex: 1, height: 100 }}>
-          <ScrollView style={{ paddingBottom: 400 }}>
+        <View style={{ flex: 1, height: "100%" }}>
+          <ScrollView style={{ paddingBottom: useWindowDimensions().height * 0.5}}>
             {/* Add the Current Location to the Top of the results*/}
             {currentQuery == "pickup" && (
               <TouchableOpacity

@@ -105,7 +105,9 @@ const Login = () => {
       }}
     />
   ) : (
-    <SafeAreaView style={[styles.container, { padding: 20 }]}>
+    <SafeAreaView
+      style={[styles.container, { padding: 20 }]}
+    >
       <View style={{ flex: 1, width: "100%", justifyContent: "space-between" }}>
         {/* Main Content */}
         <View
@@ -113,7 +115,7 @@ const Login = () => {
         >
           <Text
             style={{
-              fontSize: 25,
+              fontSize: 35,
               fontWeight: "500",
               color: "#4B2E83",
               marginBottom: 20,
@@ -122,7 +124,10 @@ const Login = () => {
             Welcome Student!
           </Text>
           <Image
-            style={[styles.signInbottomImageContainer, { flex: 1 }]}
+            style={[
+              styles.signInbottomImageContainer,
+              { flex: 0.5, marginBottom: "10%" },
+            ]}
             source={huskyCarImage}
             resizeMode="contain"
           />

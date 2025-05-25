@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { Pressable, TouchableOpacity, View } from "react-native";
+import {
+  Pressable,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import Profile from "./profile";
 import Map, { calculateDistance, isSameLocation, MapRef } from "./map";
 import { useLocalSearchParams } from "expo-router";
@@ -224,7 +229,8 @@ export default function HomePage() {
   };
 
   /* LEGEND STATE */
-  const [bottom, setBottom] = useState(350);
+  const { height } = useWindowDimensions();
+  const [bottom, setBottom] = useState(Math.round(height * 0.41));
 
   /* EFFECTS */
   useEffect(() => {
@@ -650,7 +656,7 @@ export default function HomePage() {
             position: "absolute",
             bottom:
               whichComponent == "waitForRide" || whichComponent == "handleRide"
-                ? 350
+                ? Math.round(height * 0.41)
                 : bottom,
             left: 10,
             alignItems: "flex-start",
