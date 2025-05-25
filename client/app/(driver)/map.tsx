@@ -16,7 +16,6 @@ import {
   DriverAcceptResponse,
   WebSocketResponse,
 } from "../../../server/src/api";
-import { findCoordinatesOfLocationName } from "@/services/GooglePlacesServices";
 
 export default function App() {
   // Extract netid from Redirect URL from signin page
@@ -60,8 +59,16 @@ export default function App() {
   const [rideInfo, setRideInfo] = React.useState<DriverAcceptResponse>({
     response: "ACCEPT_RIDE",
     netid: "",
-    location: "",
-    destination: "",
+    location: {
+      name: "",
+      address: "",
+      coordinates: { latitude: 0, longitude: 0 },
+    },
+    destination: {
+      name: "",
+      address: "",
+      coordinates: { latitude: 0, longitude: 0 },
+    },
     numRiders: 0,
     requestid: "",
   });
@@ -235,15 +242,8 @@ export default function App() {
       const driverAccept = message as DriverAcceptResponse;
       // update state
       setRideInfo(driverAccept);
-      setPickUpLocation(
-        await findCoordinatesOfLocationName(driverAccept.location, userLocation)
-      );
-      setDropOffLocation(
-        await findCoordinatesOfLocationName(
-          driverAccept.destination,
-          userLocation
-        )
-      );
+      setPickUpLocation(driverAccept.location.coordinates);
+      setDropOffLocation(driverAccept.destination.coordinates);
     }
   };
 
@@ -272,8 +272,16 @@ export default function App() {
       setRideInfo({
         response: "ACCEPT_RIDE",
         netid: "",
-        location: "",
-        destination: "",
+        location: {
+          name: "",
+          address: "",
+          coordinates: { latitude: 0, longitude: 0 },
+        },
+        destination: {
+          name: "",
+          address: "",
+          coordinates: { latitude: 0, longitude: 0 },
+        },
         numRiders: 0,
         requestid: "",
       });
