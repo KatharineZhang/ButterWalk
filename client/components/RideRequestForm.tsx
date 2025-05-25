@@ -19,6 +19,7 @@ import SegmentedProgressBar from "./SegmentedProgressBar";
 import {
   BuildingService,
   ComparableBuilding,
+  Coordinates,
   getBuildingNames,
 } from "@/services/BuildingService";
 import {
@@ -26,13 +27,12 @@ import {
   SnapLocationResponse,
   ErrorResponse,
   DistanceResponse,
+  LocationType,
+  PlaceSearchResponse,
+  PlaceSearchResult,
 } from "../../server/src/api";
 import WebSocketService from "../services/WebSocketService";
 import { CampusZone, PurpleZone } from "@/services/ZoneService";
-import {
-  fetchGooglePlaceSuggestions,
-  findCoordinatesOfLocationName,
-} from "@/services/GooglePlacesServices";
 
 type RideRequestFormProps = {
   pickUpLocationNameChanged: (location: string) => void;
@@ -55,7 +55,7 @@ type RideRequestFormProps = {
     boldText?: string;
   }) => void;
   startingState?: { pickup: string; dropoff: string; numRiders: number };
-  recentLocations: string[];
+  recentLocations: LocationType[];
 };
 
 export default function RideRequestForm({
@@ -118,7 +118,9 @@ export default function RideRequestForm({
   // the user clicked a dropdown location
   const allBuildings = getBuildingNames();
   const [campusAPIResults, setCampusAPIResults] = useState<string[]>([]);
-  const [placeSearchResults, setPlaceSearchResults] = useState<string[]>([]);
+  const [placeSearchResults, setPlaceSearchResults] = useState<
+    PlaceSearchResult[]
+  >([]);
 
   // the user clicked a dropdown result
   // figure out if it was a pickup or dropoff and call the right function
@@ -212,10 +214,29 @@ export default function RideRequestForm({
     } else {
       // the user clicked from recent location dropdown location
       setChosenPickup(value);
-      const pickupCoord = await findCoordinatesOfLocationName(
-        value,
-        userLocation
+      let pickupCoord: Coordinates;
+
+      // check if the clicked locations was a place search result
+      const placeSearchOptionClicked = placeSearchResults.find(
+        (item) => item.name === value
       );
+      const recentLocOptionClicked = recentLocations.find(
+        (item) => item.name === value
+      );
+      if (placeSearchOptionClicked) {
+        // if it was, we can just use the coordinates attached to it
+        pickupCoord = placeSearchOptionClicked.coordinates;
+      } else if (recentLocOptionClicked) {
+        // use the address to get the coordinates
+        pickupCoord = recentLocOptionClicked.coordinates;
+      } else {
+        // otherwise the clicked location was a campus API result
+        pickupCoord =
+          await BuildingService.getClosestBuildingEntranceCoordinates(
+            value,
+            userLocation
+          );
+      }
       setPickupCoordinates(pickupCoord);
 
       // tell the home page that the pickup location has changed
@@ -237,10 +258,30 @@ export default function RideRequestForm({
       return;
     }
     setChosenDropoff(value);
-    const dropoffCoord = await findCoordinatesOfLocationName(
-      value,
-      userLocation
+    let dropoffCoord: Coordinates;
+
+    // check if the clicked locations was a place search result
+    const placeSearchOptionClicked = placeSearchResults.find(
+      (item) => item.name === value
     );
+    const recentLocOptionClicked = recentLocations.find(
+      (item) => item.name === value
+    );
+    if (placeSearchOptionClicked) {
+      // if it was, we can just use the coordinates attached to it
+      dropoffCoord = placeSearchOptionClicked.coordinates;
+    } else if (recentLocOptionClicked) {
+      // use the address to get the coordinates
+      dropoffCoord = recentLocOptionClicked.coordinates;
+    } else {
+      // otherwise the clicked location was a campus API result
+      dropoffCoord =
+        await BuildingService.getClosestBuildingEntranceCoordinates(
+          value,
+          userLocation
+        );
+    }
+
     setDropoffCoordinates(dropoffCoord);
 
     // tell the home page that the dropoff location has changed
@@ -390,16 +431,25 @@ export default function RideRequestForm({
     }
   };
 
-  // ONLY CALL PLACE SEARCH WHEN THE USER PRESSES ENTER
-  // TODO: CHECK W TEAM
+  // Calls Place Search API when the user presses enter
   const enterPressed = async () => {
     const text = currentQuery == "pickup" ? pickUpQuery : dropOffQuery;
     if (text.length > 3) {
-      setPlaceSearchResults(
-        await fetchGooglePlaceSuggestions(
-          currentQuery == "pickup" ? pickUpQuery : dropOffQuery
-        )
-      );
+      WebSocketService.send({
+        directive: "PLACE_SEARCH",
+        query: text,
+      });
+    }
+  };
+
+  // handle the place search results
+  const handlePlaceSearchResults = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "PLACE_SEARCH") {
+      const placeSearchResp = message as PlaceSearchResponse;
+      // update the place search results
+      setPlaceSearchResults(placeSearchResp.results);
+    } else {
+      console.error("Error fetching place search results");
     }
   };
 
@@ -408,9 +458,10 @@ export default function RideRequestForm({
   useEffect(() => {
     // add the listener for the distance response
     WebSocketService.addListener(handleDistanceTopThree, "DISTANCE");
-
     // listen for the snap location response
     WebSocketService.addListener(handleSnapLocationQuery, "SNAP");
+    // listen for the place search results
+    WebSocketService.addListener(handlePlaceSearchResults, "PLACE_SEARCH");
 
     // if there is a starting state,
     // that means the user clicked back from the confirm ride component
@@ -479,21 +530,6 @@ export default function RideRequestForm({
           (currentQuery == "pickup" && item == "Current Location") // if the current query is pickup, we want to include current location
       );
     setCampusAPIResults(filteredBuildings);
-
-    // TODO: REMOVE AFTER CHECK W TEAM
-    // if (currentQuery == "pickup" && pickUpQuery.length < 3 || currentQuery == "dropoff" && dropOffQuery.length < 3) {
-    //   // Fewer than 3 characters, don't do the google place search
-    //   return;
-    // }
-
-    // // get the google place API results;
-    // const controller = new AbortController();
-
-    // (async () => {
-    //   setPlaceSearchResults(await fetchGooglePlaceSuggestions(currentQuery == "pickup" ? pickUpQuery : dropOffQuery));
-    // })();
-
-    // return () => controller.abort();
   }, [dropOffQuery, pickUpQuery]);
 
   /* ANIMATION */
@@ -733,11 +769,11 @@ export default function RideRequestForm({
             ))}
             {/* Then show the place search results */}
             {placeSearchResults
-              .filter((item) => !campusAPIResults.includes(item))
+              .filter((item) => !campusAPIResults.includes(item.name))
               .map((item) => (
                 <TouchableOpacity
-                  onPress={() => handleSelection(item)}
-                  key={item}
+                  onPress={() => handleSelection(item.name)}
+                  key={item.name}
                   style={{
                     padding: 16,
                     borderBottomWidth: 1,
@@ -761,9 +797,16 @@ export default function RideRequestForm({
                   </View>
                   <View style={{ width: 10 }} />
                   <View style={{ maxWidth: "80%" }}>
-                    <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                      {item}
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "bold",
+                        marginBottom: 5,
+                      }}
+                    >
+                      {item.name}
                     </Text>
+                    <Text style={{ fontSize: 14 }}>{item.address}</Text>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -773,8 +816,8 @@ export default function RideRequestForm({
               campusAPIResults.length == 0 &&
               recentLocations.map((item) => (
                 <TouchableOpacity
-                  onPress={() => handleSelection(item)}
-                  key={item}
+                  onPress={() => handleSelection(item.name)}
+                  key={item.name}
                   style={{
                     padding: 16,
                     borderBottomWidth: 1,
@@ -798,9 +841,16 @@ export default function RideRequestForm({
                   </View>
                   <View style={{ width: 10 }} />
                   <View style={{ maxWidth: "80%" }}>
-                    <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                      {item}
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "bold",
+                        marginBottom: 5,
+                      }}
+                    >
+                      {item.name}
                     </Text>
+                    <Text style={{ fontSize: 14 }}>{item.address}</Text>
                   </View>
                 </TouchableOpacity>
               ))}
