@@ -1041,8 +1041,8 @@ export class BuildingService {
     {
       name: "University District Building (UDB)",
       location: {
-        latitude: 47.66176794366154,
-        longitude: -122.31616701055518,
+        latitude: 47.66156402215569,
+        longitude: -122.3161857848302,
       },
     },
     {
@@ -1302,7 +1302,7 @@ export class BuildingService {
       closestBuilding,
       coord
     );
-    console.log("The closest entrance:", entrance ? entrance : "generic");
+
     if (!entrance) {
       return building.location;
     }

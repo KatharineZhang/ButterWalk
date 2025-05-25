@@ -18,6 +18,7 @@ import {
   ProblematicUser,
   RideRequest,
   User,
+  LocationType,
 } from "./api";
 
 export const db = getFirestore(app);
@@ -68,31 +69,8 @@ export async function createUser(transaction: Transaction, user: User) {
   // make a new document for the user in the locations table
   // use the net id of the user as the document id
   const docLocationRef = doc(recentlocationsCollection, user.netid);
-  // populate their redent locatiosn with our default recent locations
-  const campusLocations: string[] = [
-    "Alder Hall",
-    "Allen Library",
-    "Bagley Hall",
-    "Bloedel Hall",
-    "Cedar  Apartments ",
-    "Chemistry Building (CHB)",
-    "Dempsey Hall (DEM)",
-    "Denny Hall (DEN)",
-    "Elm Hall (ELM)",
-    "Engineering Library (ELB)",
-    "Founders Hall (FNDR)",
-    "Fluke Hall (FLK)",
-    "Gould Hall (GLD)",
-    "Hitchcock Hall (HIT)",
-    "Husky Union Building (HUB)",
-  ];
-
-  // add the user to the locations table
-  // const location: RecentLocation = {
-  //   netid: user.netid,
-  //   locations: [],
-  // };
-  // transaction.set(docLocation, location);
+  // populate their recent locations with our default recent locations
+  const campusLocations = defaultCampusLocations;
 
   // continue with the user creation
   if (docSnap.exists()) {
@@ -150,8 +128,8 @@ export async function finishCreatingUser(
 export async function addRideRequest(
   transaction: Transaction,
   netid: string,
-  location: string,
-  destination: string,
+  location: LocationType,
+  destination: LocationType,
   numRiders: number
 ): Promise<string> {
   // make sure there are no pending rides in the database by this user
@@ -265,7 +243,7 @@ export async function completeRideRequest(
   // update the recent locations of the student to include the pikup and dropoff locations
   const docLoc = doc(recentlocationsCollection, netids.student);
   const docSnapLoc = await transaction.get(docLoc);
-  let oldLocations: string[] = [];
+  let oldLocations: LocationType[] = [];
 
   // if the recent locations document does not exist, error out
   if (!docSnapLoc.exists()) {
@@ -286,8 +264,12 @@ export async function completeRideRequest(
   );
 
   // add the new pickup and dropoff locations to the front of the array
-  oldLocations.unshift(data.locationTo);
-  oldLocations.unshift(data.locationFrom);
+  oldLocations.unshift(data.locationTo); // dropoff location
+  // only add the pickup location if it doesn't have an asterisk
+  // (the location will have an asterisk if the loaction is a snapped street)
+  if (!data.locationFrom.includes("*")) {
+    oldLocations.unshift(data.locationFrom); // pickup location
+  }
 
   // limit the array to 20 locations
   oldLocations.slice(0, 20);
@@ -434,3 +416,126 @@ export async function getProfile(
   }
   return docSnap.data() as User;
 }
+
+const defaultCampusLocations: LocationType[] = [
+  {
+    name: "Alder Hall",
+    address: "Alder Hall, 1315 NE Campus Pkwy, Seattle, WA 98105",
+    coordinates: {
+      latitude: 47.65546,
+      longitude: -122.31419,
+    },
+  },
+  {
+    name: "Allen Library",
+    address: "Allen Library, 4130 George Washington Ln NE, Seattle, WA 98195",
+    coordinates: {
+      latitude: 47.65554,
+      longitude: -122.30703,
+    },
+  },
+  {
+    name: "Bagley Hall",
+    address: "Bagley Hall, 3940 15th Ave NE, Seattle, WA 98195",
+    coordinates: {
+      latitude: 47.65348,
+      longitude: -122.30884,
+    },
+  },
+  {
+    name: "Bloedel Hall",
+    address: "Bloedel Hall, 3655 W Stevens Way NE, Seattle, WA 98195",
+    coordinates: {
+      latitude: 47.65128,
+      longitude: -122.30765,
+    },
+  },
+  {
+    name: "Cedar Apartments",
+    address: "Cedar Apartments, 10101 NE 40th Ave, Seattle, WA 98105",
+    coordinates: {
+      latitude: 47.65859,
+      longitude: -122.31627,
+    },
+  },
+  {
+    name: "Chemistry Building (CHB)",
+    address: "Chemistry Building, 4000 15th Ave NE, Seattle, WA 98195",
+    coordinates: {
+      latitude: 47.65292,
+      longitude: -122.30835,
+    },
+  },
+  {
+    name: "Dempsey Hall (DEM)",
+    address: "Dempsey Hall, 4215 E Stevens Way NE, Seattle, WA 98195",
+    coordinates: {
+      latitude: 47.6599,
+      longitude: -122.308,
+    },
+  },
+  {
+    name: "Denny Hall (DEN)",
+    address: "Denny Hall, 2004 Skagit Ln, Seattle, WA 98195",
+    coordinates: {
+      latitude: 47.65849324441406,
+      longitude: -122.30882263356827,
+    },
+  },
+  {
+    name: "Elm Hall (ELM)",
+    address: "Elm Hall, 1223 NE Campus Pkwy, Seattle, WA 98105",
+    coordinates: {
+      latitude: 47.6565,
+      longitude: -122.3135,
+    },
+  },
+  {
+    name: "Engineering Library (ELB)",
+    address: "Engineering Library, 4000 15th Ave NE, Seattle, WA 98195",
+    coordinates: {
+      latitude: 47.6535,
+      longitude: -122.304,
+    },
+  },
+  {
+    name: "Founders Hall (FNDR)",
+    address: "Founders Hall, 4215 E Stevens Way NE, Seattle, WA 98195",
+    coordinates: {
+      latitude: 47.6592,
+      longitude: -122.3082,
+    },
+  },
+  {
+    name: "Fluke Hall (FLK)",
+    address: "Fluke Hall, 4000 Mason Rd NE, Seattle, WA 98195",
+    coordinates: {
+      latitude: 47.653,
+      longitude: -122.304,
+    },
+  },
+  {
+    name: "Gould Hall (GLD)",
+    address: "Gould Hall, 3949 15th Ave NE, Seattle, WA 98195",
+    coordinates: {
+      latitude: 47.656,
+      longitude: -122.313,
+    },
+  },
+  {
+    name: "Hitchcock Hall (HIT)",
+    address: "Hitchcock Hall, 4000 15th Ave NE, Seattle, WA 98195",
+    coordinates: {
+      latitude: 47.6532,
+      longitude: -122.3085,
+    },
+  },
+  {
+    name: "Husky Union Building (HUB)",
+    address: "Husky Union Building, 4001 E Stevens Way NE, Seattle, WA 98195",
+    coordinates: {
+      latitude: 47.65557006903249,
+      longitude: -122.30509195160619,
+    },
+  },
+];
