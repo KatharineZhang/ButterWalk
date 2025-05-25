@@ -409,19 +409,19 @@ export default function RideRequestForm({
       if (snapResp.success) {
         const roadName = snapResp.roadName;
         if (roadName == "") {
-          pickUpLocationNameChanged("Current Location"+"*");
-          setChosenPickup("Current Location"+"*");
-          setPickUpQuery("Current Location"+"*");
+          pickUpLocationNameChanged("Current Location" + "*");
+          setChosenPickup("Current Location" + "*");
+          setPickUpQuery("Current Location" + "*");
         } else {
-          pickUpLocationNameChanged(roadName+"*");
-          setChosenPickup(roadName+"*");
-          setPickUpQuery(roadName+"*");
+          pickUpLocationNameChanged(roadName + "*");
+          setChosenPickup(roadName + "*");
+          setPickUpQuery(roadName + "*");
         }
         // set the coordinates to the snapped location (send it back to home component)
-          pickUpLocationCoordChanged({
-            latitude: snapResp.latitude,
-            longitude: snapResp.longitude,
-          });
+        pickUpLocationCoordChanged({
+          latitude: snapResp.latitude,
+          longitude: snapResp.longitude,
+        });
       }
     } else {
       // there was a signin related error
@@ -506,7 +506,7 @@ export default function RideRequestForm({
       setPlaceSearchResults([]);
       return;
     }
-    // Filter the Campus API Results based on the current query
+    // filter the Campus API Results based on the current query
     const filteredBuildings = allBuildings
       .filter((item) => {
         // if the current query is dropoff, filter out current location
@@ -516,19 +516,19 @@ export default function RideRequestForm({
           return true;
         }
       })
-      // then filter based on the query
-      // based on if it includes the
-      .filter(
-        (item) =>
-          item
-            .toLowerCase()
-            .includes(
-              currentQuery == "pickup"
-                ? pickUpQuery.toLowerCase()
-                : dropOffQuery.toLowerCase()
-            ) ||
-          (currentQuery == "pickup" && item == "Current Location") // if the current query is pickup, we want to include current location
-      );
+      .filter((item) => {
+        const query =
+          currentQuery == "pickup"
+            ? pickUpQuery.toLowerCase()
+            : dropOffQuery.toLowerCase();
+        // ff query is empty, show all results
+        if (!query) return true;
+        // Match
+        return (
+          item.toLowerCase().includes(query) ||
+          (currentQuery == "pickup" && item == "Current Location")
+        );
+      });
     setCampusAPIResults(filteredBuildings);
   }, [dropOffQuery, pickUpQuery]);
 
