@@ -9,6 +9,7 @@ import {
   QueryConstraint,
   Timestamp,
   Transaction,
+  updateDoc,
   where,
   WhereFilterOp,
 } from "firebase/firestore";
@@ -19,6 +20,7 @@ import {
   RideRequest,
   User,
   LocationType,
+  RideRequestStatus,
 } from "./api";
 
 export const db = getFirestore(app);
@@ -26,7 +28,7 @@ export const db = getFirestore(app);
 // GREAT RESOURCE FOR BASIC FIRESTORE WORK: https://www.youtube.com/watch?v=kwVbKV0ZFEs
 
 // Our tables / collections in the database
-const usersCollection = collection(db, "Users");
+export const usersCollection = collection(db, "Users");
 const rideRequestsCollection = collection(db, "RideRequests");
 const problematicUsersCollection = collection(db, "ProblematicUsers");
 const feedbackCollection = collection(db, "Feedback");
@@ -124,50 +126,95 @@ export async function finishCreatingUser(
   }
 }
 
-// REQUEST RIDE - Add a ride request to the database
-export async function addRideRequest(
-  transaction: Transaction,
-  netid: string,
-  location: LocationType,
-  destination: LocationType,
-  numRiders: number
+/**
+ * Adds a new ride request to the database/pool, always with the status 'REQUESTED'
+ * @param t The transaction running
+ * @param rideRequest the ride request to add to the database
+ * @returns the docid supplied by firebase
+ */
+export async function addRideRequestToPool(
+  t: Transaction,
+  rideRequest: RideRequest
 ): Promise<string> {
   // make sure there are no pending rides in the database by this user
   const queryExistingRide = query(
     rideRequestsCollection,
-    where("netid", "==", netid),
-    where("status", "in", ["REQUESTED", "ACCEPTED"])
+    where("netid", "==", rideRequest.netid),
+    where("status", "in", [
+      "REQUESTED",
+      "VIEWING",
+      "DRIVING TO PICK UP",
+      "DRIVER AT PICK UP",
+      "DRIVING TO DESTINATION",
+    ])
   );
   const inDatabase = await getDocs(queryExistingRide); // get the document by netid
   //  check if user is in problematicUsers table
   if (inDatabase.size > 0) {
-    throw new Error(`${netid} already has a pending ride`);
+    throw new Error(`${rideRequest.netid} already has a pending ride`);
   }
-  const rideRequest: RideRequest = {
-    netid,
-    driverid: null,
-    completedAt: null,
-    locationFrom: location,
-    locationTo: destination,
-    numRiders,
-    status: "REQUESTED",
-  };
-  // make a new document and let the db decide the key
+  rideRequest.completedAt = null;
+  rideRequest.driverid = null;
+  rideRequest.requestedAt = Timestamp.now();
+  rideRequest.status = "REQUESTED";
   const docRef = doc(rideRequestsCollection);
-  await transaction.set(docRef, rideRequest);
+  t.set(docRef, rideRequest);
   return docRef.id;
 }
 
-// ACCEPT RIDE - Update a ride request to accepted
-export async function acceptRideRequest(
-  transaction: Transaction,
-  requestid: string,
+/**
+ * Used for the ride request pool, returns all currently REQUESTED
+ * ride requests.
+ * @returns a list of RideRequests with status "REQUESTED"
+ */
+export async function getRideRequests(): Promise<RideRequest[]> {
+  const queryRides = query(
+    rideRequestsCollection,
+    where("status", "==", "REQUESTED")
+  );
+  const inDatabase = await getDocs(queryRides);
+  const rideRequests: RideRequest[] = [];
+  inDatabase.forEach((el) => {
+    const rideRequest = el.data();
+    // TODO(connor): Type validation
+    rideRequests.push(rideRequest as RideRequest);
+  });
+  return rideRequests;
+}
+
+/**
+ * Updates the status of the provided ride request to the provided status
+ * @param status The status to change to
+ * @param netid The netid of the user with the ride request to change
+ */
+export async function setRideRequestStatus(
+  t: Transaction,
+  status: RideRequestStatus,
+  netid: string
+) {
+  const res = query(rideRequestsCollection, where("netid", "==", netid));
+  const snapshot = await getDocs(res);
+  snapshot.forEach(async (doc) => {
+    await updateDoc(doc.ref, { status: status });
+  });
+}
+
+/**
+ * Set the driver id of a ride request
+ * @param t The associated transaction
+ * @param netid netid of the student who owns the ride request to update
+ * @param driverid the id of the driver
+ */
+export async function setRideRequestDriver(
+  t: Transaction,
+  netid: string,
   driverid: string
 ) {
-  const docRef = doc(rideRequestsCollection, requestid); // get the document by id
-  const docSnap = await transaction.get(docRef);
-  await transaction.update(docRef, { driverid, status: "ACCEPTED" });
-  return docSnap.data() as RideRequest; // return the updated document data
+  const res = query(rideRequestsCollection, where("netid", "==", netid));
+  const snapshot = await getDocs(res);
+  snapshot.forEach(async (doc) => {
+    await updateDoc(doc.ref, { driverid: driverid });
+  });
 }
 
 // CANCEL RIDE - Update a ride request to canceled
@@ -198,12 +245,21 @@ export async function cancelRideRequest(
     const data = doc.data() as RideRequest;
 
     // only cancel requests that are not completed
-    if (data.status != "REQUESTED" && data.status != "ACCEPTED") {
+    if (
+      data.status != "REQUESTED" &&
+      data.status != "DRIVER AT PICK UP" &&
+      data.status != "DRIVING TO PICK UP" &&
+      data.status != "VIEWING"
+    ) {
       continue;
     }
 
-    if (data.status == "ACCEPTED") {
-      // if a request was accepted, notify the corresponding driver
+    if (
+      data.status === "DRIVING TO PICK UP" ||
+      data.status === "DRIVER AT PICK UP" ||
+      data.status === "VIEWING"
+    ) {
+      // If the cancalled request is being helped by a driver, notify the driver.
       if (role == "STUDENT") {
         otherid = data.driverid;
       } else {
@@ -211,7 +267,7 @@ export async function cancelRideRequest(
       }
     }
 
-    await transaction.update(doc.ref, { status: "CANCELLED" });
+    await setRideRequestStatus(transaction, "CANCELLED", netid);
   }
 
   return otherid; // return the driver id if there was a ride request that was accepted
@@ -226,9 +282,10 @@ export async function completeRideRequest(
   const docRef = doc(rideRequestsCollection, requestid); // get the document by id
   const docSnap = await transaction.get(docRef);
 
-  if (docSnap.exists() && docSnap.data().status != "ACCEPTED") {
+  if (docSnap.exists() && docSnap.data().status != "DRIVING TO DESTINATION") {
     throw new Error(
-      "Only can complete a ride that is 'ACCEPTED' not " + docSnap.data().status
+      "Only can complete a ride that is 'DRIVING TO DESTINATION' not " +
+        docSnap.data().status
     );
   }
 
@@ -326,7 +383,11 @@ export async function getOtherNetId(netid: string): Promise<string> {
   const queryNetid = query(
     rideRequestsCollection,
     where("netid", "==", netid),
-    where("status", "==", "ACCEPTED")
+    where("status", "in", [
+      "DRIVING TO PICK UP",
+      "DRIVER AT PICK UP",
+      "DRIVING TO DESTINATION",
+    ])
   );
   // if something is returned here, the user is a student
   // and the opposite user is the driver
@@ -345,7 +406,11 @@ export async function getOtherNetId(netid: string): Promise<string> {
   const queryDriver = query(
     rideRequestsCollection,
     where("driverid", "==", netid),
-    where("status", "==", "ACCEPTED")
+    where("status", "in", [
+      "DRIVING TO PICK UP",
+      "DRIVER AT PICK UP",
+      "DRIVING TO DESTINATION",
+    ])
   );
   docs = await getDocs(queryDriver);
   if (docs.size != 0) {
@@ -409,12 +474,16 @@ export async function getProfile(
   transaction: Transaction,
   netid: string
 ): Promise<User> {
-  const docRef = doc(usersCollection, netid);
-  const docSnap = await transaction.get(docRef);
-  if (!docSnap.exists()) {
-    throw new Error(`User with netid: ${netid} does not exist`);
+  const queryUsers = query(usersCollection, where("netid", "==", netid));
+  const inDatabase = await getDocs(queryUsers);
+  if (inDatabase.size != 1) {
+    throw new Error(`There were ${inDatabase.size} users with netid: ${netid}`);
   }
-  return docSnap.data() as User;
+  const userData = inDatabase.docs[0].data();
+  if (userData === undefined) {
+    throw new Error();
+  }
+  return userData as User;
 }
 
 const defaultCampusLocations: LocationType[] = [

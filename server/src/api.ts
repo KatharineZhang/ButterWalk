@@ -22,7 +22,8 @@ export type Command =
   | "DISTANCE"
   | "ERROR"
   | "RECENT_LOCATIONS"
-  | "PLACE_SEARCH";
+  | "PLACE_SEARCH"
+  | "VIEW_RIDE";
 
 // Input types
 export type WebSocketMessage =
@@ -94,6 +95,38 @@ export type WebSocketMessage =
       mode: "driving" | "walking";
       tag: string; // used to identify the response
     }
+  // new directive for the ride request broker, which sends back a message
+  // of type RidesExistResponse on success. Intended for use with driver
+  // sign on: When the driver opens the app they will only be able to view
+  // a ride to potentially accept when this directive gives back True.
+  | {
+      directive: "RIDES_EXIST";
+    }
+  // new directive that will check out the highest ranking ride request to
+  // a driver so they can accept/deny/report etc.
+  | {
+      directive: "VIEW_RIDE";
+      driverid: string;
+      driverLocation: { latitude: number; longitude: number };
+    }
+  // new directive that handles the drivers decision after viewing a particular ride
+  // request.
+  // ACCEPT -> accept the ride. Assigns the ride to the driver, begin pick up.
+  // DENY -> Deny the ride request without reporting, returns the req to the pool
+  // TIMEOUT -> Driver didn't decide anything fast enough, return to pool
+  // ERROR -> Unexpected problem, return request to queue
+  | {
+      directive: "VIEW_DECISION";
+      driverid: string;
+      view: ViewRideRequestResponse;
+      decision: "ACCEPT" | "DENY" | "TIMEOUT" | "ERROR";
+      tag: string; // used to identify the response
+    }
+  | {
+      directive: "DRIVER_ARRIVED";
+      driverid: string;
+      studentNetid: string;
+    }
   | { directive: "PLACE_SEARCH"; query: string };
 
 // TEMP FIX
@@ -120,6 +153,11 @@ export type WebSocketResponse =
   | ProfileResponse
   | DistanceResponse
   | ErrorResponse
+  | RidesExistResponse
+  | ViewRideRequestResponse
+  | ViewDecisionResponse
+  | ViewDecisionDriverResponse
+  | RecentLocationResponse
   | RecentLocationResponse
   | PlaceSearchResponse;
 
@@ -147,7 +185,8 @@ export type GeneralResponse = {
     | "ADD_FEEDBACK"
     | "REPORT"
     | "BLACKLIST"
-    | "ACCEPT_RIDE";
+    | "ACCEPT_RIDE"
+    | "DRIVER_ARRIVED";
   success: true;
 };
 
@@ -176,6 +215,38 @@ export type RequestRideResponse = {
   requestid: string;
 };
 
+/**
+ * Represents a response provided by the server given to a driver
+ * who wants to view a ride, contains information about the ride
+ * request they are being provided and the associated student
+ * who requested the ride, or rideExists is false if there are
+ * not rides to be returned.
+ */
+export type ViewRideRequestResponse = {
+  response: "VIEW_RIDE";
+  rideExists: boolean;
+  rideRequest?: RideRequest;
+};
+
+/**
+ * After a driver views a ride request checked out to them temporarily
+ * by the broker, they choose to accept/deny/report etc, and after
+ * doing so the handleDriverViewChoice method gives a response back
+ * to the driver based on what happened, and updates the student if
+ * they need to be updated (i.e. ride denied or accepted). undefined
+ * means do not send any response to the student.
+ */
+export type ViewDecisionResponse = {
+  response: "VIEW_DECISION";
+  student: GeneralResponse | undefined;
+  driver: ViewDecisionDriverResponse;
+};
+export type ViewDecisionDriverResponse = {
+  response: "VIEW_DECISION";
+  providedView: ViewRideRequestResponse;
+  success: boolean;
+};
+
 export type WaitTimeResponse = {
   response: "WAIT_TIME";
   rideDuration: number;
@@ -188,6 +259,11 @@ export type AcceptResponse = {
   response: "ACCEPT_RIDE";
   student: { response: "ACCEPT_RIDE"; success: true }; // of type GeneralResponse
   driver: DriverAcceptResponse;
+};
+
+export type RidesExistResponse = {
+  response: "RIDES_EXIST";
+  ridesExist: boolean;
 };
 
 export type DriverAcceptResponse = {
@@ -333,45 +409,11 @@ export const GooglePlaceSearchBadLocationTypes = [
 ];
 
 // Server Types and Data Structures
+
 export type localRideRequest = {
   requestid: string;
   netid: string;
 };
-
-class RideRequestQueue {
-  private items: localRideRequest[];
-
-  constructor() {
-    this.items = [];
-  }
-
-  // return all the items in the queue
-  get = (): localRideRequest[] => {
-    return this.items;
-  };
-  // adding to the back of the queue
-  add = (item: localRideRequest): void => {
-    this.items.push(item);
-  };
-  // removing from the front of the queue
-  pop = (): localRideRequest | undefined => {
-    return this.items.shift();
-  };
-  // returns size of queue
-  size = (): number => {
-    return this.items.length;
-  };
-  // returns first item of queue without removing it
-  peek = (): localRideRequest => {
-    return this.items[0];
-  };
-
-  remove = (netid: string): void => {
-    this.items = this.items.filter((item) => item.netid !== netid);
-  };
-}
-
-export const rideReqQueue = new RideRequestQueue(); // rideRequests Queue
 
 // Database Types
 
@@ -397,21 +439,107 @@ export type Feedback = {
   rideOrApp: "RIDE" | "APP";
 };
 
-// CREATE TABLE RideRequests (requestid int PRIMARY KEY, netid varchar(20) REFERENCES Users(netid),
-// driverid varchar(20) REFERENCES Drivers(driverid),
-// completedAt smalldatetime, locationFrom geography, locationTo geography, numRiders int,
-// completedAt smalldatetime, locationFrom geography, locationTo geography, numRiders int,
-// status int); –- -1 for canceled, 0 for requested, 1 for accepted, 2 for completed
+/**
+ * Possible states of RideRequest.status
+ */
+export type RideRequestStatus =
+  // Cancelled for any reason
+  | "CANCELLED"
+  // Student is waiting for a driver to accept their ride
+  | "REQUESTED"
+  // Driver has temporarily checked out a ride that they
+  // can choose to accept or deny
+  | "VIEWING"
+  // Driver accepted the ride and is driving to the pick
+  // up location. Ride Request should have an associated
+  // driver id
+  | "DRIVING TO PICK UP"
+  // Driver arrived at pick up location
+  | "DRIVER AT PICK UP"
+  // Driver picked up the student and is driving with them
+  // to the student's chosen destination
+  | "DRIVING TO DESTINATION"
+  // Ride is complete
+  | "COMPLETED";
+
+/**
+ * RideRequest represents a students request for a ride, with all the information necessary
+ * to rank, assign, and complete a ride.
+ *
+ * Optional parameters are new additions for the ride request broker system.
+ */
 export type RideRequest = {
-  // requestid created and stored in the database, we can't store it here
-  // requestid created and stored in the database, we can't store it here
+  /**
+   * ID of this request (?)
+   */
+  requestId?: string;
+  /**
+   * Student UW netid (uniquely identifies a student).
+   * - A given student should only have one active ride request at a time (meaning
+   * any netid should only be associated with one ride request that is either requested,
+   * accepted, in transit, or being viewed).
+   */
   netid: string;
+  /**
+   * ID that uniquely identified a driver.
+   * - Any given driver should only be associated with one active ride request at
+   * a time (meaning any driverid should only be associated with one ride request that
+   * is either accepted, in transit, or being viewed).
+   * - `null` indicates the ride request is unassigned.
+   */
   driverid: string | null;
+  /**
+   * The time that this ride request was requested by the student.
+   */
+  requestedAt?: Timestamp;
+  /**
+   * The time that the ride associated with this request was completed.
+   */
   completedAt: Timestamp | null;
-  locationFrom: LocationType;
+  /**
+   * The pick up location.
+   */
+  locationFrom: LocationType; // TODO: should these be coordinates or location names?
+  /**
+   * The drop off location.
+   */
   locationTo: LocationType;
+  /**
+   * Most recent location at the time of the ride request.
+   * - Potentially used to calculate the earliest pick up time of the student
+   * based on their distance from the pick up location, may need to be updated
+   * accordingly or ignored after a certain amount of time.
+   */
+  studentLocation?: LocationType;
+  /**
+   * The number of students in the ride
+   */
   numRiders: number;
-  status: "CANCELED" | "REQUESTED" | "ACCEPTED" | "COMPLETED";
+  /**
+   * Status of the ride request.
+   * - `CANCELED`: The ride request was canceled for any reason (could indicate
+   * cancellation by the student, cancellation by the driver, or an error).
+   * - `REQUESTED`: The ride request is waiting in the queue: the student who
+   * made the ride request is waiting for a driver to accept their ride. This
+   * is the only state which indicates that the ride is part of the "pool", and
+   * should be passed as an option to the ranking algorithm to be viewed by a driver.
+   * - `VIEWING`: The ride has been checked out temporarily from the queue
+   * to be accepted to denied by a potential driver (This is new behavior
+   * implemented for the ride request broker system).
+   * - `ACCEPTED`: **SHOULD BE DEPRECATED ASAP** Represents that a ride request
+   * is either in progress or has been accepted by a driver who has not yet
+   * picked up the student. Does not have the necessary level of granularity to
+   * handle cancellation edge cases or ride request broker behavior.
+   * - `AWAITING PICK UP`: The ride request was accepted by a driver after being
+   * checked out to them for viewing and is in the pick up stage, i.e. the driver
+   * is driving to go pick up the student, the student is waiting to be picked up,
+   * or the driver is waiting at the pick up location to pick up the student (This
+   * is new behavior for the ride request broker).
+   * - `DRIVING`: The student has been picked up by the driver and the ride is in
+   * progress (new behavior for the ride request broker).
+   * - `COMPLETED`: The student was dropped off after completion of the ride.
+   */
+  status: RideRequestStatus;
 };
 
 // CREATE TABLE ProblematicUsers (netid varchar(20) REFERENCES Users(netid) PRIMARY KEY,
