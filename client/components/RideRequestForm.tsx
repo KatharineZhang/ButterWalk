@@ -969,15 +969,17 @@ export default function RideRequestForm({
         style={{
           paddingVertical: 10,
           alignItems: "center",
-          flexDirection: "row",
-          justifyContent: "flex-end",
         }}
       >
-        <Text style={{ fontStyle: "italic" }}>See ride details</Text>
         <TouchableOpacity
-          style={styles.modalCloseButton}
+          style={{
+          flexDirection: "row",
+          alignItems: "center",
+          alignSelf: "flex-end",
+          }}
           onPress={() => rideRequested(numRiders)}
         >
+        <Text style={{ fontStyle: "italic" }}>See ride details</Text>
           <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
         </TouchableOpacity>
       </View>

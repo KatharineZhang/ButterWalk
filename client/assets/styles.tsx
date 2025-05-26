@@ -573,14 +573,15 @@ export const styles = StyleSheet.create({
     width: "100%",
   },
   bottomModalButton: {
-    padding: 20,
+    padding: 10,
     borderRadius: 10,
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
   },
   confirmButton: {
-    backgroundColor: "#4B2E83",
+    borderWidth: 2,
+    borderColor: "#4B2E83",
   },
   cancelButton: {
     backgroundColor: "red",
@@ -757,7 +758,7 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     color: "#4b2e83",
     fontWeight: "bold",
-    paddingBottom: 20,
+    paddingBottom: 10,
   },
 
   // legend
