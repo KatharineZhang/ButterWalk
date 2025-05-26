@@ -634,7 +634,7 @@ export default function HomePage() {
         </View>
 
         {/* faq pop-up modal */}
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, {bottom: 0}]}>
           <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
         </View>
         {/* notification component */}

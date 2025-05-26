@@ -491,7 +491,7 @@ export default function RideRequestForm({
         updateSideBarHeight(Math.round(height * 0.41));
         break;
       case "NumberRiders":
-        updateSideBarHeight(Math.round(height * 0.36));
+        updateSideBarHeight(Math.round(height * 0.50));
         break;
       case "LocationSuggestions":
         updateSideBarHeight(Math.round(height * 0.48));
@@ -696,7 +696,7 @@ export default function RideRequestForm({
         {/* Autocomplete Suggestions */}
 
         <View style={{ flex: 1, height: "100%" }}>
-          <ScrollView style={{ paddingBottom: useWindowDimensions().height * 0.5}}>
+          <ScrollView style={{ flex:1, paddingBottom: "150%" }}>
             {/* Add the Current Location to the Top of the results*/}
             {currentQuery == "pickup" && (
               <TouchableOpacity

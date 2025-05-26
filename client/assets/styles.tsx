@@ -26,7 +26,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 4,
-    elevation: 3,
+    // elevation: 3,
     backgroundColor: "#4B2E83",
     alignSelf: "center",
   },
@@ -53,7 +53,7 @@ export const styles = StyleSheet.create({
     position: "absolute",
     bottom: 5,
     right: 20,
-    elevation: 3,
+    // elevation: 3,
   },
   onboardingFooterButton: {
     alignItems: "center",
@@ -61,7 +61,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 25,
     borderRadius: 4,
-    elevation: 3,
+    // elevation: 3,
     backgroundColor: "#4B2E83",
   },
   /* Onboarding styling */
@@ -81,7 +81,7 @@ export const styles = StyleSheet.create({
     },
     shadowOpacity: 0.35,
     shadowRadius: 8,
-    elevation: 8,
+    // elevation: 8,
     justifyContent: "space-between",
     paddingVertical: 20,
   },
@@ -167,7 +167,7 @@ export const styles = StyleSheet.create({
     right: 10,
     top: 65,
     borderRadius: 4,
-    elevation: 3,
+    // elevation: 3,
     backgroundColor: "#4B2E83",
   },
   header: {
@@ -249,7 +249,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 4,
-    elevation: 3,
+    // elevation: 3,
     backgroundColor: "#4B2E83",
   },
 
@@ -297,7 +297,6 @@ export const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 10,
-    elevation: 3,
     borderWidth: 2,
     borderColor: "#4B2E83",
     alignSelf: "center",
@@ -326,7 +325,7 @@ export const styles = StyleSheet.create({
     marginLeft: 3,
   },
   modalContainer: {
-    flex: 1, justifyContent: "flex-end", alignItems: "center" 
+    flex: 1, justifyContent: "flex-end", alignItems: "center"
   },
   fullModalView: {
     backgroundColor: "#E4E2F0",
@@ -342,7 +341,6 @@ export const styles = StyleSheet.create({
     width: "100%",
     height: "90%",
     position: "absolute",
-    bottom: 0,
   },
 
   // Ride Request Form styles
@@ -357,12 +355,15 @@ export const styles = StyleSheet.create({
     shadowRadius: 2,
     shadowOpacity: 0.4,
     shadowOffset: { width: 0, height: 7 },
+    elevation: 2,
     shadowColor: "gray",
     paddingHorizontal: 10,
     paddingVertical: 5,
     backgroundColor: "white",
     justifyContent: "center",
     alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#4B2E83",
   },
   infoText: {
     fontSize: 12,
@@ -515,7 +516,7 @@ export const styles = StyleSheet.create({
     padding: 20,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    elevation: 5,
+    // elevation: 5,
   },
   // bottom modal styles
   bottomModalView: {
@@ -530,7 +531,7 @@ export const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 4,
-    elevation: 5,
+    // elevation: 5,
     width: "100%",
     height: "50%",
     position: "absolute",
