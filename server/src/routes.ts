@@ -23,6 +23,11 @@ import {
   SnapLocationResponse,
   RecentLocationResponse,
   DriverArrivedResponse,
+  PlaceSearchResult,
+  GooglePlaceSearchResponse,
+  GooglePlaceSearchBadLocationTypes,
+  PlaceSearchResponse,
+  PurpleZone,
 } from "./api";
 import {
   addFeedbackToDb,
@@ -275,10 +280,8 @@ async function getMatch(lat: number, long: number) {
   url.searchParams.set("steps", "false");
   url.searchParams.set("access_token", process.env.MAPBOX_SNAPPING_TOKEN);
 
-  console.log("in getMatch");
   const query = await fetch(url.toString(), { method: "GET" });
   const response = await query.json();
-  console.log("response from mapbox:", response);
   // Handle errors
   if (response.code !== "Ok") {
     console.error(
@@ -287,11 +290,34 @@ async function getMatch(lat: number, long: number) {
     return;
   }
   // Get the coordinates from the response.
-  // TODO: figure out if it's in an array or not
   const coords = response.matchings[0].geometry;
   console.log(coords);
+
+  // check if we have a valid road name
+  let roadName = response.tracepoints[1].name;
+  if (roadName.length < 1) {
+    // there was no road name, so we need to use the reverse geocoding API
+    // to get the name of the street
+    const geoCodingBase = `https://api.mapbox.com/search/geocode/v6/reverse`;
+    const geoCodingUrl = new URL(geoCodingBase);
+    geoCodingUrl.searchParams.set("longitude", `${safeLong}`); // from the coordinates
+    geoCodingUrl.searchParams.set("latitude", `${safeLat}`);
+    geoCodingUrl.searchParams.set("types", "street"); // get the street name
+    geoCodingUrl.searchParams.set(
+      "access_token",
+      process.env.MAPBOX_SNAPPING_TOKEN
+    );
+    const query = await fetch(geoCodingUrl.toString(), { method: "GET" });
+    const response = await query.json();
+    console.log("response from mapbox:", response.features[0].properties);
+
+    if (response.features.length > 0) {
+      roadName = response.features[0].properties.name;
+    }
+    // else we give up and just return the empty string
+  }
   // Code from the next step will go here
-  return { coords: coords, roadName: response.tracepoints[1].name };
+  return { coords: coords, roadName };
 }
 
 /* Adds a new ride request object to the queue using the parameters given. 
@@ -1136,4 +1162,123 @@ export const fetchRecentLocations = async (
       category: "RECENT_LOCATIONS",
     };
   }
+};
+
+// This is used to cache the results of the Google Place API
+let previousQuery = "";
+let previousResults: PlaceSearchResult[] = [];
+
+// Call the Google Place Search to get place suggestions based on user input
+export const getPlaceSearchResults = async (
+  query: string
+): Promise<PlaceSearchResponse | ErrorResponse> => {
+  try {
+    const results = await fetchGooglePlaceSuggestions(query);
+    return {
+      response: "PLACE_SEARCH",
+      results,
+    };
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error fetching place search results: ${(e as Error).message}`,
+      category: "PLACE_SEARCH",
+    };
+  }
+};
+
+/**
+ * HELPER: Fetch Google Place Autocomplete suggestions based on user input.
+ * @param query - The user's input query.
+ * @param location - The latitude and longitude to restrict the search.
+ * @param radius - The radius (in meters) to restrict the search (default: 5000).
+ * @returns A promise that resolves to an array of place descriptions.
+ */
+export const fetchGooglePlaceSuggestions = async (
+  query: string
+): Promise<PlaceSearchResult[]> => {
+  // If the query is basically the same as the previous one, return the cached results
+  if (levensteinDistance(query, previousQuery) < 3) {
+    console.log(
+      "google place search cached results for query:",
+      query,
+      "previous query:",
+      previousQuery
+    );
+    return previousResults;
+  }
+  try {
+    previousQuery = query;
+    const url =
+      `https://maps.googleapis.com/maps/api/place/textsearch/json?` +
+      `query=${encodeURIComponent(query)}` +
+      `&location=47.65979,-122.30564` + // Source: trust me bro - Snigdha (https://www.calcmaps.com/map-radius/)
+      `&radius=1859` + // but basically its just a radius around the purple zone area
+      `&key=${process.env.GOOGLE_MAPS_APIKEY}`;
+
+    const res = await fetch(url);
+    const json = await res.json();
+
+    if (Array.isArray(json.results)) {
+      // Post-filter results to ensure they are inside the polygon
+      const places = (json.results as GooglePlaceSearchResponse[])
+        .map((r) => ({
+          name: r.name,
+          location: {
+            latitude: r.geometry.location.lat,
+            longitude: r.geometry.location.lng,
+          },
+          types: r.types,
+          formatted_address: r.formatted_address,
+        }))
+        // filter to places inside the purple zone
+        .filter((place) => PurpleZone.isPointInside(place.location))
+        // filter out places that could potentially serve alcohol
+        .filter((place) => {
+          return !place.types.some((type) =>
+            GooglePlaceSearchBadLocationTypes.includes(type)
+          );
+        })
+        .map((place) => ({
+          name: place.name,
+          coordinates: place.location,
+          address: place.formatted_address,
+        }));
+      // remove duplicates from places
+      previousResults = Array.from(new Set(places));
+      return previousResults;
+    }
+  } catch (e: unknown) {
+    console.log("GOOGLE PLACE SEARCH ERROR", e);
+  }
+  previousResults = [];
+  return [];
+};
+
+// Get the distance between two strings
+// (number of insertions and deletions of characters to get from one to another)
+const levensteinDistance = (a: string, b: string): number => {
+  const matrix: number[][] = new Array(b.length + 1)
+    .fill(null)
+    .map(() => new Array(a.length + 1).fill(0));
+
+  for (let i = 0; i < a.length + 1; i++) {
+    matrix[0][i] = i;
+  }
+
+  for (let i = 0; i < b.length + 1; i++) {
+    matrix[i][0] = i;
+  }
+
+  for (let i = 1; i < a.length + 1; i++) {
+    for (let j = 1; j < b.length + 1; j++) {
+      const min = Math.min(matrix[j - 1][i], matrix[j][i - 1]);
+      if (a[i - 1] === b[j - 1]) {
+        matrix[j][i] = matrix[j - 1][i - 1];
+      } else {
+        matrix[j][i] = min + 1;
+      }
+    }
+  }
+  return matrix[b.length][a.length];
 };
