@@ -383,8 +383,7 @@ describe("Websocket Integration", () => {
     ws.send(JSON.stringify(msg));
     await setTimeout(1000);
     expect(lastMsg.response).toBe("VIEW_DECISION");
-    expect(lastMsg.driver.success).toBe(true);
-    expect(lastMsg.student.success).toBe(true);
+    expect(lastMsg.success).toBe(true);
     const updatedInDatabase = await getDocs(queryExistingRide);
     expect(updatedInDatabase.size).toBe(1);
     expect(updatedInDatabase.docs[0].get("status")).toBe("DRIVING TO PICK UP");
@@ -444,8 +443,7 @@ describe("Websocket Integration", () => {
     ws.send(JSON.stringify(msg));
     await setTimeout(1000);
     expect(lastMsg.response).toBe("VIEW_DECISION");
-    expect(lastMsg.driver.success).toBe(true);
-    expect(lastMsg.student.success).toBe(true);
+    expect(lastMsg.success).toBe(true);
     const updatedInDatabase = await getDocs(queryExistingRide);
     expect(updatedInDatabase.size).toBe(1);
     expect(updatedInDatabase.docs[0].get("status")).toBe("DRIVING TO PICK UP");

@@ -221,7 +221,6 @@ export const handleWebSocketMessage = async (
           );
         }
       }
-      sendWebSocketMessage(ws, res);
       break;
     }
 

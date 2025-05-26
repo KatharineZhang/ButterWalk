@@ -113,14 +113,13 @@ export type WebSocketMessage =
   // request.
   // ACCEPT -> accept the ride. Assigns the ride to the driver, begin pick up.
   // DENY -> Deny the ride request without reporting, returns the req to the pool
-  // REPORT -> Deny the request, remove it from the pool, blacklist the student
   // TIMEOUT -> Driver didn't decide anything fast enough, return to pool
   // ERROR -> Unexpected problem, return request to queue
   | {
       directive: "VIEW_DECISION";
       driverid: string;
       view: ViewRideRequestResponse;
-      decision: "ACCEPT" | "DENY" | "REPORT" | "TIMEOUT" | "ERROR";
+      decision: "ACCEPT" | "DENY" | "TIMEOUT" | "ERROR";
       tag: string; // used to identify the response
     }
   | {
@@ -158,7 +157,6 @@ export type WebSocketResponse =
   | ViewRideRequestResponse
   | ViewDecisionResponse
   | ViewDecisionDriverResponse
-  | DriverArrivedResponse
   | RecentLocationResponse
   | RecentLocationResponse
   | PlaceSearchResponse;
@@ -187,7 +185,8 @@ export type GeneralResponse = {
     | "ADD_FEEDBACK"
     | "REPORT"
     | "BLACKLIST"
-    | "ACCEPT_RIDE";
+    | "ACCEPT_RIDE"
+    | "DRIVER_ARRIVED";
   success: true;
 };
 
@@ -246,15 +245,6 @@ export type ViewDecisionDriverResponse = {
   response: "VIEW_DECISION";
   providedView: ViewRideRequestResponse;
   success: boolean;
-};
-
-/**
- * Response sent by DRIVER_ARRIVED directive
- * on success
- */
-export type DriverArrivedResponse = {
-  response: "DRIVER_ARRIVED";
-  success: true;
 };
 
 export type WaitTimeResponse = {

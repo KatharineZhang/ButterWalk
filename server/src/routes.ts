@@ -22,7 +22,6 @@ import {
   ViewDecisionResponse,
   SnapLocationResponse,
   RecentLocationResponse,
-  DriverArrivedResponse,
   PlaceSearchResult,
   GooglePlaceSearchResponse,
   GooglePlaceSearchBadLocationTypes,
@@ -574,7 +573,7 @@ export const handleDriverViewChoice = async (
  */
 export const driverArrived = async (
   netid: string
-): Promise<ErrorResponse | DriverArrivedResponse> => {
+): Promise<ErrorResponse | GeneralResponse> => {
   try {
     await runTransaction(db, async (t) => {
       await setRideRequestStatus(t, "DRIVER AT PICK UP", netid);
