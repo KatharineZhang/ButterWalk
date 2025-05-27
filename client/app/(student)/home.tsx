@@ -230,7 +230,10 @@ export default function HomePage() {
 
   /* LEGEND STATE */
   const { height } = useWindowDimensions();
-  const [bottom, setBottom] = useState(Math.round(height * 0.41));
+  // to start, the current component is the ride request form which takes up 40% of the screen height
+  const [currentComponentHeight, setCurrentComponentHeight] = useState(
+    Math.round(height * 0.4)
+  );
 
   /* EFFECTS */
   useEffect(() => {
@@ -634,7 +637,7 @@ export default function HomePage() {
         </View>
 
         {/* faq pop-up modal */}
-        <View style={[styles.modalContainer, {bottom: 0}]}>
+        <View style={[styles.modalContainer, { bottom: 0 }]}>
           <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
         </View>
         {/* notification component */}
@@ -654,10 +657,8 @@ export default function HomePage() {
         <View
           style={{
             position: "absolute",
-            bottom:
-              whichComponent == "waitForRide" || whichComponent == "handleRide"
-                ? Math.round(height * 0.41)
-                : bottom,
+            // set the height of the sidebar to the height of the current component + padding
+            bottom: currentComponentHeight + 10,
             left: 10,
             alignItems: "flex-start",
           }}
@@ -702,7 +703,7 @@ export default function HomePage() {
                 setFAQVisible={setFAQVisible}
                 recentLocations={recentLocations}
                 setNotificationState={setNotifState}
-                updateSideBarHeight={setBottom}
+                updateSideBarHeight={setCurrentComponentHeight}
               />
             </View>
           ) : whichComponent === "confirmRide" ? (
@@ -718,6 +719,7 @@ export default function HomePage() {
                 onClose={closeConfirmRide}
                 onConfirm={requestRide}
                 setFAQVisible={setFAQVisible}
+                updateSideBarHeight={setCurrentComponentHeight}
               />
             </View>
           ) : whichComponent === "Loading" ? (
@@ -749,6 +751,7 @@ export default function HomePage() {
                 setNotificationState={setNotifState}
                 changeRideStatus={setRideStatus}
                 goHome={goHome}
+                updateSideBarHeight={setCurrentComponentHeight}
               />
             </View>
           ) : null // default

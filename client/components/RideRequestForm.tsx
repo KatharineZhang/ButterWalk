@@ -484,20 +484,6 @@ export default function RideRequestForm({
 
   // modify the sidebar height based on the panel shown
   const { height } = useWindowDimensions();
-  useEffect(() => {
-    // Dynamically set sidebar height based on screen size
-    switch (whichPanel) {
-      case "RideReq":
-        updateSideBarHeight(Math.round(height * 0.41));
-        break;
-      case "NumberRiders":
-        updateSideBarHeight(Math.round(height * 0.50));
-        break;
-      case "LocationSuggestions":
-        updateSideBarHeight(Math.round(height * 0.48));
-        break;
-    }
-  }, [whichPanel]);
 
   // update the campus API suggestions based on the user's query
   useEffect(() => {
@@ -578,8 +564,15 @@ export default function RideRequestForm({
     <View style={{ flex: 1, pointerEvents: "box-none", width: "100%" }}>
       <BottomDrawer bottomSheetRef={bottomSheetRef}>
         {/* The search box with shadow under it*/}
-        <View style={styles.requestFormContainer}>
-          <View style={{ flex: 1, width: "99%", }}>
+        <View
+          style={styles.requestFormContainer}
+          onLayout={() => {
+            // on render, update the sidebar height to 40% the height of the screen
+            // (which is the default height of the bottom sheet)
+            updateSideBarHeight(height * 0.4);
+          }}
+        >
+          <View style={{ flex: 1, width: "99%" }}>
             {/* Header */}
             <View
               style={{
@@ -682,12 +675,17 @@ export default function RideRequestForm({
               }}
             >
               <TouchableOpacity
-                style={{ flexDirection: "row",alignItems: "center",marginVertical: 10, justifyContent: "flex-end"}}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginVertical: 10,
+                  justifyContent: "flex-end",
+                }}
                 onPress={goToNumberRiders}
               >
-                 <Text style={{ fontStyle: "italic" }}>
-                Choose # of passengers
-              </Text>
+                <Text style={{ fontStyle: "italic" }}>
+                  Choose # of passengers
+                </Text>
                 <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
               </TouchableOpacity>
             </View>
@@ -696,7 +694,7 @@ export default function RideRequestForm({
         {/* Autocomplete Suggestions */}
 
         <View style={{ flex: 1, height: "100%" }}>
-          <ScrollView style={{ flex:1, paddingBottom: "150%" }}>
+          <ScrollView style={{ flex: 1, paddingBottom: "150%" }}>
             {/* Add the Current Location to the Top of the results*/}
             {currentQuery == "pickup" && (
               <TouchableOpacity
@@ -895,6 +893,10 @@ export default function RideRequestForm({
         padding: 16,
         borderRadius: 10,
       }}
+      onLayout={(event) => {
+        // on render, update the sidebar height to the height of this component
+        updateSideBarHeight(event.nativeEvent.layout.height);
+      }}
     >
       <View style={{ height: 5 }} />
       {/* Header */}
@@ -973,13 +975,13 @@ export default function RideRequestForm({
       >
         <TouchableOpacity
           style={{
-          flexDirection: "row",
-          alignItems: "center",
-          alignSelf: "flex-end",
+            flexDirection: "row",
+            alignItems: "center",
+            alignSelf: "flex-end",
           }}
           onPress={() => rideRequested(numRiders)}
         >
-        <Text style={{ fontStyle: "italic" }}>See ride details</Text>
+          <Text style={{ fontStyle: "italic" }}>See ride details</Text>
           <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
         </TouchableOpacity>
       </View>
@@ -996,6 +998,10 @@ export default function RideRequestForm({
         backgroundColor: "white",
         padding: 16,
         borderRadius: 10,
+      }}
+      onLayout={(event) => {
+        // on render, update the sidebar height to the height of this component
+        updateSideBarHeight(event.nativeEvent.layout.height);
       }}
     >
       <View style={{ height: 5 }} />

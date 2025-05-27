@@ -105,9 +105,7 @@ const Login = () => {
       }}
     />
   ) : (
-    <SafeAreaView
-      style={[styles.container, { padding: 20 }]}
-    >
+    <SafeAreaView style={[styles.container, { padding: 20 }]}>
       <View style={{ flex: 1, width: "100%", justifyContent: "space-between" }}>
         {/* Main Content */}
         <View
