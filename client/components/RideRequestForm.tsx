@@ -38,7 +38,7 @@ import { CampusZone, PurpleZone } from "@/services/ZoneService";
 type RideRequestFormProps = {
   userLocation: { latitude: number; longitude: number };
   recentLocations: LocationType[];
-   startingState?: { pickup: string; dropoff: string; numRiders: number };
+  startingState?: { pickup: string; dropoff: string; numRiders: number };
   pickUpLocationNameChanged: (location: string) => void;
   dropOffLocationNameChanged: (location: string) => void;
   pickUpLocationCoordChanged: (location: {
@@ -698,7 +698,13 @@ export default function RideRequestForm({
         {/* Autocomplete Suggestions */}
 
         <View style={{ flex: 1, height: "100%" }}>
-          <ScrollView style={{ flex: 1, paddingBottom: "150%" }}>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{
+              paddingBottom: 200,
+              flexGrow: 1,
+            }}
+          >
             {/* Add the Current Location to the Top of the results*/}
             {currentQuery == "pickup" && (
               <TouchableOpacity
