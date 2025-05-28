@@ -24,7 +24,6 @@ function PopUpModal({ isVisible, onClose, content, type }: PopUpModalProps) {
       <View
         style={{
           flex: 1,
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
           justifyContent: "flex-end", // align modal to bottom
         }}
       >

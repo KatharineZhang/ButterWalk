@@ -55,6 +55,7 @@ type RideRequestFormProps = {
     color: string;
     boldText?: string;
   }) => void;
+  darkenScreen: (darken: boolean) => void;
   startingState?: { pickup: string; dropoff: string; numRiders: number };
   recentLocations: LocationType[];
 };
@@ -71,6 +72,7 @@ export default function RideRequestForm({
   recentLocations,
   setNotificationState,
   updateSideBarHeight,
+  darkenScreen,
 }: RideRequestFormProps) {
   /* STATE */
   // user input states for form
@@ -210,6 +212,7 @@ export default function RideRequestForm({
           setClosestBuilding(closestCampusBuilding.name);
           // show the confirmation modal to let the user know where they are being snapped to
           setConfirmationModalVisible(true);
+          darkenScreen(true);
         }
       }
     } else {
@@ -353,6 +356,7 @@ export default function RideRequestForm({
     setPickupCoordinates(pickupCoord);
     pickUpLocationCoordChanged(pickupCoord);
     setConfirmationModalVisible(false);
+    darkenScreen(false);
   };
 
   // the user clicked one of the suggested closest buildings
@@ -863,7 +867,10 @@ export default function RideRequestForm({
       <PopUpModal
         type="half"
         isVisible={confirmationModalVisible}
-        onClose={() => setConfirmationModalVisible(false)}
+        onClose={() => {
+          setConfirmationModalVisible(false);
+          darkenScreen(false);
+        }}
         content={
           <View style={{ padding: 20 }}>
             <Text style={styles.formHeader}>Confirm Pickup Location</Text>
