@@ -36,6 +36,9 @@ import WebSocketService from "../services/WebSocketService";
 import { CampusZone, PurpleZone } from "@/services/ZoneService";
 
 type RideRequestFormProps = {
+  userLocation: { latitude: number; longitude: number };
+  recentLocations: LocationType[];
+   startingState?: { pickup: string; dropoff: string; numRiders: number };
   pickUpLocationNameChanged: (location: string) => void;
   dropOffLocationNameChanged: (location: string) => void;
   pickUpLocationCoordChanged: (location: {
@@ -46,7 +49,6 @@ type RideRequestFormProps = {
     latitude: number;
     longitude: number;
   }) => void;
-  userLocation: { latitude: number; longitude: number };
   rideRequested: (numPassengers: number) => void;
   setFAQVisible: (visible: boolean) => void;
   updateSideBarHeight: (bottom: number) => void;
@@ -55,9 +57,7 @@ type RideRequestFormProps = {
     color: string;
     boldText?: string;
   }) => void;
-  darkenScreen: (darken: boolean) => void;
-  startingState?: { pickup: string; dropoff: string; numRiders: number };
-  recentLocations: LocationType[];
+  darkenScreen: (darken: boolean) => void; // darken the screen behind the confirmation modal
 };
 
 export default function RideRequestForm({
