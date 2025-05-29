@@ -8,6 +8,7 @@ import { Button, Text, View } from "react-native";
 import Map from "./map";
 import { useLocalSearchParams } from "expo-router";
 import IncomingRideRequest from "./incomingRideRequest";
+import LogoutWarning from "../../components/LogoutWarning";
 
 export default function HomePage() {
     /* Driver netId prop passed in through sign in
@@ -144,7 +145,11 @@ export default function HomePage() {
     
       // switch into the “enRoute” view
       setWhichComponent('enRoute');
-    }    
+    }
+    
+    function handleLogout() {
+      setIsLoggedIn(false);
+    }
 
     // TODO: if shiftEnded && isLoggedIn, display the "need to log out" component
     return (
@@ -175,10 +180,14 @@ export default function HomePage() {
                     <Text>Pickup Location: {"Pick up location"}</Text>
                 </View>
             ) :
-            whichComponent === "endShift" && !shiftEnded ? (
+            whichComponent === "endShift" ? (
+              isLoggedIn ? (
+                <LogoutWarning onLogout={() => handleLogout} />
+              ) : (
                 <View>
-                    <Text>Your shift has ended. Please log out.</Text>
+                    <Text>You are logged out.</Text>
                 </View>
+              )
             ) : null}
         </SafeAreaView>
     );
