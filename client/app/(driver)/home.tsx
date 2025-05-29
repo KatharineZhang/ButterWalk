@@ -16,7 +16,7 @@ export default function HomePage() {
 
     // TODO: make "incomingReq" and "acceptRideReq" the same PAGE
     const [whichComponent, setWhichComponent] = useState<
-    "waitingForReq" | "incomingReq" | "acceptRideReq" | "enRoute" | "arrived" | "endShift">("waitingForReq");
+    "waitingForReq" | "incomingReq" | "enRoute" | "arrived" | "endShift">("waitingForReq");
     const[shiftEnded, setShiftEnded] = useState(false);
 
     // if the user is currently logged in or not
@@ -111,15 +111,16 @@ export default function HomePage() {
       // Handler for ACCEPT RIDE
       function handleAcceptRequest(message: WebSocketResponse) {
         if ("response" in message && message.response === "ACCEPT_RIDE") {
-          setWhichComponent("acceptRideReq");
+          setDriverAcceptInfo(message as DriverAcceptResponse);
+          // No need to change the component; we stay on incomingReq
         }
       };
 
-      WebSocketService.addListener(handleAcceptRequest, "ACCEPT_RIDE")
+      WebSocketService.addListener(handleAcceptRequest, "ACCEPT_RIDE");
 
       return () => {
-        WebSocketService.removeListener(handleAcceptRequest, "ACCEPT_RIDE")
-      }
+        WebSocketService.removeListener(handleAcceptRequest, "ACCEPT_RIDE");
+      };
     }, []);
 
     function handleAcceptRequest(): void {
