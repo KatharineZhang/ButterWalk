@@ -24,7 +24,7 @@ export default function HomePage() {
         // check current time and compare with the shift hours
         const currentHr : number = Number(momentTimezone.tz(moment.tz.guess()).format("HH"));
         if(currentHr < 18 || currentHr > 1) { // in shift
-            setWhichComponent("waitingForReq")
+            setWhichComponent("incomingReq")
         } else { // off shift
             setShiftEnded(true);
             setWhichComponent("endShift");
@@ -101,15 +101,19 @@ export default function HomePage() {
     return (
         <SafeAreaView style={{ flex: 1 }}>
             {/* put in params later */}
+            {/* <Map/> && requestInfo && !shiftEnded*/}
             <Map/>
             {whichComponent === "waitingForReq" && !shiftEnded ? (
                 <View>
                     <Text>Waiting for ride request...</Text>
                 </View>
             ) : 
-            whichComponent === "incomingReq" && requestInfo && !shiftEnded ? (
+            whichComponent === "incomingReq" ? (
               <IncomingRideRequest
-                requestInfo={requestInfo}
+                requestInfo={{
+                  response: "REQUEST_RIDE",
+                  requestid: 'temp'
+                }}
                 driverAcceptInfo={driverAcceptInfo}
                 onAccept={handleAcceptRequest}
                 onLetsGo={handleLetsGo}

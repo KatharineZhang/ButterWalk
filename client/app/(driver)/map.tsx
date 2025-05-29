@@ -295,116 +295,117 @@ export default function Map() {
   };
 
   // Map UI
-  return (
-    <View style={styles.mapContainer}>
-      <SafeAreaProvider style={{ flex: 1 }}>
-        <Header netid={netid as string} />
-        <MapView
-          ref={mapRef}
-          style={styles.map}
-          initialRegion={{
-            latitude: userLocation.latitude || 47.65462693267042,
-            longitude: userLocation.longitude || -122.30938853301136,
-            latitudeDelta: 0.015,
-            longitudeDelta: 0.015,
-          }}
-        >
-          {/* show the user's location*/}
-          <Marker
-            coordinate={{
-              latitude: userLocation.latitude,
-              longitude: userLocation.longitude,
-            }}
-            title={"userLocation"}
-          >
-            <Image
-              source={require("../../assets/images/car-pindrop.png")}
-              style={{ height: 60, width: 45 }}
-            />
-          </Marker>
-          <Marker
-            coordinate={{
-              latitude: pickUpLocation.latitude,
-              longitude: pickUpLocation.longitude,
-            }}
-            title={"pickUpLocation"}
-          />
-          <Marker
-            coordinate={{
-              latitude: dropOffLocation.latitude,
-              longitude: dropOffLocation.longitude,
-            }}
-            title={"dropOffLocation"}
-          />
-          {/* show the directions between the pickup and dropoff locations if they are valid */}
-          {/* TODO: when these locations are (0,0) we get a gmaps error since it can't map between locations
-          in the atlantic. It's not really a problem. 
-          The other option would be the have these locations as a key to force rerender 
-          and then check if the locations are not 0 here, but then the rerender loses our wonderful zoom. */}
-          <MapViewDirections
-            origin={pickUpLocation}
-            destination={dropOffLocation}
-            apikey={GOOGLE_MAPS_APIKEY}
-            strokeWidth={3}
-            strokeColor="#D1AE49"
-            onReady={handleDirectionsReady}
-          />
-        </MapView>
-        {/* Temporary footer for accepting and completing rides*/}
-        <View
-          style={{
-            position: "absolute",
-            bottom: 0,
-            width: "100%",
-            padding: 20,
-            backgroundColor: "#D1AE49",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 10,
-          }}
-        >
-          <Text>Ride Info: {JSON.stringify(rideInfo)}</Text>
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            <Pressable
-              onPress={sendAccept}
-              style={{
-                backgroundColor: "#4B2E83",
-                padding: 10,
-                borderRadius: 5,
-              }}
-            >
-              <Text style={{ color: "white" }}>Accept</Text>
-            </Pressable>
-            <Pressable
-              onPress={sendCancel}
-              style={{
-                backgroundColor: "#4B2E83",
-                padding: 10,
-                borderRadius: 5,
-              }}
-            >
-              <Text style={{ color: "white" }}>Cancel</Text>
-            </Pressable>
-            <Pressable
-              onPress={sendComplete}
-              style={{
-                backgroundColor: "#4B2E83",
-                padding: 10,
-                borderRadius: 5,
-              }}
-            >
-              <Text style={{ color: "white" }}>Complete</Text>
-            </Pressable>
-            {/* recenter button */}
-            <TouchableOpacity onPress={() => centerMapOnLocations(zoomOn)}>
-              <Image
-                source={require("@/assets/images/recenter.png")}
-                style={{ width: 50, height: 50 }}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </SafeAreaProvider>
-    </View>
-  );
+  return <></>;
+  // return (
+  //   <View style={styles.mapContainer}>
+  //     <SafeAreaProvider style={{ flex: 1 }}>
+  //       <Header netid={netid as string} />
+  //       <MapView
+  //         ref={mapRef}
+  //         style={styles.map}
+  //         initialRegion={{
+  //           latitude: userLocation.latitude || 47.65462693267042,
+  //           longitude: userLocation.longitude || -122.30938853301136,
+  //           latitudeDelta: 0.015,
+  //           longitudeDelta: 0.015,
+  //         }}
+  //       >
+  //         {/* show the user's location*/}
+  //         <Marker
+  //           coordinate={{
+  //             latitude: userLocation.latitude,
+  //             longitude: userLocation.longitude,
+  //           }}
+  //           title={"userLocation"}
+  //         >
+  //           <Image
+  //             source={require("../../assets/images/car-pindrop.png")}
+  //             style={{ height: 60, width: 45 }}
+  //           />
+  //         </Marker>
+  //         <Marker
+  //           coordinate={{
+  //             latitude: pickUpLocation.latitude,
+  //             longitude: pickUpLocation.longitude,
+  //           }}
+  //           title={"pickUpLocation"}
+  //         />
+  //         <Marker
+  //           coordinate={{
+  //             latitude: dropOffLocation.latitude,
+  //             longitude: dropOffLocation.longitude,
+  //           }}
+  //           title={"dropOffLocation"}
+  //         />
+  //         {/* show the directions between the pickup and dropoff locations if they are valid */}
+  //         {/* TODO: when these locations are (0,0) we get a gmaps error since it can't map between locations
+  //         in the atlantic. It's not really a problem. 
+  //         The other option would be the have these locations as a key to force rerender 
+  //         and then check if the locations are not 0 here, but then the rerender loses our wonderful zoom. */}
+  //         <MapViewDirections
+  //           origin={pickUpLocation}
+  //           destination={dropOffLocation}
+  //           apikey={GOOGLE_MAPS_APIKEY}
+  //           strokeWidth={3}
+  //           strokeColor="#D1AE49"
+  //           onReady={handleDirectionsReady}
+  //         />
+  //       </MapView>
+  //       {/* Temporary footer for accepting and completing rides*/}
+  //       <View
+  //         style={{
+  //           position: "absolute",
+  //           bottom: 0,
+  //           width: "100%",
+  //           padding: 20,
+  //           backgroundColor: "#D1AE49",
+  //           alignItems: "center",
+  //           justifyContent: "space-between",
+  //           gap: 10,
+  //         }}
+  //       >
+  //         <Text>Ride Info: {JSON.stringify(rideInfo)}</Text>
+  //         <View style={{ flexDirection: "row", gap: 10 }}>
+  //           <Pressable
+  //             onPress={sendAccept}
+  //             style={{
+  //               backgroundColor: "#4B2E83",
+  //               padding: 10,
+  //               borderRadius: 5,
+  //             }}
+  //           >
+  //             <Text style={{ color: "white" }}>Accept</Text>
+  //           </Pressable>
+  //           <Pressable
+  //             onPress={sendCancel}
+  //             style={{
+  //               backgroundColor: "#4B2E83",
+  //               padding: 10,
+  //               borderRadius: 5,
+  //             }}
+  //           >
+  //             <Text style={{ color: "white" }}>Cancel</Text>
+  //           </Pressable>
+  //           <Pressable
+  //             onPress={sendComplete}
+  //             style={{
+  //               backgroundColor: "#4B2E83",
+  //               padding: 10,
+  //               borderRadius: 5,
+  //             }}
+  //           >
+  //             <Text style={{ color: "white" }}>Complete</Text>
+  //           </Pressable>
+  //           {/* recenter button */}
+  //           <TouchableOpacity onPress={() => centerMapOnLocations(zoomOn)}>
+  //             <Image
+  //               source={require("@/assets/images/recenter.png")}
+  //               style={{ width: 50, height: 50 }}
+  //             />
+  //           </TouchableOpacity>
+  //         </View>
+  //       </View>
+  //     </SafeAreaProvider>
+  //   </View>
+  // );
 }
