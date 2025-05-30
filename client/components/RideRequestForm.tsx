@@ -701,7 +701,7 @@ export default function RideRequestForm({
           <ScrollView
             style={{ flex: 1 }}
             contentContainerStyle={{
-              paddingBottom: 200,
+              paddingBottom: height * 0.1,
               flexGrow: 1,
             }}
           >
