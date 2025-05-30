@@ -26,16 +26,17 @@ interface HandleRideProps {
   walkDuration: number;
   rideDuration: number;
   driverETA: number;
-  onCancel: (reason: "button" | "timer") => void;
-  setFAQVisible: (visible: boolean) => void;
-  openNavigation: () => void;
+  onCancel: (reason: "button" | "timer") => void; // tell homepage to cancel the ride
+  setFAQVisible: (visible: boolean) => void; // callback function to set the visibility of the FAQ modal
+  openNavigation: () => void; // open the native maps app with the pickup location
   setNotificationState: (state: {
     text: string;
     color: string;
     boldText?: string;
-  }) => void;
-  changeRideStatus: (status: RideStatus) => void;
-  goHome: () => void;
+  }) => void; // show a notification to the user by calling this function
+  changeRideStatus: (status: RideStatus) => void; // update the ride status based on button press
+  goHome: () => void; // callback function to go back to the ride request form
+  updateSideBarHeight: (height: number) => void; // callback function to update the height of the sidebar
 }
 
 const HandleRideComponent: React.FC<HandleRideProps> = ({
@@ -47,14 +48,15 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   walkProgress,
   rideProgress,
   walkDuration,
-  onCancel,
   rideDuration,
   driverETA,
+  onCancel,
   setFAQVisible,
   openNavigation,
   setNotificationState,
   changeRideStatus,
   goHome,
+  updateSideBarHeight,
 }) => {
   // TIMER STUFF
   // keep track of the seconds left
@@ -144,7 +146,13 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   const [expanded, setExpanded] = useState(false); // if the progress bar is expanded or not
 
   return (
-    <View style={styles.progressContainer}>
+    <View
+      style={styles.progressContainer}
+      onLayout={(event) => {
+        // on render, update the sidebar height to the height of this component
+        updateSideBarHeight(event.nativeEvent.layout.height);
+      }}
+    >
       <View style={styles.progressBarTop}>
         <View style={styles.mainTextContainer}>
           {/* Figure out what title to show */}
