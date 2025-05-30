@@ -105,7 +105,9 @@ export default function RideRequestForm({
 
   // what the user types in to the text boxes
   const [pickUpQuery, setPickUpQuery] = useState(""); // Typed in pickup query
+  const [previousPickUpQuery, setPreviousPickUpQuery] = useState(""); // Previous pickup query
   const [dropOffQuery, setDropOffQuery] = useState(""); // typed in dropoff query
+  const [previousDropOffQuery, setPreviousDropOffQuery] = useState(""); // Previous dropoff query
 
   // which text box is currently being updated
   const [currentQuery, setCurrentQuery] = useState<"pickup" | "dropoff">(
@@ -439,12 +441,51 @@ export default function RideRequestForm({
   // Calls Place Search API when the user presses enter
   const enterPressed = async () => {
     const text = currentQuery == "pickup" ? pickUpQuery : dropOffQuery;
-    if (text.length > 3) {
+    const previousQuery =
+      currentQuery == "pickup" ? previousPickUpQuery : previousDropOffQuery;
+    // only call place search if the text is longer than 3 characters
+    // and if the text is different enough from the previous query
+    if (text.length > 3 && levensteinDistance(text, previousQuery) > 2) {
+      // We are going to call the place search API
+      // update the previous query as the one we are currently using
+      if (currentQuery == "pickup") {
+        setPreviousPickUpQuery(text);
+      } else {
+        setPreviousDropOffQuery(text);
+      }
       WebSocketService.send({
         directive: "PLACE_SEARCH",
         query: text,
       });
     }
+  };
+
+  // Get the distance between two strings
+  // (number of insertions and deletions of characters to get from one to another)
+  const levensteinDistance = (a: string, b: string): number => {
+    const matrix: number[][] = new Array(b.length + 1)
+      .fill(null)
+      .map(() => new Array(a.length + 1).fill(0));
+
+    for (let i = 0; i < a.length + 1; i++) {
+      matrix[0][i] = i;
+    }
+
+    for (let i = 0; i < b.length + 1; i++) {
+      matrix[i][0] = i;
+    }
+
+    for (let i = 1; i < a.length + 1; i++) {
+      for (let j = 1; j < b.length + 1; j++) {
+        const min = Math.min(matrix[j - 1][i], matrix[j][i - 1]);
+        if (a[i - 1] === b[j - 1]) {
+          matrix[j][i] = matrix[j - 1][i - 1];
+        } else {
+          matrix[j][i] = min + 1;
+        }
+      }
+    }
+    return matrix[b.length][a.length];
   };
 
   // handle the place search results
