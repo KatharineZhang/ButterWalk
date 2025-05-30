@@ -3,7 +3,7 @@ import { View, Text, Button, StyleSheet } from "react-native";
 import {
   RequestRideResponse,
   DriverAcceptResponse,
-} from "../../../server/src/api";
+} from "../../server/src/api";
 
 interface Props {
   requestInfo: RequestRideResponse;

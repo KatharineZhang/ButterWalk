@@ -2,13 +2,16 @@ import { useState, useEffect, useRef } from "react";
 import moment from "moment";
 import momentTimezone from "moment-timezone";
 import WebSocketService from "@/services/WebSocketService";
-import { RequestRideResponse, DriverAcceptResponse, WebSocketResponse } from "../../../server/src/api";
+import { RequestRideResponse, DriverAcceptResponse, WebSocketResponse, User } from "../../../server/src/api";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, Text, View } from "react-native";
+import { Button, Pressable, Text, View } from "react-native";
 import Map from "./map";
 import { useLocalSearchParams } from "expo-router";
-import IncomingRideRequest from "./incomingRideRequest";
+import IncomingRideRequest from "@/components/incomingRideRequest";
 import LogoutWarning from "../../components/LogoutWarning";
+import Legend from "@/components/Legend";
+import Profile from "./profile";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function HomePage() {
     /* Driver netId prop passed in through sign in
@@ -151,12 +154,54 @@ export default function HomePage() {
       setIsLoggedIn(false);
     }
 
+    const [profileVisible, setProfileVisible] = useState(false);
+    const [user, setUser] = useState<User>({} as User);
+
+    useEffect(() => {
+      WebSocketService.addListener(handleProfile, "PROFILE");
+      WebSocketService.send({ directive: "PROFILE", netid });
+    
+      return () => {
+        WebSocketService.removeListener(handleProfile, "PROFILE");
+      };
+    }, [netid]);
+
+    function handleProfile(msg: WebSocketResponse) {
+      // only run when the response type actually is "PROFILE"
+      if (msg.response === "PROFILE") {
+        // msg.user comes from your ProfileResponse
+        setUser(msg.user);
+      }
+    }
+
     // TODO: if shiftEnded && isLoggedIn, display the "need to log out" component
     return (
         <SafeAreaView style={{ flex: 1 }}>
             {/* put in params later */}
             {/* <Map/> && requestInfo && !shiftEnded*/}
             <Map/>
+
+            {/* Map Key (legend) */}
+            <View style={{ position: "absolute", bottom: 20, right: 20 }}>
+              <Legend />
+            </View>
+
+            {/* profile button */}
+            <Pressable
+              style={{ position: "absolute", top: 50, left: 20, zIndex: 100 }}
+              onPress={() => setProfileVisible(true)}
+            >
+              <Ionicons name="person-circle" size={36} color="white" />
+            </Pressable>
+
+            {/* driver profile modal */}
+            <Profile
+              isVisible={profileVisible}
+              onClose={() => setProfileVisible(false)}
+              user={user}
+            />
+
+
             {whichComponent === "waitingForReq" && !shiftEnded ? (
                 <View>
                     <Text>Waiting for ride request...</Text>
@@ -182,7 +227,7 @@ export default function HomePage() {
             ) :
             whichComponent === "endShift" ? (
               isLoggedIn ? (
-                <LogoutWarning onLogout={() => handleLogout} />
+                <LogoutWarning onLogout={handleLogout} />
               ) : (
                 <View>
                     <Text>You are logged out.</Text>
