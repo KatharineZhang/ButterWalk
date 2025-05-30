@@ -11,7 +11,7 @@ import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { styles } from "@/assets/styles";
 import { View, Image, Alert, Linking } from "react-native";
-import MapViewDirections from "react-native-maps-directions";
+// import MapViewDirections from "react-native-maps-directions";
 import { Ionicons } from "@expo/vector-icons";
 import { PurpleZone } from "@/services/ZoneService";
 
@@ -93,9 +93,9 @@ const Map = forwardRef<MapRef, MapProps>(
     }, [status]);
 
     // GOOGLE MAPS API KEY
-    const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
-      ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
-      : "";
+    // const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
+    //   ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
+    //   : "";
 
     // used for map zooming
     const mapRef = useRef<MapView>(null);
@@ -316,7 +316,7 @@ const Map = forwardRef<MapRef, MapProps>(
           </Marker>
           {/* show the directions between the pickup and dropoff locations if they are valid
         if the ride is not currently happening / happened  */}
-          {status !== "RideInProgress" && status !== "RideCompleted"
+          {/* {status !== "RideInProgress" && status !== "RideCompleted"
             ? userLocation.latitude === 0
               ? pickUpLocation.latitude !== 0 &&
                 dropOffLocation.latitude !== 0 && (
@@ -340,7 +340,7 @@ const Map = forwardRef<MapRef, MapProps>(
                     strokeColor="#000000"
                   />
                 )
-            : null}
+            : null} */}
 
           {/* show the path of the ride if it is in progress. 
         Used to plot the path of the driver during the ride */}
