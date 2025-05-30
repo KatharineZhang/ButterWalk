@@ -17,7 +17,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.butterwalk.butterwalk",
       "config": {
-        "googleMapsApiKey": "AIzaSyAi4GiqY4FUMk7CQWB0MxNQIGWOsr_laBw"
+        "googleMapsApiKey": "see app.config.ts"
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
