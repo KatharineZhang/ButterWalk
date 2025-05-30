@@ -702,7 +702,7 @@ export default function RideRequestForm({
             style={{ flex: 1 }}
             contentContainerStyle={{
               paddingBottom: height * 0.1,
-              flexGrow: 1,
+              //flexGrow: 1,
             }}
           >
             {/* Add the Current Location to the Top of the results*/}
