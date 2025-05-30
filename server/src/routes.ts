@@ -1,10 +1,7 @@
 import dotenv from "dotenv";
 import { AuthSessionResult } from "expo-auth-session";
 import {
-  localRideRequest,
-  rideReqQueue,
   ErrorResponse,
-  AcceptResponse,
   CancelResponse,
   GeneralResponse,
   FinishAccCreationResponse,
@@ -20,8 +17,9 @@ import {
   GoogleResponse,
   ProfileResponse,
   User,
-  LocationType,
   DistanceResponse,
+  ViewRideRequestResponse,
+  ViewDecisionResponse,
   SnapLocationResponse,
   RecentLocationResponse,
   PlaceSearchResult,
@@ -31,10 +29,8 @@ import {
   PurpleZone,
 } from "./api";
 import {
-  acceptRideRequest,
   addFeedbackToDb,
   addProblematic,
-  addRideRequest,
   blacklistUser,
   cancelRideRequest,
   completeRideRequest,
@@ -44,16 +40,15 @@ import {
   queryFeedback,
   db,
   getProfile,
+  addRideRequestToPool,
+  getRideRequests,
+  setRideRequestStatus,
+  setRideRequestDriver,
   getRecentLocations,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
-import { Mutex } from "async-mutex";
+import { highestRank, rankOf } from "./rankingAlgorithm";
 dotenv.config();
-
-// every time we access the queue and the database,
-// we want to lock the entire section to make both the database action
-// and the queue action combined into one atomic action to prevent data races
-const queueLock: Mutex = new Mutex();
 
 // performs the google auth and returns the user profile information
 export const googleAuth = async (
@@ -333,100 +328,267 @@ Will add a new request to the database, populated with the fields passed in and 
 - On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: “REQUEST_RIDE” }.
 - Returns a json object TO THE STUDENT in the form: { response: “REQUEST_RIDE”, requestid: string }. */
 export const requestRide = async (
-  phoneNum: string,
-  netid: string,
-  from: LocationType,
-  to: LocationType,
-  numRiders: number
+  rideRequest: RideRequest
 ): Promise<RequestRideResponse | ErrorResponse> => {
-  if (!phoneNum || !from || !to || numRiders <= 0) {
-    return {
-      response: "ERROR",
-      error: "Missing or invalid ride request details.",
-      category: "REQUEST_RIDE",
-    };
-  }
-
-  queueLock.acquire();
-  // add a new request to the database, populated with the fields passed in and a request status of 0
-  // on error, return { success: false, error: 'Error adding ride request to the database.'};
   try {
-    const requestid = await runTransaction(db, async (transaction) => {
-      // we cannot directly assign the requestid to the return value of addRideRequest
-      // since you cannot alter app state in a transaction
-      return await addRideRequest(transaction, netid, from, to, numRiders);
+    const requestid = await runTransaction(db, async (t) => {
+      return await addRideRequestToPool(t, rideRequest);
     });
-    // can't do this in the transaction unfortuntely
-    // we also want to keep the requests locally in the server queue, but without too much information
-    const newRideReq: localRideRequest = { requestid, netid };
-    rideReqQueue.add(newRideReq);
-    return { response: "REQUEST_RIDE", requestid };
-  } catch (e) {
+    if (requestid != null) {
+      return { response: "REQUEST_RIDE", requestid };
+    } else {
+      throw new Error(`requestid was null`);
+    }
+  } catch (e: unknown) {
+    // TODO(connor): introduce a debugging and logging utility and or proper error
+    // handling so this is not necessary.
     return {
       response: "ERROR",
       error: `Error adding ride request to the database: ${e}`,
       category: "REQUEST_RIDE",
     };
-  } finally {
-    queueLock.release();
   }
 };
 
-/* Pops the next ride request in the queue and assigns it to the driver. 
-This call will update the database to add the driver id to the specific request 
-and change the status of the request to 1 (accepted). 
-
-- Takes in a json object in the form { directive: "ACCEPT_RIDE" }.
-- On error, returns the json object in the form:  { response: “ERROR”, success: false, error: string, category: “ACCEPT_RIDE” }.
-- Returns a json object in the form: 
-{ student: { response: "ACCEPT_RIDE", success: true }, 
- driver: { response: "ACCEPT_RIDE", netID: string, location: string, destination: string, numRiders: number, requestid: string }}
-Where the object that should be returned TO THE STUDENT is in the form: { response: "ACCEPT_RIDE", success: true }
-and the object that should be returned TO THE DRIVER is in the format: 
-{ response: "ACCEPT_RIDE", netID: string, location: string, destination: string, numRiders: number, requestid: string } */
-export const acceptRide = async (
-  driverid: string
-): Promise<AcceptResponse | ErrorResponse> => {
-  queueLock.acquire();
-  if (!rideReqQueue.peek()) {
-    queueLock.release();
+/**
+ * Returns "YES" or "NO" depending on if there are currently rides in the pool.
+ * Used by the ride request broker, called when a driver opens the application.
+ */
+export const ridesExist = async (): Promise<boolean | ErrorResponse> => {
+  try {
+    return await runTransaction(db, async () => {
+      const rideRequests: RideRequest[] = await getRideRequests();
+      return rideRequests.length !== 0;
+    });
+  } catch (e) {
     return {
       response: "ERROR",
-      error: "No ride requests in the queue.",
-      category: "ACCEPT_RIDE",
+      error: `Error getting ride requests from the database: ${e}`,
+      category: "REQUEST_RIDE",
     };
   }
+};
 
-  // get the next request in the queue
-  // can't do this in the transaction unfortuntely
-  const nextRide = rideReqQueue.pop() as localRideRequest;
-  // update the request in database to add the driver id and change the status of the request to 1 (accepted)
-  // if there is an error, return { success: false, error: 'Error accepting ride request.'};
+/**
+ * Temporarily checks out a ride request to a driver, who can choose to either accept
+ * or decline the ride reqeust they are granted.
+ * @param driverid The ID of the driver who is going to view a ride and either accept
+ * or deny it after having viewed it.
+ * @param driverLocation The current location of the driver associated with driverId.
+ * @returns a ViewRideRequestResponse with all of the information the driver needs
+ * to accept or deny the request, or an ErrorResponse if there was some recoverable
+ * problem.
+ */
+export const viewRide = async (
+  driverid: string,
+  driverLocation: {
+    latitude: number;
+    longitude: number;
+  } | null //TODO(connor): remove null option, force for ranking
+): Promise<ViewRideRequestResponse | ErrorResponse> => {
+  let associatedUser: User | null = null;
   try {
-    const req: RideRequest = await runTransaction(db, async (transaction) => {
-      return await acceptRideRequest(transaction, nextRide.requestid, driverid);
-    });
+    const rideRequest: RideRequest | null = await runTransaction(
+      db,
+      async (t) => {
+        const rideRequests: RideRequest[] = await getRideRequests();
+        if (rideRequests.length === 0) {
+          return null;
+        }
+        const bestRequest: RideRequest = highestRank(
+          rideRequests,
+          driverid,
+          driverLocation
+        );
+        const userNetid = bestRequest.netid;
+        associatedUser = await getProfile(t, userNetid);
+        setRideRequestStatus(t, "VIEWING", associatedUser.netid);
+        return bestRequest;
+      }
+    );
+    if (rideRequest === null) {
+      return {
+        response: "VIEW_RIDE",
+        rideExists: false,
+      };
+    }
+    if (associatedUser === null) {
+      throw new Error(`Didn't find any User during view ride.`);
+    }
     return {
-      response: "ACCEPT_RIDE",
-      student: { response: "ACCEPT_RIDE", success: true },
-      driver: {
-        response: "ACCEPT_RIDE",
-        netid: nextRide.netid,
-        location: req.locationFrom,
-        destination: req.locationTo,
-        numRiders: req.numRiders,
-        requestid: nextRide.requestid,
-      },
+      response: "VIEW_RIDE",
+      rideExists: true,
+      rideRequest: rideRequest,
     };
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Error accepting ride request: ${e}`,
-      category: "ACCEPT_RIDE",
+      error: `Unknown problem during viewRide: ${e}`,
+      category: "VIEW_RIDE",
     };
-  } finally {
-    queueLock.release();
   }
+};
+
+/**
+ * Handles the acceptance, rejection, reporting, timing out, or erroring
+ * of a ride request in the pool that was previously checked out to a
+ * particular driver.
+ * @param driverid ID of the driver who viewed the given ride request
+ * @param providedView The view that was provided to the driver
+ * @param decision The driver's decision on the ride request
+ *  `ACCEPT` -> Accepts the ride request, ties to driver
+ */
+export const handleDriverViewChoice = async (
+  driverid: string,
+  providedView: ViewRideRequestResponse,
+  decision: "ACCEPT" | "DENY" | "TIMEOUT" | "ERROR"
+): Promise<ViewDecisionResponse | ErrorResponse> => {
+  const requestNetid = providedView.rideRequest?.netid;
+  if (typeof requestNetid !== "string") {
+    return {
+      response: "ERROR",
+      error: `Tried to handle view choice when provided view had undefined netid: ${requestNetid}`,
+      category: "VIEW_RIDE",
+    };
+  }
+  if (decision === "ACCEPT") {
+    /**
+     * Change the status of the ride request with the given
+     * rideRequestId to be `DRIVING TO PICK UP`,
+     * assigning the ride to the given driver
+     */
+    try {
+      return await runTransaction(db, async (t) => {
+        setRideRequestStatus(t, "DRIVING TO PICK UP", requestNetid);
+        setRideRequestDriver(t, requestNetid, driverid);
+        return {
+          response: "VIEW_DECISION",
+          driver: {
+            response: "VIEW_DECISION",
+            providedView: providedView,
+            success: true,
+          },
+          student: {
+            response: "ACCEPT_RIDE",
+            success: true,
+          },
+        };
+      });
+    } catch (e) {
+      return {
+        response: "ERROR",
+        error: `Unexpected Error during handleDriverViewChoie: ${e}`,
+        category: "VIEW_RIDE",
+      };
+    }
+  } else if (decision === "DENY") {
+    /**
+     * Change the status of the ride request with the given
+     * id back to `REQUESTED`, returning it to the pool.
+     */
+    try {
+      return await runTransaction(db, async (t) => {
+        setRideRequestStatus(t, "REQUESTED", requestNetid);
+        return {
+          response: "VIEW_DECISION",
+          driver: {
+            response: "VIEW_DECISION",
+            providedView: providedView,
+            success: true,
+          },
+          student: undefined,
+        };
+      });
+    } catch (e) {
+      return {
+        response: "ERROR",
+        error: `Unexpected Error during handleDriverViewChoice: ${e}`,
+        category: "VIEW_RIDE",
+      };
+    }
+  } else if (decision === "TIMEOUT") {
+    /**
+     * Change the status of the ride request with the given id
+     * back to `REQUESTED`, returning it to the pool.
+     */
+    try {
+      return await runTransaction(db, async (t) => {
+        setRideRequestStatus(t, "REQUESTED", requestNetid);
+        return {
+          response: "VIEW_DECISION",
+          driver: {
+            response: "VIEW_DECISION",
+            providedView: providedView,
+            success: true,
+          },
+          student: undefined,
+        };
+      });
+    } catch (e) {
+      return {
+        response: "ERROR",
+        error: `Unexpected Error during handleDriverViewChocie: ${e}`,
+        category: "VIEW_RIDE",
+      };
+    }
+  } else if (decision === "ERROR") {
+    /**
+     * Change the status of the ride request with the given id
+     * back to `REQUESTED`, returning it to the pool. Do any
+     * additional logging or error handling for unexpected
+     * behavior.
+     */
+    try {
+      return await runTransaction(db, async (t) => {
+        setRideRequestStatus(t, "REQUESTED", requestNetid);
+        return {
+          response: "VIEW_DECISION",
+          driver: {
+            response: "VIEW_DECISION",
+            providedView: providedView,
+            success: true,
+          },
+          student: undefined,
+        };
+      });
+    } catch (e) {
+      return {
+        response: "ERROR",
+        error: `Unexpected Error during handleDriverViewChoice: ${e}`,
+        category: "VIEW_RIDE",
+      };
+    }
+  } else {
+    throw new Error(`decision: ${decision} was not a valid string.`);
+  }
+};
+
+/**
+ * Sets the status of the ride request associated with `netid`
+ * to be "DRIVER AT PICK UP" indicating that the driver has
+ * arrived at the pick up location
+ * @param netid netid of the student of the ride request
+ * @returns DriverArrivedResponse with .success = true on success,
+ * or an error response otherwise.
+ */
+export const driverArrived = async (
+  netid: string
+): Promise<ErrorResponse | GeneralResponse> => {
+  try {
+    await runTransaction(db, async (t) => {
+      await setRideRequestStatus(t, "DRIVER AT PICK UP", netid);
+    });
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Unexpected Error during driverArrived: ${e}`,
+      category: "VIEW_RIDE",
+    };
+  }
+  return {
+    response: "DRIVER_ARRIVED",
+    success: true,
+  };
 };
 
 /* Allows the student to cancel a ride and updates the server and notifies the user. 
@@ -457,21 +619,6 @@ export const cancelRide = async (
   netid: string,
   role: "STUDENT" | "DRIVER"
 ): Promise<CancelResponse | ErrorResponse> => {
-  if (!netid) {
-    return {
-      response: "ERROR",
-      error: "Missing required fields.",
-      category: "CANCEL",
-    };
-  }
-
-  queueLock.acquire();
-  // can't do this in the transaction unfortuntely, so lock instead
-  if (role === "STUDENT") {
-    // get rid of any pending requests in the local queue that have the same netid
-    rideReqQueue.remove(netid);
-  }
-
   try {
     return await runTransaction(db, async (transaction) => {
       const otherid = await cancelRideRequest(transaction, netid, role);
@@ -496,8 +643,6 @@ export const cancelRide = async (
       error: `Error canceling ride request: ${e}`,
       category: "CANCEL",
     };
-  } finally {
-    queueLock.release();
   }
 };
 
@@ -513,29 +658,25 @@ export const cancelRide = async (
 export const completeRide = async (
   requestid: string
 ): Promise<CompleteResponse | ErrorResponse> => {
-  if (!requestid) {
-    return {
-      response: "ERROR",
-      error: "Missing required fields.",
-      category: "COMPLETE",
-    };
-  }
-  // set the specific request status to 2 in the database
-  // if there is an error, return { success: false, error: 'Error completing ride request.'};
   try {
-    return await runTransaction(db, async (transaction) => {
-      const netids = await completeRideRequest(transaction, requestid);
+    return await runTransaction(db, async (t) => {
+      const netids = await completeRideRequest(t, requestid);
       return {
         response: "COMPLETE",
-        info: { response: "COMPLETE", success: true },
-        netids: netids,
+        info: {
+          response: "COMPLETE",
+          success: true,
+        },
+        netids: {
+          student: netids.student,
+          driver: netids.driver,
+        },
       };
     });
   } catch (e) {
-    // if there is an error, return { success: false, error: 'Error completing ride request.'};
     return {
       response: "ERROR",
-      error: `Error completing ride request: ${e}`,
+      error: `Unexpected Error during completeRide: ${e}`,
       category: "COMPLETE",
     };
   }
@@ -723,21 +864,18 @@ export const waitTime = async (
   }
 
   // FIND THE DRIVER'S ETA TO THE STUDENT
-  queueLock.acquire();
   if (!requestid) {
     // if there is no concrete request in the queue, return the queue length * 15 minutes
-    const queueLength = rideReqQueue.get().length;
+    const queueLength = (await getRideRequests()).length;
     driverETA = queueLength * 15;
   } else if (requestid && !driverLocation) {
     // if there is a requestid, then there is a requested ride,
     // if there is also no driverLocation,
     // return corresponding queue index * 15
-    const index = rideReqQueue
-      .get()
-      .findIndex((request) => request.requestid === requestid);
+    const rideRequests: RideRequest[] = await getRideRequests();
+    const index = rankOf(rideRequests, requestid);
     if (index === -1) {
       // the requestid was not in the queue
-      queueLock.release();
       return {
         response: "ERROR",
         error: `Could not find requestid ${requestid} in the queue.`,
@@ -763,7 +901,6 @@ export const waitTime = async (
     }
   }
 
-  queueLock.release();
   return {
     response: "WAIT_TIME",
     rideDuration,
