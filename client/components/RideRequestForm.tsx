@@ -697,14 +697,8 @@ export default function RideRequestForm({
         </View>
         {/* Autocomplete Suggestions */}
 
-        <View style={{ flex: 1, height: "100%" }}>
-          <ScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={{
-              paddingBottom: height * 0.1,
-              //flexGrow: 1,
-            }}
-          >
+        <View style={{ flex: 1 }}>
+          <ScrollView style={{ flex: 1 }}>
             {/* Add the Current Location to the Top of the results*/}
             {currentQuery == "pickup" && (
               <TouchableOpacity

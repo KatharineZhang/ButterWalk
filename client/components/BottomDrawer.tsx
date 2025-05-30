@@ -43,6 +43,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     width: "100%",
+    height: "97%",
   },
 });
 
