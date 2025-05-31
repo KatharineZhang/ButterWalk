@@ -21,13 +21,15 @@ export type Command =
   | "PROFILE"
   | "DISTANCE"
   | "ERROR"
-  | "RECENT_LOCATIONS"
   | "PLACE_SEARCH"
-  | "VIEW_RIDE";
+  | "VIEW_RIDE"
+  | "VIEW_DECISION"
+  | "RIDES_EXIST"
+  | "DRIVER_ARRIVED"
+  | "DISCONNECT";
 
 // Input types
 export type WebSocketMessage =
-  | { directive: "RECENT_LOCATIONS"; netid: string }
   | { directive: "DISCONNECT" }
   | { directive: "CONNECT"; netid: string; role: "STUDENT" | "DRIVER" } // TODO: REMOVE THIS ONCE BYPASS SIGNIN IS REMOVED
   | {
@@ -157,14 +159,7 @@ export type WebSocketResponse =
   | ViewRideRequestResponse
   | ViewDecisionResponse
   | ViewDecisionDriverResponse
-  | RecentLocationResponse
-  | RecentLocationResponse
   | PlaceSearchResponse;
-
-export type RecentLocationResponse = {
-  response: "RECENT_LOCATIONS";
-  locations: LocationType[];
-};
 
 export type LocationType = {
   name: string;
@@ -303,6 +298,7 @@ export type QueryResponse = {
 export type ProfileResponse = {
   response: "PROFILE";
   user: User;
+  locations: LocationType[];
 };
 
 export type ErrorResponse = {
@@ -551,6 +547,7 @@ export type ProblematicUser = {
   category: "REPORTED" | "BLACKLISTED";
 };
 
+// Database type for storing recent locations of students
 export type RecentLocation = {
   netid: string;
   locations: LocationType[];
