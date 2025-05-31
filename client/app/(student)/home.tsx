@@ -517,7 +517,6 @@ export default function HomePage() {
       setNotifState({
         text: errorMessage.error,
         color: "#FFCBCB",
-        boldText: "error",
       });
       // go back to request ride
       setWhichComponent("rideReq");
@@ -576,8 +575,10 @@ export default function HomePage() {
           pickUpLocation={pickUpLocation}
           dropOffLocation={dropOffLocation}
           driverLocation={driverLocation}
+          startLocation={startLocation}
           userLocationChanged={userLocationChanged}
           status={rideStatus}
+          whichComponent={whichComponent}
         />
         {/* profile pop-up modal */}
         <View style={styles.modalContainer}>

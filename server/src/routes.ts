@@ -343,7 +343,7 @@ export const requestRide = async (
     // handling so this is not necessary.
     return {
       response: "ERROR",
-      error: `Error adding ride request to the database: ${e}`,
+      error: `${e}`,
       category: "REQUEST_RIDE",
     };
   }
