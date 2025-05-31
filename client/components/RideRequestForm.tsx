@@ -69,7 +69,7 @@ export default function RideRequestForm({
   rideRequested,
   startingState,
   setFAQVisible,
-  recentLocations,
+  recentLocations = [], // default to an empty array if not provided
   setNotificationState,
   updateSideBarHeight,
   darkenScreen,

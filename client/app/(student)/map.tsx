@@ -39,7 +39,10 @@ interface MapProps {
     | "handleRide";
 }
 
-const production = false;
+// This is used to determine if we are in production or not
+// In production, we use the Google Maps API key restricted to the com.butterwalk.butterwalk package
+// In development, we use the local Google Maps API key that works with all domains
+const production = true;
 
 // functions that can be called from the parent component
 // using the ref
