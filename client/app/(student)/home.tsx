@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { Pressable, TouchableOpacity, View } from "react-native";
+import {
+  Pressable,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import Profile from "./profile";
 import Map, { calculateDistance, isSameLocation, MapRef } from "./map";
 import { useLocalSearchParams } from "expo-router";
@@ -115,6 +120,9 @@ export default function HomePage() {
   // the user's recent locations that will be displayed in the dropdown
   const [recentLocations, setRecentLocations] = useState<LocationType[]>([]);
 
+  // darken the screen when the user clicks on the confirmation modal
+  const [darkenScreen, setDarkenScreen] = useState(false);
+
   /* PROFILE STATE AND METHODS */
   const [profileVisible, setProfileVisible] = useState(false);
   const [user, setUser] = useState<User>({} as User);
@@ -224,7 +232,11 @@ export default function HomePage() {
   };
 
   /* LEGEND STATE */
-  const [bottom, setBottom] = useState(350);
+  const { height } = useWindowDimensions();
+  // to start, the current component is the ride request form which takes up 40% of the screen height
+  const [currentComponentHeight, setCurrentComponentHeight] = useState(
+    Math.round(height * 0.4)
+  );
 
   /* EFFECTS */
   useEffect(() => {
@@ -237,15 +249,9 @@ export default function HomePage() {
     WebSocketService.addListener(handleCompleteOrCancel, "COMPLETE");
     WebSocketService.addListener(handleWaitTime, "WAIT_TIME");
     WebSocketService.addListener(handleDistance, "DISTANCE");
-    WebSocketService.addListener(
-      handleRecentLocationResponse,
-      "RECENT_LOCATIONS"
-    );
 
     // get the user's profile on first render
     sendProfile();
-    // get the user's locations on first render
-    sendRecentLocation();
   }, []);
 
   // logic that should happen when the component FIRST changes
@@ -388,26 +394,10 @@ export default function HomePage() {
   const handleProfileResponse = (message: WebSocketResponse) => {
     if (message.response === "PROFILE") {
       setUser(message.user as User);
-    } else {
-      // something went wrong
-      console.log("Profile response error: ", message);
-    }
-  };
-
-  // WEBSOCKET -- RECENT_LOCATION
-  const sendRecentLocation = async () => {
-    WebSocketService.send({
-      directive: "RECENT_LOCATIONS",
-      netid: netid,
-    });
-  };
-
-  const handleRecentLocationResponse = (message: WebSocketResponse) => {
-    if (message.response === "RECENT_LOCATIONS") {
       setRecentLocations(message.locations as LocationType[]);
     } else {
       // something went wrong
-      console.log("Recent location response error: ", message);
+      console.log("Profile response error: ", message);
     }
   };
 
@@ -527,7 +517,6 @@ export default function HomePage() {
       setNotifState({
         text: errorMessage.error,
         color: "#FFCBCB",
-        boldText: "error",
       });
       // go back to request ride
       setWhichComponent("rideReq");
@@ -586,8 +575,10 @@ export default function HomePage() {
           pickUpLocation={pickUpLocation}
           dropOffLocation={dropOffLocation}
           driverLocation={driverLocation}
+          startLocation={startLocation}
           userLocationChanged={userLocationChanged}
           status={rideStatus}
+          whichComponent={whichComponent}
         />
         {/* profile pop-up modal */}
         <View style={styles.modalContainer}>
@@ -628,7 +619,7 @@ export default function HomePage() {
         </View>
 
         {/* faq pop-up modal */}
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { bottom: 0 }]}>
           <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
         </View>
         {/* notification component */}
@@ -648,10 +639,8 @@ export default function HomePage() {
         <View
           style={{
             position: "absolute",
-            bottom:
-              whichComponent == "waitForRide" || whichComponent == "handleRide"
-                ? 350
-                : bottom,
+            // set the height of the sidebar to the height of the current component + padding
+            bottom: currentComponentHeight + 10,
             left: 10,
             alignItems: "flex-start",
           }}
@@ -696,7 +685,8 @@ export default function HomePage() {
                 setFAQVisible={setFAQVisible}
                 recentLocations={recentLocations}
                 setNotificationState={setNotifState}
-                updateSideBarHeight={setBottom}
+                updateSideBarHeight={setCurrentComponentHeight}
+                darkenScreen={setDarkenScreen}
               />
             </View>
           ) : whichComponent === "confirmRide" ? (
@@ -712,6 +702,7 @@ export default function HomePage() {
                 onClose={closeConfirmRide}
                 onConfirm={requestRide}
                 setFAQVisible={setFAQVisible}
+                updateSideBarHeight={setCurrentComponentHeight}
               />
             </View>
           ) : whichComponent === "Loading" ? (
@@ -743,10 +734,25 @@ export default function HomePage() {
                 setNotificationState={setNotifState}
                 changeRideStatus={setRideStatus}
                 goHome={goHome}
+                updateSideBarHeight={setCurrentComponentHeight}
               />
             </View>
           ) : null // default
         }
+        {/* Overlay an semi-transparent screen when FAQ or profile or ride request confirmation mdoal is visible */}
+        {(FAQVisible || profileVisible || darkenScreen) && (
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0,0,0,0.5)", // semi-transparent background
+              zIndex: 9999,
+            }}
+          />
+        )}
       </View>
     </GestureHandlerRootView>
   );

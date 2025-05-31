@@ -103,7 +103,7 @@ const finishAcc = () => {
     <View style={styles.container}>
       <Text style={styles.heading}>Create Account</Text>
 
-      <View style={styles.formContainer}>
+      <View style={[styles.formContainer, { width: "90%" }]}>
         <Text style={styles.description}>Preferred Name</Text>
         <TextInput
           value={preferredName}
@@ -134,13 +134,12 @@ const finishAcc = () => {
           autoCapitalize="none"
         />
       </View>
-
+      <View style={{ height: "1%" }} />
       <Pressable style={styles.button_finishAcc} onPress={setValues}>
         <Text style={styles.button_text}>Sign Up</Text>
       </Pressable>
-      <Text>For easier dev testing (will be removed later) </Text>
       <Pressable
-        style={styles.button}
+        style={[styles.button, { position: "absolute", bottom: "5%" }]}
         onPress={() => {
           // temporary connection to websocket since we aren't going through the sign in process
           WebSocketService.send({

@@ -6,6 +6,7 @@ import {
   Pressable,
   Animated,
   TouchableOpacity,
+  useWindowDimensions,
 } from "react-native";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
@@ -35,6 +36,9 @@ import WebSocketService from "../services/WebSocketService";
 import { CampusZone, PurpleZone } from "@/services/ZoneService";
 
 type RideRequestFormProps = {
+  userLocation: { latitude: number; longitude: number };
+  recentLocations: LocationType[];
+  startingState?: { pickup: string; dropoff: string; numRiders: number };
   pickUpLocationNameChanged: (location: string) => void;
   dropOffLocationNameChanged: (location: string) => void;
   pickUpLocationCoordChanged: (location: {
@@ -45,7 +49,6 @@ type RideRequestFormProps = {
     latitude: number;
     longitude: number;
   }) => void;
-  userLocation: { latitude: number; longitude: number };
   rideRequested: (numPassengers: number) => void;
   setFAQVisible: (visible: boolean) => void;
   updateSideBarHeight: (bottom: number) => void;
@@ -54,8 +57,7 @@ type RideRequestFormProps = {
     color: string;
     boldText?: string;
   }) => void;
-  startingState?: { pickup: string; dropoff: string; numRiders: number };
-  recentLocations: LocationType[];
+  darkenScreen: (darken: boolean) => void; // darken the screen behind the confirmation modal
 };
 
 export default function RideRequestForm({
@@ -70,6 +72,7 @@ export default function RideRequestForm({
   recentLocations,
   setNotificationState,
   updateSideBarHeight,
+  darkenScreen,
 }: RideRequestFormProps) {
   /* STATE */
   // user input states for form
@@ -102,7 +105,9 @@ export default function RideRequestForm({
 
   // what the user types in to the text boxes
   const [pickUpQuery, setPickUpQuery] = useState(""); // Typed in pickup query
+  const [previousPickUpQuery, setPreviousPickUpQuery] = useState(""); // Previous pickup query
   const [dropOffQuery, setDropOffQuery] = useState(""); // typed in dropoff query
+  const [previousDropOffQuery, setPreviousDropOffQuery] = useState(""); // Previous dropoff query
 
   // which text box is currently being updated
   const [currentQuery, setCurrentQuery] = useState<"pickup" | "dropoff">(
@@ -209,6 +214,7 @@ export default function RideRequestForm({
           setClosestBuilding(closestCampusBuilding.name);
           // show the confirmation modal to let the user know where they are being snapped to
           setConfirmationModalVisible(true);
+          darkenScreen(true);
         }
       }
     } else {
@@ -352,6 +358,7 @@ export default function RideRequestForm({
     setPickupCoordinates(pickupCoord);
     pickUpLocationCoordChanged(pickupCoord);
     setConfirmationModalVisible(false);
+    darkenScreen(false);
   };
 
   // the user clicked one of the suggested closest buildings
@@ -409,19 +416,19 @@ export default function RideRequestForm({
       if (snapResp.success) {
         const roadName = snapResp.roadName;
         if (roadName == "") {
-          pickUpLocationNameChanged("Current Location"+"*");
-          setChosenPickup("Current Location"+"*");
-          setPickUpQuery("Current Location"+"*");
+          pickUpLocationNameChanged("Current Location" + "*");
+          setChosenPickup("Current Location" + "*");
+          setPickUpQuery("Current Location" + "*");
         } else {
-          pickUpLocationNameChanged(roadName+"*");
-          setChosenPickup(roadName+"*");
-          setPickUpQuery(roadName+"*");
+          pickUpLocationNameChanged(roadName + "*");
+          setChosenPickup(roadName + "*");
+          setPickUpQuery(roadName + "*");
         }
         // set the coordinates to the snapped location (send it back to home component)
-          pickUpLocationCoordChanged({
-            latitude: snapResp.latitude,
-            longitude: snapResp.longitude,
-          });
+        pickUpLocationCoordChanged({
+          latitude: snapResp.latitude,
+          longitude: snapResp.longitude,
+        });
       }
     } else {
       // there was a signin related error
@@ -434,12 +441,51 @@ export default function RideRequestForm({
   // Calls Place Search API when the user presses enter
   const enterPressed = async () => {
     const text = currentQuery == "pickup" ? pickUpQuery : dropOffQuery;
-    if (text.length > 3) {
+    const previousQuery =
+      currentQuery == "pickup" ? previousPickUpQuery : previousDropOffQuery;
+    // only call place search if the text is longer than 3 characters
+    // and if the text is different enough from the previous query
+    if (text.length > 3 && levensteinDistance(text, previousQuery) > 2) {
+      // We are going to call the place search API
+      // update the previous query as the one we are currently using
+      if (currentQuery == "pickup") {
+        setPreviousPickUpQuery(text);
+      } else {
+        setPreviousDropOffQuery(text);
+      }
       WebSocketService.send({
         directive: "PLACE_SEARCH",
         query: text,
       });
     }
+  };
+
+  // Get the distance between two strings
+  // (number of insertions and deletions of characters to get from one to another)
+  const levensteinDistance = (a: string, b: string): number => {
+    const matrix: number[][] = new Array(b.length + 1)
+      .fill(null)
+      .map(() => new Array(a.length + 1).fill(0));
+
+    for (let i = 0; i < a.length + 1; i++) {
+      matrix[0][i] = i;
+    }
+
+    for (let i = 0; i < b.length + 1; i++) {
+      matrix[i][0] = i;
+    }
+
+    for (let i = 1; i < a.length + 1; i++) {
+      for (let j = 1; j < b.length + 1; j++) {
+        const min = Math.min(matrix[j - 1][i], matrix[j][i - 1]);
+        if (a[i - 1] === b[j - 1]) {
+          matrix[j][i] = matrix[j - 1][i - 1];
+        } else {
+          matrix[j][i] = min + 1;
+        }
+      }
+    }
+    return matrix[b.length][a.length];
   };
 
   // handle the place search results
@@ -482,19 +528,7 @@ export default function RideRequestForm({
   }, []);
 
   // modify the sidebar height based on the panel shown
-  useEffect(() => {
-    switch (whichPanel) {
-      case "RideReq":
-        updateSideBarHeight(350);
-        break;
-      case "NumberRiders":
-        updateSideBarHeight(310);
-        break;
-      case "LocationSuggestions":
-        updateSideBarHeight(400);
-        break;
-    }
-  }, [whichPanel]);
+  const { height } = useWindowDimensions();
 
   // update the campus API suggestions based on the user's query
   useEffect(() => {
@@ -572,10 +606,18 @@ export default function RideRequestForm({
   /* PANEL UI */
   // the ride request panel
   const RideRequest: JSX.Element = (
-    <View style={{ flex: 1, pointerEvents: "box-none" }}>
+    <View style={{ flex: 1, pointerEvents: "box-none", width: "100%" }}>
       <BottomDrawer bottomSheetRef={bottomSheetRef}>
-        <View style={styles.requestFormContainer}>
-          <View>
+        {/* The search box with shadow under it*/}
+        <View
+          style={styles.requestFormContainer}
+          onLayout={() => {
+            // on render, update the sidebar height to 40% the height of the screen
+            // (which is the default height of the bottom sheet)
+            updateSideBarHeight(height * 0.4);
+          }}
+        >
+          <View style={{ flex: 1, width: "99%" }}>
             {/* Header */}
             <View
               style={{
@@ -584,9 +626,10 @@ export default function RideRequestForm({
                 alignItems: "center",
                 width: "90%",
                 marginHorizontal: 20,
+                marginBottom: 20,
               }}
             >
-              <View style={{ width: 20 }} />
+              <View style={{ width: "10%" }} />
               {/* Title */}
               <Text style={{ fontSize: 20, fontWeight: "bold" }}>
                 Choose Your Locations
@@ -612,7 +655,7 @@ export default function RideRequestForm({
                 backgroundColor: "#4B2E83",
                 position: "absolute",
                 zIndex: 3,
-                top: 90,
+                top: 110,
                 left: 13,
                 height: 15,
                 width: 15,
@@ -623,7 +666,7 @@ export default function RideRequestForm({
               style={{
                 zIndex: 3,
                 position: "absolute",
-                top: 112,
+                top: 132,
                 left: 19,
                 width: 2,
                 height: 40,
@@ -634,7 +677,7 @@ export default function RideRequestForm({
               style={{
                 position: "absolute",
                 zIndex: 3,
-                top: 157,
+                top: 177,
                 left: 10,
                 height: 20,
                 width: 20,
@@ -672,18 +715,22 @@ export default function RideRequestForm({
             {/* Next Button */}
             <View
               style={{
-                alignItems: "center",
-                flexDirection: "row",
+                flex: 0.1,
                 justifyContent: "flex-end",
               }}
             >
-              <Text style={{ fontStyle: "italic" }}>
-                Choose # of passengers
-              </Text>
               <TouchableOpacity
-                style={styles.modalCloseButton}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginVertical: 10,
+                  justifyContent: "flex-end",
+                }}
                 onPress={goToNumberRiders}
               >
+                <Text style={{ fontStyle: "italic" }}>
+                  Choose # of passengers
+                </Text>
                 <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
               </TouchableOpacity>
             </View>
@@ -691,8 +738,8 @@ export default function RideRequestForm({
         </View>
         {/* Autocomplete Suggestions */}
 
-        <View style={{ flex: 1, height: 100 }}>
-          <ScrollView style={{ paddingBottom: 400 }}>
+        <View style={{ flex: 1 }}>
+          <ScrollView style={{ flex: 1 }}>
             {/* Add the Current Location to the Top of the results*/}
             {currentQuery == "pickup" && (
               <TouchableOpacity
@@ -861,7 +908,10 @@ export default function RideRequestForm({
       <PopUpModal
         type="half"
         isVisible={confirmationModalVisible}
-        onClose={() => setConfirmationModalVisible(false)}
+        onClose={() => {
+          setConfirmationModalVisible(false);
+          darkenScreen(false);
+        }}
         content={
           <View style={{ padding: 20 }}>
             <Text style={styles.formHeader}>Confirm Pickup Location</Text>
@@ -890,6 +940,10 @@ export default function RideRequestForm({
         backgroundColor: "white",
         padding: 16,
         borderRadius: 10,
+      }}
+      onLayout={(event) => {
+        // on render, update the sidebar height to the height of this component
+        updateSideBarHeight(event.nativeEvent.layout.height);
       }}
     >
       <View style={{ height: 5 }} />
@@ -965,15 +1019,17 @@ export default function RideRequestForm({
         style={{
           paddingVertical: 10,
           alignItems: "center",
-          flexDirection: "row",
-          justifyContent: "flex-end",
         }}
       >
-        <Text style={{ fontStyle: "italic" }}>See ride details</Text>
         <TouchableOpacity
-          style={styles.modalCloseButton}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            alignSelf: "flex-end",
+          }}
           onPress={() => rideRequested(numRiders)}
         >
+          <Text style={{ fontStyle: "italic" }}>See ride details</Text>
           <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
         </TouchableOpacity>
       </View>
@@ -990,6 +1046,10 @@ export default function RideRequestForm({
         backgroundColor: "white",
         padding: 16,
         borderRadius: 10,
+      }}
+      onLayout={(event) => {
+        // on render, update the sidebar height to the height of this component
+        updateSideBarHeight(event.nativeEvent.layout.height);
       }}
     >
       <View style={{ height: 5 }} />

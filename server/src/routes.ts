@@ -21,7 +21,6 @@ import {
   ViewRideRequestResponse,
   ViewDecisionResponse,
   SnapLocationResponse,
-  RecentLocationResponse,
   PlaceSearchResult,
   GooglePlaceSearchResponse,
   GooglePlaceSearchBadLocationTypes,
@@ -344,7 +343,7 @@ export const requestRide = async (
     // handling so this is not necessary.
     return {
       response: "ERROR",
-      error: `Error adding ride request to the database: ${e}`,
+      error: `${e}`,
       category: "REQUEST_RIDE",
     };
   }
@@ -1121,7 +1120,8 @@ export const profile = async (
     return await runTransaction(db, async (transaction) => {
       // get the user's profile information
       const user: User = await getProfile(transaction, netid);
-      return { response: "PROFILE", user };
+      const locations = await getRecentLocations(transaction, netid);
+      return { response: "PROFILE", user, locations };
     });
   } catch (e) {
     return {
@@ -1131,41 +1131,6 @@ export const profile = async (
     };
   }
 };
-
-/*testing get recent locations*/
-export const fetchRecentLocations = async (
-  netid: string
-): Promise<RecentLocationResponse | ErrorResponse> => {
-  if (!netid) {
-    return {
-      response: "ERROR",
-      error: "Missing netid.",
-      category: "RECENT_LOCATIONS",
-    };
-  }
-
-  try {
-    return await runTransaction(db, async (transaction) => {
-      // Fetch recent locations using the function in firebaseActions
-      const locations = await getRecentLocations(transaction, netid);
-
-      return {
-        response: "RECENT_LOCATIONS",
-        locations,
-      };
-    });
-  } catch (e) {
-    return {
-      response: "ERROR",
-      error: `Error fetching recent locations: ${(e as Error).message}`,
-      category: "RECENT_LOCATIONS",
-    };
-  }
-};
-
-// This is used to cache the results of the Google Place API
-let previousQuery = "";
-let previousResults: PlaceSearchResult[] = [];
 
 // Call the Google Place Search to get place suggestions based on user input
 export const getPlaceSearchResults = async (
@@ -1196,18 +1161,7 @@ export const getPlaceSearchResults = async (
 export const fetchGooglePlaceSuggestions = async (
   query: string
 ): Promise<PlaceSearchResult[]> => {
-  // If the query is basically the same as the previous one, return the cached results
-  if (levensteinDistance(query, previousQuery) < 3) {
-    console.log(
-      "google place search cached results for query:",
-      query,
-      "previous query:",
-      previousQuery
-    );
-    return previousResults;
-  }
   try {
-    previousQuery = query;
     const url =
       `https://maps.googleapis.com/maps/api/place/textsearch/json?` +
       `query=${encodeURIComponent(query)}` +
@@ -1244,40 +1198,11 @@ export const fetchGooglePlaceSuggestions = async (
           address: place.formatted_address,
         }));
       // remove duplicates from places
-      previousResults = Array.from(new Set(places));
-      return previousResults;
+      const toReturn = Array.from(new Set(places));
+      return toReturn;
     }
   } catch (e: unknown) {
     console.log("GOOGLE PLACE SEARCH ERROR", e);
   }
-  previousResults = [];
   return [];
-};
-
-// Get the distance between two strings
-// (number of insertions and deletions of characters to get from one to another)
-const levensteinDistance = (a: string, b: string): number => {
-  const matrix: number[][] = new Array(b.length + 1)
-    .fill(null)
-    .map(() => new Array(a.length + 1).fill(0));
-
-  for (let i = 0; i < a.length + 1; i++) {
-    matrix[0][i] = i;
-  }
-
-  for (let i = 0; i < b.length + 1; i++) {
-    matrix[i][0] = i;
-  }
-
-  for (let i = 1; i < a.length + 1; i++) {
-    for (let j = 1; j < b.length + 1; j++) {
-      const min = Math.min(matrix[j - 1][i], matrix[j][i - 1]);
-      if (a[i - 1] === b[j - 1]) {
-        matrix[j][i] = matrix[j - 1][i - 1];
-      } else {
-        matrix[j][i] = min + 1;
-      }
-    }
-  }
-  return matrix[b.length][a.length];
 };

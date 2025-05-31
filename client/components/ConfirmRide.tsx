@@ -2,7 +2,14 @@
 import { styles } from "@/assets/styles";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React from "react";
-import { View, Image, Text, Pressable, TouchableOpacity } from "react-native";
+import {
+  View,
+  Image,
+  Text,
+  Pressable,
+  TouchableOpacity,
+  useWindowDimensions,
+} from "react-native";
 import SegmentedProgressBar from "./SegmentedProgressBar";
 
 interface ConfirmRideProps {
@@ -14,7 +21,8 @@ interface ConfirmRideProps {
   driverETA: number;
   onClose: () => void; // callback function for when the user closes modal
   onConfirm: (numPassengers: number) => void; // callback function for when the user confirms ride
-  setFAQVisible: (visible: boolean) => void;
+  setFAQVisible: (visible: boolean) => void; // callback function to set the visibility of the FAQ modal
+  updateSideBarHeight: (height: number) => void; // callback function to update the height of the sidebar
 }
 
 const ConfirmRide: React.FC<ConfirmRideProps> = ({
@@ -27,6 +35,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
   onClose,
   onConfirm,
   setFAQVisible,
+  updateSideBarHeight,
 }) => {
   return (
     <View
@@ -34,13 +43,17 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
         backgroundColor: "white",
         borderRadius: 10,
         position: "absolute",
-        bottom: -10,
+        bottom: 0,
         width: "100%",
-        height: "65%",
-        padding: 10,
+        maxHeight: "90%",
+        padding: "2%",
+      }}
+      onLayout={(event) => {
+        // on render, update the sidebar height to the height of this component
+        updateSideBarHeight(event.nativeEvent.layout.height);
       }}
     >
-      <View style={{ height: 20 }} />
+      <View style={{ height: "1%" }} />
 
       {/* Header */}
       <View
@@ -48,7 +61,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "center",
-          marginHorizontal: 20,
+          marginHorizontal: "5%",
         }}
       >
         {/* Back Button */}
@@ -66,31 +79,29 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
           <Ionicons name="information-circle-outline" size={25} color="black" />
         </TouchableOpacity>
       </View>
-
-      <View style={{ height: 20 }} />
+      <View style={{ height: "3%" }} />
       <SegmentedProgressBar type={3} />
-      <View style={{ height: 20 }} />
-
+      <View style={{ height: "2%" }} />
       {/* Duration Info */}
       <Text style={styles.confirmHeader}>Duration Information</Text>
 
       {/* Estimated Wait Time */}
       <View
         style={{
-          marginHorizontal: 50,
+          marginHorizontal: "13%",
           flexDirection: "row",
           justifyContent: "space-around",
           alignItems: "center",
-          paddingBottom: 20,
+          paddingBottom: "5%",
         }}
       >
         <Ionicons name="time-outline" size={22} color="black" />
-        <View style={{ width: 10 }} />
+        <View style={{ width: "2%" }} />
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
-            width: 250,
+            width: "95%",
             justifyContent: "space-between",
           }}
         >
@@ -110,20 +121,20 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
       {/* Walking Duration */}
       <View
         style={{
-          marginHorizontal: 50,
+          marginHorizontal: "13%",
           flexDirection: "row",
           justifyContent: "space-around",
           alignItems: "center",
-          paddingBottom: 20,
+          paddingBottom: "5%",
         }}
       >
         <Ionicons name="walk" size={22} color="black" />
-        <View style={{ width: 10 }} />
+        <View style={{ width: "2%" }} />
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
-            width: 250,
+            width: "95%",
             justifyContent: "space-between",
           }}
         >
@@ -139,24 +150,23 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
           </Text>
         </View>
       </View>
-
       {/* Ride Duration */}
       <View
         style={{
-          marginHorizontal: 50,
+          marginHorizontal: "13%",
           flexDirection: "row",
           justifyContent: "space-around",
           alignItems: "center",
-          paddingBottom: 10,
+          paddingBottom: "5%",
         }}
       >
         <Ionicons name="car" size={22} color="black" />
-        <View style={{ width: 10 }} />
+        <View style={{ width: "2%" }} />
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
-            width: 250,
+            width: "95%",
             justifyContent: "space-between",
           }}
         >
@@ -173,8 +183,6 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
         </View>
       </View>
 
-      <View style={{ height: 10 }} />
-
       {/* Location and Passenger Info */}
       <Text style={styles.confirmHeader}>
         Location and Passenger Information
@@ -183,10 +191,10 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
       {/* Pickup Location */}
       <View
         style={{
-          marginHorizontal: 55,
+          marginHorizontal: "14%",
           flexDirection: "row",
           alignItems: "center",
-          paddingBottom: 20,
+          paddingBottom: "5%",
         }}
       >
         <View
@@ -197,34 +205,34 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
             backgroundColor: "#4B2E83",
           }}
         />
-        <View style={{ width: 30 }} />
+        <View style={{ width: "7%" }} />
         <Text style={{ fontSize: 16 }}>{pickUpLoc}</Text>
       </View>
 
       {/* Dropoff Location */}
       <View
         style={{
-          marginHorizontal: 53,
+          marginHorizontal: "13.5%",
           flexDirection: "row",
           alignItems: "center",
-          paddingBottom: 20,
+          paddingBottom: "5%",
         }}
       >
         <Image
           source={require("@/assets/images/dropoff-location.png")}
           style={{ width: 20, height: 20, resizeMode: "contain" }}
         />
-        <View style={{ width: 28 }} />
+        <View style={{ width: "6.5%" }} />
         <Text style={{ fontSize: 16 }}>{dropOffLoc}</Text>
       </View>
 
       {/* Number of Passengers */}
       <View
         style={{
-          marginHorizontal: 52,
+          marginHorizontal: "13%",
           flexDirection: "row",
           alignItems: "center",
-          paddingBottom: 20,
+          paddingBottom: "2.5%",
         }}
       >
         <Image
@@ -233,21 +241,9 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
           resizeMode="contain"
         />
 
-        <View style={{ width: 28 }} />
+        <View style={{ width: "6.5%" }} />
         <Text style={{ fontSize: 16 }}>{numPassengers} passenger(s)</Text>
       </View>
-
-      {/* Dashed Line Between Locations */}
-      <Image
-        source={require("@/assets/images/dashed-line.png")}
-        style={{
-          position: "absolute",
-          top: 329,
-          left: 72,
-          width: 2,
-          height: 20,
-        }}
-      />
 
       {/* Confirm Button */}
       <View style={styles.bottomModalButtonContainer}>
@@ -255,9 +251,17 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
           style={[styles.bottomModalButton, styles.confirmButton]}
           onPress={() => onConfirm(numPassengers)}
         >
-          <Text style={styles.buttonText}>Confirm Ride</Text>
+          <Text
+            style={{
+              color: "#4B2E83",
+              fontSize: 18,
+            }}
+          >
+            Confirm Ride
+          </Text>
         </Pressable>
       </View>
+      <View style={{ height: useWindowDimensions().height * 0.05 }} />
     </View>
   );
 };
