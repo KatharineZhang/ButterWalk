@@ -23,7 +23,12 @@ export type Command =
   | "ERROR"
   | "RECENT_LOCATIONS"
   | "PLACE_SEARCH"
-  | "VIEW_RIDE";
+  | "VIEW_RIDE"
+  | "RIDES_EXIST"
+  | "VIEW_DECISION"
+  | "DRIVER_ARRIVED"
+  | "DISCONNECT"
+  | "PLACE_SEARCH";
 
 // Input types
 export type WebSocketMessage =
