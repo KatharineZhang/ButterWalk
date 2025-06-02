@@ -6,6 +6,7 @@ import {
   Pressable,
   Animated,
   TouchableOpacity,
+  useWindowDimensions,
 } from "react-native";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
@@ -19,6 +20,7 @@ import SegmentedProgressBar from "./SegmentedProgressBar";
 import {
   BuildingService,
   ComparableBuilding,
+  Coordinates,
   getBuildingNames,
 } from "@/services/BuildingService";
 import {
@@ -26,15 +28,17 @@ import {
   SnapLocationResponse,
   ErrorResponse,
   DistanceResponse,
+  LocationType,
+  PlaceSearchResponse,
+  PlaceSearchResult,
 } from "../../server/src/api";
 import WebSocketService from "../services/WebSocketService";
 import { CampusZone, PurpleZone } from "@/services/ZoneService";
-import {
-  fetchGooglePlaceSuggestions,
-  findCoordinatesOfLocationName,
-} from "@/services/GooglePlacesServices";
 
 type RideRequestFormProps = {
+  userLocation: { latitude: number; longitude: number };
+  recentLocations: LocationType[];
+  startingState?: { pickup: string; dropoff: string; numRiders: number };
   pickUpLocationNameChanged: (location: string) => void;
   dropOffLocationNameChanged: (location: string) => void;
   pickUpLocationCoordChanged: (location: {
@@ -45,7 +49,6 @@ type RideRequestFormProps = {
     latitude: number;
     longitude: number;
   }) => void;
-  userLocation: { latitude: number; longitude: number };
   rideRequested: (numPassengers: number) => void;
   setFAQVisible: (visible: boolean) => void;
   updateSideBarHeight: (bottom: number) => void;
@@ -54,8 +57,7 @@ type RideRequestFormProps = {
     color: string;
     boldText?: string;
   }) => void;
-  startingState?: { pickup: string; dropoff: string; numRiders: number };
-  recentLocations: string[];
+  darkenScreen: (darken: boolean) => void; // darken the screen behind the confirmation modal
 };
 
 export default function RideRequestForm({
@@ -70,6 +72,7 @@ export default function RideRequestForm({
   recentLocations,
   setNotificationState,
   updateSideBarHeight,
+  darkenScreen,
 }: RideRequestFormProps) {
   /* STATE */
   // user input states for form
@@ -118,7 +121,9 @@ export default function RideRequestForm({
   // the user clicked a dropdown location
   const allBuildings = getBuildingNames();
   const [campusAPIResults, setCampusAPIResults] = useState<string[]>([]);
-  const [placeSearchResults, setPlaceSearchResults] = useState<string[]>([]);
+  const [placeSearchResults, setPlaceSearchResults] = useState<
+    PlaceSearchResult[]
+  >([]);
 
   // the user clicked a dropdown result
   // figure out if it was a pickup or dropoff and call the right function
@@ -207,15 +212,35 @@ export default function RideRequestForm({
           setClosestBuilding(closestCampusBuilding.name);
           // show the confirmation modal to let the user know where they are being snapped to
           setConfirmationModalVisible(true);
+          darkenScreen(true);
         }
       }
     } else {
       // the user clicked from recent location dropdown location
       setChosenPickup(value);
-      const pickupCoord = await findCoordinatesOfLocationName(
-        value,
-        userLocation
+      let pickupCoord: Coordinates;
+
+      // check if the clicked locations was a place search result
+      const placeSearchOptionClicked = placeSearchResults.find(
+        (item) => item.name === value
       );
+      const recentLocOptionClicked = recentLocations.find(
+        (item) => item.name === value
+      );
+      if (placeSearchOptionClicked) {
+        // if it was, we can just use the coordinates attached to it
+        pickupCoord = placeSearchOptionClicked.coordinates;
+      } else if (recentLocOptionClicked) {
+        // use the address to get the coordinates
+        pickupCoord = recentLocOptionClicked.coordinates;
+      } else {
+        // otherwise the clicked location was a campus API result
+        pickupCoord =
+          await BuildingService.getClosestBuildingEntranceCoordinates(
+            value,
+            userLocation
+          );
+      }
       setPickupCoordinates(pickupCoord);
 
       // tell the home page that the pickup location has changed
@@ -237,10 +262,30 @@ export default function RideRequestForm({
       return;
     }
     setChosenDropoff(value);
-    const dropoffCoord = await findCoordinatesOfLocationName(
-      value,
-      userLocation
+    let dropoffCoord: Coordinates;
+
+    // check if the clicked locations was a place search result
+    const placeSearchOptionClicked = placeSearchResults.find(
+      (item) => item.name === value
     );
+    const recentLocOptionClicked = recentLocations.find(
+      (item) => item.name === value
+    );
+    if (placeSearchOptionClicked) {
+      // if it was, we can just use the coordinates attached to it
+      dropoffCoord = placeSearchOptionClicked.coordinates;
+    } else if (recentLocOptionClicked) {
+      // use the address to get the coordinates
+      dropoffCoord = recentLocOptionClicked.coordinates;
+    } else {
+      // otherwise the clicked location was a campus API result
+      dropoffCoord =
+        await BuildingService.getClosestBuildingEntranceCoordinates(
+          value,
+          userLocation
+        );
+    }
+
     setDropoffCoordinates(dropoffCoord);
 
     // tell the home page that the dropoff location has changed
@@ -311,6 +356,7 @@ export default function RideRequestForm({
     setPickupCoordinates(pickupCoord);
     pickUpLocationCoordChanged(pickupCoord);
     setConfirmationModalVisible(false);
+    darkenScreen(false);
   };
 
   // the user clicked one of the suggested closest buildings
@@ -364,22 +410,23 @@ export default function RideRequestForm({
   const handleSnapLocationQuery = (message: WebSocketResponse) => {
     if ("response" in message && message.response == "SNAP") {
       const snapResp = message as SnapLocationResponse;
+
       if (snapResp.success) {
         const roadName = snapResp.roadName;
         if (roadName == "") {
-          pickUpLocationNameChanged("Current Location");
-          setChosenPickup("Current Location");
-          setPickUpQuery("Current Location");
+          pickUpLocationNameChanged("Current Location" + "*");
+          setChosenPickup("Current Location" + "*");
+          setPickUpQuery("Current Location" + "*");
         } else {
-          pickUpLocationNameChanged(roadName);
-          // set the coordinates to the snapped location (send it back to home component)
-          pickUpLocationCoordChanged({
-            latitude: snapResp.latitude,
-            longitude: snapResp.longitude,
-          });
-          setChosenPickup(roadName);
-          setPickUpQuery(roadName);
+          pickUpLocationNameChanged(roadName + "*");
+          setChosenPickup(roadName + "*");
+          setPickUpQuery(roadName + "*");
         }
+        // set the coordinates to the snapped location (send it back to home component)
+        pickUpLocationCoordChanged({
+          latitude: snapResp.latitude,
+          longitude: snapResp.longitude,
+        });
       }
     } else {
       // there was a signin related error
@@ -389,16 +436,25 @@ export default function RideRequestForm({
     }
   };
 
-  // ONLY CALL PLACE SEARCH WHEN THE USER PRESSES ENTER
-  // TODO: CHECK W TEAM
+  // Calls Place Search API when the user presses enter
   const enterPressed = async () => {
     const text = currentQuery == "pickup" ? pickUpQuery : dropOffQuery;
     if (text.length > 3) {
-      setPlaceSearchResults(
-        await fetchGooglePlaceSuggestions(
-          currentQuery == "pickup" ? pickUpQuery : dropOffQuery
-        )
-      );
+      WebSocketService.send({
+        directive: "PLACE_SEARCH",
+        query: text,
+      });
+    }
+  };
+
+  // handle the place search results
+  const handlePlaceSearchResults = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "PLACE_SEARCH") {
+      const placeSearchResp = message as PlaceSearchResponse;
+      // update the place search results
+      setPlaceSearchResults(placeSearchResp.results);
+    } else {
+      console.error("Error fetching place search results");
     }
   };
 
@@ -407,9 +463,10 @@ export default function RideRequestForm({
   useEffect(() => {
     // add the listener for the distance response
     WebSocketService.addListener(handleDistanceTopThree, "DISTANCE");
-
     // listen for the snap location response
     WebSocketService.addListener(handleSnapLocationQuery, "SNAP");
+    // listen for the place search results
+    WebSocketService.addListener(handlePlaceSearchResults, "PLACE_SEARCH");
 
     // if there is a starting state,
     // that means the user clicked back from the confirm ride component
@@ -430,19 +487,7 @@ export default function RideRequestForm({
   }, []);
 
   // modify the sidebar height based on the panel shown
-  useEffect(() => {
-    switch (whichPanel) {
-      case "RideReq":
-        updateSideBarHeight(350);
-        break;
-      case "NumberRiders":
-        updateSideBarHeight(310);
-        break;
-      case "LocationSuggestions":
-        updateSideBarHeight(400);
-        break;
-    }
-  }, [whichPanel]);
+  const { height } = useWindowDimensions();
 
   // update the campus API suggestions based on the user's query
   useEffect(() => {
@@ -478,21 +523,6 @@ export default function RideRequestForm({
           (currentQuery == "pickup" && item == "Current Location") // if the current query is pickup, we want to include current location
       );
     setCampusAPIResults(filteredBuildings);
-
-    // TODO: REMOVE AFTER CHECK W TEAM
-    // if (currentQuery == "pickup" && pickUpQuery.length < 3 || currentQuery == "dropoff" && dropOffQuery.length < 3) {
-    //   // Fewer than 3 characters, don't do the google place search
-    //   return;
-    // }
-
-    // // get the google place API results;
-    // const controller = new AbortController();
-
-    // (async () => {
-    //   setPlaceSearchResults(await fetchGooglePlaceSuggestions(currentQuery == "pickup" ? pickUpQuery : dropOffQuery));
-    // })();
-
-    // return () => controller.abort();
   }, [dropOffQuery, pickUpQuery]);
 
   /* ANIMATION */
@@ -535,10 +565,18 @@ export default function RideRequestForm({
   /* PANEL UI */
   // the ride request panel
   const RideRequest: JSX.Element = (
-    <View style={{ flex: 1, pointerEvents: "box-none" }}>
+    <View style={{ flex: 1, pointerEvents: "box-none", width: "100%" }}>
       <BottomDrawer bottomSheetRef={bottomSheetRef}>
-        <View style={styles.requestFormContainer}>
-          <View>
+        {/* The search box with shadow under it*/}
+        <View
+          style={styles.requestFormContainer}
+          onLayout={() => {
+            // on render, update the sidebar height to 40% the height of the screen
+            // (which is the default height of the bottom sheet)
+            updateSideBarHeight(height * 0.4);
+          }}
+        >
+          <View style={{ flex: 1, width: "99%" }}>
             {/* Header */}
             <View
               style={{
@@ -547,9 +585,10 @@ export default function RideRequestForm({
                 alignItems: "center",
                 width: "90%",
                 marginHorizontal: 20,
+                marginBottom: 20,
               }}
             >
-              <View style={{ width: 20 }} />
+              <View style={{ width: "10%" }} />
               {/* Title */}
               <Text style={{ fontSize: 20, fontWeight: "bold" }}>
                 Choose Your Locations
@@ -575,7 +614,7 @@ export default function RideRequestForm({
                 backgroundColor: "#4B2E83",
                 position: "absolute",
                 zIndex: 3,
-                top: 90,
+                top: 110,
                 left: 13,
                 height: 15,
                 width: 15,
@@ -586,7 +625,7 @@ export default function RideRequestForm({
               style={{
                 zIndex: 3,
                 position: "absolute",
-                top: 112,
+                top: 132,
                 left: 19,
                 width: 2,
                 height: 40,
@@ -597,7 +636,7 @@ export default function RideRequestForm({
               style={{
                 position: "absolute",
                 zIndex: 3,
-                top: 157,
+                top: 177,
                 left: 10,
                 height: 20,
                 width: 20,
@@ -635,18 +674,22 @@ export default function RideRequestForm({
             {/* Next Button */}
             <View
               style={{
-                alignItems: "center",
-                flexDirection: "row",
+                flex: 0.1,
                 justifyContent: "flex-end",
               }}
             >
-              <Text style={{ fontStyle: "italic" }}>
-                Choose # of passengers
-              </Text>
               <TouchableOpacity
-                style={styles.modalCloseButton}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginVertical: 10,
+                  justifyContent: "flex-end",
+                }}
                 onPress={goToNumberRiders}
               >
+                <Text style={{ fontStyle: "italic" }}>
+                  Choose # of passengers
+                </Text>
                 <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
               </TouchableOpacity>
             </View>
@@ -654,8 +697,8 @@ export default function RideRequestForm({
         </View>
         {/* Autocomplete Suggestions */}
 
-        <View style={{ flex: 1, height: 100 }}>
-          <ScrollView style={{ paddingBottom: 400 }}>
+        <View style={{ flex: 1 }}>
+          <ScrollView style={{ flex: 1 }}>
             {/* Add the Current Location to the Top of the results*/}
             {currentQuery == "pickup" && (
               <TouchableOpacity
@@ -732,11 +775,11 @@ export default function RideRequestForm({
             ))}
             {/* Then show the place search results */}
             {placeSearchResults
-              .filter((item) => !campusAPIResults.includes(item))
+              .filter((item) => !campusAPIResults.includes(item.name))
               .map((item) => (
                 <TouchableOpacity
-                  onPress={() => handleSelection(item)}
-                  key={item}
+                  onPress={() => handleSelection(item.name)}
+                  key={item.name}
                   style={{
                     padding: 16,
                     borderBottomWidth: 1,
@@ -760,9 +803,16 @@ export default function RideRequestForm({
                   </View>
                   <View style={{ width: 10 }} />
                   <View style={{ maxWidth: "80%" }}>
-                    <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                      {item}
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "bold",
+                        marginBottom: 5,
+                      }}
+                    >
+                      {item.name}
                     </Text>
+                    <Text style={{ fontSize: 14 }}>{item.address}</Text>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -772,8 +822,8 @@ export default function RideRequestForm({
               campusAPIResults.length == 0 &&
               recentLocations.map((item) => (
                 <TouchableOpacity
-                  onPress={() => handleSelection(item)}
-                  key={item}
+                  onPress={() => handleSelection(item.name)}
+                  key={item.name}
                   style={{
                     padding: 16,
                     borderBottomWidth: 1,
@@ -797,9 +847,16 @@ export default function RideRequestForm({
                   </View>
                   <View style={{ width: 10 }} />
                   <View style={{ maxWidth: "80%" }}>
-                    <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                      {item}
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "bold",
+                        marginBottom: 5,
+                      }}
+                    >
+                      {item.name}
                     </Text>
+                    <Text style={{ fontSize: 14 }}>{item.address}</Text>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -810,7 +867,10 @@ export default function RideRequestForm({
       <PopUpModal
         type="half"
         isVisible={confirmationModalVisible}
-        onClose={() => setConfirmationModalVisible(false)}
+        onClose={() => {
+          setConfirmationModalVisible(false);
+          darkenScreen(false);
+        }}
         content={
           <View style={{ padding: 20 }}>
             <Text style={styles.formHeader}>Confirm Pickup Location</Text>
@@ -839,6 +899,10 @@ export default function RideRequestForm({
         backgroundColor: "white",
         padding: 16,
         borderRadius: 10,
+      }}
+      onLayout={(event) => {
+        // on render, update the sidebar height to the height of this component
+        updateSideBarHeight(event.nativeEvent.layout.height);
       }}
     >
       <View style={{ height: 5 }} />
@@ -914,15 +978,17 @@ export default function RideRequestForm({
         style={{
           paddingVertical: 10,
           alignItems: "center",
-          flexDirection: "row",
-          justifyContent: "flex-end",
         }}
       >
-        <Text style={{ fontStyle: "italic" }}>See ride details</Text>
         <TouchableOpacity
-          style={styles.modalCloseButton}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            alignSelf: "flex-end",
+          }}
           onPress={() => rideRequested(numRiders)}
         >
+          <Text style={{ fontStyle: "italic" }}>See ride details</Text>
           <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
         </TouchableOpacity>
       </View>
@@ -939,6 +1005,10 @@ export default function RideRequestForm({
         backgroundColor: "white",
         padding: 16,
         borderRadius: 10,
+      }}
+      onLayout={(event) => {
+        // on render, update the sidebar height to the height of this component
+        updateSideBarHeight(event.nativeEvent.layout.height);
       }}
     >
       <View style={{ height: 5 }} />

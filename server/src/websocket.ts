@@ -1,7 +1,6 @@
 import WebSocketServer from "ws";
 import { clients, refreshClient } from "./index";
 import {
-  acceptRide,
   addFeedback,
   blacklist,
   cancelRide,
@@ -17,18 +16,24 @@ import {
   googleAuth,
   profile,
   distanceMatrix,
+  ridesExist,
+  viewRide,
+  handleDriverViewChoice,
   fetchRecentLocations,
+  driverArrived,
+  getPlaceSearchResults,
 } from "./routes";
 import {
-  AcceptResponse,
   CancelResponse,
   CompleteResponse,
   WebSocketMessage,
   WebSocketResponse,
   GoogleResponse,
   ErrorResponse,
+  RideRequest,
   SnapLocationResponse,
 } from "./api";
+import { Timestamp } from "firebase/firestore";
 
 export const handleWebSocketMessage = async (
   ws: WebSocketServer,
@@ -38,6 +43,7 @@ export const handleWebSocketMessage = async (
   let resp;
   let client;
 
+  //TODO(connor): setup debug and logging utility so this can be compiled away in prod
   console.log(`WEBSOCKET: Received message => ${message}`);
 
   try {
@@ -125,40 +131,108 @@ export const handleWebSocketMessage = async (
       sendWebSocketMessage(ws, resp);
       break;
 
-    case "SNAP":
+    case "REQUEST_RIDE": {
+      const rideRequest: RideRequest = {
+        netid: input.netid,
+        driverid: null,
+        requestedAt: Timestamp.now(),
+        completedAt: null,
+        locationFrom: input.location,
+        locationTo: input.destination,
+        numRiders: input.numRiders,
+        status: "REQUESTED",
+      };
+      resp = await requestRide(rideRequest);
+      // send response back to client (the student)
+      sendWebSocketMessage(ws, resp);
+      break;
+    }
+
+    case "SNAP": {
       resp = (await snapLocation(
         input.currLat,
         input.currLong
       )) as SnapLocationResponse;
       sendWebSocketMessage(ws, resp);
       break;
+    }
 
-    case "REQUEST_RIDE":
-      resp = await requestRide(
-        input.phoneNum,
-        input.netid,
-        input.location,
-        input.destination,
-        input.numRiders
-      );
-      // send response back to client (the student)
-      sendWebSocketMessage(ws, resp);
-      break;
-
-    case "ACCEPT_RIDE":
-      resp = await acceptRide(input.driverid);
-      if ("driver" in resp && "student" in resp) {
-        const acceptResponse = resp as AcceptResponse;
-        // send response back to client (the driver)
-        sendWebSocketMessage(ws, acceptResponse.driver);
-
-        // send response back to corresponding client (the student)
-        sendMessageToNetid(acceptResponse.driver.netid, acceptResponse.student);
+    // new directive for the ride request broker, which sends back a message
+    // of type RidesExistResponse on success. Intended for use with driver
+    // sign on: When the driver opens the app they will only be able to view
+    // a ride to potentially accept when this directive gives back True.
+    case "RIDES_EXIST": {
+      const thereIsARide: boolean | ErrorResponse = await ridesExist();
+      if (typeof thereIsARide === "boolean") {
+        sendWebSocketMessage(ws, {
+          response: "RIDES_EXIST",
+          ridesExist: thereIsARide,
+        });
       } else {
-        // the ErrorResponse case, send only to driver
-        sendWebSocketMessage(ws, resp);
+        sendWebSocketMessage(ws, thereIsARide);
       }
       break;
+    }
+
+    // new directive that will check out the highest ranking ride request to
+    // a driver so they can accept/deny/report etc.
+    case "VIEW_RIDE": {
+      const res = await viewRide(input.driverid, input.driverLocation);
+      sendWebSocketMessage(ws, res);
+      break;
+    }
+
+    // new directive that handles the drivers decision after viewing a particular ride
+    // request.
+    // ACCEPT -> accept the ride. Assigns the ride to the driver, begin pick up.
+    // DENY -> Deny the ride request without reporting, returns the req to the pool
+    // TIMEOUT -> Driver didn't decide anything fast enough, return to pool
+    // ERROR -> Unexpected problem, return request to queue
+    case "VIEW_DECISION": {
+      console.log(`here is the input: ${JSON.stringify(input)}`);
+      if (
+        input.decision !== "ACCEPT" &&
+        input.decision !== "DENY" &&
+        input.decision !== "ERROR" &&
+        input.decision !== "TIMEOUT"
+      ) {
+        throw new Error(
+          `input.decsion was ${input.decision}, not a legal type.`
+        );
+      }
+      const res = await handleDriverViewChoice(
+        input.driverid,
+        input.view,
+        input.decision
+      );
+      if (res.response == "ERROR") {
+        sendWebSocketMessage(ws, res);
+      } else {
+        if (res.driver.providedView.rideRequest?.netid == undefined) {
+          throw new Error(
+            `Driver allowed to accept ride with no netid: ${input.view}`
+          );
+        }
+        sendWebSocketMessage(ws, res.driver);
+        if (res.student !== undefined) {
+          sendMessageToNetid(
+            res.driver.providedView.rideRequest?.netid,
+            res.student
+          );
+        }
+      }
+      break;
+    }
+
+    // Directive
+    case "DRIVER_ARRIVED": {
+      const res = await driverArrived(input.studentNetid);
+      sendWebSocketMessage(ws, res);
+      if (res.response == "DRIVER_ARRIVED" && res.success) {
+        sendMessageToNetid(input.studentNetid, res);
+      }
+      break;
+    }
 
     case "CANCEL":
       resp = await cancelRide(input.netid, input.role);
@@ -265,6 +339,13 @@ export const handleWebSocketMessage = async (
       // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
       break;
+
+    case "PLACE_SEARCH":
+      resp = await getPlaceSearchResults(input.query);
+      // send response back to client (the student)
+      sendWebSocketMessage(ws, resp);
+      break;
+
     default:
       console.log(`WEBSOCKET: Unknown directive: ${input}`);
       break;
