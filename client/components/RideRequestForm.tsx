@@ -499,6 +499,7 @@ export default function RideRequestForm({
   // update the campus API suggestions based on the user's query
   useEffect(() => {
     if (
+      // empty
       (currentQuery == "pickup" && pickUpQuery == "") ||
       (currentQuery == "dropoff" && dropOffQuery == "")
     ) {
@@ -506,29 +507,56 @@ export default function RideRequestForm({
       setPlaceSearchResults([]);
       return;
     }
-    // filter the Campus API Results based on the current query
+
+    // is it pickup or drop off query
+    const query =
+      currentQuery == "pickup"
+        ? pickUpQuery.toLowerCase()
+        : dropOffQuery.toLowerCase();
+
+    // filter the Campus API Results
     const filteredBuildings = allBuildings
       .filter((item) => {
         // if the current query is dropoff, filter out current location
         if (currentQuery == "dropoff") {
           return item !== "Current Location";
-        } else {
-          return true;
         }
+        return true;
       })
       .filter((item) => {
-        const query =
-          currentQuery == "pickup"
-            ? pickUpQuery.toLowerCase()
-            : dropOffQuery.toLowerCase();
         if (!query) return true;
-        // match if the building name STARTS WITH the query
+        const itemLower = item.toLowerCase();
+        // prioritize items that start with the query
         return (
-          item.toLowerCase().startsWith(query) ||
+          itemLower.startsWith(query) ||
           (currentQuery == "pickup" && item == "Current Location")
         );
       });
-    setCampusAPIResults(filteredBuildings);
+    // sort the filtered buildings to prioritize matches that start with the query
+    const sortedBuildings = filteredBuildings.sort((a, b) => {
+      const aStartsWith = a.toLowerCase().startsWith(query);
+      const bStartsWith = b.toLowerCase().startsWith(query);
+      if (aStartsWith && !bStartsWith) return -1;
+      if (!aStartsWith && bStartsWith) return 1;
+      return 0;
+    });
+
+    setCampusAPIResults(sortedBuildings);
+    // Filter and sort place search results
+    const filteredPlaces = placeSearchResults
+      .filter((item) => {
+        const nameLower = item.name.toLowerCase();
+        return nameLower.includes(query);
+      })
+      .sort((a, b) => {
+        const aStartsWith = a.name.toLowerCase().startsWith(query);
+        const bStartsWith = b.name.toLowerCase().startsWith(query);
+        if (aStartsWith && !bStartsWith) return -1;
+        if (!aStartsWith && bStartsWith) return 1;
+        return 0;
+      });
+
+    setPlaceSearchResults(filteredPlaces);
   }, [dropOffQuery, pickUpQuery]);
 
   /* ANIMATION */
