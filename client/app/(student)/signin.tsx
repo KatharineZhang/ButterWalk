@@ -1,11 +1,4 @@
-import {
-  View,
-  Text,
-  KeyboardAvoidingView,
-  Pressable,
-  TouchableOpacity,
-  Image,
-} from "react-native";
+import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
 import { useState, useEffect } from "react";
 import { styles } from "../../assets/styles";
 import { Redirect } from "expo-router";
@@ -112,36 +105,77 @@ const Login = () => {
       }}
     />
   ) : (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.appNameText}>Husky ButterWalk</Text>
-      <Image style={styles.signInbottomImageContainer} source={huskyCarImage} />
-      <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
-        <Text style={styles.signInText}>start your ride by signing in!</Text>
-        <View style={{ height: 20 }}></View>
-
-        <TouchableOpacity
-          style={styles.signInGoogleContainer}
-          onPress={() => promptAsync()}
+    <SafeAreaView style={[styles.container, { padding: 20 }]}>
+      <View style={{ flex: 1, width: "100%", justifyContent: "space-between" }}>
+        {/* Main Content */}
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
-          <Image style={styles.signInGoogleLogo} source={logo} />
-          <Text style={{ fontWeight: "bold", fontSize: 17 }}>
-            Sign in with UW Email
+          <Text
+            style={{
+              fontSize: 35,
+              fontWeight: "500",
+              color: "#4B2E83",
+              marginBottom: 20,
+            }}
+          >
+            Welcome Student!
           </Text>
-        </TouchableOpacity>
-        <Text style={{ color: "red" }}>{errMsg}</Text>
+          <Image
+            style={[
+              styles.signInbottomImageContainer,
+              { flex: 0.5, marginBottom: "10%" },
+            ]}
+            source={huskyCarImage}
+            resizeMode="contain"
+          />
+          <Text
+            style={{
+              fontSize: 20,
+              textAlign: "center",
+              fontWeight: "500",
+              color: "#4B2E83",
+              lineHeight: 30,
+              marginVertical: 20,
+            }}
+          >
+            Start your SafeTrip journey by signing in with your UW email
+          </Text>
 
-        {/* TEMPORARY Bypass Signin Button */}
-        <View style={{ height: 20 }}></View>
-        <Pressable
-          style={styles.signInButton}
-          onPress={() => {
-            setAccExists(false);
-            setNetid("student-netID");
-          }}
-        >
-          <Text style={styles.signInText}>Bypass Signin</Text>
-        </Pressable>
-      </KeyboardAvoidingView>
+          <TouchableOpacity
+            style={{
+              borderColor: "#4B2E83",
+              borderWidth: 2,
+              height: 50,
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: 10,
+              width: "95%",
+              flexDirection: "row",
+            }}
+            onPress={() => promptAsync()}
+          >
+            <Image style={styles.signInGoogleLogo} source={logo} />
+            <Text style={{ fontWeight: "bold", fontSize: 17, marginLeft: 30 }}>
+              Sign in with UW Email
+            </Text>
+          </TouchableOpacity>
+          <Text style={{ color: "red", marginTop: 10 }}>{errMsg}</Text>
+        </View>
+
+        {/* TEMPORARY Bypass Button */}
+        <View style={{ paddingBottom: 20 }}>
+          <Pressable
+            style={styles.signInButton}
+            onPress={() => {
+              setAccExists(false);
+              setNetid("student-netID");
+            }}
+          >
+            <Text style={styles.signInText}>Bypass Signin</Text>
+          </Pressable>
+        </View>
+      </View>
     </SafeAreaView>
   );
 };

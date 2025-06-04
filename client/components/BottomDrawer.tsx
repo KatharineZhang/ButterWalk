@@ -42,9 +42,8 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   contentContainer: {
-    padding: 15,
     width: "100%",
-    backgroundColor: "white",
+    height: "97%",
   },
 });
 

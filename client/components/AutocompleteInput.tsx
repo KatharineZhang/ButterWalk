@@ -6,6 +6,7 @@ interface AutoCompleteInputProps {
   onPress: () => void;
   query: string;
   setQuery: (text: string) => void;
+  enterPressed: () => void;
   placeholder: string;
   data: string[];
 }
@@ -14,6 +15,7 @@ const AutoCompleteInput: React.FC<AutoCompleteInputProps> = ({
   onPress,
   query,
   setQuery,
+  enterPressed,
   placeholder,
 }) => {
   return (
@@ -25,6 +27,7 @@ const AutoCompleteInput: React.FC<AutoCompleteInputProps> = ({
         onChangeText={(text) => {
           setQuery(text);
         }}
+        onSubmitEditing={enterPressed}
         placeholder={placeholder}
         placeholderTextColor="#888"
       />
@@ -34,7 +37,6 @@ const AutoCompleteInput: React.FC<AutoCompleteInputProps> = ({
 
 const styles = StyleSheet.create({
   autocompleteContainer: {
-    position: "relative",
     zIndex: 100,
     paddingBottom: 7,
     width: "100%",

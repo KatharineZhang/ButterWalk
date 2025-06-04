@@ -15,7 +15,8 @@ interface OnboardingItemProps {
 }
 
 export default function OnboardingItem({ item }: OnboardingItemProps) {
-  const { width } = useWindowDimensions();
+  const { height, width } = useWindowDimensions();
+
   return (
     <View style={[styles.container, { width }]}>
       <Image
@@ -23,23 +24,12 @@ export default function OnboardingItem({ item }: OnboardingItemProps) {
         style={{
           flex: 0.5,
           justifyContent: "center",
-          width: width * (item.id === "2" ? 0.35 : item.id === "3" ? 0.4 : 0.7),
+          height,
           resizeMode: "contain",
-          marginTop: -350,
+          marginTop: "-85%",
           alignSelf: "center",
         }}
       />
-      {/*<View style={{ flex: 0.3, alignContent: "center", margin: 20 }}>
-        <Text
-          style={{
-            fontSize: 28,
-            textAlign: "center",
-            marginBottom: 10,
-          }}
-        >
-          {item.title}
-        </Text>
-        </View> */}
     </View>
   );
 }

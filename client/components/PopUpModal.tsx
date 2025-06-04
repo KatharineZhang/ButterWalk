@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { styles } from "@/assets/styles";
+import { JSX } from "react";
 import { View, Modal, ScrollView, TouchableOpacity, Image } from "react-native";
 
 // the component that displays a list of frequently asked questions
@@ -23,7 +24,6 @@ function PopUpModal({ isVisible, onClose, content, type }: PopUpModalProps) {
       <View
         style={{
           flex: 1,
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
           justifyContent: "flex-end", // align modal to bottom
         }}
       >

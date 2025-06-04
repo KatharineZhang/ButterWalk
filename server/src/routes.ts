@@ -1,10 +1,7 @@
 import dotenv from "dotenv";
 import { AuthSessionResult } from "expo-auth-session";
 import {
-  localRideRequest,
-  rideReqQueue,
   ErrorResponse,
-  AcceptResponse,
   CancelResponse,
   GeneralResponse,
   FinishAccCreationResponse,
@@ -21,14 +18,19 @@ import {
   ProfileResponse,
   User,
   DistanceResponse,
+  ViewRideRequestResponse,
+  ViewDecisionResponse,
   SnapLocationResponse,
   RecentLocationResponse,
+  PlaceSearchResult,
+  GooglePlaceSearchResponse,
+  GooglePlaceSearchBadLocationTypes,
+  PlaceSearchResponse,
+  PurpleZone,
 } from "./api";
 import {
-  acceptRideRequest,
   addFeedbackToDb,
   addProblematic,
-  addRideRequest,
   blacklistUser,
   cancelRideRequest,
   completeRideRequest,
@@ -38,16 +40,15 @@ import {
   queryFeedback,
   db,
   getProfile,
+  addRideRequestToPool,
+  getRideRequests,
+  setRideRequestStatus,
+  setRideRequestDriver,
   getRecentLocations,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
-import { Mutex } from "async-mutex";
+import { highestRank, rankOf } from "./rankingAlgorithm";
 dotenv.config();
-
-// every time we access the queue and the database,
-// we want to lock the entire section to make both the database action
-// and the queue action combined into one atomic action to prevent data races
-const queueLock: Mutex = new Mutex();
 
 // performs the google auth and returns the user profile information
 export const googleAuth = async (
@@ -71,7 +72,6 @@ const handleToken = async (
   console.log("error with response", response);
   return { message: "Error signing in: Make sure you're using your UW email." };
 };
-
 
 // gets the user profile information using the token from google auth
 // returns us the user info if the user is a UW student and signin is successful
@@ -218,7 +218,7 @@ export const snapLocation = async (
     };
   }
 
-  if(typeof currLat !== "number" || typeof currLong !== "number") {
+  if (typeof currLat !== "number" || typeof currLong !== "number") {
     return {
       response: "ERROR",
       error: "latitude or longitude not the correct type.",
@@ -226,15 +226,13 @@ export const snapLocation = async (
     };
   }
 
-  if(currLat < -90 || currLat > 90 || currLong < -180 || currLong > 180) {
+  if (currLat < -90 || currLat > 90 || currLong < -180 || currLong > 180) {
     return {
       response: "ERROR",
       error: "Invalid latitude or longitude.",
       category: "SNAP",
     };
   }
-
-  
 
   try {
     // Documentation on how to use MapBox's map matching API:
@@ -281,10 +279,8 @@ async function getMatch(lat: number, long: number) {
   url.searchParams.set("steps", "false");
   url.searchParams.set("access_token", process.env.MAPBOX_SNAPPING_TOKEN);
 
-  console.log("in getMatch");
   const query = await fetch(url.toString(), { method: "GET" });
   const response = await query.json();
-  console.log("response from mapbox:", response);
   // Handle errors
   if (response.code !== "Ok") {
     console.error(
@@ -293,11 +289,34 @@ async function getMatch(lat: number, long: number) {
     return;
   }
   // Get the coordinates from the response.
-  // TODO: figure out if it's in an array or not
   const coords = response.matchings[0].geometry;
   console.log(coords);
+
+  // check if we have a valid road name
+  let roadName = response.tracepoints[1].name;
+  if (roadName.length < 1) {
+    // there was no road name, so we need to use the reverse geocoding API
+    // to get the name of the street
+    const geoCodingBase = `https://api.mapbox.com/search/geocode/v6/reverse`;
+    const geoCodingUrl = new URL(geoCodingBase);
+    geoCodingUrl.searchParams.set("longitude", `${safeLong}`); // from the coordinates
+    geoCodingUrl.searchParams.set("latitude", `${safeLat}`);
+    geoCodingUrl.searchParams.set("types", "street"); // get the street name
+    geoCodingUrl.searchParams.set(
+      "access_token",
+      process.env.MAPBOX_SNAPPING_TOKEN
+    );
+    const query = await fetch(geoCodingUrl.toString(), { method: "GET" });
+    const response = await query.json();
+    console.log("response from mapbox:", response.features[0].properties);
+
+    if (response.features.length > 0) {
+      roadName = response.features[0].properties.name;
+    }
+    // else we give up and just return the empty string
+  }
   // Code from the next step will go here
-  return { coords: coords, roadName: response.tracepoints[1].name };
+  return { coords: coords, roadName };
 }
 
 /* Adds a new ride request object to the queue using the parameters given. 
@@ -309,100 +328,267 @@ Will add a new request to the database, populated with the fields passed in and 
 - On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: “REQUEST_RIDE” }.
 - Returns a json object TO THE STUDENT in the form: { response: “REQUEST_RIDE”, requestid: string }. */
 export const requestRide = async (
-  phoneNum: string,
-  netid: string,
-  from: string,
-  to: string,
-  numRiders: number
+  rideRequest: RideRequest
 ): Promise<RequestRideResponse | ErrorResponse> => {
-  if (!phoneNum || !from || !to || numRiders <= 0) {
-    return {
-      response: "ERROR",
-      error: "Missing or invalid ride request details.",
-      category: "REQUEST_RIDE",
-    };
-  }
-
-  queueLock.acquire();
-  // add a new request to the database, populated with the fields passed in and a request status of 0
-  // on error, return { success: false, error: 'Error adding ride request to the database.'};
   try {
-    const requestid = await runTransaction(db, async (transaction) => {
-      // we cannot directly assign the requestid to the return value of addRideRequest
-      // since you cannot alter app state in a transaction
-      return await addRideRequest(transaction, netid, from, to, numRiders);
+    const requestid = await runTransaction(db, async (t) => {
+      return await addRideRequestToPool(t, rideRequest);
     });
-    // can't do this in the transaction unfortuntely
-    // we also want to keep the requests locally in the server queue, but without too much information
-    const newRideReq: localRideRequest = { requestid, netid };
-    rideReqQueue.add(newRideReq);
-    return { response: "REQUEST_RIDE", requestid };
-  } catch (e) {
+    if (requestid != null) {
+      return { response: "REQUEST_RIDE", requestid };
+    } else {
+      throw new Error(`requestid was null`);
+    }
+  } catch (e: unknown) {
+    // TODO(connor): introduce a debugging and logging utility and or proper error
+    // handling so this is not necessary.
     return {
       response: "ERROR",
       error: `Error adding ride request to the database: ${e}`,
       category: "REQUEST_RIDE",
     };
-  } finally {
-    queueLock.release();
   }
 };
 
-/* Pops the next ride request in the queue and assigns it to the driver. 
-This call will update the database to add the driver id to the specific request 
-and change the status of the request to 1 (accepted). 
-
-- Takes in a json object in the form { directive: "ACCEPT_RIDE" }.
-- On error, returns the json object in the form:  { response: “ERROR”, success: false, error: string, category: “ACCEPT_RIDE” }.
-- Returns a json object in the form: 
-{ student: { response: "ACCEPT_RIDE", success: true }, 
- driver: { response: "ACCEPT_RIDE", netID: string, location: string, destination: string, numRiders: number, requestid: string }}
-Where the object that should be returned TO THE STUDENT is in the form: { response: "ACCEPT_RIDE", success: true }
-and the object that should be returned TO THE DRIVER is in the format: 
-{ response: "ACCEPT_RIDE", netID: string, location: string, destination: string, numRiders: number, requestid: string } */
-export const acceptRide = async (
-  driverid: string
-): Promise<AcceptResponse | ErrorResponse> => {
-  queueLock.acquire();
-  if (!rideReqQueue.peek()) {
-    queueLock.release();
+/**
+ * Returns "YES" or "NO" depending on if there are currently rides in the pool.
+ * Used by the ride request broker, called when a driver opens the application.
+ */
+export const ridesExist = async (): Promise<boolean | ErrorResponse> => {
+  try {
+    return await runTransaction(db, async () => {
+      const rideRequests: RideRequest[] = await getRideRequests();
+      return rideRequests.length !== 0;
+    });
+  } catch (e) {
     return {
       response: "ERROR",
-      error: "No ride requests in the queue.",
-      category: "ACCEPT_RIDE",
+      error: `Error getting ride requests from the database: ${e}`,
+      category: "REQUEST_RIDE",
     };
   }
+};
 
-  // get the next request in the queue
-  // can't do this in the transaction unfortuntely
-  const nextRide = rideReqQueue.pop() as localRideRequest;
-  // update the request in database to add the driver id and change the status of the request to 1 (accepted)
-  // if there is an error, return { success: false, error: 'Error accepting ride request.'};
+/**
+ * Temporarily checks out a ride request to a driver, who can choose to either accept
+ * or decline the ride reqeust they are granted.
+ * @param driverid The ID of the driver who is going to view a ride and either accept
+ * or deny it after having viewed it.
+ * @param driverLocation The current location of the driver associated with driverId.
+ * @returns a ViewRideRequestResponse with all of the information the driver needs
+ * to accept or deny the request, or an ErrorResponse if there was some recoverable
+ * problem.
+ */
+export const viewRide = async (
+  driverid: string,
+  driverLocation: {
+    latitude: number;
+    longitude: number;
+  } | null //TODO(connor): remove null option, force for ranking
+): Promise<ViewRideRequestResponse | ErrorResponse> => {
+  let associatedUser: User | null = null;
   try {
-    const req: RideRequest = await runTransaction(db, async (transaction) => {
-      return await acceptRideRequest(transaction, nextRide.requestid, driverid);
-    });
+    const rideRequest: RideRequest | null = await runTransaction(
+      db,
+      async (t) => {
+        const rideRequests: RideRequest[] = await getRideRequests();
+        if (rideRequests.length === 0) {
+          return null;
+        }
+        const bestRequest: RideRequest = highestRank(
+          rideRequests,
+          driverid,
+          driverLocation
+        );
+        const userNetid = bestRequest.netid;
+        associatedUser = await getProfile(t, userNetid);
+        setRideRequestStatus(t, "VIEWING", associatedUser.netid);
+        return bestRequest;
+      }
+    );
+    if (rideRequest === null) {
+      return {
+        response: "VIEW_RIDE",
+        rideExists: false,
+      };
+    }
+    if (associatedUser === null) {
+      throw new Error(`Didn't find any User during view ride.`);
+    }
     return {
-      response: "ACCEPT_RIDE",
-      student: { response: "ACCEPT_RIDE", success: true },
-      driver: {
-        response: "ACCEPT_RIDE",
-        netid: nextRide.netid,
-        location: req.locationFrom,
-        destination: req.locationTo,
-        numRiders: req.numRiders,
-        requestid: nextRide.requestid,
-      },
+      response: "VIEW_RIDE",
+      rideExists: true,
+      rideRequest: rideRequest,
     };
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Error accepting ride request: ${e}`,
-      category: "ACCEPT_RIDE",
+      error: `Unknown problem during viewRide: ${e}`,
+      category: "VIEW_RIDE",
     };
-  } finally {
-    queueLock.release();
   }
+};
+
+/**
+ * Handles the acceptance, rejection, reporting, timing out, or erroring
+ * of a ride request in the pool that was previously checked out to a
+ * particular driver.
+ * @param driverid ID of the driver who viewed the given ride request
+ * @param providedView The view that was provided to the driver
+ * @param decision The driver's decision on the ride request
+ *  `ACCEPT` -> Accepts the ride request, ties to driver
+ */
+export const handleDriverViewChoice = async (
+  driverid: string,
+  providedView: ViewRideRequestResponse,
+  decision: "ACCEPT" | "DENY" | "TIMEOUT" | "ERROR"
+): Promise<ViewDecisionResponse | ErrorResponse> => {
+  const requestNetid = providedView.rideRequest?.netid;
+  if (typeof requestNetid !== "string") {
+    return {
+      response: "ERROR",
+      error: `Tried to handle view choice when provided view had undefined netid: ${requestNetid}`,
+      category: "VIEW_RIDE",
+    };
+  }
+  if (decision === "ACCEPT") {
+    /**
+     * Change the status of the ride request with the given
+     * rideRequestId to be `DRIVING TO PICK UP`,
+     * assigning the ride to the given driver
+     */
+    try {
+      return await runTransaction(db, async (t) => {
+        setRideRequestStatus(t, "DRIVING TO PICK UP", requestNetid);
+        setRideRequestDriver(t, requestNetid, driverid);
+        return {
+          response: "VIEW_DECISION",
+          driver: {
+            response: "VIEW_DECISION",
+            providedView: providedView,
+            success: true,
+          },
+          student: {
+            response: "ACCEPT_RIDE",
+            success: true,
+          },
+        };
+      });
+    } catch (e) {
+      return {
+        response: "ERROR",
+        error: `Unexpected Error during handleDriverViewChoie: ${e}`,
+        category: "VIEW_RIDE",
+      };
+    }
+  } else if (decision === "DENY") {
+    /**
+     * Change the status of the ride request with the given
+     * id back to `REQUESTED`, returning it to the pool.
+     */
+    try {
+      return await runTransaction(db, async (t) => {
+        setRideRequestStatus(t, "REQUESTED", requestNetid);
+        return {
+          response: "VIEW_DECISION",
+          driver: {
+            response: "VIEW_DECISION",
+            providedView: providedView,
+            success: true,
+          },
+          student: undefined,
+        };
+      });
+    } catch (e) {
+      return {
+        response: "ERROR",
+        error: `Unexpected Error during handleDriverViewChoice: ${e}`,
+        category: "VIEW_RIDE",
+      };
+    }
+  } else if (decision === "TIMEOUT") {
+    /**
+     * Change the status of the ride request with the given id
+     * back to `REQUESTED`, returning it to the pool.
+     */
+    try {
+      return await runTransaction(db, async (t) => {
+        setRideRequestStatus(t, "REQUESTED", requestNetid);
+        return {
+          response: "VIEW_DECISION",
+          driver: {
+            response: "VIEW_DECISION",
+            providedView: providedView,
+            success: true,
+          },
+          student: undefined,
+        };
+      });
+    } catch (e) {
+      return {
+        response: "ERROR",
+        error: `Unexpected Error during handleDriverViewChocie: ${e}`,
+        category: "VIEW_RIDE",
+      };
+    }
+  } else if (decision === "ERROR") {
+    /**
+     * Change the status of the ride request with the given id
+     * back to `REQUESTED`, returning it to the pool. Do any
+     * additional logging or error handling for unexpected
+     * behavior.
+     */
+    try {
+      return await runTransaction(db, async (t) => {
+        setRideRequestStatus(t, "REQUESTED", requestNetid);
+        return {
+          response: "VIEW_DECISION",
+          driver: {
+            response: "VIEW_DECISION",
+            providedView: providedView,
+            success: true,
+          },
+          student: undefined,
+        };
+      });
+    } catch (e) {
+      return {
+        response: "ERROR",
+        error: `Unexpected Error during handleDriverViewChoice: ${e}`,
+        category: "VIEW_RIDE",
+      };
+    }
+  } else {
+    throw new Error(`decision: ${decision} was not a valid string.`);
+  }
+};
+
+/**
+ * Sets the status of the ride request associated with `netid`
+ * to be "DRIVER AT PICK UP" indicating that the driver has
+ * arrived at the pick up location
+ * @param netid netid of the student of the ride request
+ * @returns DriverArrivedResponse with .success = true on success,
+ * or an error response otherwise.
+ */
+export const driverArrived = async (
+  netid: string
+): Promise<ErrorResponse | GeneralResponse> => {
+  try {
+    await runTransaction(db, async (t) => {
+      await setRideRequestStatus(t, "DRIVER AT PICK UP", netid);
+    });
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Unexpected Error during driverArrived: ${e}`,
+      category: "VIEW_RIDE",
+    };
+  }
+  return {
+    response: "DRIVER_ARRIVED",
+    success: true,
+  };
 };
 
 /* Allows the student to cancel a ride and updates the server and notifies the user. 
@@ -433,21 +619,6 @@ export const cancelRide = async (
   netid: string,
   role: "STUDENT" | "DRIVER"
 ): Promise<CancelResponse | ErrorResponse> => {
-  if (!netid) {
-    return {
-      response: "ERROR",
-      error: "Missing required fields.",
-      category: "CANCEL",
-    };
-  }
-
-  queueLock.acquire();
-  // can't do this in the transaction unfortuntely, so lock instead
-  if (role === "STUDENT") {
-    // get rid of any pending requests in the local queue that have the same netid
-    rideReqQueue.remove(netid);
-  }
-
   try {
     return await runTransaction(db, async (transaction) => {
       const otherid = await cancelRideRequest(transaction, netid, role);
@@ -472,8 +643,6 @@ export const cancelRide = async (
       error: `Error canceling ride request: ${e}`,
       category: "CANCEL",
     };
-  } finally {
-    queueLock.release();
   }
 };
 
@@ -489,29 +658,25 @@ export const cancelRide = async (
 export const completeRide = async (
   requestid: string
 ): Promise<CompleteResponse | ErrorResponse> => {
-  if (!requestid) {
-    return {
-      response: "ERROR",
-      error: "Missing required fields.",
-      category: "COMPLETE",
-    };
-  }
-  // set the specific request status to 2 in the database
-  // if there is an error, return { success: false, error: 'Error completing ride request.'};
   try {
-    return await runTransaction(db, async (transaction) => {
-      const netids = await completeRideRequest(transaction, requestid);
+    return await runTransaction(db, async (t) => {
+      const netids = await completeRideRequest(t, requestid);
       return {
         response: "COMPLETE",
-        info: { response: "COMPLETE", success: true },
-        netids: netids,
+        info: {
+          response: "COMPLETE",
+          success: true,
+        },
+        netids: {
+          student: netids.student,
+          driver: netids.driver,
+        },
       };
     });
   } catch (e) {
-    // if there is an error, return { success: false, error: 'Error completing ride request.'};
     return {
       response: "ERROR",
-      error: `Error completing ride request: ${e}`,
+      error: `Unexpected Error during completeRide: ${e}`,
       category: "COMPLETE",
     };
   }
@@ -699,21 +864,18 @@ export const waitTime = async (
   }
 
   // FIND THE DRIVER'S ETA TO THE STUDENT
-  queueLock.acquire();
   if (!requestid) {
     // if there is no concrete request in the queue, return the queue length * 15 minutes
-    const queueLength = rideReqQueue.get().length;
+    const queueLength = (await getRideRequests()).length;
     driverETA = queueLength * 15;
   } else if (requestid && !driverLocation) {
     // if there is a requestid, then there is a requested ride,
     // if there is also no driverLocation,
     // return corresponding queue index * 15
-    const index = rideReqQueue
-      .get()
-      .findIndex((request) => request.requestid === requestid);
+    const rideRequests: RideRequest[] = await getRideRequests();
+    const index = rankOf(rideRequests, requestid);
     if (index === -1) {
       // the requestid was not in the queue
-      queueLock.release();
       return {
         response: "ERROR",
         error: `Could not find requestid ${requestid} in the queue.`,
@@ -739,7 +901,6 @@ export const waitTime = async (
     }
   }
 
-  queueLock.release();
   return {
     response: "WAIT_TIME",
     rideDuration,
@@ -985,11 +1146,8 @@ export const fetchRecentLocations = async (
 
   try {
     return await runTransaction(db, async (transaction) => {
-      // Create a mock user object with the netid
-      const user: User = { netid, firstName: "", lastName: "", phoneNumber: null, studentNumber: null, studentOrDriver: "STUDENT" };
-
       // Fetch recent locations using the function in firebaseActions
-      const locations = await getRecentLocations(user);
+      const locations = await getRecentLocations(transaction, netid);
 
       return {
         response: "RECENT_LOCATIONS",
@@ -1003,4 +1161,123 @@ export const fetchRecentLocations = async (
       category: "RECENT_LOCATIONS",
     };
   }
+};
+
+// This is used to cache the results of the Google Place API
+let previousQuery = "";
+let previousResults: PlaceSearchResult[] = [];
+
+// Call the Google Place Search to get place suggestions based on user input
+export const getPlaceSearchResults = async (
+  query: string
+): Promise<PlaceSearchResponse | ErrorResponse> => {
+  try {
+    const results = await fetchGooglePlaceSuggestions(query);
+    return {
+      response: "PLACE_SEARCH",
+      results,
+    };
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error fetching place search results: ${(e as Error).message}`,
+      category: "PLACE_SEARCH",
+    };
+  }
+};
+
+/**
+ * HELPER: Fetch Google Place Autocomplete suggestions based on user input.
+ * @param query - The user's input query.
+ * @param location - The latitude and longitude to restrict the search.
+ * @param radius - The radius (in meters) to restrict the search (default: 5000).
+ * @returns A promise that resolves to an array of place descriptions.
+ */
+export const fetchGooglePlaceSuggestions = async (
+  query: string
+): Promise<PlaceSearchResult[]> => {
+  // If the query is basically the same as the previous one, return the cached results
+  if (levensteinDistance(query, previousQuery) < 3) {
+    console.log(
+      "google place search cached results for query:",
+      query,
+      "previous query:",
+      previousQuery
+    );
+    return previousResults;
+  }
+  try {
+    previousQuery = query;
+    const url =
+      `https://maps.googleapis.com/maps/api/place/textsearch/json?` +
+      `query=${encodeURIComponent(query)}` +
+      `&location=47.65979,-122.30564` + // Source: trust me bro - Snigdha (https://www.calcmaps.com/map-radius/)
+      `&radius=1859` + // but basically its just a radius around the purple zone area
+      `&key=${process.env.GOOGLE_MAPS_APIKEY}`;
+
+    const res = await fetch(url);
+    const json = await res.json();
+
+    if (Array.isArray(json.results)) {
+      // Post-filter results to ensure they are inside the polygon
+      const places = (json.results as GooglePlaceSearchResponse[])
+        .map((r) => ({
+          name: r.name,
+          location: {
+            latitude: r.geometry.location.lat,
+            longitude: r.geometry.location.lng,
+          },
+          types: r.types,
+          formatted_address: r.formatted_address,
+        }))
+        // filter to places inside the purple zone
+        .filter((place) => PurpleZone.isPointInside(place.location))
+        // filter out places that could potentially serve alcohol
+        .filter((place) => {
+          return !place.types.some((type) =>
+            GooglePlaceSearchBadLocationTypes.includes(type)
+          );
+        })
+        .map((place) => ({
+          name: place.name,
+          coordinates: place.location,
+          address: place.formatted_address,
+        }));
+      // remove duplicates from places
+      previousResults = Array.from(new Set(places));
+      return previousResults;
+    }
+  } catch (e: unknown) {
+    console.log("GOOGLE PLACE SEARCH ERROR", e);
+  }
+  previousResults = [];
+  return [];
+};
+
+// Get the distance between two strings
+// (number of insertions and deletions of characters to get from one to another)
+const levensteinDistance = (a: string, b: string): number => {
+  const matrix: number[][] = new Array(b.length + 1)
+    .fill(null)
+    .map(() => new Array(a.length + 1).fill(0));
+
+  for (let i = 0; i < a.length + 1; i++) {
+    matrix[0][i] = i;
+  }
+
+  for (let i = 0; i < b.length + 1; i++) {
+    matrix[i][0] = i;
+  }
+
+  for (let i = 1; i < a.length + 1; i++) {
+    for (let j = 1; j < b.length + 1; j++) {
+      const min = Math.min(matrix[j - 1][i], matrix[j][i - 1]);
+      if (a[i - 1] === b[j - 1]) {
+        matrix[j][i] = matrix[j - 1][i - 1];
+      } else {
+        matrix[j][i] = min + 1;
+      }
+    }
+  }
+  return matrix[b.length][a.length];
 };

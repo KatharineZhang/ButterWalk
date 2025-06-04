@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { Pressable, TouchableOpacity, View } from "react-native";
+import {
+  Pressable,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import Profile from "./profile";
 import Map, { calculateDistance, isSameLocation, MapRef } from "./map";
 import { useLocalSearchParams } from "expo-router";
@@ -8,7 +13,7 @@ import {
   DistanceResponse,
   ErrorResponse,
   LocationResponse,
-  RecentLocationResponse,
+  LocationType,
   RequestRideResponse,
   User,
   WaitTimeResponse,
@@ -113,7 +118,10 @@ export default function HomePage() {
   };
 
   // the user's recent locations that will be displayed in the dropdown
-  const [recentLocations, setRecentLocations] = useState<string[]>([]);
+  const [recentLocations, setRecentLocations] = useState<LocationType[]>([]);
+
+  // darken the screen when the user clicks on the confirmation modal
+  const [darkenScreen, setDarkenScreen] = useState(false);
 
   /* PROFILE STATE AND METHODS */
   const [profileVisible, setProfileVisible] = useState(false);
@@ -151,8 +159,16 @@ export default function HomePage() {
       directive: "REQUEST_RIDE",
       phoneNum: user.phoneNumber as string,
       netid,
-      location: pickUpLocationName,
-      destination: dropOffLocationName,
+      location: {
+        name: pickUpLocationName,
+        address: pickUpAddress,
+        coordinates: pickUpLocation,
+      },
+      destination: {
+        name: dropOffLocationName,
+        address: dropOffAddress,
+        coordinates: dropOffLocation,
+      },
       numRiders: numPassengers,
     });
     // set the component to show to loading
@@ -216,7 +232,11 @@ export default function HomePage() {
   };
 
   /* LEGEND STATE */
-  const [bottom, setBottom] = useState(350);
+  const { height } = useWindowDimensions();
+  // to start, the current component is the ride request form which takes up 40% of the screen height
+  const [currentComponentHeight, setCurrentComponentHeight] = useState(
+    Math.round(height * 0.4)
+  );
 
   /* EFFECTS */
   useEffect(() => {
@@ -229,34 +249,17 @@ export default function HomePage() {
     WebSocketService.addListener(handleCompleteOrCancel, "COMPLETE");
     WebSocketService.addListener(handleWaitTime, "WAIT_TIME");
     WebSocketService.addListener(handleDistance, "DISTANCE");
-    WebSocketService.addListener(handleRecentLocationResponse, "RECENT_LOCATIONS");
+    WebSocketService.addListener(
+      handleRecentLocationResponse,
+      "RECENT_LOCATIONS"
+    );
+    WebSocketService.addListener(handleDriverArrived, "DRIVER_ARRIVED");
 
     // get the user's profile on first render
     sendProfile();
     // get the user's locations on first render
     sendRecentLocation();
   }, []);
-
-  // TODO: remove
-  // // figure out coordinates from pickup and dropoff location names
-  // // clicked in the ride request form
-  // useEffect(() => {
-  //   // get the coordinates of the pickup location
-  //   if (pickUpLocationName !== "") {
-  //     // TODO: PARSE THE SNAP STRING TO GET THE ROAD NAME AND LAT/LONG
-  //     // setPickUpLocation() <-- this holds the lat/long to send to Map
-  //     setPickUpLocation(
-  //       BuildingService.getBuildingCoordinates(pickUpLocationName)
-  //     );
-  //   }
-
-  //   if (dropOffLocationName != "") {
-  //     // get the coordinates of the dropoff location
-  //     setDropOffLocation(
-  //       BuildingService.getBuildingCoordinates(dropOffLocationName)
-  //     );
-  //   }
-  // }, [pickUpLocationName, dropOffLocationName]);
 
   // logic that should happen when the component FIRST changes
   // currently only handles wait time when the confirm ride component is shown
@@ -339,27 +342,21 @@ export default function HomePage() {
                 userLocation,
                 pickUpLocation
               );
-              console.log("walk progress: ", wp);
               setWalkProgress(wp);
             }
           }
 
           // the driver has accepted the ride  and they are on their way
-          // check if the driver has arrived at the pickup location
-          if (isSameLocation(driverLocation, pickUpLocation)) {
-            setRideStatus("DriverArrived");
-          } else {
-            // else check their ETA in reaching the student
-            WebSocketService.send({
-              directive: "WAIT_TIME",
-              driverLocation,
-              requestid,
-              requestedRide: {
-                pickUpLocation,
-                dropOffLocation,
-              },
-            });
-          }
+          // check their ETA in reaching the student
+          WebSocketService.send({
+            directive: "WAIT_TIME",
+            driverLocation,
+            requestid,
+            requestedRide: {
+              pickUpLocation,
+              dropOffLocation,
+            },
+          });
           break;
         case "DriverArrived":
           // driver arrived. hopefully walk progress is 1
@@ -373,12 +370,6 @@ export default function HomePage() {
           setRideProgress(
             calculateProgress(pickUpLocation, driverLocation, dropOffLocation)
           );
-
-          // check if the driver has reached the dropoff location
-          if (isSameLocation(driverLocation, dropOffLocation)) {
-            setRideStatus("RideCompleted");
-            setRideProgress(1); // set the ride progress to 1 to show the user they have arrived
-          }
           break;
         case "RideCompleted":
           // the ride is completed
@@ -404,23 +395,23 @@ export default function HomePage() {
       console.log("Profile response error: ", message);
     }
   };
-  
+
   // WEBSOCKET -- RECENT_LOCATION
-  const sendRecentLocation = async () =>{
+  const sendRecentLocation = async () => {
     WebSocketService.send({
       directive: "RECENT_LOCATIONS",
       netid: netid,
-    })
-  }
+    });
+  };
 
   const handleRecentLocationResponse = (message: WebSocketResponse) => {
     if (message.response === "RECENT_LOCATIONS") {
-      setRecentLocations(message.locations as string[]);
+      setRecentLocations(message.locations as LocationType[]);
     } else {
       // something went wrong
       console.log("Recent location response error: ", message);
     }
-  }
+  };
 
   // WEBSOCKET -- LOCATION
   // listen for any LOCATION messages from the server about the driver's location
@@ -450,20 +441,43 @@ export default function HomePage() {
       // go back to ride request component
       setWhichComponent("rideReq");
 
-      // set the notif state based on the reason
-      if (cancelReason.current === "button") {
-        setNotifState({
-          text: "Ride successfully canceled",
-          color: "#FFCBCB",
-          boldText: "canceled",
-        });
+      // show the notification based on the response
+      if (message.response === "CANCEL") {
+        // set the notif state based on the reason for cancellation
+        if (cancelReason.current === "button") {
+          setNotifState({
+            text: "Ride successfully canceled",
+            color: "#FFCBCB",
+            boldText: "canceled",
+          });
+        } else {
+          setNotifState({
+            text: "Your ride was canceled— timer ran out",
+            color: "#FFCBCB",
+            boldText: "canceled",
+          });
+        }
       } else {
+        // wait until we recieve message with the ride completed
+        // for us to set the student's ride status to completed
+        setRideStatus("RideCompleted");
+        setRideProgress(1); // set the ride progress to 1 to show the user they have arrived
         setNotifState({
-          text: "Your ride was canceled— timer ran out",
-          color: "#FFCBCB",
-          boldText: "canceled",
+          text: "Ride successfully completed!",
+          color: "#C9FED0",
+          boldText: "completed",
         });
       }
+    }
+  };
+
+  // WEBSOCKET -- DRIVER ARRIVED
+  // when the driver has clicked the button saying they have arrived at the pickup location
+  // notify the user and change the ride status to DriverArrived
+  const handleDriverArrived = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "DRIVER_ARRIVED") {
+      // the driver has arrived at the pickup location
+      setRideStatus("DriverArrived");
     }
   };
 
@@ -510,7 +524,6 @@ export default function HomePage() {
       const reqMessage = message as RequestRideResponse;
       setRequestID(reqMessage.requestid);
 
-      // TODO: REDUNDANT? IDK WHY IT WASN'T UPDATING START LOCATION FROM HERE
       // set the startLocation to figure out if the user needs to walk
       setStartLocation(userLocation);
 
@@ -566,8 +579,6 @@ export default function HomePage() {
   };
 
   // WEBSOCKET -- DISTANCE
-  // TODO: WE CANNOT ASSUME ALL DISTANCE RESPONSES
-  // ARE FOR WALKING DURATION EVENTUALLY...(FAKE DIJKSTRAS)
   const handleDistance = (message: WebSocketResponse) => {
     if ("response" in message && message.response === "DISTANCE") {
       const distanceResp = message as DistanceResponse;
@@ -633,7 +644,7 @@ export default function HomePage() {
         </View>
 
         {/* faq pop-up modal */}
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { bottom: 0 }]}>
           <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
         </View>
         {/* notification component */}
@@ -653,10 +664,8 @@ export default function HomePage() {
         <View
           style={{
             position: "absolute",
-            bottom:
-              whichComponent == "waitForRide" || whichComponent == "handleRide"
-                ? 350
-                : bottom,
+            // set the height of the sidebar to the height of the current component + padding
+            bottom: currentComponentHeight + 10,
             left: 10,
             alignItems: "flex-start",
           }}
@@ -701,7 +710,8 @@ export default function HomePage() {
                 setFAQVisible={setFAQVisible}
                 recentLocations={recentLocations}
                 setNotificationState={setNotifState}
-                updateSideBarHeight={setBottom}
+                updateSideBarHeight={setCurrentComponentHeight}
+                darkenScreen={setDarkenScreen}
               />
             </View>
           ) : whichComponent === "confirmRide" ? (
@@ -717,6 +727,7 @@ export default function HomePage() {
                 onClose={closeConfirmRide}
                 onConfirm={requestRide}
                 setFAQVisible={setFAQVisible}
+                updateSideBarHeight={setCurrentComponentHeight}
               />
             </View>
           ) : whichComponent === "Loading" ? (
@@ -748,10 +759,25 @@ export default function HomePage() {
                 setNotificationState={setNotifState}
                 changeRideStatus={setRideStatus}
                 goHome={goHome}
+                updateSideBarHeight={setCurrentComponentHeight}
               />
             </View>
           ) : null // default
         }
+        {/* Overlay an semi-transparent screen when FAQ or profile or ride request confirmation mdoal is visible */}
+        {(FAQVisible || profileVisible || darkenScreen) && (
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0,0,0,0.5)", // semi-transparent background
+              zIndex: 9999,
+            }}
+          />
+        )}
       </View>
     </GestureHandlerRootView>
   );

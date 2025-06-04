@@ -26,7 +26,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 4,
-    elevation: 3,
+    // elevation: 3,
     backgroundColor: "#4B2E83",
     alignSelf: "center",
   },
@@ -53,7 +53,7 @@ export const styles = StyleSheet.create({
     position: "absolute",
     bottom: 5,
     right: 20,
-    elevation: 3,
+    // elevation: 3,
   },
   onboardingFooterButton: {
     alignItems: "center",
@@ -61,7 +61,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 25,
     borderRadius: 4,
-    elevation: 3,
+    // elevation: 3,
     backgroundColor: "#4B2E83",
   },
   /* Onboarding styling */
@@ -81,7 +81,7 @@ export const styles = StyleSheet.create({
     },
     shadowOpacity: 0.35,
     shadowRadius: 8,
-    elevation: 8,
+    // elevation: 8,
     justifyContent: "space-between",
     paddingVertical: 20,
   },
@@ -167,7 +167,7 @@ export const styles = StyleSheet.create({
     right: 10,
     top: 65,
     borderRadius: 4,
-    elevation: 3,
+    // elevation: 3,
     backgroundColor: "#4B2E83",
   },
   header: {
@@ -233,14 +233,13 @@ export const styles = StyleSheet.create({
     margin: 10,
     padding: 10,
     borderRadius: 10,
-    borderColor: "#C1C1C1",
+    borderColor: "#4B2E83",
     borderWidth: 2,
+    alignSelf: "center",
     alignItems: "center",
-    justifyContent: "center",
-    maxWidth: 300
+    width: "100%",
   },
   signInGoogleLogo: {
-    marginRight: 10,
     width: 30,
     height: 30,
   },
@@ -250,7 +249,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 4,
-    elevation: 3,
+    // elevation: 3,
     backgroundColor: "#4B2E83",
   },
 
@@ -262,7 +261,7 @@ export const styles = StyleSheet.create({
 
   input: {
     height: 50,
-    width: 335,
+    width: "100%",
     borderWidth: 1,
     marginVertical: 4,
     borderRadius: 10,
@@ -280,10 +279,7 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
     letterSpacing: 0.25,
     color: "black",
-    justifyContent: "flex-start",
     fontFamily: "Encode Sans",
-    textAlign: "left",
-    alignSelf: "flex-start",
     marginLeft: 23,
     marginBottom: 30,
   },
@@ -301,10 +297,10 @@ export const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 10,
-    elevation: 3,
-    backgroundColor: "#4B2E83",
+    borderWidth: 2,
+    borderColor: "#4B2E83",
     alignSelf: "center",
-    width: 335,
+    width: "90%",
     marginTop: 10,
     marginLeft: 5,
   },
@@ -313,7 +309,7 @@ export const styles = StyleSheet.create({
     lineHeight: 21,
     fontWeight: "bold",
     letterSpacing: 0.25,
-    color: "white",
+    color: "#4B2E83",
     fontFamily: "DM Sans",
     textAlign: "center",
   },
@@ -324,12 +320,12 @@ export const styles = StyleSheet.create({
     lineHeight: 18,
     letterSpacing: 0.25,
     color: "black",
-    textAlign: "left",
+    alignSelf: "flex-start",
     marginTop: 10,
     marginLeft: 3,
   },
   modalContainer: {
-    flex: 1, justifyContent: "flex-end", alignItems: "center" 
+    flex: 1, justifyContent: "flex-end", alignItems: "center"
   },
   fullModalView: {
     backgroundColor: "#E4E2F0",
@@ -345,28 +341,29 @@ export const styles = StyleSheet.create({
     width: "100%",
     height: "90%",
     position: "absolute",
-    bottom: 0,
   },
 
   // Ride Request Form styles
 
   formContainer: {
-    paddingHorizontal: 10,
     justifyContent: "center",
     alignItems: "center",
   },
   requestFormContainer: {
-    left: -14,
-    width: "108%",
+    width: "100%",
     borderRadius: 10,
     shadowRadius: 2,
     shadowOpacity: 0.4,
     shadowOffset: { width: 0, height: 7 },
+    elevation: 2,
     shadowColor: "gray",
     paddingHorizontal: 10,
+    paddingVertical: 5,
     backgroundColor: "white",
     justifyContent: "center",
     alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#4B2E83",
   },
   infoText: {
     fontSize: 12,
@@ -465,6 +462,7 @@ export const styles = StyleSheet.create({
   },
   accordianContainer: {
     paddingVertical: 15,
+    marginVertical: 5,
     borderRadius: 10,
     alignContent: "center",
     justifyContent: "center",
@@ -479,6 +477,7 @@ export const styles = StyleSheet.create({
     borderRadius: 5,
   },
   accordianHeaderText: {
+    maxWidth: "90%",
     fontSize: 16,
     fontWeight: "bold",
     textTransform: "capitalize",
@@ -517,7 +516,7 @@ export const styles = StyleSheet.create({
     padding: 20,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    elevation: 5,
+    // elevation: 5,
   },
   // bottom modal styles
   bottomModalView: {
@@ -532,7 +531,7 @@ export const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 4,
-    elevation: 5,
+    // elevation: 5,
     width: "100%",
     height: "50%",
     position: "absolute",
@@ -574,14 +573,15 @@ export const styles = StyleSheet.create({
     width: "100%",
   },
   bottomModalButton: {
-    padding: 20,
+    padding: 10,
     borderRadius: 10,
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
   },
   confirmButton: {
-    backgroundColor: "#4B2E83",
+    borderWidth: 2,
+    borderColor: "#4B2E83",
   },
   cancelButton: {
     backgroundColor: "red",
@@ -758,7 +758,7 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     color: "#4b2e83",
     fontWeight: "bold",
-    paddingBottom: 20,
+    paddingBottom: 10,
   },
 
   // legend
