@@ -9,14 +9,15 @@ import {
   User,
 } from "../../../server/src/api";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, Pressable, Text, View } from "react-native";
+import { Alert, Button, Pressable, Text, View } from "react-native";
 import Map from "./map";
 import { useLocalSearchParams } from "expo-router";
-import IncomingRideRequest from "@/components/incomingRideRequest";
+// import IncomingRideRequest from "@/components/incomingRideRequest";
 import LogoutWarning from "../../components/LogoutWarning";
 import Legend from "@/components/Legend";
 import Profile from "./profile";
 import { Ionicons } from "@expo/vector-icons";
+import TimeService from "@/services/TimeService";
 
 // HaveArrived state
 // NOTE: still unclear if this state is meant to represent if the driver has arrived to pickup student
@@ -144,6 +145,17 @@ export default function HomePage() {
   useEffect(() => {
     // Handler for ACCEPT RIDE
     function handleAcceptRequest(message: WebSocketResponse) {
+      // logic that does not allow driver to  accept ride if shift is over
+      const currentHr: number = Number(
+        momentTimezone.tz(moment.tz.guess()).format("HH")
+      );
+
+      // If outside shift hours (2 AM to 6 PM), show alert and return
+      if (!TimeService.inServicableTime() || shiftEnded) {
+        Alert.alert("Outside Shift Hours");
+        return;
+      }
+
       if ("response" in message && message.response === "ACCEPT_RIDE") {
         setDriverAcceptInfo(message as DriverAcceptResponse);
         // No need to change the component; we stay on incomingReq
