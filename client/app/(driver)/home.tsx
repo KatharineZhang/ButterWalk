@@ -1,53 +1,31 @@
 import { useState, useEffect, useRef } from "react";
-import moment from "moment";
-import momentTimezone from "moment-timezone";
-import {
-  RequestRideResponse,
-  DriverAcceptResponse,
-  User,
-} from "../../../server/src/api";
+import { User, RideRequest } from "../../../server/src/api";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Pressable, Text, View } from "react-native";
+import {
+  Pressable,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import Map, { MapRef } from "./map";
 import { useLocalSearchParams } from "expo-router";
 import IncomingRideRequest from "@/components/IncomingRideRequest";
-import LogoutWarning from "../../components/LogoutWarning";
-import Legend from "@/components/Legend";
-import Profile from "./profile";
+import Legend from "@/components/Student_Legend";
+import Profile from "../(student)/profile";
 import { Ionicons } from "@expo/vector-icons";
+import Notification from "@/components/Notification";
 import TimeService from "@/services/TimeService";
-
-// HaveArrived state
-// NOTE: still unclear if this state is meant to represent if the driver has arrived to pickup student
-// or has arrived at the student's drop off location
-type Location = {
-  latitude: number;
-  longitude: number;
-};
-
-type HaveArrivedState = {
-  pickUpLocation: Location;
-  dropOffLocation: Location;
-  estimatedPickupTime: number;
-  estimatedDropOffTime: number;
-  riderName: string;
-  numPassengers: number;
-  isFlagged: boolean;
-};
+import { styles } from "@/assets/styles";
+import ShiftIsOver from "@/components/ShiftOver";
+import WaitingForRequest from "@/components/WaitingForRequest";
 
 export default function HomePage() {
-  /* Driver netId prop passed in through sign in
-    TODO: fix this once we actually get driver netId from UWPD */
-  const { netid } = useLocalSearchParams<{ netid: string }>();
-
+  /* HOME PAGE STATE */
   // TODO: make "incomingReq" and "acceptRideReq" the same PAGE
   const [whichComponent, setWhichComponent] = useState<
     "waitingForReq" | "incomingReq" | "enRoute" | "arrived" | "endShift"
   >("waitingForReq");
-  const [shiftEnded, setShiftEnded] = useState(false);
-
-  // if the user is currently logged in or not
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   // determines if the flagging functionality is do-able by the driver
   // True only for when enroute’s STATE is “waiting for pick up”,
@@ -56,73 +34,36 @@ export default function HomePage() {
   // TODO: create callback function for components to alter this state
   const [showFlag, setShowFlag] = useState(false);
 
-  // the driver's location
-  const [driverLocation, setDriverLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  }>({ latitude: 0, longitude: 0 });
+  /* USE EFFECTS */
+  useEffect(() => {
+    // TODO: add all the necessary listeners for the websocket connection
+    // TODO: call the route to get the driver's profile
+  }, []);
 
-  // when the driver's current location changes,
-  // the map will call this function to alert the home page of the change
-  // updates home page's record of the user's location
-  // TODO: make this callback fucntion for the <Map> prop to send user location back to home.tsx
-  const userLocationChanged = (location: {
-    latitude: number;
-    longitude: number;
-  }) => {
-    setDriverLocation(location);
-  };
-  
-  // retain a reference to the map to call functions on it later
-  const mapRef = useRef<MapRef>(null);
-  // when the user clicks the recenter button
-  // recenter the map to the user's location
-  const recenter = () => {
-    if (mapRef.current) {
-      mapRef.current.recenterMap();
-    }
-  };
-
-  const [currentComponentHeight, setCurrentComponentHeight] = useState(0.5);
-
-  // HaveArrived state
-  const [haveArrivedState, setHaveArrivedState] =
-    useState<HaveArrivedState | null>(null);
-
-  // what is rendered when home page is first loaded
+  // set the initial component based on the current time
   useEffect(() => {
     // check if the user should be logged out based on the current time
     const interval = setInterval(() => {
       // check current time and compare with the shift hours
-      const currentHr: number = Number(
-        momentTimezone.tz(moment.tz.guess()).format("HH")
-      );
-      if (currentHr < 18 || currentHr > 1) {
+      if (TimeService.inServicableTime()) {
         // in shift
-        if (netid != null) {
-          setWhichComponent("incomingReq");
-        } else {
-          setIsLoggedIn(false);
-          console.error(
-            "netid is null when loading homepage. This should not happen"
-          );
-        }
+        setWhichComponent("incomingReq");
       } else {
         // off shift
-        setShiftEnded(true);
         setWhichComponent("endShift");
       }
-    }, 1000 * 3600); // check every hour ??
+    }, 1000 * 1800); // check every half hour
     return () => {
       // clear the interval when the component unmounts
       clearInterval(interval);
     };
   }, []);
 
-  // state for incoming ride request
-  const [requestInfo, setRequestInfo] = useState<RequestRideResponse | null>(
-    null
-  );
+  /* MAP STATE */
+  const [driverLocation, setDriverLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  }>({ latitude: 0, longitude: 0 });
 
   // the pick up location specified in teh ride request response
   const [pickUpLocation, setPickUpLocation] = useState<{
@@ -136,38 +77,122 @@ export default function HomePage() {
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
 
-  // if the driver has accepted the ride or not
-  const [driverAcceptInfo, setDriverAcceptInfo] =
-    useState<DriverAcceptResponse | null>(null);
-  const [showRoute, setShowRoute] = useState(false);
+  // retain a reference to the map to call functions on it later
+  const mapRef = useRef<MapRef>(null);
 
-  function handleLetsGo(): void {
-    // start drawing the route on the map
-    setShowRoute(true);
-
-    // switch into the “enRoute” view
-    setWhichComponent("enRoute");
-  }
-
-  function handleLogout() {
-    setIsLoggedIn(false);
-  }
-
+  /* PROFILE STATE */
+  const { netid } = useLocalSearchParams<{ netid: string }>();
   const [profileVisible, setProfileVisible] = useState(false);
   const [user, setUser] = useState<User>({} as User);
 
-  // TODO: if shiftEnded && isLoggedIn, display the "need to log out" component
+  /* NOTIFICATION STATE */
+  // what notification to show
+  const [notifState, setNotifState] = useState<{
+    text: string;
+    color: string;
+    boldText?: string;
+  }>({
+    text: "",
+    color: "",
+    boldText: "",
+  });
+
+  /* SIDE BAR STATE */
+  const { height } = useWindowDimensions();
+  // to start, the current component is the ride request form which takes up 40% of the screen height
+  const [currentComponentHeight, setCurrentComponentHeight] = useState(
+    Math.round(height * 0.5)
+  );
+  // when the user clicks the recenter button
+  // recenter the map to the user's location
+  const recenter = () => {
+    if (mapRef.current) {
+      mapRef.current.recenterMap();
+    }
+  };
+
+  /* WAITING FOR REQUEST STATE */
+  const [requestInfo, setRequestInfo] = useState<RideRequest>(
+    {} as RideRequest
+  );
+
+  const onAccept = () => {
+    // TODO: handle the accept ride request logic
+  };
+  const onLetsGo = () => {
+    // TODO: handle the lets go logic
+    setWhichComponent("enRoute");
+  };
+
+  /* INCOMING RIDE REQUEST STATE */
+
+  /* EN ROUTE STATE */
+
+  /* END SHIFT STATE */
+
+  /* WEBSOCKET HANDLERS */
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
+      {/* map component */}
       <Map
         ref={mapRef}
         pickUpLocation={pickUpLocation}
         dropOffLocation={dropOffLocation}
-        driverLocation={driverLocation}
-        userLocationChanged={userLocationChanged}
+        userLocationChanged={(location) => setDriverLocation(location)}
       />
-        
-      {/* Map Key (legend) */}
+      {/* TODO: This is currently the student profile pop-up modal */}
+      <View style={styles.modalContainer}>
+        <Profile
+          isVisible={profileVisible}
+          onClose={() => setProfileVisible(false)}
+          user={user}
+        />
+      </View>
+      {/* profile button in top left corner*/}
+      <View
+        style={{
+          position: "absolute",
+          paddingVertical: 50,
+          paddingHorizontal: 20,
+          width: "100%",
+          height: "100%",
+          shadowOpacity: 0.5,
+          shadowRadius: 5,
+          shadowOffset: { width: 0, height: 1 },
+          shadowColor: "grey",
+          pointerEvents: "box-none",
+        }}
+      >
+        <TouchableOpacity
+          style={{ width: 35, height: 35 }}
+          onPress={() => setProfileVisible(true)}
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              borderRadius: 100,
+            }}
+          >
+            <Ionicons name="menu" size={35} color="#4B2E83" />
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      {/* Notification */}
+      <View
+        style={{ position: "absolute", top: 0, width: "100%", zIndex: 100 }}
+      >
+        {notifState.text != "" && (
+          <Notification
+            text={notifState.text}
+            color={notifState.color}
+            boldText={notifState.boldText}
+          />
+        )}
+      </View>
+
+      {/* Side Bar */}
       <View
         style={{
           position: "absolute",
@@ -201,55 +226,29 @@ export default function HomePage() {
         <Legend />
       </View>
 
-      {/* profile button */}
-      <Pressable
-        style={{ position: "absolute", top: 50, left: 20, zIndex: 100 }}
-        onPress={() => setProfileVisible(true)}
-      >
-        <Ionicons name="person-circle" size={36} color="white" />
-      </Pressable>
-
-      {/* driver profile modal */}
-      <Profile
-        isVisible={profileVisible}
-        onClose={() => setProfileVisible(false)}
-        user={user}
-      />
-
-      {whichComponent === "waitingForReq" && !shiftEnded ? (
-        <View>
-          <Text>Waiting for ride request...</Text>
+      {/* Decide which component to render */}
+      {whichComponent === "waitingForReq" ? (
+        <View style={styles.homePageComponentContainer}>
+          <WaitingForRequest updateSideBarHeight={setCurrentComponentHeight} />
         </View>
       ) : whichComponent === "incomingReq" ? (
-        <IncomingRideRequest
-          requestInfo={{
-            response: "REQUEST_RIDE",
-            requestid: "temp",
-          }}
-          driverAcceptInfo={driverAcceptInfo}
-          onAccept={handleAcceptRequest}
-          onLetsGo={handleLetsGo}
-        />
-      ) : // change to enRouteToPickup and enRouteToDropoff
-      whichComponent === "enRoute" && requestInfo && !shiftEnded ? (
-        <View>
-          <Text>En Route to Pickup</Text>
-          <Text>Pickup Location: {"Pick up location"}</Text>
+        <View style={styles.homePageComponentContainer}>
+          <IncomingRideRequest
+            requestInfo={requestInfo}
+            driverAcceptInfo={null} // @KATHARINE IM SO CONFUSED ON WHAT THIS IS SUPPOSED TO BE
+            onAccept={onAccept}
+            onLetsGo={onLetsGo}
+          />
+        </View>
+      ) : whichComponent === "enRoute" ? (
+        <View style={styles.homePageComponentContainer}>
+          <Text>En Route</Text>
         </View>
       ) : whichComponent === "endShift" ? (
-        isLoggedIn ? (
-          <LogoutWarning onLogout={handleLogout} />
-        ) : (
-          <View>
-            <Text>You are logged out.</Text>
-          </View>
-        )
-      ) : haveArrivedState ? (
-        <View>
-          <Text>You've Arrived</Text>
+        <View style={styles.homePageComponentContainer}>
+          <ShiftIsOver updateSideBarHeight={setCurrentComponentHeight} />
         </View>
-      ) : // show the I've dropped off student button and the flagging component
-      null}
+      ) : null}
     </SafeAreaView>
   );
 }

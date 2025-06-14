@@ -1,10 +1,10 @@
 // components/profile.tsx
 import { styles } from "@/assets/styles";
-import PopUpModal from "@/components/PopUpModal";
+import PopUpModal from "@/components/Student_PopUpModal";
 import { Redirect } from "expo-router";
 import { JSX, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { User, WebSocketResponse } from "../../../server/src/api";
+import { User } from "../../../server/src/api";
 import WebSocketService from "@/services/WebSocketService";
 import { Ionicons } from "@expo/vector-icons";
 

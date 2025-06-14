@@ -1,18 +1,54 @@
-import { View } from "react-native";
+import { View, Text } from "react-native";
 import LogoutWarning from "./LogoutWarning";
+import WebsocketService from "../services/WebSocketService";
+import { useState } from "react";
+import { Redirect } from "expo-router";
 
 type ShiftIsOverProps = {
-  isLoggedIn: boolean;
-  onLogout: () => void;
+  updateSideBarHeight: (height: number) => void;
 };
 
-export default function ShiftIsOver({
-  isLoggedIn,
-  onLogout,
-}: ShiftIsOverProps) {
-  // if driver is logged in, show the logout warning
-  if (isLoggedIn) {
-    return <LogoutWarning onLogout={onLogout} />;
+export default function ShiftIsOver({ updateSideBarHeight }: ShiftIsOverProps) {
+  const [signedIn, setSignedIn] = useState(true);
+  if (signedIn === false) {
+    // disconnect user from the websocket connection
+    WebsocketService.send({ directive: "DISCONNECT" });
+    return (
+      <Redirect
+        href={{
+          pathname: "/driverOrstudent",
+        }}
+      />
+    );
   }
-  return <View>{/* No UI yet, just a dummy componenet */}</View>;
+  return (
+    <View style={{ height: "100%", justifyContent: "flex-end" }}>
+      <LogoutWarning onLogout={() => setSignedIn(false)} />
+      <View
+        style={{
+          bottom: 0,
+          width: "100%",
+          backgroundColor: "white",
+          paddingHorizontal: 16,
+          borderRadius: 10,
+          paddingVertical: "10%",
+        }}
+        onLayout={(event) => {
+          // on render, update the sidebar height to the height of this component
+          updateSideBarHeight(event.nativeEvent.layout.height);
+        }}
+      >
+        <View style={{ height: "1%" }} />
+        {/* Title */}
+        <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+          Your Shift is Over
+        </Text>
+        <View style={{ height: "20%" }} />
+        <Text style={{ fontSize: 15 }}>
+          Log back in when it is your next shift to see new requests.
+        </Text>
+        <View style={{ height: 20 }} />
+      </View>
+    </View>
+  );
 }

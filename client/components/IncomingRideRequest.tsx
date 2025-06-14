@@ -1,12 +1,9 @@
 import React, { useState } from "react";
 import { View, Text, Button, StyleSheet } from "react-native";
-import {
-  RequestRideResponse,
-  DriverAcceptResponse,
-} from "../../server/src/api";
+import { DriverAcceptResponse, RideRequest } from "../../server/src/api";
 
 interface Props {
-  requestInfo: RequestRideResponse;
+  requestInfo: RideRequest;
   driverAcceptInfo: DriverAcceptResponse | null;
   onAccept: () => void;
   onLetsGo: () => void;

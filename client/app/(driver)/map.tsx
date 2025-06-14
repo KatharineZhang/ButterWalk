@@ -18,7 +18,6 @@ import { PurpleZone } from "@/services/ZoneService";
 interface MapProps {
   pickUpLocation: { latitude: number; longitude: number };
   dropOffLocation: { latitude: number; longitude: number };
-  driverLocation: { latitude: number; longitude: number };
   userLocationChanged: (location: {
     latitude: number;
     longitude: number;
@@ -36,7 +35,6 @@ export interface MapRef {
 const Map = forwardRef<MapRef, MapProps>(
   (
     {
-      driverLocation = { latitude: 0, longitude: 0 },
       pickUpLocation = { latitude: 0, longitude: 0 },
       dropOffLocation = { latitude: 0, longitude: 0 },
       userLocationChanged,
@@ -51,11 +49,10 @@ const Map = forwardRef<MapRef, MapProps>(
     }>({ latitude: 0, longitude: 0 });
 
     // what locations to focus on when zooming in on the map
-    // in the format: [userLocation, driverLocation, pickUpLocation, dropOffLocation]
+    // in the format: [userLocation, pickUpLocation, dropOffLocation]
     const [zoomOn, setZoomOn] = useState<
       { latitude: number; longitude: number }[]
     >([
-      { latitude: 0, longitude: 0 },
       { latitude: 0, longitude: 0 },
       { latitude: 0, longitude: 0 },
       { latitude: 0, longitude: 0 },
@@ -87,31 +84,23 @@ const Map = forwardRef<MapRef, MapProps>(
           return newZoomOn;
         });
       }
-      // check zoomOn index 1 aka driverLocation
-      if (!isSameLocation(driverLocation, zoomOn[1])) {
-        setZoomOn((prevZoomOn) => {
-          const newZoomOn = [...prevZoomOn];
-          newZoomOn[1] = driverLocation;
-          return newZoomOn;
-        });
-      }
-      // check zoomOn index 2 aka pickUpLocation
-      if (!isSameLocation(pickUpLocation, zoomOn[2])) {
+      // check zoomOn index 1 aka pickUpLocation
+      if (!isSameLocation(pickUpLocation, zoomOn[1])) {
         setZoomOn((prevZoomOn) => {
           const newZoomOn = [...prevZoomOn];
           newZoomOn[2] = pickUpLocation;
           return newZoomOn;
         });
       }
-      // check zoomOn index 3 aka dropOffLocation
-      if (!isSameLocation(dropOffLocation, zoomOn[3])) {
+      // check zoomOn index 2 aka dropOffLocation
+      if (!isSameLocation(dropOffLocation, zoomOn[2])) {
         setZoomOn((prevZoomOn) => {
           const newZoomOn = [...prevZoomOn];
           newZoomOn[3] = dropOffLocation;
           return newZoomOn;
         });
       }
-    }, [userLocation, driverLocation, pickUpLocation, dropOffLocation]);
+    }, [userLocation, pickUpLocation, dropOffLocation]);
 
     useEffect(() => {
       // when we change what we want to zoom on, zoom on it
@@ -237,10 +226,10 @@ const Map = forwardRef<MapRef, MapProps>(
           </Marker>
           <Marker
             coordinate={{
-              latitude: driverLocation.latitude,
-              longitude: driverLocation.longitude,
+              latitude: userLocation.latitude,
+              longitude: userLocation.longitude,
             }}
-            title={"driverLocation"}
+            title={"userLocation"}
           >
             <View
               style={{
@@ -250,24 +239,23 @@ const Map = forwardRef<MapRef, MapProps>(
                 // opacity: 0.8,
               }}
             >
-              {/* <Ionicons name="locate-sharp" size={25} color="black" /> */}
               <Ionicons name="car-sharp" size={30} color="black" />
             </View>
           </Marker>
           {/* show the directions between the pickup and dropoff locations if they are valid
         if the ride is not currently happening / happened  */}
-            {userLocation.latitude !== 0 &&
-                pickUpLocation.latitude !== 0 &&
-                dropOffLocation.latitude !== 0 && (
-                  <MapViewDirections
-                    origin={userLocation}
-                    waypoints={[pickUpLocation]}
-                    destination={dropOffLocation}
-                    apikey={GOOGLE_MAPS_APIKEY}
-                    strokeWidth={3}
-                    strokeColor="#000000"
-                  />
-                )}
+          {userLocation.latitude !== 0 &&
+            pickUpLocation.latitude !== 0 &&
+            dropOffLocation.latitude !== 0 && (
+              <MapViewDirections
+                origin={userLocation}
+                waypoints={[pickUpLocation]}
+                destination={dropOffLocation}
+                apikey={GOOGLE_MAPS_APIKEY}
+                strokeWidth={3}
+                strokeColor="#000000"
+              />
+            )}
         </MapView>
       </View>
     );
