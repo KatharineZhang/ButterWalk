@@ -1,64 +1,158 @@
-import React, { useState } from "react";
-import { View, Text, Button, StyleSheet } from "react-native";
+import React, { useState, useRef } from "react";
+import { styles } from "@/assets/styles";
+import { View, Text, Button, StyleSheet, Pressable, Image } from "react-native";
 import { DriverAcceptResponse, RideRequest } from "../../server/src/api";
+import BottomSheet from "@gorhom/bottom-sheet";
+import BottomDrawer from "./Student_RideReqBottomDrawer";
 
 interface Props {
   requestInfo: RideRequest;
-  driverAcceptInfo: DriverAcceptResponse | null;
-  onAccept: () => void;
   onLetsGo: () => void;
 }
 
 export default function IncomingRideRequest({
   requestInfo,
-  driverAcceptInfo,
-  onAccept,
   onLetsGo,
 }: Props) {
   const [showDetails, setShowDetails] = useState(false);
 
-  const handleAccept = () => {
-    onAccept();
-    setShowDetails(true);
-  };
+  const bottomSheetRef = useRef<BottomSheet>(null);
 
-  if (!showDetails) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Incoming Ride Request</Text>
-        <Text>Pickup: {requestInfo.response}</Text>
-        <Button title="Accept" onPress={handleAccept} />
-      </View>
-    );
+
+  const onAccept = () => {
+    setShowDetails(true);
   }
 
+  // expand the bottom sheet
+  const expand = () => {
+    if (bottomSheetRef == null) {
+      console.log("bottomSheetRef is null");
+      return;
+    }
+    bottomSheetRef.current?.expand();
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Ride Details</Text>
-      <Text>Pickup: {driverAcceptInfo?.location ?? "Loading..."}</Text>
-      <Text>Drop‑off: {driverAcceptInfo?.destination ?? "Loading..."}</Text>
-      <Text>
-        Passengers: {driverAcceptInfo?.numRiders ?? "Loading..."}
-      </Text>
-      <Button
-        title="Let's go"
-        onPress={onLetsGo}
-        disabled={!driverAcceptInfo}
-      />
+    <View style={{ flex: 1, pointerEvents: "box-none", width: "100%" }}>
+      <BottomDrawer bottomSheetRef={bottomSheetRef}>
+        {showDetails ? (
+          <>
+            {/* Show ride request details */}
+            <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+              Next Ride
+            </Text>
+            {/* ------------------- Your loc -> pick up -> drop off graphic */ -----------------}
+
+            {/* Your location */}
+            <View
+              style={{
+                marginHorizontal: "14%",
+                flexDirection: "row",
+                alignItems: "center",
+                paddingBottom: "5%",
+              }}
+            >
+              <View
+                style={{
+                  width: 15,
+                  height: 15,
+                  borderRadius: 13,
+                  backgroundColor: "#4B2E83",
+                }}
+              />
+              <View style={{ width: "7%" }} />
+              <Text style={{ fontSize: 16 }}>Your Location</Text>
+            </View>
+
+            {/* Pickup location */}
+            <View
+              style={{
+                marginHorizontal: "14%",
+                flexDirection: "row",
+                alignItems: "center",
+                paddingBottom: "5%",
+              }}
+            >
+              <View
+                style={{
+                  width: 15,
+                  height: 15,
+                  borderRadius: 13,
+                  backgroundColor: "#4B2E83",
+                }}
+              />
+              
+              <View style={{ width: "7%" }} />
+              <Text style={{ fontSize: 16 }}>TODO: put pick up location here</Text>
+            </View>
+      
+            {/* Dropoff Location */}
+            <View
+              style={{
+                marginHorizontal: "13.5%",
+                flexDirection: "row",
+                alignItems: "center",
+                paddingBottom: "5%",
+              }}
+            >
+              <Image
+                source={require("@/assets/images/dropoff-location.png")}
+                style={{ width: 20, height: 20, resizeMode: "contain" }}
+              />
+              <View style={{ width: "6.5%" }} />
+              <Text style={{ fontSize: 16 }}> TODO: put Drop off location here</Text>
+            </View>
+
+            {/* Let's Go Button */}
+            <View style={styles.bottomModalButtonContainer}>
+              <Pressable
+                style={[styles.bottomModalButton, styles.confirmButton]}
+                onPress={onLetsGo}
+              >
+                <Text
+                  style={{
+                    color: "#4B2E83",
+                    fontSize: 18,
+                  }}
+                >
+                  Let's Go!
+                </Text>
+              </Pressable>
+            </View>
+          </>
+        ) :  (
+          <>
+            {/* Title */}
+            <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+              New Ride Request
+            </Text>
+
+            {/* Body text */}
+            <Text style={{ fontSize: 16 }}>
+              You have a new ride request! Click 'accept' to start the ride!
+            </Text>
+
+            {/* Accept Request Button */}
+            <View style={styles.bottomModalButtonContainer}>
+              <Pressable
+                style={[styles.bottomModalButton, styles.confirmButton]}
+                onPress={onAccept}
+              >
+                <Text
+                  style={{
+                    color: "#4B2E83",
+                    fontSize: 18,
+                  }}
+                >
+                  Accept
+                </Text>
+              </Pressable>
+            </View>
+          </>
+          )
+        }
+      </BottomDrawer>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    margin: 12,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-});

@@ -235,14 +235,15 @@ export default function HomePage() {
         <View style={styles.homePageComponentContainer}>
           <IncomingRideRequest
             requestInfo={requestInfo}
-            driverAcceptInfo={null} // @KATHARINE IM SO CONFUSED ON WHAT THIS IS SUPPOSED TO BE
-            onAccept={onAccept}
             onLetsGo={onLetsGo}
           />
         </View>
       ) : whichComponent === "enRoute" ? (
         <View style={styles.homePageComponentContainer}>
           <Text>En Route</Text>
+            <Pressable onPress={() => setWhichComponent("incomingReq")}>
+              <Text>Back to Incoming Request (for testing)</Text>
+            </Pressable>
         </View>
       ) : whichComponent === "endShift" ? (
         <View style={styles.homePageComponentContainer}>
