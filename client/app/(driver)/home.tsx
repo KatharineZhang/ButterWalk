@@ -45,8 +45,10 @@ export default function HomePage() {
     // check if the user should be logged out based on the current time
     const interval = setInterval(() => {
       // check current time and compare with the shift hours
-      if (TimeService.inServicableTime()) {
+      if (TimeService.inServicableTime()) { 
         // in shift
+
+        // TODO: this should be "waintingForReq" if the user is logged in. But is "incomingReq" for testing purposes
         setWhichComponent("incomingReq");
       } else {
         // off shift
