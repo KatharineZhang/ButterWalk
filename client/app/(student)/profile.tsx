@@ -1,5 +1,5 @@
 import { styles } from "@/assets/styles";
-import PopUpModal from "@/components/PopUpModal";
+import PopUpModal from "@/components/Student_PopUpModal";
 import { Redirect } from "expo-router";
 import { JSX, useState } from "react";
 import { Pressable, Text, View } from "react-native";
