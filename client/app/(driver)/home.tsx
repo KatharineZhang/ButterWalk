@@ -15,6 +15,7 @@ import LogoutWarning from "../../components/LogoutWarning";
 import Legend from "@/components/Legend";
 import Profile from "./profile";
 import { Ionicons } from "@expo/vector-icons";
+import TimeService from "@/services/TimeService";
 
 // HaveArrived state
 // NOTE: still unclear if this state is meant to represent if the driver has arrived to pickup student
