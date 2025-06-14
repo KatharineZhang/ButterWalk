@@ -19,17 +19,17 @@ import {
   WaitTimeResponse,
   WebSocketResponse,
 } from "../../../server/src/api";
-import RideRequestForm from "@/components/(student)/Student_RideRequestForm";
-import ConfirmRide from "@/components/(student)/Student_ConfirmRide";
+import RideRequestForm from "@/components/Student_RideRequestForm";
+import ConfirmRide from "@/components/Student_ConfirmRide";
 import Notification from "@/components/Notification";
 import FAQ from "./faq";
 import { Ionicons } from "@expo/vector-icons";
 import { styles } from "@/assets/styles";
-import HandleRideComponent from "@/components/(student)/Student_HandleRide";
+import HandleRideComponent from "@/components/Student_HandleRide";
 import { createOpenLink } from "react-native-open-maps";
-import LoadingPageComp from "@/components/(student)/Student_LoadingPage";
+import LoadingPageComp from "@/components/Student_LoadingPage";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import Legend from "@/components/(student)/Student_Legend";
+import Legend from "@/components/Student_Legend";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import React from "react";
 import { View, Text, Animated, Image } from "react-native";
-import { loadingPageCompStyles, styles } from "../../assets/styles";
+import { loadingPageCompStyles, styles } from "../assets/styles";
 import { Ionicons } from "@expo/vector-icons";
 import LoadingDots from "./Student_LoadingDots";
 

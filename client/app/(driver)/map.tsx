@@ -305,7 +305,6 @@ export default function App() {
   return (
     <View style={styles.mapContainer}>
       <SafeAreaProvider style={{ flex: 1 }}>
-        <Header netid={netid as string} />
         <MapView
           ref={mapRef}
           style={styles.map}
