@@ -10,13 +10,13 @@ import {
 } from "react-native";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
-import AutocompleteInput from "./AutocompleteInput";
-import { styles } from "../assets/styles";
-import BottomDrawer from "./BottomDrawer";
-import PopUpModal from "./PopUpModal";
+import AutocompleteInput from "./Student_AutocompleteTextInput";
+import { styles } from "../../assets/styles";
+import BottomDrawer from "./Student_RideReqBottomDrawer";
+import PopUpModal from "./Student_PopUpModal";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { ScrollView } from "react-native-gesture-handler";
-import SegmentedProgressBar from "./SegmentedProgressBar";
+import SegmentedProgressBar from "../SegmentedProgressBar";
 import {
   BuildingService,
   ComparableBuilding,
@@ -31,8 +31,8 @@ import {
   LocationType,
   PlaceSearchResponse,
   PlaceSearchResult,
-} from "../../server/src/api";
-import WebSocketService from "../services/WebSocketService";
+} from "../../../server/src/api";
+import WebSocketService from "../../services/WebSocketService";
 import { CampusZone, PurpleZone } from "@/services/ZoneService";
 
 type RideRequestFormProps = {

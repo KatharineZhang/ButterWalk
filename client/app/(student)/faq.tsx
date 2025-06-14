@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { styles } from "@/assets/styles";
 import Accordion, { AccordionProps } from "@/components/Accordian";
-import PopUpModal from "@/components/PopUpModal";
+import PopUpModal from "@/components/(student)/Student_PopUpModal";
 import { JSX } from "react";
 import { Text, ScrollView, View } from "react-native";
 
