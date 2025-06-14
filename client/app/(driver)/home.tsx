@@ -1,18 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import moment from "moment";
 import momentTimezone from "moment-timezone";
-import WebSocketService from "@/services/WebSocketService";
 import {
   RequestRideResponse,
   DriverAcceptResponse,
-  WebSocketResponse,
   User,
 } from "../../../server/src/api";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, Pressable, Text, View } from "react-native";
-import Map from "./map";
+import { Pressable, Text, View } from "react-native";
+import Map, { MapRef } from "./map";
 import { useLocalSearchParams } from "expo-router";
-import IncomingRideRequest from "@/components/incomingRideRequest";
+import IncomingRideRequest from "@/components/IncomingRideRequest";
 import LogoutWarning from "../../components/LogoutWarning";
 import Legend from "@/components/Legend";
 import Profile from "./profile";
@@ -73,6 +71,18 @@ export default function HomePage() {
   }) => {
     setDriverLocation(location);
   };
+  
+  // retain a reference to the map to call functions on it later
+  const mapRef = useRef<MapRef>(null);
+  // when the user clicks the recenter button
+  // recenter the map to the user's location
+  const recenter = () => {
+    if (mapRef.current) {
+      mapRef.current.recenterMap();
+    }
+  };
+
+  const [currentComponentHeight, setCurrentComponentHeight] = useState(0.5);
 
   // HaveArrived state
   const [haveArrivedState, setHaveArrivedState] =
@@ -80,25 +90,32 @@ export default function HomePage() {
 
   // what is rendered when home page is first loaded
   useEffect(() => {
-    // check current time and compare with the shift hours
-    const currentHr: number = Number(
-      momentTimezone.tz(moment.tz.guess()).format("HH")
-    );
-    if (currentHr < 18 || currentHr > 1) {
-      // in shift
-      if (netid != null) {
-        setWhichComponent("incomingReq");
+    // check if the user should be logged out based on the current time
+    const interval = setInterval(() => {
+      // check current time and compare with the shift hours
+      const currentHr: number = Number(
+        momentTimezone.tz(moment.tz.guess()).format("HH")
+      );
+      if (currentHr < 18 || currentHr > 1) {
+        // in shift
+        if (netid != null) {
+          setWhichComponent("incomingReq");
+        } else {
+          setIsLoggedIn(false);
+          console.error(
+            "netid is null when loading homepage. This should not happen"
+          );
+        }
       } else {
-        setIsLoggedIn(false);
-        console.error(
-          "netid is null when loading homepage. This should not happen"
-        );
+        // off shift
+        setShiftEnded(true);
+        setWhichComponent("endShift");
       }
-    } else {
-      // off shift
-      setShiftEnded(true);
-      setWhichComponent("endShift");
-    }
+    }, 1000 * 3600); // check every hour ??
+    return () => {
+      // clear the interval when the component unmounts
+      clearInterval(interval);
+    };
   }, []);
 
   // state for incoming ride request
@@ -123,55 +140,6 @@ export default function HomePage() {
     useState<DriverAcceptResponse | null>(null);
   const [showRoute, setShowRoute] = useState(false);
 
-  // use effect for incoming ride requests
-  useEffect(() => {
-    const handleIncoming = (msg: WebSocketResponse) => {
-      if ("response" in msg && msg.response === "REQUEST_RIDE") {
-        const req = msg as RequestRideResponse;
-        setRequestInfo(req);
-        setDriverAcceptInfo(null); // reset any old accept
-        setWhichComponent("incomingReq");
-      }
-    };
-
-    WebSocketService.addListener(handleIncoming, "REQUEST_RIDE");
-    return () => {
-      WebSocketService.removeListener(handleIncoming, "REQUEST_RIDE");
-    };
-  }, []);
-
-  // Accept Ride Request Logic
-  useEffect(() => {
-    // Handler for ACCEPT RIDE
-    function handleAcceptRequest(message: WebSocketResponse) {
-      if ("response" in message && message.response === "ACCEPT_RIDE") {
-        setDriverAcceptInfo(message as DriverAcceptResponse);
-        // No need to change the component; we stay on incomingReq
-      }
-    }
-
-    WebSocketService.addListener(handleAcceptRequest, "ACCEPT_RIDE");
-
-    return () => {
-      WebSocketService.removeListener(handleAcceptRequest, "ACCEPT_RIDE");
-    };
-  }, []);
-
-  function handleAcceptRequest(): void {
-    // don’t do anything if we don’t yet have a request
-    if (!requestInfo) {
-      return;
-    }
-
-    const payload = {
-      response: "ACCEPT_RIDE" as const,
-      requestid: requestInfo.requestid,
-      driverNetid: netid,
-    };
-
-    WebSocketService.send(payload as any);
-  }
-
   function handleLetsGo(): void {
     // start drawing the route on the map
     setShowRoute(true);
@@ -187,32 +155,48 @@ export default function HomePage() {
   const [profileVisible, setProfileVisible] = useState(false);
   const [user, setUser] = useState<User>({} as User);
 
-  useEffect(() => {
-    WebSocketService.addListener(handleProfile, "PROFILE");
-    WebSocketService.send({ directive: "PROFILE", netid });
-
-    return () => {
-      WebSocketService.removeListener(handleProfile, "PROFILE");
-    };
-  }, [netid]);
-
-  function handleProfile(msg: WebSocketResponse) {
-    // only run when the response type actually is "PROFILE"
-    if (msg.response === "PROFILE") {
-      // msg.user comes from your ProfileResponse
-      setUser(msg.user);
-    }
-  }
-
   // TODO: if shiftEnded && isLoggedIn, display the "need to log out" component
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      {/* put in params later */}
-      {/* <Map/> && requestInfo && !shiftEnded*/}
-      <Map />
-
+      <Map
+        ref={mapRef}
+        pickUpLocation={pickUpLocation}
+        dropOffLocation={dropOffLocation}
+        driverLocation={driverLocation}
+        userLocationChanged={userLocationChanged}
+      />
+        
       {/* Map Key (legend) */}
-      <View style={{ position: "absolute", bottom: 20, right: 20 }}>
+      <View
+        style={{
+          position: "absolute",
+          // set the height of the sidebar to the height of the current component + padding
+          bottom: currentComponentHeight + 10,
+          left: 10,
+          alignItems: "flex-start",
+        }}
+      >
+        {/* Recenter Button */}
+        <Pressable
+          style={{
+            backgroundColor: "#4b2e83",
+            width: 35,
+            height: 35,
+            borderRadius: 50,
+            borderWidth: 3,
+            borderColor: "white",
+            justifyContent: "center",
+            alignItems: "center",
+            marginBottom: 10,
+            shadowOpacity: 0.3,
+            left: 2,
+          }}
+          onPress={recenter}
+        >
+          <Ionicons name="locate" size={20} color="white" />
+        </Pressable>
+
+        {/* Side map legend */}
         <Legend />
       </View>
 
