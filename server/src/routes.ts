@@ -384,7 +384,7 @@ export const viewRide = async (
   driverLocation: {
     latitude: number;
     longitude: number;
-  } | null //TODO(connor): remove null option, force for ranking
+  }
 ): Promise<ViewRideRequestResponse | ErrorResponse> => {
   let associatedUser: User | null = null;
   try {
@@ -400,6 +400,7 @@ export const viewRide = async (
           driverid,
           driverLocation
         );
+        // TODO: use the driver's location to get wait times and send that back to the driver
         const userNetid = bestRequest.netid;
         associatedUser = await getProfile(t, userNetid);
         setRideRequestStatus(t, "VIEWING", associatedUser.netid);

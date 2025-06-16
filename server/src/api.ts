@@ -60,7 +60,6 @@ export type WebSocketMessage =
       destination: LocationType;
       numRiders: number;
     }
-  | { directive: "ACCEPT_RIDE"; driverid: string }
   | { directive: "CANCEL"; netid: string; role: "STUDENT" | "DRIVER" }
   | { directive: "COMPLETE"; requestid: string }
   | {
@@ -149,8 +148,6 @@ export type WebSocketResponse =
   | SnapLocationResponse
   | RequestRideResponse
   | WaitTimeResponse
-  | AcceptResponse
-  | DriverAcceptResponse
   | CancelResponse
   | CompleteResponse
   | LocationResponse
@@ -243,7 +240,7 @@ export type ViewRideRequestResponse = {
  */
 export type ViewDecisionResponse = {
   response: "VIEW_DECISION";
-  student: GeneralResponse | undefined;
+  student: GeneralResponse | undefined; // with command "ACCEPT_RIDE"
   driver: ViewDecisionDriverResponse;
 };
 export type ViewDecisionDriverResponse = {
@@ -260,24 +257,9 @@ export type WaitTimeResponse = {
   dropOffAddress?: string;
 };
 
-export type AcceptResponse = {
-  response: "ACCEPT_RIDE";
-  student: { response: "ACCEPT_RIDE"; success: true }; // of type GeneralResponse
-  driver: DriverAcceptResponse;
-};
-
 export type RidesExistResponse = {
   response: "RIDES_EXIST";
   ridesExist: boolean;
-};
-
-export type DriverAcceptResponse = {
-  response: "ACCEPT_RIDE";
-  netid: string;
-  location: LocationType;
-  destination: LocationType;
-  numRiders: number;
-  requestid: string;
 };
 
 export type CancelResponse = {
@@ -420,7 +402,7 @@ export type localRideRequest = {
   netid: string;
 };
 
-// Database Types
+/* DATABASE TYPES */
 
 // CREATE TABLE Users ( netid varchar(20) PRIMARY KEY, name text, student_num char(7),
 // phone_num char(10), student_or_driver int); –- 0 for student, 1 for driver
@@ -504,7 +486,7 @@ export type RideRequest = {
   /**
    * The pick up location.
    */
-  locationFrom: LocationType; // TODO: should these be coordinates or location names?
+  locationFrom: LocationType;
   /**
    * The drop off location.
    */
@@ -561,6 +543,7 @@ export type RecentLocation = {
   locations: LocationType[];
 };
 
+/* ZONE STUFF */
 // Zone Service Copy since we can't import it from the client side
 export type Coordinates = {
   latitude: number;

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { User, RideRequest } from "../../../server/src/api";
+import { RideRequest } from "../../../server/src/api";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Pressable,
@@ -12,13 +12,13 @@ import Map, { MapRef } from "./map";
 import { useLocalSearchParams } from "expo-router";
 import IncomingRideRequest from "@/components/IncomingRideRequest";
 import Legend from "@/components/Student_Legend";
-import Profile from "../(student)/profile";
+import Profile from "./profile";
 import { Ionicons } from "@expo/vector-icons";
 import Notification from "@/components/Notification";
 import TimeService from "@/services/TimeService";
 import { styles } from "@/assets/styles";
 import ShiftIsOver from "@/components/ShiftOver";
-import WaitingForRequest from "@/components/WaitingForRequest";
+import NoRequests from "@/components/NoRequests";
 
 export default function HomePage() {
   /* HOME PAGE STATE */
@@ -45,7 +45,7 @@ export default function HomePage() {
     // check if the user should be logged out based on the current time
     const interval = setInterval(() => {
       // check current time and compare with the shift hours
-      if (TimeService.inServicableTime()) { 
+      if (TimeService.inServicableTime()) {
         // in shift
 
         // TODO: this should be "waintingForReq" if the user is logged in. But is "incomingReq" for testing purposes
@@ -85,7 +85,6 @@ export default function HomePage() {
   /* PROFILE STATE */
   const { netid } = useLocalSearchParams<{ netid: string }>();
   const [profileVisible, setProfileVisible] = useState(false);
-  const [user, setUser] = useState<User>({} as User);
 
   /* NOTIFICATION STATE */
   // what notification to show
@@ -119,10 +118,12 @@ export default function HomePage() {
   );
 
   const onAccept = () => {
-    // TODO: handle the accept ride request logic
+    // TODO: handle the accept ride request logic (call "VIEW_RIDE")
+    // if successful, set the requestInfo state to the ride request info
+    // if not successful, show a notification and set currentComponent to "waitingForReq"
   };
   const onLetsGo = () => {
-    // TODO: handle the lets go logic
+    // TODO: handle the lets go logic (websocket call "VIEW_DECISION" with "ACCEPT" tag)
     setWhichComponent("enRoute");
   };
 
@@ -133,6 +134,12 @@ export default function HomePage() {
   /* END SHIFT STATE */
 
   /* WEBSOCKET HANDLERS */
+  const seeIfRidesExist = () => {
+    // TODO: how often should this be called?
+    // call RIDES_EXIST websocket call
+    // if true, set the component to "incomingReq"
+    // if false, set the component to "waitingForReq"
+  };
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -148,7 +155,7 @@ export default function HomePage() {
         <Profile
           isVisible={profileVisible}
           onClose={() => setProfileVisible(false)}
-          user={user}
+          netid={netid}
         />
       </View>
       {/* profile button in top left corner*/}
@@ -231,21 +238,22 @@ export default function HomePage() {
       {/* Decide which component to render */}
       {whichComponent === "waitingForReq" ? (
         <View style={styles.homePageComponentContainer}>
-          <WaitingForRequest updateSideBarHeight={setCurrentComponentHeight} />
+          <NoRequests updateSideBarHeight={setCurrentComponentHeight} />
         </View>
       ) : whichComponent === "incomingReq" ? (
         <View style={styles.homePageComponentContainer}>
           <IncomingRideRequest
             requestInfo={requestInfo}
+            onAccept={onAccept}
             onLetsGo={onLetsGo}
           />
         </View>
       ) : whichComponent === "enRoute" ? (
         <View style={styles.homePageComponentContainer}>
           <Text>En Route</Text>
-            <Pressable onPress={() => setWhichComponent("incomingReq")}>
-              <Text>Back to Incoming Request (for testing)</Text>
-            </Pressable>
+          <Pressable onPress={() => setWhichComponent("incomingReq")}>
+            <Text>Back to Incoming Request (for testing)</Text>
+          </Pressable>
         </View>
       ) : whichComponent === "endShift" ? (
         <View style={styles.homePageComponentContainer}>

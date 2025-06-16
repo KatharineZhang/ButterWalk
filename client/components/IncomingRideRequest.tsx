@@ -1,27 +1,23 @@
-import React, { useState, useRef } from "react";
+/* eslint-disable @typescript-eslint/no-require-imports */
+import React, { useRef } from "react";
 import { styles } from "@/assets/styles";
-import { View, Text, Button, StyleSheet, Pressable, Image } from "react-native";
-import { DriverAcceptResponse, RideRequest } from "../../server/src/api";
+import { View, Text, Pressable, Image } from "react-native";
+import { RideRequest } from "../../server/src/api";
 import BottomSheet from "@gorhom/bottom-sheet";
 import BottomDrawer from "./Student_RideReqBottomDrawer";
 
 interface Props {
-  requestInfo: RideRequest;
+  requestInfo?: RideRequest;
+  onAccept: () => void;
   onLetsGo: () => void;
 }
 
 export default function IncomingRideRequest({
-  requestInfo,
+  requestInfo, // might be undefined initially
+  onAccept,
   onLetsGo,
 }: Props) {
-  const [showDetails, setShowDetails] = useState(false);
-
   const bottomSheetRef = useRef<BottomSheet>(null);
-
-
-  const onAccept = () => {
-    setShowDetails(true);
-  }
 
   // expand the bottom sheet
   const expand = () => {
@@ -35,13 +31,11 @@ export default function IncomingRideRequest({
   return (
     <View style={{ flex: 1, pointerEvents: "box-none", width: "100%" }}>
       <BottomDrawer bottomSheetRef={bottomSheetRef}>
-        {showDetails ? (
+        {requestInfo != undefined ? (
           <>
             {/* Show ride request details */}
-            <Text style={{ fontSize: 20, fontWeight: "bold" }}>
-              Next Ride
-            </Text>
-            {/* ------------------- Your loc -> pick up -> drop off graphic */ -----------------}
+            <Text style={{ fontSize: 20, fontWeight: "bold" }}>Next Ride</Text>
+            {/* ------------------- Your loc -> pick up -> drop off graphic  ----------------- */}
 
             {/* Your location */}
             <View
@@ -81,11 +75,13 @@ export default function IncomingRideRequest({
                   backgroundColor: "#4B2E83",
                 }}
               />
-              
+
               <View style={{ width: "7%" }} />
-              <Text style={{ fontSize: 16 }}>TODO: put pick up location here</Text>
+              <Text style={{ fontSize: 16 }}>
+                TODO: put pick up location here
+              </Text>
             </View>
-      
+
             {/* Dropoff Location */}
             <View
               style={{
@@ -100,7 +96,10 @@ export default function IncomingRideRequest({
                 style={{ width: 20, height: 20, resizeMode: "contain" }}
               />
               <View style={{ width: "6.5%" }} />
-              <Text style={{ fontSize: 16 }}> TODO: put Drop off location here</Text>
+              <Text style={{ fontSize: 16 }}>
+                {" "}
+                TODO: put Drop off location here
+              </Text>
             </View>
 
             {/* Let's Go Button */}
@@ -120,7 +119,7 @@ export default function IncomingRideRequest({
               </Pressable>
             </View>
           </>
-        ) :  (
+        ) : (
           <>
             {/* Title */}
             <Text style={{ fontSize: 20, fontWeight: "bold" }}>
@@ -149,10 +148,8 @@ export default function IncomingRideRequest({
               </Pressable>
             </View>
           </>
-          )
-        }
+        )}
       </BottomDrawer>
     </View>
   );
 }
-
