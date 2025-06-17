@@ -21,7 +21,7 @@ import {
 } from "../../../server/src/api";
 import RideRequestForm from "@/components/Student_RideRequestForm";
 import ConfirmRide from "@/components/Student_ConfirmRide";
-import Notification from "@/components/Notification";
+import Notification from "@/components/Both_Notification";
 import FAQ from "./faq";
 import { Ionicons } from "@expo/vector-icons";
 import { styles } from "@/assets/styles";

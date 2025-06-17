@@ -17,7 +17,7 @@ import BottomDrawer from "./Student_RideReqBottomDrawer";
 import PopUpModal from "./Student_PopUpModal";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { ScrollView } from "react-native-gesture-handler";
-import SegmentedProgressBar from "./SegmentedProgressBar";
+import SegmentedProgressBar from "./Both_SegmentedProgressBar";
 import {
   BuildingService,
   ComparableBuilding,
