@@ -7,6 +7,8 @@ type EnroutePhase = "headingToPickup" | "waitingForPickup" | "headingToDropoff";
 
 interface EnrouteProps {
   requestInfo: RideRequest;
+  driverToPickupDuration: number; // in minutes, might be undefined initially
+  pickupToDropoffDuration: number; // in minutes, might be undefined initially
   changeFlaggingAllowed: (allowed: boolean) => void;
   goHome: () => void;
   changeNotifState: (notif: NotificationType) => void;
@@ -15,6 +17,8 @@ interface EnrouteProps {
 
 export default function Enroute({
   requestInfo,
+  driverToPickupDuration,
+  pickupToDropoffDuration,
   changeFlaggingAllowed: changeFlaggingAllowed,
   goHome: goHome,
   changeNotifState: setNotificationState,
@@ -71,6 +75,7 @@ export default function Enroute({
     return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
   };
 
+  // TODO: fix this UI
   return (
     <View style={{ padding: 16 }}>
       <Text style={{ fontWeight: "bold" }}>Enroute Component</Text>
@@ -79,6 +84,8 @@ export default function Enroute({
       {phase === "headingToPickup" && (
         <View>
           <Text>Heading to Pickup</Text>
+          <Text>Duration: {driverToPickupDuration}</Text>
+          <Text>Duration: {pickupToDropoffDuration}</Text>
           <Text>
             Pickup Location: {JSON.stringify(requestInfo.locationFrom)}
           </Text>

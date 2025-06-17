@@ -6,6 +6,8 @@ import { NotificationType } from "./Both_Notification";
 
 interface RequestAvailableProps {
   requestInfo?: RideRequest;
+  driverToPickupDuration?: number; // in minutes, might be undefined initially
+  pickupToDropoffDuration?: number; // in minutes, might be undefined initially
   onAccept: () => void;
   onLetsGo: () => void;
   changeNotifState: (notif: NotificationType) => void;
@@ -13,6 +15,8 @@ interface RequestAvailableProps {
 
 export default function RequestAvailable({
   requestInfo, // might be undefined initially
+  driverToPickupDuration, // in minutes, might be undefined initially
+  pickupToDropoffDuration, // in minutes, might be undefined initially
   onAccept,
   onLetsGo,
   // TODO: remove this when you implement the notification system
@@ -77,8 +81,10 @@ export default function RequestAvailable({
 
             <View style={{ width: "7%" }} />
             <Text style={{ fontSize: 16 }}>
-              TODO: put pick up location here
+              {requestInfo.locationFrom.name}
             </Text>
+            {/* TODO: fix the UI for duration */}
+            <Text>Duration: {driverToPickupDuration}</Text>
           </View>
 
           {/* Dropoff Location */}
@@ -95,10 +101,9 @@ export default function RequestAvailable({
               style={{ width: 20, height: 20, resizeMode: "contain" }}
             />
             <View style={{ width: "6.5%" }} />
-            <Text style={{ fontSize: 16 }}>
-              {" "}
-              TODO: put Drop off location here
-            </Text>
+            <Text style={{ fontSize: 16 }}>{requestInfo.locationTo.name}</Text>
+            {/* TODO: fix the UI for duration */}
+            <Text>Duration: {pickupToDropoffDuration}</Text>
           </View>
 
           {/* Let's Go Button */}

@@ -388,39 +388,64 @@ export const viewRide = async (
 ): Promise<ViewRideRequestResponse | ErrorResponse> => {
   let associatedUser: User | null = null;
   try {
-    const rideRequest: RideRequest | null = await runTransaction(
-      db,
-      async (t) => {
-        const rideRequests: RideRequest[] = await getRideRequests();
-        if (rideRequests.length === 0) {
-          return null;
-        }
-        const bestRequest: RideRequest = highestRank(
-          rideRequests,
-          driverid,
-          driverLocation
-        );
-        // TODO: use the driver's location to get wait times and send that back to the driver
-        const userNetid = bestRequest.netid;
-        associatedUser = await getProfile(t, userNetid);
-        setRideRequestStatus(t, "VIEWING", associatedUser.netid);
-        return bestRequest;
+    return await runTransaction(db, async (t) => {
+      const rideRequests: RideRequest[] = await getRideRequests();
+      if (rideRequests.length === 0) {
+        return {
+          response: "VIEW_RIDE",
+          rideExists: false,
+        };
       }
-    );
-    if (rideRequest === null) {
+      const bestRequest: RideRequest = highestRank(
+        rideRequests,
+        driverid,
+        driverLocation
+      );
+
+      const driverToPickUpDuration = await getDuration(
+        driverLocation,
+        bestRequest.locationFrom.coordinates,
+        false // we are getting driverETA so don't get addresses
+      ).then((resp) => {
+        if ("duration" in resp) {
+          return resp.duration;
+        } else {
+          // error response
+          throw new Error(
+            `Error getting driver to pick up duration: ${resp.error}`
+          );
+        }
+      });
+
+      const pickUpToDropOffDuration = await getDuration(
+        bestRequest.locationFrom.coordinates,
+        bestRequest.locationTo.coordinates,
+        false // we are getting rideDuration so don't get addresses
+      ).then((resp) => {
+        if ("duration" in resp) {
+          return resp.duration;
+        } else {
+          // error response
+          throw new Error(
+            `Error getting driver to pick up duration: ${resp.error}`
+          );
+        }
+      });
+
+      const userNetid = bestRequest.netid;
+      associatedUser = await getProfile(t, userNetid);
+      if (associatedUser === null) {
+        throw new Error(`Didn't find any User during view ride.`);
+      }
+      setRideRequestStatus(t, "VIEWING", associatedUser.netid);
       return {
         response: "VIEW_RIDE",
-        rideExists: false,
+        rideExists: true,
+        rideRequest: bestRequest,
+        driverToPickUpDuration,
+        pickUpToDropOffDuration,
       };
-    }
-    if (associatedUser === null) {
-      throw new Error(`Didn't find any User during view ride.`);
-    }
-    return {
-      response: "VIEW_RIDE",
-      rideExists: true,
-      rideRequest: rideRequest,
-    };
+    });
   } catch (e) {
     return {
       response: "ERROR",
@@ -466,7 +491,6 @@ export const handleDriverViewChoice = async (
           response: "VIEW_DECISION",
           driver: {
             response: "VIEW_DECISION",
-            providedView: providedView,
             success: true,
           },
           student: {
@@ -494,7 +518,6 @@ export const handleDriverViewChoice = async (
           response: "VIEW_DECISION",
           driver: {
             response: "VIEW_DECISION",
-            providedView: providedView,
             success: true,
           },
           student: undefined,
@@ -519,7 +542,6 @@ export const handleDriverViewChoice = async (
           response: "VIEW_DECISION",
           driver: {
             response: "VIEW_DECISION",
-            providedView: providedView,
             success: true,
           },
           student: undefined,

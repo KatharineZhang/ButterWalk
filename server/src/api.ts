@@ -158,7 +158,6 @@ export type WebSocketResponse =
   | RidesExistResponse
   | ViewRideRequestResponse
   | ViewDecisionResponse
-  | ViewDecisionDriverResponse
   | RecentLocationResponse
   | RecentLocationResponse
   | PlaceSearchResponse;
@@ -178,17 +177,7 @@ export type LocationType = {
 };
 
 export type GeneralResponse = {
-  response:
-    | "CONNECT"
-    | "SIGNIN"
-    | "FINISH_ACC"
-    | "CANCEL"
-    | "COMPLETE"
-    | "ADD_FEEDBACK"
-    | "REPORT"
-    | "BLACKLIST"
-    | "ACCEPT_RIDE"
-    | "DRIVER_ARRIVED";
+  response: Command;
   success: true;
 };
 
@@ -228,6 +217,8 @@ export type ViewRideRequestResponse = {
   response: "VIEW_RIDE";
   rideExists: boolean;
   rideRequest?: RideRequest;
+  driverToPickUpDuration?: number; // in minutes
+  pickUpToDropOffDuration?: number; // in minutes
 };
 
 /**
@@ -240,13 +231,9 @@ export type ViewRideRequestResponse = {
  */
 export type ViewDecisionResponse = {
   response: "VIEW_DECISION";
+  // in cases of Deny or Timeout, this will be undefined
   student: GeneralResponse | undefined; // with command "ACCEPT_RIDE"
-  driver: ViewDecisionDriverResponse;
-};
-export type ViewDecisionDriverResponse = {
-  response: "VIEW_DECISION";
-  providedView: ViewRideRequestResponse;
-  success: boolean;
+  driver: GeneralResponse; // with command "VIEW_DECISION"
 };
 
 export type WaitTimeResponse = {

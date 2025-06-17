@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import Map, { MapRef } from "./map";
 import { useLocalSearchParams } from "expo-router";
-import IncomingRideRequest from "@/components/Driver_RequestAvailable";
+import RequestAvailable from "@/components/Driver_RequestAvailable";
 import Legend from "@/components/Student_Legend";
 import Profile from "./profile";
 import { Ionicons } from "@expo/vector-icons";
@@ -132,6 +132,11 @@ export default function HomePage() {
   };
 
   /* INCOMING RIDE REQUEST STATE */
+  const [driverToPickupDuration, setDriverToPickupDuration] =
+    useState<number>(0);
+  const [pickupToDropoffDuration, setPickupToDropoffDuration] =
+    useState<number>(0);
+
   const onAccept = () => {
     // TODO: handle the accept ride request logic (call "VIEW_RIDE")
     // use driverLocation in the request
@@ -139,7 +144,7 @@ export default function HomePage() {
     console.log(driverLocation);
   };
 
-  // Handler for the "Let's Go" action in IncomingRideRequest
+  // Handler for the "Let's Go" action in RequestAvailable
   const onLetsGo = () => {
     // TODO: implement the logic for when the driver clicks "Let's Go"
     // call the websocket call "VIEW_DECISION" with "ACCEPT" tag
@@ -226,6 +231,10 @@ export default function HomePage() {
       latitude: 0,
       longitude: 0,
     }); // stub location
+
+    // TODO: change the durations to the ones in message
+    setDriverToPickupDuration(0); // stub duration
+    setPickupToDropoffDuration(0); // stub duration
 
     // TODO: handle the lets go logic (websocket call "VIEW_DECISION" with "ACCEPT" tag)
 
@@ -398,8 +407,10 @@ export default function HomePage() {
         </View>
       ) : whichComponent === "incomingReq" ? (
         <View style={styles.homePageComponentContainer}>
-          <IncomingRideRequest
+          <RequestAvailable
             requestInfo={requestInfo}
+            driverToPickupDuration={driverToPickupDuration}
+            pickupToDropoffDuration={pickupToDropoffDuration}
             onAccept={onAccept}
             onLetsGo={onLetsGo}
             changeNotifState={setNotifState}
@@ -409,6 +420,8 @@ export default function HomePage() {
         <View style={styles.homePageComponentContainer}>
           <Enroute
             requestInfo={requestInfo}
+            driverToPickupDuration={driverToPickupDuration}
+            pickupToDropoffDuration={pickupToDropoffDuration}
             changeFlaggingAllowed={setFlaggingAllowed}
             goHome={goHome}
             changeNotifState={setNotifState}
