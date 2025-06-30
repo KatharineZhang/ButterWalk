@@ -7,6 +7,7 @@ import {
   Animated,
   TouchableOpacity,
   useWindowDimensions,
+  Alert,
 } from "react-native";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
@@ -16,7 +17,7 @@ import BottomDrawer from "./Student_RideReqBottomDrawer";
 import PopUpModal from "./Student_PopUpModal";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { ScrollView } from "react-native-gesture-handler";
-import SegmentedProgressBar from "./SegmentedProgressBar";
+import SegmentedProgressBar from "./Both_SegmentedProgressBar";
 import {
   BuildingService,
   ComparableBuilding,
@@ -34,6 +35,9 @@ import {
 } from "../../server/src/api";
 import WebSocketService from "../services/WebSocketService";
 import { CampusZone, PurpleZone } from "@/services/ZoneService";
+import TimeService from "@/services/TimeService";
+import moment from "moment";
+import momentTimezone from "moment-timezone";
 
 type RideRequestFormProps = {
   userLocation: { latitude: number; longitude: number };
@@ -329,6 +333,30 @@ export default function RideRequestForm({
   const goToNumberRiders = () => {
     if (chosenPickup == "" || chosenDropoff == "") {
       alert("Please specify a pickup and dropoff location!");
+      return;
+    }
+
+    // added check to make sure student cannot request ride if outside of service hours
+    const currentTime = momentTimezone.tz(moment(), moment.tz.guess());
+
+    // check if it's a holiday
+    if (TimeService.isHoliday(currentTime)) {
+      const holiday = TimeService.HOLIDAYS_2025.find(
+        (h) => h.date === currentTime.format("YYYY-MM-DD")
+      );
+      Alert.alert(
+        "Service Unavailable",
+        `Service is not available on ${holiday?.name}`
+      );
+      return;
+    }
+
+    // check if within service hours
+    if (!TimeService.inServicableTime()) {
+      Alert.alert(
+        "Service Unavailable",
+        "Service is only available between 6:30 PM and 2:00 AM"
+      );
       return;
     }
 

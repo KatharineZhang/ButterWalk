@@ -208,17 +208,14 @@ export const handleWebSocketMessage = async (
       if (res.response == "ERROR") {
         sendWebSocketMessage(ws, res);
       } else {
-        if (res.driver.providedView.rideRequest?.netid == undefined) {
+        if (input.view.rideRequest?.netid == undefined) {
           throw new Error(
             `Driver allowed to accept ride with no netid: ${input.view}`
           );
         }
         sendWebSocketMessage(ws, res.driver);
         if (res.student !== undefined) {
-          sendMessageToNetid(
-            res.driver.providedView.rideRequest?.netid,
-            res.student
-          );
+          sendMessageToNetid(input.view.rideRequest?.netid, res.student);
         }
       }
       break;
