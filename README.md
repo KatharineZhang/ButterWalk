@@ -40,8 +40,9 @@
 - Add platform-tools path to User variables Path
 - Make an emulator on Android Studio
 - Launch the emulator and download expo go on the phone
-- Switch to Expo Go by pressing 's'
-- Copy paste the link under Metro waiting at "exp://..." into the 'paste url manually' in the emulator's expo go (see [video](https://www.youtube.com/watch?v=uN64m3bUY6M&t=590s))
+- Sometimes it works if you press 'a' in the terminal
+- Otherwise, switch to Expo Go by pressing 's' and
+copy paste the link under Metro waiting at "exp://..." into the 'paste url manually' in the emulator's expo go (see [video](https://www.youtube.com/watch?v=uN64m3bUY6M&t=590s))
 
 # Development
 
