@@ -8,6 +8,7 @@
 - go into the server folder and copy `.env.sample`. Rename the copied file `.env`.
   - Fill in the information by asking someone on the dev team.
 - cd into both the client and server folders and run `npm i`
+  - DO NOT RUN ```npm i``` IN THE PARENT BUTTERWALK DIRECTORY only in the client and server folders otherwise bad things will happen
 - Install the Expo Go app on your phone or a mobile emulator onto your computer.
   - Remember the login details you use to sign in with expo. You will need them soon.
 
