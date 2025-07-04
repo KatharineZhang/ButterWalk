@@ -23,7 +23,6 @@ import Flagging from "@/components/Driver_Flagging";
 
 export default function HomePage() {
   /* HOME PAGE STATE */
-  // TODO: make "incomingReq" and "acceptRideReq" the same PAGE
   const [whichComponent, setWhichComponent] = useState<
     "waitingForReq" | "incomingReq" | "enRoute" | "arrived" | "endShift"
   >("waitingForReq");
@@ -31,7 +30,6 @@ export default function HomePage() {
   /* USE EFFECTS */
   useEffect(() => {
     // TODO: add all the necessary listeners for the websocket connection
-    // TODO: call the route to get the driver's profile
   }, []);
 
   // set the initial component based on the current time
@@ -41,9 +39,7 @@ export default function HomePage() {
       // check current time and compare with the shift hours
       if (TimeService.inServicableTime()) {
         // in shift
-
-        // TODO: this should be "waintingForReq" if the user is logged in. But is "incomingReq" for testing purposes
-        setWhichComponent("incomingReq");
+        setWhichComponent("waitingForReq");
       } else {
         // off shift
         setWhichComponent("endShift");
@@ -57,6 +53,8 @@ export default function HomePage() {
 
   // check if rides exist every 30 seconds
   // to see if we should notify the driver of incoming rides
+  // TODO: to replace with server messaging clients after figuring out
+  // corner case for rides exist (which is not the same as driver is viewing rides)
   useEffect(() => {
     let interval: number | undefined;
     if (whichComponent === "waitingForReq") {
@@ -127,8 +125,7 @@ export default function HomePage() {
   );
 
   const seeIfRidesExist = () => {
-    // TODO: how often should this be called?
-    // call RIDES_EXIST websocket call
+    // TODO: call RIDES_EXIST websocket call
   };
 
   /* INCOMING RIDE REQUEST STATE */
@@ -182,6 +179,7 @@ export default function HomePage() {
   // TODO: remove this override when we add listeners to useEffect
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const ridesExistListener = (message: WebSocketResponse) => {
+    // TODO: implement the logic for when rides exist
     // to appease linter TODO: remove
     console.log(message);
     // if true, set the component to "incomingReq"
@@ -191,6 +189,7 @@ export default function HomePage() {
   // TODO: remove this override when we add listeners to useEffect
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const viewRideListener = (message: WebSocketResponse) => {
+    // TODO: implement the logic for when a ride is viewed
     // to appease linter TODO: remove
     console.log(message);
     // if successful, set the requestInfo state to the ride request info
@@ -236,7 +235,7 @@ export default function HomePage() {
     setDriverToPickupDuration(0); // stub duration
     setPickupToDropoffDuration(0); // stub duration
 
-    // TODO: handle the lets go logic (websocket call "VIEW_DECISION" with "ACCEPT" tag)
+    // TODO: handle the lets go logic that is the result of the websocket call "VIEW_DECISION" with "ACCEPT" tag
 
     setWhichComponent("enRoute");
   };
@@ -244,6 +243,7 @@ export default function HomePage() {
   // TODO: remove this override when we add listeners to useEffect
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const viewDecisionListener = (message: WebSocketResponse) => {
+    // TODO: implement the logic for when a decision is made on a ride request
     // to appease linter TODO: remove
     console.log(message);
     // if successful, go to enRoute component
@@ -254,6 +254,7 @@ export default function HomePage() {
   // TODO: remove this override when we add listeners to useEffect
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const reportStudentListener = (message: WebSocketResponse) => {
+    // TODO: implement the logic for when a student is flagged
     // to appease linter TODO: remove
     console.log(message);
     // if successful, show a notification that the student has been flagged

@@ -1068,8 +1068,6 @@ information to the opposite user (student → driver, driver → student).
 - On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: “LOCATION” }.
 - Returns a json object TO THE OPPOSITE USER (STUDENT OR DRIVER) in the format: 
 { response: “LOCATION”, netid: string, latitude: number, longitude: number } where netid is the id of the opposite user. */
-
-// TODO: THIS MAY NOT NEED TO BE A FUNCTION AND CAN BE HANDLED IN THE WEBSOCKET??
 export const location = async (
   id: string,
   latitude: number,
