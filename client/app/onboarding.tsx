@@ -11,7 +11,7 @@ import {
   ImageSourcePropType,
 } from "react-native";
 import OnboardingItem from "../components/OnboardingItem";
-import Paginator from "@/components/Paginator";
+import Paginator from "@/components/OnboardingPaginator";
 import { Link, router } from "expo-router";
 
 //Onboarding Page

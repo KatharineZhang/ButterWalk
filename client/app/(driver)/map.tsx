@@ -4,7 +4,6 @@ import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import MapViewDirections from "react-native-maps-directions";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import Header from "@/components/Header";
 import { styles } from "@/assets/styles";
 import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
 import { useLocalSearchParams } from "expo-router";
@@ -306,7 +305,6 @@ export default function App() {
   return (
     <View style={styles.mapContainer}>
       <SafeAreaProvider style={{ flex: 1 }}>
-        <Header netid={netid as string} />
         <MapView
           ref={mapRef}
           style={styles.map}

@@ -19,17 +19,17 @@ import {
   WaitTimeResponse,
   WebSocketResponse,
 } from "../../../server/src/api";
-import RideRequestForm from "@/components/RideRequestForm";
-import ConfirmRide from "@/components/ConfirmRide";
+import RideRequestForm from "@/components/Student_RideRequestForm";
+import ConfirmRide from "@/components/Student_ConfirmRide";
+import Notification from "@/components/notification";
 import FAQ from "./faq";
 import { Ionicons } from "@expo/vector-icons";
 import { styles } from "@/assets/styles";
-import HandleRideComponent from "@/components/HandleRideComp";
+import HandleRideComponent from "@/components/Student_HandleRide";
 import { createOpenLink } from "react-native-open-maps";
-import LoadingPageComp from "@/components/loadingPageComp";
-import Notification from "@/components/notification";
+import LoadingPageComp from "@/components/Student_LoadingPage";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import Legend from "@/components/Legend";
+import Legend from "@/components/Student_Legend";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -249,6 +249,11 @@ export default function HomePage() {
     WebSocketService.addListener(handleCompleteOrCancel, "COMPLETE");
     WebSocketService.addListener(handleWaitTime, "WAIT_TIME");
     WebSocketService.addListener(handleDistance, "DISTANCE");
+    WebSocketService.addListener(
+      handleRecentLocationResponse,
+      "RECENT_LOCATIONS"
+    );
+    WebSocketService.addListener(handleDriverArrived, "DRIVER_ARRIVED");
 
     // get the user's profile on first render
     sendProfile();
@@ -340,21 +345,16 @@ export default function HomePage() {
           }
 
           // the driver has accepted the ride  and they are on their way
-          // check if the driver has arrived at the pickup location
-          if (isSameLocation(driverLocation, pickUpLocation)) {
-            setRideStatus("DriverArrived");
-          } else {
-            // else check their ETA in reaching the student
-            WebSocketService.send({
-              directive: "WAIT_TIME",
-              driverLocation,
-              requestid,
-              requestedRide: {
-                pickUpLocation,
-                dropOffLocation,
-              },
-            });
-          }
+          // check their ETA in reaching the student
+          WebSocketService.send({
+            directive: "WAIT_TIME",
+            driverLocation,
+            requestid,
+            requestedRide: {
+              pickUpLocation,
+              dropOffLocation,
+            },
+          });
           break;
         case "DriverArrived":
           // driver arrived. hopefully walk progress is 1
@@ -368,12 +368,6 @@ export default function HomePage() {
           setRideProgress(
             calculateProgress(pickUpLocation, driverLocation, dropOffLocation)
           );
-
-          // check if the driver has reached the dropoff location
-          if (isSameLocation(driverLocation, dropOffLocation)) {
-            setRideStatus("RideCompleted");
-            setRideProgress(1); // set the ride progress to 1 to show the user they have arrived
-          }
           break;
         case "RideCompleted":
           // the ride is completed
@@ -429,10 +423,10 @@ export default function HomePage() {
       // go back to ride request component
       setWhichComponent("rideReq");
 
-      // set the notif state based on the reason for cancellation
-      if (cancelReason.current === "button") {
-        // show the notification based on the response
-        if (message.response === "CANCEL") {
+      // show the notification based on the response
+      if (message.response === "CANCEL") {
+        // set the notif state based on the reason for cancellation
+        if (cancelReason.current === "button") {
           setNotifState({
             text: "Ride successfully canceled",
             color: "#FFCBCB",
@@ -440,18 +434,32 @@ export default function HomePage() {
           });
         } else {
           setNotifState({
-            text: "Ride successfully completed!",
-            color: "#C9FED0",
-            boldText: "completed",
+            text: "Your ride was canceled— timer ran out",
+            color: "#FFCBCB",
+            boldText: "canceled",
           });
         }
       } else {
+        // wait until we recieve message with the ride completed
+        // for us to set the student's ride status to completed
+        setRideStatus("RideCompleted");
+        setRideProgress(1); // set the ride progress to 1 to show the user they have arrived
         setNotifState({
-          text: "Your ride was canceled— timer ran out",
-          color: "#FFCBCB",
-          boldText: "canceled",
+          text: "Ride successfully completed!",
+          color: "#C9FED0",
+          boldText: "completed",
         });
       }
+    }
+  };
+
+  // WEBSOCKET -- DRIVER ARRIVED
+  // when the driver has clicked the button saying they have arrived at the pickup location
+  // notify the user and change the ride status to DriverArrived
+  const handleDriverArrived = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "DRIVER_ARRIVED") {
+      // the driver has arrived at the pickup location
+      setRideStatus("DriverArrived");
     }
   };
 
