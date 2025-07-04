@@ -2,7 +2,6 @@
 import { styles } from "@/assets/styles";
 import { View, Text, Pressable, Image } from "react-native";
 import { RideRequest } from "../../server/src/api";
-import { NotificationType } from "./Both_Notification";
 
 interface RequestAvailableProps {
   requestInfo?: RideRequest;
@@ -10,7 +9,6 @@ interface RequestAvailableProps {
   pickupToDropoffDuration?: number; // in minutes, might be undefined initially
   onAccept: () => void;
   onLetsGo: () => void;
-  changeNotifState: (notif: NotificationType) => void;
 }
 
 export default function RequestAvailable({
@@ -19,9 +17,6 @@ export default function RequestAvailable({
   pickupToDropoffDuration, // in minutes, might be undefined initially
   onAccept,
   onLetsGo,
-  // TODO: remove this when you implement the notification system
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  changeNotifState, // TODO: call this when you need to show a notification
 }: RequestAvailableProps) {
   return (
     <View

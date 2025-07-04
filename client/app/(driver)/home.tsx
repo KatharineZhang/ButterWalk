@@ -1,5 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { RideRequest, WebSocketResponse } from "../../../server/src/api";
+import {
+  ErrorResponse,
+  RideRequest,
+  RidesExistResponse,
+  ViewRideRequestResponse,
+  WebSocketResponse,
+} from "../../../server/src/api";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Pressable,
@@ -20,6 +26,7 @@ import ShiftIsOver from "@/components/Driver_ShiftOver";
 import NoRequests from "@/components/Driver_NoRequests";
 import Enroute from "@/components/Driver_Enroute";
 import Flagging from "@/components/Driver_Flagging";
+import WebSocketService from "@/services/WebSocketService";
 
 export default function HomePage() {
   /* HOME PAGE STATE */
@@ -29,7 +36,11 @@ export default function HomePage() {
 
   /* USE EFFECTS */
   useEffect(() => {
-    // TODO: add all the necessary listeners for the websocket connection
+    WebSocketService.addListener(cancelRideListener, "CANCEL");
+    WebSocketService.addListener(ridesExistListener, "RIDES_EXIST");
+    WebSocketService.addListener(viewRideListener, "VIEW_RIDE");
+    WebSocketService.addListener(viewDecisionListener, "VIEW_DECISION");
+    WebSocketService.addListener(reportStudentListener, "REPORT");
   }, []);
 
   // set the initial component based on the current time
@@ -120,12 +131,11 @@ export default function HomePage() {
   };
 
   /* WAITING FOR REQUEST STATE */
-  const [requestInfo, setRequestInfo] = useState<RideRequest>(
-    {} as RideRequest
-  );
-
   const seeIfRidesExist = () => {
-    // TODO: call RIDES_EXIST websocket call
+    // call the websocket call to see if rides exist
+    WebSocketService.send({
+      directive: "RIDES_EXIST",
+    });
   };
 
   /* INCOMING RIDE REQUEST STATE */
@@ -133,18 +143,31 @@ export default function HomePage() {
     useState<number>(0);
   const [pickupToDropoffDuration, setPickupToDropoffDuration] =
     useState<number>(0);
+  const [requestInfo, setRequestInfo] = useState<RideRequest>(
+    {} as RideRequest
+  );
 
   const onAccept = () => {
-    // TODO: handle the accept ride request logic (call "VIEW_RIDE")
+    // when the driver clicks "Accept"
+    // call "VIEW_RIDE" websocket call to get the ride request info
     // use driverLocation in the request
-    // to appease linter TODO: remove
-    console.log(driverLocation);
+    WebSocketService.send({
+      directive: "VIEW_RIDE",
+      driverid: netid,
+      driverLocation: driverLocation,
+    });
   };
 
   // Handler for the "Let's Go" action in RequestAvailable
   const onLetsGo = () => {
-    // TODO: implement the logic for when the driver clicks "Let's Go"
+    // when the driver clicks "Let's Go"
     // call the websocket call "VIEW_DECISION" with "ACCEPT" tag
+    WebSocketService.send({
+      directive: "VIEW_DECISION",
+      driverid: netid,
+      view: {} as ViewRideRequestResponse, // TODO: remove this
+      decision: "ACCEPT",
+    });
   };
 
   /* EN ROUTE STATE */
@@ -155,115 +178,188 @@ export default function HomePage() {
   const [flaggingAllowed, setFlaggingAllowed] = useState(false);
   const [flagPopupVisible, setFlagPopupVisible] = useState(false);
 
-  const flagStudent = () => {
+  const flagStudent = (reason: string) => {
+    if (!requestInfo.requestId) {
+      return; // TODO: handle error case where requestId is not set
+    }
     // call the REPORT route
+    WebSocketService.send({
+      directive: "REPORT",
+      netid: requestInfo.netid, // the student netid
+      requestid: requestInfo.requestId, // the ride request id
+      reason,
+    });
   };
 
   const cancelRide = () => {
-    // TODO: call the websocket call to cancel the ride
-    // if successful, set the current component to "waitingForReq"
-    // if not successful, log the error
+    // call the websocket call to cancel the ride
+    WebSocketService.send({
+      directive: "CANCEL",
+      netid,
+      role: "DRIVER",
+    });
   };
 
   const goHome = () => {
     // reset all fields
+    resetAllFields();
     // see if there are more rides available
     // this function will set the current component to "waitingForReq" or "incomingReq"
     seeIfRidesExist();
   };
 
+  const resetAllFields = () => {
+    // reset all fields to their initial state
+    setDriverLocation({ latitude: 0, longitude: 0 });
+    setPickUpLocation({ latitude: 0, longitude: 0 });
+    setDropOffLocation({ latitude: 0, longitude: 0 });
+    setDriverToPickupDuration(0);
+    setPickupToDropoffDuration(0);
+    setRequestInfo({} as RideRequest);
+    setFlaggingAllowed(false);
+    setFlagPopupVisible(false);
+    setNotifState({
+      text: "",
+      color: "",
+      boldText: "",
+    });
+    setWhichComponent("waitingForReq");
+  };
+
   /* END SHIFT STATE */
 
   /* WEBSOCKET Listeners */
+  // WEBSOCKET - CANCEL
+  const cancelRideListener = (message: WebSocketResponse) => {
+    // recived a message that ride is cancelled
+    if ("response" in message && message.response === "CANCEL") {
+      // if successful, set the current component to "waitingForReq"
+      resetAllFields();
+      setWhichComponent("waitingForReq");
+      setNotifState({
+        text: "Ride cancelled successfully",
+        color: "#4B2E83",
+        boldText: "cancelled",
+      });
+    } else {
+      // if not successful, log the error
+      const errMessage = message as ErrorResponse;
+      console.log("Failed to cancel ride: ", errMessage.error);
+    }
+  };
 
-  // TODO: remove this override when we add listeners to useEffect
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // WEBSOCKET - RIDES_EXIST
   const ridesExistListener = (message: WebSocketResponse) => {
-    // TODO: implement the logic for when rides exist
-    // to appease linter TODO: remove
-    console.log(message);
-    // if true, set the component to "incomingReq"
-    // if false, set the component to "waitingForReq"
+    if ("response" in message && message.response === "RIDES_EXIST") {
+      const ridesExistMessage = message as RidesExistResponse;
+      if (ridesExistMessage.ridesExist) {
+        // if true, set the component to "incomingReq"
+        setWhichComponent("incomingReq");
+        setNotifState({
+          text: "New ride request available",
+          color: "#4B2E83",
+          boldText: "new ride",
+        });
+      } else {
+        // if false, set the component to "waitingForReq"
+        setWhichComponent("waitingForReq");
+      }
+    } else {
+      const errMessage = message as ErrorResponse;
+      console.log("Failed to see if rides exist: ", errMessage.error);
+    }
   };
 
-  // TODO: remove this override when we add listeners to useEffect
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // WEBSOCKET - VIEW_RIDE
   const viewRideListener = (message: WebSocketResponse) => {
-    // TODO: implement the logic for when a ride is viewed
-    // to appease linter TODO: remove
-    console.log(message);
-    // if successful, set the requestInfo state to the ride request info
-    // if not successful, show a notification and set currentComponent to "waitingForReq"
+    if ("response" in message && message.response === "VIEW_RIDE") {
+      const viewReqResponse = message as ViewRideRequestResponse;
+      if (viewReqResponse.rideInfo) {
+        // if the ride request info exists, then the view was successful
+        // set the requestInfo state to the ride request info
+        setRequestInfo(viewReqResponse.rideInfo.rideRequest);
 
-    // TODO: remove this stub once the websocket call is implemented
-    setRequestInfo({
-      requestId: "stub-request-id",
-      netid: "stub-student-netid",
-      driverid: "stub-driver-id",
-      completedAt: null,
-      locationFrom: {
-        name: "",
-        address: "",
-        coordinates: {
-          latitude: 0,
-          longitude: 0,
-        },
-      }, // stub location
-      locationTo: {
-        name: "",
-        address: "",
-        coordinates: {
-          latitude: 0,
-          longitude: 0,
-        },
-      }, // stub location
-      numRiders: 1,
-      status: "REQUESTED",
-    });
+        // set the pick up and drop off locations coordinates
+        // (the names can be extracted from the requestInfo if needed)
+        setPickUpLocation(
+          viewReqResponse.rideInfo.rideRequest.locationFrom.coordinates
+        );
+        setDropOffLocation(
+          viewReqResponse.rideInfo.rideRequest.locationTo.coordinates
+        );
 
-    // TODO: set the pick up and drop off locations based on the requestInfo
-    setPickUpLocation({
-      latitude: 0,
-      longitude: 0,
-    }); // stub location
-    setDropOffLocation({
-      latitude: 0,
-      longitude: 0,
-    }); // stub location
-
-    // TODO: change the durations to the ones in message
-    setDriverToPickupDuration(0); // stub duration
-    setPickupToDropoffDuration(0); // stub duration
-
-    // TODO: handle the lets go logic that is the result of the websocket call "VIEW_DECISION" with "ACCEPT" tag
-
-    setWhichComponent("enRoute");
+        // set the durations
+        setDriverToPickupDuration(
+          viewReqResponse.rideInfo.driverToPickUpDuration
+        );
+        setPickupToDropoffDuration(
+          viewReqResponse.rideInfo.pickUpToDropOffDuration
+        );
+      } else {
+        // if the ride request info does not exist, then the view was not successful
+        // if not successful, show a notification and set currentComponent to "waitingForReq"
+        setNotifState({
+          text: "The ride you were trying to view does not exist anymore.",
+          color: "#FF0000",
+        });
+        setWhichComponent("waitingForReq"); // go to no requests page TODO: check this is correct behavior
+      }
+    } else {
+      const errMessage = message as ErrorResponse;
+      console.log("Failed to view ride request: ", errMessage.error);
+    }
   };
 
-  // TODO: remove this override when we add listeners to useEffect
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // WEBSOCKET - VIEW_DECISION
   const viewDecisionListener = (message: WebSocketResponse) => {
-    // TODO: implement the logic for when a decision is made on a ride request
-    // to appease linter TODO: remove
-    console.log(message);
-    // if successful, go to enRoute component
-    // if not successful, show a notification and set currentComponent to "waitingForReq"
-    setWhichComponent("enRoute");
+    // the logic for when a decision is made on a ride request
+    if ("response" in message && message.response === "VIEW_DECISION") {
+      if ("success" in message && message.success == true) {
+        // if the decision was successful, set the current component to "enRoute"
+        setNotifState({
+          text: "Ride accepted successfully",
+          color: "#4B2E83",
+          boldText: "accepted",
+        });
+        setWhichComponent("enRoute");
+      } else {
+        // if the decision was not successful, show a notification and set currentComponent to "waitingForReq"
+        setNotifState({
+          text: "Failed to accept ride request",
+          color: "#FF0000",
+        });
+        setWhichComponent("waitingForReq"); // go to no requests page TODO: check this is correct behavior
+      }
+    } else {
+      const errMessage = message as ErrorResponse;
+      console.log("Failed to accept ride request: ", errMessage.error);
+    }
   };
 
-  // TODO: remove this override when we add listeners to useEffect
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // WEBSOCKET - REPORT
   const reportStudentListener = (message: WebSocketResponse) => {
-    // TODO: implement the logic for when a student is flagged
-    // to appease linter TODO: remove
-    console.log(message);
-    // if successful, show a notification that the student has been flagged
-    setFlagPopupVisible(false);
-    setNotifState({
-      text: "Student has been flagged",
-      color: "#4B2E83",
-      boldText: "flagged",
-    });
+    //  logic for when a student is flagged
+    if ("response" in message && message.response === "REPORT") {
+      if ("success" in message && message.success === true) {
+        // if successful, show a notification that the student has been flagged
+        setFlagPopupVisible(false); // close the flagging popup
+        setNotifState({
+          text: "Student has been flagged",
+          color: "#4B2E83",
+          boldText: "flagged",
+        });
+      } else {
+        // if not successful, show a notification that the student could not be flagged
+        setNotifState({
+          text: "Failed to flag student",
+          color: "#FF0000",
+        });
+        setFlagPopupVisible(false); // close the flagging popup
+      }
+    } else {
+      const errMessage = message as ErrorResponse;
+      console.log("Failed to flag student: ", errMessage.error);
+    }
   };
 
   return (
@@ -414,7 +510,6 @@ export default function HomePage() {
             pickupToDropoffDuration={pickupToDropoffDuration}
             onAccept={onAccept}
             onLetsGo={onLetsGo}
-            changeNotifState={setNotifState}
           />
         </View>
       ) : whichComponent === "enRoute" ? (

@@ -469,7 +469,7 @@ export const handleDriverViewChoice = async (
   providedView: ViewRideRequestResponse,
   decision: "ACCEPT" | "DENY" | "TIMEOUT" | "ERROR"
 ): Promise<ViewDecisionResponse | ErrorResponse> => {
-  const requestNetid = providedView.rideRequest?.netid;
+  const requestNetid = providedView.rideInfo?.rideRequest.netid;
   if (typeof requestNetid !== "string") {
     return {
       response: "ERROR",

@@ -124,7 +124,6 @@ export type WebSocketMessage =
       driverid: string;
       view: ViewRideRequestResponse;
       decision: "ACCEPT" | "DENY" | "TIMEOUT" | "ERROR";
-      tag: string; // used to identify the response
     }
   | {
       directive: "DRIVER_ARRIVED";
@@ -216,9 +215,12 @@ export type RequestRideResponse = {
 export type ViewRideRequestResponse = {
   response: "VIEW_RIDE";
   rideExists: boolean;
-  rideRequest?: RideRequest;
-  driverToPickUpDuration?: number; // in minutes
-  pickUpToDropOffDuration?: number; // in minutes
+  rideInfo?: {
+    // if the ride exists, this will be defined
+    rideRequest: RideRequest;
+    driverToPickUpDuration: number; // in minutes
+    pickUpToDropOffDuration: number; // in minutes
+  };
 };
 
 /**
