@@ -120,8 +120,8 @@ const Map = forwardRef<MapRef, MapProps>(
           : // default case
             ""
       : // local
-        process.env.EXPO_PUBLIC_LOCAL_GOOGLE_MAPS_APIKEY
-        ? process.env.EXPO_PUBLIC_LOCAL_GOOGLE_MAPS_APIKEY
+        process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
+        ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
         : "";
 
     // used for map zooming

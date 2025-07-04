@@ -2,12 +2,13 @@
 
 - Git clone this repo
 - If you haven't already, you need to also install `Node.js v20.18.0`
-- cd into the client folder and copy the `.env.sample`. Rename the copied file `.env`.
+- go into the client folder and copy the `.env.sample`. Rename the copied file `.env`.
   - Fill in the EXPO_PUBLIC_IP_ADDRESS with your publically accessible IPv4 ip address. Windows instructions are in the `.env.sample` (someone please add the mac and linux versions if you know).
   - Fill in the rest of the information by asking someone on the dev team.
-- cd into the server folder and copy `.env.sample`. Rename the copied file `.env`.
+- go into the server folder and copy `.env.sample`. Rename the copied file `.env`.
   - Fill in the information by asking someone on the dev team.
 - cd into both the client and server folders and run `npm i`
+  - DO NOT RUN ```npm i``` IN THE PARENT BUTTERWALK DIRECTORY only in the client and server folders otherwise bad things will happen
 - Install the Expo Go app on your phone or a mobile emulator onto your computer.
   - Remember the login details you use to sign in with expo. You will need them soon.
 
@@ -40,8 +41,9 @@
 - Add platform-tools path to User variables Path
 - Make an emulator on Android Studio
 - Launch the emulator and download expo go on the phone
-- Switch to Expo Go by pressing 's'
-- Copy paste the link under Metro waiting at "exp://..." into the 'paste url manually' in the emulator's expo go (see [video](https://www.youtube.com/watch?v=uN64m3bUY6M&t=590s))
+- Sometimes it works if you press 'a' in the terminal
+- Otherwise, switch to Expo Go by pressing 's' and
+copy paste the link under Metro waiting at "exp://..." into the 'paste url manually' in the emulator's expo go (see [video](https://www.youtube.com/watch?v=uN64m3bUY6M&t=590s))
 
 # Development
 
