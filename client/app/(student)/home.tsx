@@ -257,6 +257,8 @@ export default function HomePage() {
 
     // get the user's profile on first render
     sendProfile();
+    // get the user's locations on first render
+    sendRecentLocation();
   }, []);
 
   // logic that should happen when the component FIRST changes
@@ -388,10 +390,26 @@ export default function HomePage() {
   const handleProfileResponse = (message: WebSocketResponse) => {
     if (message.response === "PROFILE") {
       setUser(message.user as User);
-      setRecentLocations(message.locations as LocationType[]);
     } else {
       // something went wrong
       console.log("Profile response error: ", message);
+    }
+  };
+
+  // WEBSOCKET -- RECENT_LOCATION
+  const sendRecentLocation = async () => {
+    WebSocketService.send({
+      directive: "RECENT_LOCATIONS",
+      netid: netid,
+    });
+  };
+
+  const handleRecentLocationResponse = (message: WebSocketResponse) => {
+    if (message.response === "RECENT_LOCATIONS") {
+      setRecentLocations(message.locations as LocationType[]);
+    } else {
+      // something went wrong
+      console.log("Recent location response error: ", message);
     }
   };
 
@@ -525,6 +543,7 @@ export default function HomePage() {
       setNotifState({
         text: errorMessage.error,
         color: "#FFCBCB",
+        boldText: "error",
       });
       // go back to request ride
       setWhichComponent("rideReq");
@@ -583,10 +602,10 @@ export default function HomePage() {
           pickUpLocation={pickUpLocation}
           dropOffLocation={dropOffLocation}
           driverLocation={driverLocation}
-          startLocation={startLocation}
           userLocationChanged={userLocationChanged}
           status={rideStatus}
-          whichComponent={whichComponent}
+          startLocation={startLocation}
+          whichComponent={"rideReq"}
         />
         {/* profile pop-up modal */}
         <View style={styles.modalContainer}>
