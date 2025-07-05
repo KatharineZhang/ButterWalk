@@ -32,6 +32,7 @@ import {
   ErrorResponse,
   RideRequest,
   SnapLocationResponse,
+  ViewDecisionResponse,
 } from "./api";
 import { Timestamp } from "firebase/firestore";
 
@@ -202,23 +203,18 @@ export const handleWebSocketMessage = async (
       }
       const res = await handleDriverViewChoice(
         input.driverid,
-        input.view,
+        input.netid,
         input.decision
       );
       if (res.response == "ERROR") {
         sendWebSocketMessage(ws, res);
       } else {
-        if (input.view.rideInfo?.rideRequest.netid == undefined) {
-          throw new Error(
-            `Driver allowed to accept ride with no netid: ${input.view}`
-          );
-        }
-        sendWebSocketMessage(ws, res.driver);
-        if (res.student !== undefined) {
-          sendMessageToNetid(
-            input.view.rideInfo?.rideRequest.netid,
-            res.student
-          );
+        const viewDecisionResponse = res as ViewDecisionResponse;
+        sendWebSocketMessage(ws, viewDecisionResponse.driver);
+
+        // if there is a message to send to the student, send it
+        if (viewDecisionResponse.student !== undefined) {
+          sendMessageToNetid(input.netid, viewDecisionResponse.student);
         }
       }
       break;

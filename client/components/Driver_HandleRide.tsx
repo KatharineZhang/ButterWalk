@@ -3,9 +3,13 @@ import { View, Text, Button } from "react-native";
 import { RideRequest } from "../../server/src/api";
 import { NotificationType } from "./Both_Notification";
 
-type EnroutePhase = "headingToPickup" | "waitingForPickup" | "headingToDropoff";
+type HandleRidePhase =
+  | "headingToPickup"
+  | "waitingForPickup"
+  | "headingToDropoff"
+  | "arrivedAtDropoff";
 
-interface EnrouteProps {
+interface HandleRideProps {
   requestInfo: RideRequest;
   driverToPickupDuration: number; // in minutes, might be undefined initially
   pickupToDropoffDuration: number; // in minutes, might be undefined initially
@@ -15,7 +19,7 @@ interface EnrouteProps {
   onCancel: () => void;
 }
 
-export default function Enroute({
+export default function HandleRide({
   requestInfo,
   driverToPickupDuration,
   pickupToDropoffDuration,
@@ -23,27 +27,27 @@ export default function Enroute({
   goHome: goHome,
   changeNotifState: setNotificationState,
   onCancel,
-}: EnrouteProps) {
+}: HandleRideProps) {
   // State to track which phase the ride is in
-  const [phase, setPhase] = useState<EnroutePhase>("headingToPickup");
+  const [phase, setPhase] = useState<HandleRidePhase>("headingToPickup");
 
   // When timer is done in "waitingForPickup" state
   const [timerDone, setTimerDone] = useState(false);
   const [seconds, setSeconds] = useState(5 * 60); // 5 minutes
 
   useEffect(() => {
-    if (phase === "waitingForPickup") {
-      changeFlaggingAllowed(true);
-      // Update seconds every second
-      const interval = setInterval(() => {
-        setSeconds((prevSeconds) => prevSeconds - 1);
-      }, 1000);
-      // TODO: make sure timer actually stops
-      return () => clearInterval(interval);
-    } else if (phase === "headingToDropoff") {
-      changeFlaggingAllowed(true);
-    } else {
+    if (phase === 'headingToPickup'){
       changeFlaggingAllowed(false);
+    } else {
+      if (phase === "waitingForPickup") {
+        changeFlaggingAllowed(true);
+        // Update seconds every second
+        const interval = setInterval(() => {
+          setSeconds((prevSeconds) => prevSeconds - 1);
+        }, 1000);
+        // TODO: make sure timer actually stops
+        return () => clearInterval(interval);
+      }
     }
   }, [phase]);
 
@@ -78,10 +82,10 @@ export default function Enroute({
   // TODO: fix this UI
   return (
     <View style={{ padding: 16 }}>
-      <Text style={{ fontWeight: "bold" }}>Enroute Component</Text>
+      <Text style={{ fontWeight: "bold" }}>HandleRide Component</Text>
 
       {/* Phase-specific Views */}
-      {phase === "headingToPickup" && (
+      {phase === "headingToPickup" ? (
         <View>
           <Text>Heading to Pickup</Text>
           <Text>Duration: {driverToPickupDuration}</Text>
@@ -94,9 +98,7 @@ export default function Enroute({
             onPress={() => setPhase("waitingForPickup")}
           />
         </View>
-      )}
-
-      {phase === "waitingForPickup" && (
+      ) : phase === "waitingForPickup" ? (
         <View>
           <Text>Waiting for Pickup</Text>
           <Text>
@@ -109,15 +111,19 @@ export default function Enroute({
           />
           {timerDone && <Button title="Cancel Ride" onPress={cancelRide} />}
         </View>
-      )}
-
-      {phase === "headingToDropoff" && (
+      ) : phase === "headingToDropoff" ? (
         <View>
           <Text>Heading to Dropoff</Text>
           <Text>
             Dropoff Location: {JSON.stringify(requestInfo.locationTo)}
           </Text>
           <Button title="Arrived at dropoff" onPress={goHome} />
+        </View>
+      ) : (
+        <View>
+          <Text>Arrived at Dropoff</Text>
+          <Text>Thank you for completing the ride!</Text>
+          <Button title="Go Home" onPress={goHome} />
         </View>
       )}
     </View>

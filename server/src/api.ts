@@ -122,7 +122,7 @@ export type WebSocketMessage =
   | {
       directive: "VIEW_DECISION";
       driverid: string;
-      view: ViewRideRequestResponse;
+      netid: string; // the student who requested the ride
       decision: "ACCEPT" | "DENY" | "TIMEOUT" | "ERROR";
     }
   | {
@@ -233,8 +233,7 @@ export type ViewRideRequestResponse = {
  */
 export type ViewDecisionResponse = {
   response: "VIEW_DECISION";
-  // in cases of Deny or Timeout, this will be undefined
-  student: GeneralResponse | undefined; // with command "ACCEPT_RIDE"
+  student?: GeneralResponse; // with command "ACCEPT_RIDE"
   driver: GeneralResponse; // with command "VIEW_DECISION"
 };
 
@@ -446,7 +445,8 @@ export type RideRequestStatus =
  */
 export type RideRequest = {
   /**
-   * ID of this request (?)
+   * ID of this request
+   * will be undefined if the request has not been saved to the database yet.
    */
   requestId?: string;
   /**

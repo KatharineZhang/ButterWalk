@@ -10,10 +10,10 @@ interface NotificationProps {
 }
 
 export type NotificationType = {
-  text: string,
-  color: string,
-  boldText?: string,
-}
+  text: string;
+  color: string;
+  boldText?: string;
+};
 
 const Notification: React.FC<NotificationProps> = ({
   text,

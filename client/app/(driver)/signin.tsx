@@ -14,8 +14,6 @@ import * as WebBrowser from "expo-web-browser";
 // @ts-expect-error the image does exists so get rid of the error
 import butterWalkLogo from "@/assets/images/butterWalkLogo.png";
 
-
-
 WebBrowser.maybeCompleteAuthSession();
 
 const Login = () => {
@@ -36,20 +34,19 @@ const Login = () => {
       setSignedIn(false);
       setErrMsg("Driver ID must be exactly 7 digits.");
     }
-  }
+  };
 
-  
   // if signed in successfully, redirect
-  return signedIn && netid ?
-   <Redirect
+  return signedIn && netid ? (
+    <Redirect
       href={{
         pathname: "/(driver)/home",
         params: {
           netid: netid,
-          },
-        }}
-      />
-    : (
+        },
+      }}
+    />
+  ) : (
     <View style={styles.container}>
       <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
         <Text style={styles.appNameText}>Husky ButterWalk</Text>
@@ -57,20 +54,18 @@ const Login = () => {
         <Text style={styles.signInText}>Driver Sign in</Text>
         <View style={{ height: 20 }}></View>
 
-        <Text style={{ fontSize: 17 }}>
-          Driver ID
-        </Text>
-       
+        <Text style={{ fontSize: 17 }}>Driver ID</Text>
+
         {/* driver signin ID input box */}
         <TextInput
           value={driverId}
           style={[styles.input, driverId && styles.inputFocused]}
           placeholder="Driver ID"
           placeholderTextColor={"#808080"}
-          onChangeText={(text : string) => setDriverId(text)}
+          onChangeText={(text: string) => setDriverId(text)}
           autoCapitalize="none"
         />
-        
+
         <Text style={{ color: "red" }}>{errMsg}</Text>
 
         <Pressable
@@ -78,7 +73,7 @@ const Login = () => {
           onPress={() => {
             checkDriverIdInput();
           }}
-        > 
+        >
           <Text style={styles.signInText}>Sign In</Text>
         </Pressable>
 

@@ -1,23 +1,19 @@
 // components/profile.tsx
-import { Redirect } from "expo-router";
-import { useState } from "react";
 import { Pressable, View, Text } from "react-native";
-import WebSocketService from "@/services/WebSocketService";
 
 interface ProfileProps {
   isVisible: boolean;
-  onClose: () => void;
   netid: string;
+  onClose: () => void;
+  onLogOut: () => void;
 }
 
-export default function Profile({ isVisible, onClose, netid }: ProfileProps) {
-  const [signedOut, setSignedOut] = useState(false);
-
-  if (signedOut) {
-    WebSocketService.send({ directive: "DISCONNECT" });
-    return <Redirect href={{ pathname: "/driverOrstudent" }} />;
-  }
-
+export default function Profile({
+  isVisible,
+  onClose,
+  onLogOut,
+  netid,
+}: ProfileProps) {
   // TODO: fix this styling!!
   return isVisible ? (
     <View>
@@ -28,7 +24,7 @@ export default function Profile({ isVisible, onClose, netid }: ProfileProps) {
         <Text>Close Profile</Text>
       </Pressable>
       <Pressable
-        onPress={() => setSignedOut(true)}
+        onPress={onLogOut}
         style={{
           padding: 10,
           backgroundColor: "red",

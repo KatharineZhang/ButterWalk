@@ -45,6 +45,7 @@ import {
   setRideRequestStatus,
   setRideRequestDriver,
   getRecentLocations,
+  findActiveRequestByStudentNetid,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { highestRank, rankOf } from "./rankingAlgorithm";
@@ -466,17 +467,23 @@ export const viewRide = async (
  */
 export const handleDriverViewChoice = async (
   driverid: string,
-  providedView: ViewRideRequestResponse,
+  netid: string,
   decision: "ACCEPT" | "DENY" | "TIMEOUT" | "ERROR"
 ): Promise<ViewDecisionResponse | ErrorResponse> => {
-  const requestNetid = providedView.rideInfo?.rideRequest.netid;
-  if (typeof requestNetid !== "string") {
+  try {
+    await findActiveRequestByStudentNetid(netid);
+  } catch (e) {
+    // for the driver to make a decision on the ride,
+    // the request must still be in viewing/requested mode
+    // (aka no other driver has accepted it and is currently processing it)
+    // if it is not, or the some other error occured, return an error
     return {
       response: "ERROR",
-      error: `Tried to handle view choice when provided view had undefined netid: ${requestNetid}`,
+      error: `Couldn't find active request for ${netid}. Error: ${e}`,
       category: "VIEW_RIDE",
     };
   }
+
   if (decision === "ACCEPT") {
     /**
      * Change the status of the ride request with the given
@@ -485,8 +492,8 @@ export const handleDriverViewChoice = async (
      */
     try {
       return await runTransaction(db, async (t) => {
-        setRideRequestStatus(t, "DRIVING TO PICK UP", requestNetid);
-        setRideRequestDriver(t, requestNetid, driverid);
+        setRideRequestStatus(t, "DRIVING TO PICK UP", netid);
+        setRideRequestDriver(t, netid, driverid);
         return {
           response: "VIEW_DECISION",
           driver: {
@@ -513,7 +520,7 @@ export const handleDriverViewChoice = async (
      */
     try {
       return await runTransaction(db, async (t) => {
-        setRideRequestStatus(t, "REQUESTED", requestNetid);
+        setRideRequestStatus(t, "REQUESTED", netid);
         return {
           response: "VIEW_DECISION",
           driver: {
@@ -537,7 +544,7 @@ export const handleDriverViewChoice = async (
      */
     try {
       return await runTransaction(db, async (t) => {
-        setRideRequestStatus(t, "REQUESTED", requestNetid);
+        setRideRequestStatus(t, "REQUESTED", netid);
         return {
           response: "VIEW_DECISION",
           driver: {
@@ -563,12 +570,11 @@ export const handleDriverViewChoice = async (
      */
     try {
       return await runTransaction(db, async (t) => {
-        setRideRequestStatus(t, "REQUESTED", requestNetid);
+        setRideRequestStatus(t, "REQUESTED", netid);
         return {
           response: "VIEW_DECISION",
           driver: {
             response: "VIEW_DECISION",
-            providedView: providedView,
             success: true,
           },
           student: undefined,

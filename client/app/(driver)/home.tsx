@@ -14,7 +14,7 @@ import {
   View,
 } from "react-native";
 import Map, { MapRef } from "./map";
-import { useLocalSearchParams } from "expo-router";
+import { Redirect, useLocalSearchParams } from "expo-router";
 import RequestAvailable from "@/components/Driver_RequestAvailable";
 import Legend from "@/components/Student_Legend";
 import Profile from "./profile";
@@ -24,15 +24,15 @@ import TimeService from "@/services/TimeService";
 import { styles } from "@/assets/styles";
 import ShiftIsOver from "@/components/Driver_ShiftOver";
 import NoRequests from "@/components/Driver_NoRequests";
-import Enroute from "@/components/Driver_Enroute";
+import HandleRide from "@/components/Driver_HandleRide";
 import Flagging from "@/components/Driver_Flagging";
 import WebSocketService from "@/services/WebSocketService";
 
 export default function HomePage() {
   /* HOME PAGE STATE */
   const [whichComponent, setWhichComponent] = useState<
-    "waitingForReq" | "incomingReq" | "enRoute" | "arrived" | "endShift"
-  >("waitingForReq");
+    "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
+  >("noRequests");
 
   /* USE EFFECTS */
   useEffect(() => {
@@ -50,7 +50,7 @@ export default function HomePage() {
       // check current time and compare with the shift hours
       if (TimeService.inServicableTime()) {
         // in shift
-        setWhichComponent("waitingForReq");
+        setWhichComponent("noRequests");
       } else {
         // off shift
         setWhichComponent("endShift");
@@ -61,27 +61,6 @@ export default function HomePage() {
       clearInterval(interval);
     };
   }, []);
-
-  // check if rides exist every 30 seconds
-  // to see if we should notify the driver of incoming rides
-  // TODO: to replace with server messaging clients after figuring out
-  // corner case for rides exist (which is not the same as driver is viewing rides)
-  useEffect(() => {
-    let interval: number | undefined;
-    if (whichComponent === "waitingForReq") {
-      // if the component is waiting for a request, we should check if rides exist
-      // this will be called every 30 seconds to see if there are any rides available
-      interval = setInterval(() => {
-        seeIfRidesExist();
-      }, 1000 * 30); // check every 30 seconds
-    } else {
-      if (interval) {
-        // if the component is not waiting for a request, clear the interval
-        return () => clearInterval(interval);
-      }
-    }
-    return () => clearInterval(interval);
-  }, [whichComponent]);
 
   /* MAP STATE */
   const [driverLocation, setDriverLocation] = useState<{
@@ -107,6 +86,16 @@ export default function HomePage() {
   /* PROFILE STATE */
   const { netid } = useLocalSearchParams<{ netid: string }>();
   const [profileVisible, setProfileVisible] = useState(false);
+
+  const onLogout = () => {
+    // when the user clicks the logout button in the profile or logoutWarning
+    // reset all fields to their initial state
+    resetAllFields();
+    // call the websocket call to disconnect the user
+    WebSocketService.send({ directive: "DISCONNECT" });
+    // redirect the user to the driverOrStudent page
+    return <Redirect href={{ pathname: "/driverOrstudent" }} />;
+  };
 
   /* NOTIFICATION STATE */
   // what notification to show
@@ -165,17 +154,18 @@ export default function HomePage() {
     WebSocketService.send({
       directive: "VIEW_DECISION",
       driverid: netid,
-      view: {} as ViewRideRequestResponse, // TODO: remove this
+      netid: requestInfo.netid,
       decision: "ACCEPT",
     });
   };
 
   /* EN ROUTE STATE */
   // determines if the flagging functionality is do-able by the driver
-  // True only for when enroute’s STATE is “waiting for pick up”,
-  // “heading to drop off location”, or on PAGE “arrived”
+  // True only for when handleRide’s STATE is “waiting for pick up”,
+  // “heading to drop off location”, or “arrived”
   // All other PAGES and states should have this as FALSE
   const [flaggingAllowed, setFlaggingAllowed] = useState(false);
+  // this is used to control the visibility of the flagging popup
   const [flagPopupVisible, setFlagPopupVisible] = useState(false);
 
   const flagStudent = (reason: string) => {
@@ -203,9 +193,7 @@ export default function HomePage() {
   const goHome = () => {
     // reset all fields
     resetAllFields();
-    // see if there are more rides available
-    // this function will set the current component to "waitingForReq" or "incomingReq"
-    seeIfRidesExist();
+    setWhichComponent("noRequests");
   };
 
   const resetAllFields = () => {
@@ -223,7 +211,7 @@ export default function HomePage() {
       color: "",
       boldText: "",
     });
-    setWhichComponent("waitingForReq");
+    setWhichComponent("noRequests");
   };
 
   /* END SHIFT STATE */
@@ -233,9 +221,9 @@ export default function HomePage() {
   const cancelRideListener = (message: WebSocketResponse) => {
     // recived a message that ride is cancelled
     if ("response" in message && message.response === "CANCEL") {
-      // if successful, set the current component to "waitingForReq"
+      // if successful, set the current component to "noRequests"
       resetAllFields();
-      setWhichComponent("waitingForReq");
+      setWhichComponent("noRequests");
       setNotifState({
         text: "Ride cancelled successfully",
         color: "#4B2E83",
@@ -252,19 +240,23 @@ export default function HomePage() {
   const ridesExistListener = (message: WebSocketResponse) => {
     if ("response" in message && message.response === "RIDES_EXIST") {
       const ridesExistMessage = message as RidesExistResponse;
-      if (ridesExistMessage.ridesExist) {
-        // if true, set the component to "incomingReq"
-        setWhichComponent("incomingReq");
-        setNotifState({
-          text: "New ride request available",
-          color: "#4B2E83",
-          boldText: "new ride",
-        });
-      } else {
-        // if false, set the component to "waitingForReq"
-        setWhichComponent("waitingForReq");
-      }
+      if (whichComponent === "noRequests") {
+        // if the driver is waiting for a request
+        if (ridesExistMessage.ridesExist) {
+          // and rides exist, set the component to "requestsAreAvailable"
+          setWhichComponent("requestsAreAvailable");
+          setNotifState({
+            text: "New ride request available",
+            color: "#4B2E83",
+            boldText: "new ride",
+          });
+        } else {
+          // if false, set the component to "noRequests"
+          setWhichComponent("noRequests");
+        }
+      } // if the driver is not waiting for a request, do nothing
     } else {
+      // there was an error in the message!
       const errMessage = message as ErrorResponse;
       console.log("Failed to see if rides exist: ", errMessage.error);
     }
@@ -297,12 +289,13 @@ export default function HomePage() {
         );
       } else {
         // if the ride request info does not exist, then the view was not successful
-        // if not successful, show a notification and set currentComponent to "waitingForReq"
+        // if not successful, show a notification and set currentComponent to "noRequests"
         setNotifState({
           text: "The ride you were trying to view does not exist anymore.",
           color: "#FF0000",
         });
-        setWhichComponent("waitingForReq"); // go to no requests page TODO: check this is correct behavior
+        resetAllFields(); // reset all fields
+        setWhichComponent("noRequests"); // go to no requests page
       }
     } else {
       const errMessage = message as ErrorResponse;
@@ -315,20 +308,21 @@ export default function HomePage() {
     // the logic for when a decision is made on a ride request
     if ("response" in message && message.response === "VIEW_DECISION") {
       if ("success" in message && message.success == true) {
-        // if the decision was successful, set the current component to "enRoute"
+        // if the decision was successful, set the current component to "handleRide"
         setNotifState({
           text: "Ride accepted successfully",
           color: "#4B2E83",
           boldText: "accepted",
         });
-        setWhichComponent("enRoute");
+        setWhichComponent("handleRide");
       } else {
-        // if the decision was not successful, show a notification and set currentComponent to "waitingForReq"
+        // if the decision was not successful, show a notification and set currentComponent to "noRequests"
         setNotifState({
           text: "Failed to accept ride request",
           color: "#FF0000",
         });
-        setWhichComponent("waitingForReq"); // go to no requests page TODO: check this is correct behavior
+        resetAllFields(); // reset all fields
+        setWhichComponent("noRequests"); // go to no requests page
       }
     } else {
       const errMessage = message as ErrorResponse;
@@ -371,11 +365,13 @@ export default function HomePage() {
         dropOffLocation={dropOffLocation}
         userLocationChanged={(location) => setDriverLocation(location)}
       />
-      {/* TODO: This is currently the student profile pop-up modal */}
+      {/* the profile component */}
+      {/* TODO: MAKE PROFILE LOOK NOICE LIKE FIGMA */}
       <View style={styles.modalContainer}>
         <Profile
           isVisible={profileVisible}
           onClose={() => setProfileVisible(false)}
+          onLogOut={onLogout}
           netid={netid}
         />
       </View>
@@ -498,11 +494,14 @@ export default function HomePage() {
       )}
 
       {/* Decide which component to render */}
-      {whichComponent === "waitingForReq" ? (
+      {whichComponent === "noRequests" ? (
         <View style={styles.homePageComponentContainer}>
-          <NoRequests updateSideBarHeight={setCurrentComponentHeight} />
+          <NoRequests
+            updateSideBarHeight={setCurrentComponentHeight}
+            seeIfRidesExist={seeIfRidesExist}
+          />
         </View>
-      ) : whichComponent === "incomingReq" ? (
+      ) : whichComponent === "requestsAreAvailable" ? (
         <View style={styles.homePageComponentContainer}>
           <RequestAvailable
             requestInfo={requestInfo}
@@ -512,9 +511,9 @@ export default function HomePage() {
             onLetsGo={onLetsGo}
           />
         </View>
-      ) : whichComponent === "enRoute" ? (
+      ) : whichComponent === "handleRide" ? (
         <View style={styles.homePageComponentContainer}>
-          <Enroute
+          <HandleRide
             requestInfo={requestInfo}
             driverToPickupDuration={driverToPickupDuration}
             pickupToDropoffDuration={pickupToDropoffDuration}
