@@ -18,7 +18,7 @@ export const highestRank = (
   driverLocation: {
     latitude: number;
     longitude: number;
-  } | null
+  }
 ) => {
   if (rideRequests.length === 0) {
     throw new Error("Cannot get highest rank of 0 ride requests.");

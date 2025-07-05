@@ -182,6 +182,26 @@ export async function getRideRequests(): Promise<RideRequest[]> {
   return rideRequests;
 }
 
+export async function findActiveRequestByStudentNetid(
+  netid: string
+): Promise<RideRequest> {
+  // look for the netid and a request that has not been accepted
+  const queryNetid = query(
+    rideRequestsCollection,
+    where("netid", "==", netid),
+    where("status", "in", ["REQUESTED", "VIEWING"])
+  );
+  // run the query
+  const inDatabase = await getDocs(queryNetid);
+  // make sure there is only one active ride
+  if (inDatabase.size != 1) {
+    throw new Error(
+      `There were ${inDatabase.size} ride requests with netid: ${netid}`
+    );
+  }
+  return inDatabase.docs[0].data() as RideRequest;
+}
+
 /**
  * Updates the status of the provided ride request to the provided status
  * @param status The status to change to

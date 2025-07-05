@@ -60,7 +60,6 @@ export type WebSocketMessage =
       destination: LocationType;
       numRiders: number;
     }
-  | { directive: "ACCEPT_RIDE"; driverid: string }
   | { directive: "CANCEL"; netid: string; role: "STUDENT" | "DRIVER" }
   | { directive: "COMPLETE"; requestid: string }
   | {
@@ -123,9 +122,8 @@ export type WebSocketMessage =
   | {
       directive: "VIEW_DECISION";
       driverid: string;
-      view: ViewRideRequestResponse;
+      netid: string; // the student who requested the ride
       decision: "ACCEPT" | "DENY" | "TIMEOUT" | "ERROR";
-      tag: string; // used to identify the response
     }
   | {
       directive: "DRIVER_ARRIVED";
@@ -149,8 +147,6 @@ export type WebSocketResponse =
   | SnapLocationResponse
   | RequestRideResponse
   | WaitTimeResponse
-  | AcceptResponse
-  | DriverAcceptResponse
   | CancelResponse
   | CompleteResponse
   | LocationResponse
@@ -161,7 +157,6 @@ export type WebSocketResponse =
   | RidesExistResponse
   | ViewRideRequestResponse
   | ViewDecisionResponse
-  | ViewDecisionDriverResponse
   | RecentLocationResponse
   | RecentLocationResponse
   | PlaceSearchResponse;
@@ -181,17 +176,7 @@ export type LocationType = {
 };
 
 export type GeneralResponse = {
-  response:
-    | "CONNECT"
-    | "SIGNIN"
-    | "FINISH_ACC"
-    | "CANCEL"
-    | "COMPLETE"
-    | "ADD_FEEDBACK"
-    | "REPORT"
-    | "BLACKLIST"
-    | "ACCEPT_RIDE"
-    | "DRIVER_ARRIVED";
+  response: Command;
   success: true;
 };
 
@@ -230,7 +215,12 @@ export type RequestRideResponse = {
 export type ViewRideRequestResponse = {
   response: "VIEW_RIDE";
   rideExists: boolean;
-  rideRequest?: RideRequest;
+  rideInfo?: {
+    // if the ride exists, this will be defined
+    rideRequest: RideRequest;
+    driverToPickUpDuration: number; // in minutes
+    pickUpToDropOffDuration: number; // in minutes
+  };
 };
 
 /**
@@ -243,13 +233,8 @@ export type ViewRideRequestResponse = {
  */
 export type ViewDecisionResponse = {
   response: "VIEW_DECISION";
-  student: GeneralResponse | undefined;
-  driver: ViewDecisionDriverResponse;
-};
-export type ViewDecisionDriverResponse = {
-  response: "VIEW_DECISION";
-  providedView: ViewRideRequestResponse;
-  success: boolean;
+  student?: GeneralResponse; // with command "ACCEPT_RIDE"
+  driver: GeneralResponse; // with command "VIEW_DECISION"
 };
 
 export type WaitTimeResponse = {
@@ -260,24 +245,9 @@ export type WaitTimeResponse = {
   dropOffAddress?: string;
 };
 
-export type AcceptResponse = {
-  response: "ACCEPT_RIDE";
-  student: { response: "ACCEPT_RIDE"; success: true }; // of type GeneralResponse
-  driver: DriverAcceptResponse;
-};
-
 export type RidesExistResponse = {
   response: "RIDES_EXIST";
   ridesExist: boolean;
-};
-
-export type DriverAcceptResponse = {
-  response: "ACCEPT_RIDE";
-  netid: string;
-  location: LocationType;
-  destination: LocationType;
-  numRiders: number;
-  requestid: string;
 };
 
 export type CancelResponse = {
@@ -420,7 +390,7 @@ export type localRideRequest = {
   netid: string;
 };
 
-// Database Types
+/* DATABASE TYPES */
 
 // CREATE TABLE Users ( netid varchar(20) PRIMARY KEY, name text, student_num char(7),
 // phone_num char(10), student_or_driver int); –- 0 for student, 1 for driver
@@ -475,7 +445,8 @@ export type RideRequestStatus =
  */
 export type RideRequest = {
   /**
-   * ID of this request (?)
+   * ID of this request
+   * will be undefined if the request has not been saved to the database yet.
    */
   requestId?: string;
   /**
@@ -504,7 +475,7 @@ export type RideRequest = {
   /**
    * The pick up location.
    */
-  locationFrom: LocationType; // TODO: should these be coordinates or location names?
+  locationFrom: LocationType;
   /**
    * The drop off location.
    */
@@ -561,6 +532,7 @@ export type RecentLocation = {
   locations: LocationType[];
 };
 
+/* ZONE STUFF */
 // Zone Service Copy since we can't import it from the client side
 export type Coordinates = {
   latitude: number;
