@@ -49,7 +49,7 @@ const Login = () => {
   ) : (
     <View style={styles.container}>
       <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
-        <Text style={styles.appNameText}>Husky ButterWalk</Text>
+        <Text style={styles.appNameText}>Husky SafeTrip</Text>
         <Image style={styles.signinLogo} source={butterWalkLogo} />
         <Text style={styles.signInText}>Driver Sign in</Text>
         <View style={{ height: 20 }}></View>

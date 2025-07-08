@@ -356,6 +356,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
               { borderWidth: 2, backgroundColor: "#4B2E83" },
             ]}
             onPress={() => {
+              // TODO replace with callback from listener to listen for when the driver clicks 'I picked up student'
               changeRideStatus("RideInProgress");
             }}
           >
@@ -373,7 +374,10 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
               styles.bottomModalButton,
               { borderWidth: 2, backgroundColor: "#4B2E83" },
             ]}
-            onPress={goHome}
+            onPress={
+              //TODO call COMPLETE route
+              goHome
+            }
           >
             <Text style={styles.buttonText}>Back To HomePage</Text>
           </Pressable>

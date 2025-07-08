@@ -23,9 +23,9 @@ export default function HandleRide({
   requestInfo,
   driverToPickupDuration,
   pickupToDropoffDuration,
-  changeFlaggingAllowed: changeFlaggingAllowed,
-  goHome: goHome,
-  changeNotifState: setNotificationState,
+  changeFlaggingAllowed,
+  goHome,
+  changeNotifState,
   onCancel,
 }: HandleRideProps) {
   // State to track which phase the ride is in
@@ -36,11 +36,10 @@ export default function HandleRide({
   const [seconds, setSeconds] = useState(5 * 60); // 5 minutes
 
   useEffect(() => {
-    if (phase === 'headingToPickup'){
+    if (phase === "headingToPickup") {
       changeFlaggingAllowed(false);
     } else {
       if (phase === "waitingForPickup") {
-        changeFlaggingAllowed(true);
         // Update seconds every second
         const interval = setInterval(() => {
           setSeconds((prevSeconds) => prevSeconds - 1);
@@ -53,7 +52,7 @@ export default function HandleRide({
 
   useEffect(() => {
     if (seconds == 60) {
-      setNotificationState({
+      changeNotifState({
         text: "Your ride will be cancelled in one minute.",
         color: "#FFCBCB",
         boldText: "one minute",
@@ -61,11 +60,12 @@ export default function HandleRide({
     } else if (seconds <= 0) {
       // the timer ran out! cancel the ride
       setTimerDone(true);
+      changeFlaggingAllowed(true);
     }
   }, [seconds]);
 
   const cancelRide = () => {
-    setNotificationState({
+    changeNotifState({
       text: "Ride cancelled",
       color: "#FF0000",
     });
