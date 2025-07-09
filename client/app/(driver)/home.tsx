@@ -42,6 +42,14 @@ export default function HomePage() {
     WebSocketService.addListener(viewRideListener, "VIEW_RIDE");
     WebSocketService.addListener(viewDecisionListener, "VIEW_DECISION");
     WebSocketService.addListener(reportStudentListener, "REPORT");
+    WebSocketService.addListener(
+      driverDrivingToDropOffListener,
+      "DRIVER_DRIVING_TO_DROPOFF"
+    );
+    WebSocketService.addListener(
+      driverArrivedAtPickupListener,
+      "DRIVER_ARRIVED_AT_PICKUP"
+    );
   }, []);
 
   // set the initial component based on the current time
@@ -161,6 +169,13 @@ export default function HomePage() {
   };
 
   /* EN ROUTE STATE */
+  type HandleRidePhase =
+    | "headingToPickup"
+    | "waitingForPickup"
+    | "headingToDropoff"
+    | "arrivedAtDropoff";
+
+  const [phase, setPhase] = useState<HandleRidePhase>("headingToPickup");
   // determines if the flagging functionality is do-able by the driver
   // True only for when handleRide’s STATE is “waiting for pick up”,
   // “heading to drop off location”, or “arrived”
@@ -195,6 +210,22 @@ export default function HomePage() {
     WebSocketService.send({
       directive: "COMPLETE",
       requestid: requestInfo.requestId as string,
+    });
+  };
+
+  const driverArrivedAtPickup = () => {
+    WebSocketService.send({
+      directive: "DRIVER_ARRIVED_AT_PICKUP",
+      driverid: netid,
+      studentNetid: requestInfo.netid,
+    });
+  };
+
+  const driverDrivingToDropOff = () => {
+    WebSocketService.send({
+      directive: "DRIVER_DRIVING_TO_DROPOFF",
+      driverid: netid,
+      studentNetid: requestInfo.netid,
     });
   };
 
@@ -345,6 +376,30 @@ export default function HomePage() {
     }
   };
 
+  // WEBSOCKET - DRIVER ARRIVED (at the pickup location)
+  const driverArrivedAtPickupListener = (message: WebSocketResponse) => {
+    // logic for when the driver arrives at the pick up location
+    if (
+      "response" in message &&
+      message.response === "DRIVER_ARRIVED_AT_PICKUP"
+    ) {
+      console.log("Driver arrived at pickup location");
+      setPhase("waitingForPickup");
+    } else {
+      const errMessage = message as ErrorResponse;
+      console.log(
+        "Failed to note that driver arrived at pickup: ",
+        errMessage.error
+      );
+      // if not successful, show a notification that the driver could not arrive at the pickup location
+      setNotifState({
+        text: "Failed to note that driver arrived at pickup location",
+        color: "#FF0000",
+      });
+      setFlagPopupVisible(false); // close the flagging popup
+    }
+  };
+
   // WEBSOCKET - REPORT
   const reportStudentListener = (message: WebSocketResponse) => {
     //  logic for when a student is flagged
@@ -368,6 +423,23 @@ export default function HomePage() {
     } else {
       const errMessage = message as ErrorResponse;
       console.log("Failed to flag student: ", errMessage.error);
+    }
+  };
+
+  // WEBSOCKET - DRIVER_DRIVING_TO_DROPOFF
+  const driverDrivingToDropOffListener = (message: WebSocketResponse) => {
+    //  logic for when a student is flagged
+    if (
+      "response" in message &&
+      message.response === "DRIVER_DRIVING_TO_DROPOFF"
+    ) {
+      setPhase("headingToDropoff");
+    } else {
+      const errMessage = message as ErrorResponse;
+      console.log(
+        "Failed to note that driver is driving to dropoff: ",
+        errMessage.error
+      );
     }
   };
 
@@ -529,6 +601,7 @@ export default function HomePage() {
       ) : whichComponent === "handleRide" ? (
         <View style={styles.homePageComponentContainer}>
           <HandleRide
+            phase={phase}
             requestInfo={requestInfo}
             driverToPickupDuration={driverToPickupDuration}
             pickupToDropoffDuration={pickupToDropoffDuration}
@@ -536,6 +609,8 @@ export default function HomePage() {
             completeRide={completeRide}
             changeNotifState={setNotifState}
             onCancel={cancelRide}
+            driverArrivedAtPickup={driverArrivedAtPickup}
+            driverDrivingToDropOff={driverDrivingToDropOff}
           />
         </View>
       ) : whichComponent === "endShift" ? (

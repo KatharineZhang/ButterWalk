@@ -3,12 +3,6 @@ import { View, Text, Button } from "react-native";
 import { RideRequest } from "../../server/src/api";
 import { NotificationType } from "./Both_Notification";
 
-type HandleRidePhase =
-  | "headingToPickup"
-  | "waitingForPickup"
-  | "headingToDropoff"
-  | "arrivedAtDropoff";
-
 interface HandleRideProps {
   requestInfo: RideRequest;
   driverToPickupDuration: number; // in minutes, might be undefined initially
@@ -17,9 +11,17 @@ interface HandleRideProps {
   completeRide: () => void;
   changeNotifState: (notif: NotificationType) => void;
   onCancel: () => void;
+  phase:
+    | "headingToPickup"
+    | "waitingForPickup"
+    | "headingToDropoff"
+    | "arrivedAtDropoff";
+  driverArrivedAtPickup: () => void;
+  driverDrivingToDropOff: () => void;
 }
 
 export default function HandleRide({
+  phase,
   requestInfo,
   driverToPickupDuration,
   pickupToDropoffDuration,
@@ -27,10 +29,9 @@ export default function HandleRide({
   completeRide,
   changeNotifState,
   onCancel,
+  driverArrivedAtPickup,
+  driverDrivingToDropOff,
 }: HandleRideProps) {
-  // State to track which phase the ride is in
-  const [phase, setPhase] = useState<HandleRidePhase>("headingToPickup");
-
   // When timer is done in "waitingForPickup" state
   const [timerDone, setTimerDone] = useState(false);
   const [seconds, setSeconds] = useState(5 * 60); // 5 minutes
@@ -93,10 +94,7 @@ export default function HandleRide({
           <Text>
             Pickup Location: {JSON.stringify(requestInfo.locationFrom)}
           </Text>
-          <Button
-            title="I am at pickup"
-            onPress={() => setPhase("waitingForPickup")}
-          />
+          <Button title="I am at pickup" onPress={driverArrivedAtPickup} />
         </View>
       ) : phase === "waitingForPickup" ? (
         <View>
@@ -105,10 +103,7 @@ export default function HandleRide({
             Time remaining: {formatTime(seconds)}{" "}
             {seconds <= 60 && <Text>(Ride will be cancelled soon)</Text>}
           </Text>
-          <Button
-            title="Found student"
-            onPress={() => setPhase("headingToDropoff")}
-          />
+          <Button title="Found student" onPress={driverDrivingToDropOff} />
           {timerDone && <Button title="Cancel Ride" onPress={cancelRide} />}
         </View>
       ) : phase === "headingToDropoff" ? (

@@ -3,10 +3,12 @@ import { app } from "./firebaseConfig";
 import {
   collection,
   doc,
+  DocumentData,
   getDocs,
   getFirestore,
   query,
   QueryConstraint,
+  QuerySnapshot,
   Timestamp,
   Transaction,
   updateDoc,
@@ -184,7 +186,7 @@ export async function getRideRequests(): Promise<RideRequest[]> {
 
 export async function findActiveRequestByStudentNetid(
   netid: string
-): Promise<RideRequest> {
+): Promise<QuerySnapshot<DocumentData, DocumentData>> {
   // look for the netid and a request that has not been accepted
   const queryNetid = query(
     rideRequestsCollection,
@@ -199,7 +201,7 @@ export async function findActiveRequestByStudentNetid(
       `There were ${inDatabase.size} ride requests with netid: ${netid}`
     );
   }
-  return inDatabase.docs[0].data() as RideRequest;
+  return inDatabase;
 }
 
 /**
@@ -212,11 +214,14 @@ export async function setRideRequestStatus(
   status: RideRequestStatus,
   netid: string
 ) {
-  const res = query(rideRequestsCollection, where("netid", "==", netid));
-  const snapshot = await getDocs(res);
-  snapshot.forEach(async (doc) => {
-    await updateDoc(doc.ref, { status: status });
-  });
+  const res = await findActiveRequestByStudentNetid(netid);
+  if (res.size !== 1) {
+    throw new Error(
+      `Expected exactly one active ride request for netid: ${netid}, found ${res.size}`
+    );
+  }
+  const docRef = res.docs[0].ref;
+  await updateDoc(docRef, { status: status });
 }
 
 /**
@@ -230,11 +235,14 @@ export async function setRideRequestDriver(
   netid: string,
   driverid: string
 ) {
-  const res = query(rideRequestsCollection, where("netid", "==", netid));
-  const snapshot = await getDocs(res);
-  snapshot.forEach(async (doc) => {
-    await updateDoc(doc.ref, { driverid: driverid });
-  });
+  const res = await findActiveRequestByStudentNetid(netid);
+  if (res.size !== 1) {
+    throw new Error(
+      `Expected exactly one active ride request for netid: ${netid}, found ${res.size}`
+    );
+  }
+  const docRef = res.docs[0].ref;
+  await updateDoc(docRef, { driverid: driverid });
 }
 
 // CANCEL RIDE - Update a ride request to canceled

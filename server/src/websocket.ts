@@ -22,6 +22,7 @@ import {
   fetchRecentLocations,
   driverArrived,
   getPlaceSearchResults,
+  driverDrivingToDropoff,
 } from "./routes";
 import {
   CancelResponse,
@@ -220,11 +221,19 @@ export const handleWebSocketMessage = async (
       break;
     }
 
-    // Directive
-    case "DRIVER_ARRIVED": {
+    case "DRIVER_ARRIVED_AT_PICKUP": {
       const res = await driverArrived(input.studentNetid);
       sendWebSocketMessage(ws, res);
-      if (res.response == "DRIVER_ARRIVED" && res.success) {
+      if (res.response == "DRIVER_ARRIVED_AT_PICKUP" && res.success) {
+        sendMessageToNetid(input.studentNetid, res);
+      }
+      break;
+    }
+
+    case "DRIVER_DRIVING_TO_DROPOFF": {
+      const res = await driverDrivingToDropoff(input.studentNetid);
+      sendWebSocketMessage(ws, res);
+      if (res.response == "DRIVER_DRIVING_TO_DROPOFF" && res.success) {
         sendMessageToNetid(input.studentNetid, res);
       }
       break;

@@ -615,7 +615,35 @@ export const driverArrived = async (
     };
   }
   return {
-    response: "DRIVER_ARRIVED",
+    response: "DRIVER_ARRIVED_AT_PICKUP",
+    success: true,
+  };
+};
+
+/**
+ * Sets the status of the ride request associated with `netid`
+ * to be "DRIVING TO DESTINATION" indicating that the driver has
+ * picked up student and is taking them to the dropoff
+ * @param netid netid of the student of the ride request
+ * @returns DriverArrivedResponse with .success = true on success,
+ * or an error response otherwise.
+ */
+export const driverDrivingToDropoff = async (
+  netid: string
+): Promise<ErrorResponse | GeneralResponse> => {
+  try {
+    await runTransaction(db, async (t) => {
+      await setRideRequestStatus(t, "DRIVING TO DESTINATION", netid);
+    });
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Unexpected Error during driverPickedUpStudent: ${e}`,
+      category: "VIEW_RIDE",
+    };
+  }
+  return {
+    response: "DRIVER_DRIVING_TO_DROPOFF",
     success: true,
   };
 };

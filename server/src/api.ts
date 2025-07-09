@@ -26,7 +26,8 @@ export type Command =
   | "VIEW_RIDE"
   | "RIDES_EXIST"
   | "VIEW_DECISION"
-  | "DRIVER_ARRIVED"
+  | "DRIVER_ARRIVED_AT_PICKUP"
+  | "DRIVER_DRIVING_TO_DROPOFF"
   | "DISCONNECT"
   | "PLACE_SEARCH";
 
@@ -126,11 +127,19 @@ export type WebSocketMessage =
       decision: "ACCEPT" | "DENY" | "TIMEOUT" | "ERROR";
     }
   | {
-      directive: "DRIVER_ARRIVED";
+      directive: "DRIVER_ARRIVED_AT_PICKUP";
       driverid: string;
       studentNetid: string;
     }
-  | { directive: "PLACE_SEARCH"; query: string };
+  | {
+      directive: "DRIVER_DRIVING_TO_DROPOFF";
+      driverid: string;
+      studentNetid: string;
+    }
+  | {
+      directive: "PLACE_SEARCH";
+      query: string;
+    };
 
 // TEMP FIX
 export type ConnectMessage = {
