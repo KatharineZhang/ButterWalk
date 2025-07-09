@@ -34,6 +34,9 @@ import {
   RideRequest,
   SnapLocationResponse,
   ViewDecisionResponse,
+  RequestRideResponse,
+  RidesExistResponse,
+  ViewRideRequestResponse,
 } from "./api";
 import { Timestamp } from "firebase/firestore";
 
@@ -145,6 +148,12 @@ export const handleWebSocketMessage = async (
         status: "REQUESTED",
       };
       resp = await requestRide(rideRequest);
+      if (resp.response == "REQUEST_RIDE") {
+        const requestResp = resp as RequestRideResponse;
+        if (requestResp.notifyDrivers) {
+          notifyDrivers(true);
+        }
+      }
       // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
       break;
@@ -180,6 +189,15 @@ export const handleWebSocketMessage = async (
     // a driver so they can accept/deny/report etc.
     case "VIEW_RIDE": {
       const res = await viewRide(input.driverid, input.driverLocation);
+      if (res.response == "VIEW_RIDE") {
+        const viewResp = res as ViewRideRequestResponse;
+
+        // if we want to notify drivers
+        if (viewResp.notifyDrivers) {
+          // tell the drivers that there are no more rides
+          notifyDrivers(false);
+        }
+      }
       sendWebSocketMessage(ws, res);
       break;
     }
@@ -217,6 +235,12 @@ export const handleWebSocketMessage = async (
         if (viewDecisionResponse.student !== undefined) {
           sendMessageToNetid(input.netid, viewDecisionResponse.student);
         }
+
+        // this will only be true if we are re-adding the ride back into the pool
+        // the pool was initially empty, so we need to notify drivers
+        if (viewDecisionResponse.notifyDrivers) {
+          notifyDrivers(true);
+        }
       }
       break;
     }
@@ -250,6 +274,11 @@ export const handleWebSocketMessage = async (
           // send response back to opposite client (the driver usually)
           // this could be the student if the driver cancels after a 5 minute wait
           sendMessageToNetid(cancelResponse.otherNetid, cancelResponse.info);
+        }
+        // if we want to notify drivers
+        if (cancelResponse.notifyDrivers) {
+          // tell the drivers that rides don't exist (false)
+          notifyDrivers(false);
         }
       } else {
         // the ErrorResponse case, send only to original client
@@ -391,5 +420,26 @@ export const connectWebsocketToNetid = (
       client.netid = netid;
       client.role = role;
     }
+  });
+};
+
+/**
+ * Notifies all currently connected drivers about the existence/lack of rides.
+ * Sends a `RIDES_EXIST` response message to each driver, indicating whether rides are available.
+ *
+ * @param ridesExist - A boolean indicating if rides currently exist.
+ */
+export const notifyDrivers = (ridesExist: boolean): void => {
+  // the message sent to each driver is that rides exist (or don't)
+  const message: RidesExistResponse = {
+    response: "RIDES_EXIST",
+    ridesExist,
+  };
+
+  // find all the drivers currently connected to the app
+  const drivers = clients.filter((client) => client.role == "DRIVER");
+  // send each of them a message
+  drivers.forEach((driver) => {
+    sendMessageToNetid(driver.netid, message);
   });
 };

@@ -332,11 +332,12 @@ export const requestRide = async (
   rideRequest: RideRequest
 ): Promise<RequestRideResponse | ErrorResponse> => {
   try {
-    const requestid = await runTransaction(db, async (t) => {
-      return await addRideRequestToPool(t, rideRequest);
-    });
-    if (requestid != null) {
-      return { response: "REQUEST_RIDE", requestid };
+    const response: { requestid: string; notifyDrivers: boolean } =
+      await runTransaction(db, async (t) => {
+        return await addRideRequestToPool(t, rideRequest);
+      });
+    if (response.requestid != null) {
+      return { response: "REQUEST_RIDE", ...response };
     } else {
       throw new Error(`requestid was null`);
     }
@@ -395,6 +396,7 @@ export const viewRide = async (
         return {
           response: "VIEW_RIDE",
           rideExists: false,
+          notifyDrivers: false,
         };
       }
       const bestRequest: RideRequest = highestRank(
@@ -438,6 +440,14 @@ export const viewRide = async (
       if (associatedUser === null) {
         throw new Error(`Didn't find any User during view ride.`);
       }
+
+      // before we take the request out of the queue,
+      // check if this was the last request before empty
+      let notify = false;
+      const numReqs = await getRideRequests();
+      if (numReqs.length == 1) {
+        notify = true;
+      }
       setRideRequestStatus(t, "VIEWING", associatedUser.netid);
       return {
         response: "VIEW_RIDE",
@@ -445,6 +455,7 @@ export const viewRide = async (
         rideRequest: bestRequest,
         driverToPickUpDuration,
         pickUpToDropOffDuration,
+        notifyDrivers: notify,
       };
     });
   } catch (e) {
@@ -504,6 +515,7 @@ export const handleDriverViewChoice = async (
             response: "ACCEPT_RIDE",
             success: true,
           },
+          notifyDrivers: false,
         };
       });
     } catch (e) {
@@ -520,6 +532,14 @@ export const handleDriverViewChoice = async (
      */
     try {
       return await runTransaction(db, async (t) => {
+        // before we take the request out of the queue,
+        // check if the pool was empty before we put this one back in
+        let notify = false;
+        const numReqs = await getRideRequests();
+        if (numReqs.length == 0) {
+          notify = true;
+        }
+
         setRideRequestStatus(t, "REQUESTED", netid);
         return {
           response: "VIEW_DECISION",
@@ -528,6 +548,7 @@ export const handleDriverViewChoice = async (
             success: true,
           },
           student: undefined,
+          notifyDrivers: notify,
         };
       });
     } catch (e) {
@@ -544,6 +565,14 @@ export const handleDriverViewChoice = async (
      */
     try {
       return await runTransaction(db, async (t) => {
+        // before we take the request out of the queue,
+        // check if the pool was empty before we put this one back in
+        let notify = false;
+        const numReqs = await getRideRequests();
+        if (numReqs.length == 0) {
+          notify = true;
+        }
+
         setRideRequestStatus(t, "REQUESTED", netid);
         return {
           response: "VIEW_DECISION",
@@ -552,6 +581,7 @@ export const handleDriverViewChoice = async (
             success: true,
           },
           student: undefined,
+          notifyDrivers: notify,
         };
       });
     } catch (e) {
@@ -570,6 +600,14 @@ export const handleDriverViewChoice = async (
      */
     try {
       return await runTransaction(db, async (t) => {
+        // before we take the request out of the queue,
+        // check if the pool was empty before we put this one back in
+        let notify = false;
+        const numReqs = await getRideRequests();
+        if (numReqs.length == 0) {
+          notify = true;
+        }
+
         setRideRequestStatus(t, "REQUESTED", netid);
         return {
           response: "VIEW_DECISION",
@@ -578,6 +616,7 @@ export const handleDriverViewChoice = async (
             success: true,
           },
           student: undefined,
+          notifyDrivers: notify,
         };
       });
     } catch (e) {
@@ -678,19 +717,21 @@ export const cancelRide = async (
 ): Promise<CancelResponse | ErrorResponse> => {
   try {
     return await runTransaction(db, async (transaction) => {
-      const otherid = await cancelRideRequest(transaction, netid, role);
-      if (otherid) {
+      const response = await cancelRideRequest(transaction, netid, role);
+      if (response.otherId) {
         // if we have an accepted ride, we have annetid of the opposite user
         return {
           response: "CANCEL",
           info: { response: "CANCEL", success: true },
-          otherNetid: otherid,
+          otherNetid: response.otherId,
+          notifyDrivers: response.notifyDrivers,
         };
       }
       // no driver specified in this pending request case!
       return {
         response: "CANCEL",
         info: { response: "CANCEL", success: true },
+        notifyDrivers: response.notifyDrivers,
       };
     });
   } catch (e) {

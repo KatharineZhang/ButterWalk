@@ -212,6 +212,7 @@ export type SnapLocationResponse = {
 export type RequestRideResponse = {
   response: "REQUEST_RIDE";
   requestid: string;
+  notifyDrivers: boolean;
 };
 
 /**
@@ -230,6 +231,7 @@ export type ViewRideRequestResponse = {
     driverToPickUpDuration: number; // in minutes
     pickUpToDropOffDuration: number; // in minutes
   };
+  notifyDrivers: boolean;
 };
 
 /**
@@ -244,6 +246,7 @@ export type ViewDecisionResponse = {
   response: "VIEW_DECISION";
   student?: GeneralResponse; // with command "ACCEPT_RIDE"
   driver: GeneralResponse; // with command "VIEW_DECISION"
+  notifyDrivers: boolean;
 };
 
 export type WaitTimeResponse = {
@@ -263,6 +266,7 @@ export type CancelResponse = {
   response: "CANCEL";
   info: { response: "CANCEL"; success: true }; // of type GeneralResponse
   otherNetid?: string;
+  notifyDrivers: boolean;
 };
 
 export type CompleteResponse = {

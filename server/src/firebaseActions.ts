@@ -137,7 +137,20 @@ export async function finishCreatingUser(
 export async function addRideRequestToPool(
   t: Transaction,
   rideRequest: RideRequest
-): Promise<string> {
+): Promise<{ requestid: string; notifyDrivers: boolean }> {
+  let notify: boolean = false;
+  // how many rides were there in pool before add this one?
+  const inThePool = query(
+    rideRequestsCollection,
+    where("status", "==", "REQUESTED")
+  );
+  const result = await getDocs(inThePool);
+  // if there was previously 0 (before we add)
+  // we need to notify drivers that rides now exist!!
+  if (result.size == 0) {
+    notify = true;
+  }
+
   // make sure there are no pending rides in the database by this user
   const queryExistingRide = query(
     rideRequestsCollection,
@@ -161,7 +174,7 @@ export async function addRideRequestToPool(
   rideRequest.status = "REQUESTED";
   const docRef = doc(rideRequestsCollection);
   t.set(docRef, rideRequest);
-  return docRef.id;
+  return { requestid: docRef.id, notifyDrivers: notify };
 }
 
 /**
@@ -246,29 +259,43 @@ export async function setRideRequestDriver(
 }
 
 // CANCEL RIDE - Update a ride request to canceled
-// returns the driver id if there was a ride request that was accepted or null if not
+// Returns: the other id if there was a ride request that was accepted or null if not
+// otherid is the netid of the driver if the driver is the one cancelling
+// or the netid of the student if the student is the one cancelling
+// notifyDrivers is true if there are no more rides in the pool after cancellation
+// and we need to notify drivers that rides no longer exist
 export async function cancelRideRequest(
   transaction: Transaction,
   netid: string,
   role: "STUDENT" | "DRIVER"
-): Promise<string | null> {
+): Promise<{ otherId: string | null; notifyDrivers: boolean }> {
+  //tracks if need to notif drivers if no more rides exist after cancellation
+  let notify: boolean = false;
+  // save the num rides in pool for later
+  const numRidesInPool = await getRideRequests();
+
   // look through all the ride requests made by this specific user using the status
   let queryRequests;
   if (role == "STUDENT") {
     // student query
-    queryRequests = query(rideRequestsCollection, where("netid", "==", netid));
+    queryRequests = query(
+      rideRequestsCollection,
+      where("netid", "==", netid),
+      where("status", "not-in", ["CANCELLED", "COMPLETED"])
+    );
   } else {
     // driver query
     queryRequests = query(
       rideRequestsCollection,
-      where("driverid", "==", netid)
+      where("driverid", "==", netid),
+      where("status", "not-in", ["CANCELLED", "COMPLETED"])
     );
   }
   // transaction doesn't support querying docs
-  const docs = await getDocs(queryRequests);
+  const result = await getDocs(queryRequests);
 
-  let otherid: string | null = null;
-  for (const doc of docs.docs) {
+  let otherId: string | null = null;
+  for (const doc of result.docs) {
     // change any active (based on status) request to canceleD
     const data = doc.data() as RideRequest;
 
@@ -287,18 +314,24 @@ export async function cancelRideRequest(
       data.status === "DRIVER AT PICK UP" ||
       data.status === "VIEWING"
     ) {
-      // If the cancalled request is being helped by a driver, notify the driver.
+      // If the cancelled request is being helped by a driver, notify the driver.
       if (role == "STUDENT") {
-        otherid = data.driverid;
+        otherId = data.driverid;
       } else {
-        otherid = data.netid;
+        otherId = data.netid;
       }
     }
 
     await setRideRequestStatus(transaction, "CANCELLED", netid);
   }
 
-  return otherid; // return the driver id if there was a ride request that was accepted
+  // if no one had accepted this ride yet and it was the last one in the pool
+  // only then, notify the drivers
+  if (!otherId && numRidesInPool.length == 1) {
+    notify = true;
+  }
+
+  return { otherId, notifyDrivers: notify }; // return the driver id if there was a ride request that was accepted
 }
 
 // COMPLETE RIDE - Update a ride request to completed
