@@ -209,7 +209,6 @@ export const styles = StyleSheet.create({
     color: "black",
     textAlign: "center",
     fontFamily: "Encode Sans",
-
   },
   signInText: {
     fontSize: 25,
@@ -325,7 +324,9 @@ export const styles = StyleSheet.create({
     marginLeft: 3,
   },
   modalContainer: {
-    flex: 1, justifyContent: "flex-end", alignItems: "center"
+    flex: 1,
+    justifyContent: "flex-end",
+    alignItems: "center",
   },
   fullModalView: {
     backgroundColor: "#E4E2F0",
@@ -596,7 +597,7 @@ export const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "white",
     padding: 16,
-    borderRadius:10,
+    borderRadius: 10,
     width: "100%",
   },
   progressBarTop: {
@@ -673,30 +674,30 @@ export const styles = StyleSheet.create({
     zIndex: 2,
   },
   locationsContainer: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      width: "90%",
-      marginTop: 15,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "90%",
+    marginTop: 15,
   },
   pickUpContainer: {
-      alignItems: "flex-start",
-      maxWidth: "40%"
+    alignItems: "flex-start",
+    maxWidth: "40%",
   },
   dropOffContainer: {
-      alignItems: "flex-end",
-      maxWidth: "40%"
+    alignItems: "flex-end",
+    maxWidth: "40%",
   },
   locationTitle: {
-      fontWeight: "bold",
-      fontSize: 12,
-      marginBottom: 3,
+    fontWeight: "bold",
+    fontSize: 12,
+    marginBottom: 3,
   },
   locationSubtitle: {
     fontWeight: "bold",
     fontSize: 12,
     color: "#4B2E83",
     marginBottom: 3,
-  },  
+  },
   locationText: {
     fontSize: 12,
   },
@@ -704,6 +705,7 @@ export const styles = StyleSheet.create({
     position: "absolute",
     width: "100%",
     height: "100%",
+    bottom: 0,
     shadowRadius: 5,
     shadowOpacity: 0.4,
     shadowOffset: { width: 0, height: -7 },
@@ -764,12 +766,14 @@ export const styles = StyleSheet.create({
   // legend
   legendContainer: {
     flexDirection: "row",
-          alignItems: "center",
-          marginBottom: 7,
+    alignItems: "center",
+    marginBottom: 7,
   },
   legendText: {
-    left: 5, fontSize: 12, marginLeft: 5 
-  }
+    left: 5,
+    fontSize: 12,
+    marginLeft: 5,
+  },
 });
 
 export const loadingPageCompStyles = StyleSheet.create({

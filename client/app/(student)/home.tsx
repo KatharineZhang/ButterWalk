@@ -14,6 +14,8 @@ import {
   ErrorResponse,
   LocationResponse,
   LocationType,
+  ProfileResponse,
+  RecentLocationResponse,
   RequestRideResponse,
   User,
   WaitTimeResponse,
@@ -21,7 +23,7 @@ import {
 } from "../../../server/src/api";
 import RideRequestForm from "@/components/Student_RideRequestForm";
 import ConfirmRide from "@/components/Student_ConfirmRide";
-import Notification from "@/components/notification";
+import Notification from "@/components/Both_Notification";
 import FAQ from "./faq";
 import { Ionicons } from "@expo/vector-icons";
 import { styles } from "@/assets/styles";
@@ -389,7 +391,8 @@ export default function HomePage() {
   // set our user state to the user profile we received
   const handleProfileResponse = (message: WebSocketResponse) => {
     if (message.response === "PROFILE") {
-      setUser(message.user as User);
+      const profileMessage = message as ProfileResponse;
+      setUser(profileMessage.user as User);
     } else {
       // something went wrong
       console.log("Profile response error: ", message);
@@ -406,7 +409,8 @@ export default function HomePage() {
 
   const handleRecentLocationResponse = (message: WebSocketResponse) => {
     if (message.response === "RECENT_LOCATIONS") {
-      setRecentLocations(message.locations as LocationType[]);
+      const locationMessage = message as RecentLocationResponse;
+      setRecentLocations(locationMessage.locations as LocationType[]);
     } else {
       // something went wrong
       console.log("Recent location response error: ", message);

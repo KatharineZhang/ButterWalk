@@ -10,8 +10,8 @@ import {
   Pressable,
   ImageSourcePropType,
 } from "react-native";
-import OnboardingItem from "../components/OnboardingItem";
-import Paginator from "@/components/OnboardingPaginator";
+import OnboardingItem from "../components/Both_OnboardingItem";
+import Paginator from "@/components/Both_OnboardingPaginator";
 import { Link, router } from "expo-router";
 
 //Onboarding Page
