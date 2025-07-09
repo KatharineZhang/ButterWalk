@@ -14,7 +14,7 @@ interface HandleRideProps {
   driverToPickupDuration: number; // in minutes, might be undefined initially
   pickupToDropoffDuration: number; // in minutes, might be undefined initially
   changeFlaggingAllowed: (allowed: boolean) => void;
-  goHome: () => void;
+  completeRide: () => void;
   changeNotifState: (notif: NotificationType) => void;
   onCancel: () => void;
 }
@@ -24,7 +24,7 @@ export default function HandleRide({
   driverToPickupDuration,
   pickupToDropoffDuration,
   changeFlaggingAllowed,
-  goHome,
+  completeRide,
   changeNotifState,
   onCancel,
 }: HandleRideProps) {
@@ -117,13 +117,13 @@ export default function HandleRide({
           <Text>
             Dropoff Location: {JSON.stringify(requestInfo.locationTo)}
           </Text>
-          <Button title="Arrived at dropoff" onPress={goHome} />
+          <Button title="Arrived at dropoff" onPress={completeRide} />
         </View>
       ) : (
         <View>
           <Text>Arrived at Dropoff</Text>
           <Text>Thank you for completing the ride!</Text>
-          <Button title="Go Home" onPress={goHome} />
+          <Button title="Go Home" onPress={completeRide} />
         </View>
       )}
     </View>

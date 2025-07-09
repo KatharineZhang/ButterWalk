@@ -37,6 +37,7 @@ export default function HomePage() {
   /* USE EFFECTS */
   useEffect(() => {
     WebSocketService.addListener(cancelRideListener, "CANCEL");
+    WebSocketService.addListener(completeRideListener, "COMPLETE");
     WebSocketService.addListener(ridesExistListener, "RIDES_EXIST");
     WebSocketService.addListener(viewRideListener, "VIEW_RIDE");
     WebSocketService.addListener(viewDecisionListener, "VIEW_DECISION");
@@ -190,10 +191,11 @@ export default function HomePage() {
     });
   };
 
-  const goHome = () => {
-    // reset all fields
-    resetAllFields();
-    setWhichComponent("noRequests");
+  const completeRide = () => {
+    WebSocketService.send({
+      directive: "COMPLETE",
+      requestid: requestInfo.requestId as string,
+    });
   };
 
   const resetAllFields = () => {
@@ -233,6 +235,19 @@ export default function HomePage() {
       // if not successful, log the error
       const errMessage = message as ErrorResponse;
       console.log("Failed to cancel ride: ", errMessage.error);
+    }
+  };
+
+  // WEBSOCKET - COMPLETE
+  const completeRideListener = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "COMPLETE") {
+      // reset all fields
+      resetAllFields();
+      setWhichComponent("noRequests");
+    } else {
+      // if not successful, log the error
+      const errMessage = message as ErrorResponse;
+      console.log("Failed to complete ride: ", errMessage.error);
     }
   };
 
@@ -518,7 +533,7 @@ export default function HomePage() {
             driverToPickupDuration={driverToPickupDuration}
             pickupToDropoffDuration={pickupToDropoffDuration}
             changeFlaggingAllowed={setFlaggingAllowed}
-            goHome={goHome}
+            completeRide={completeRide}
             changeNotifState={setNotifState}
             onCancel={cancelRide}
           />
