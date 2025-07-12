@@ -2,6 +2,8 @@
 import { styles } from "@/assets/styles";
 import { View, Text, Pressable, Image } from "react-native";
 import { RideRequest } from "../../server/src/api";
+import { useState, useRef, useEffect } from "react";
+import { Animated, Easing } from "react-native";
 
 interface RequestAvailableProps {
   requestInfo?: RideRequest;
@@ -17,19 +19,52 @@ export default function RequestAvailable({
   pickupToDropoffDuration, // in minutes, might be undefined initially
   onAccept,
   onLetsGo,
-}: RequestAvailableProps) {
+}: RequestAvailableProps) { // switches between screen showing accept button and next ride details
+  // once "Let's Go" button is clicked, component should switch over to HandleRide component based on what is in home.tsx
+  const [showAcceptScreen, setShowAcceptScreen] = useState(true);
+  const rotation = useRef(new Animated.Value(0)).current;
+  const swing = rotation.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: ["30deg", "0deg", "-30deg", "0deg", "30deg"],
+  });
+
+  // changes the screen when the driver clicks accept
+  const handleAccept = () => {
+    onAccept();
+    setShowAcceptScreen(false); 
+  };
+  
+  // animation for clock
+  useEffect(() => {
+    const swingLoop = Animated.loop(
+      Animated.timing(rotation, {
+        toValue: 1,
+        duration: 1700,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      })
+    );
+    swingLoop.start();
+
+    return () => swingLoop.stop();
+  }, []);
+
   return (
-    <View
-      style={{
-        bottom: 0,
-        width: "100%",
-        backgroundColor: "white",
-        paddingHorizontal: 16,
-        borderRadius: 10,
-        paddingVertical: "10%",
-      }}
-    >
-      {requestInfo != undefined ? (
+      <View
+        style={[
+          {
+            position: "absolute",
+            bottom: 0,
+            width: "100%",
+            backgroundColor: "white",
+            paddingHorizontal: 16,
+            borderRadius: 10,
+            paddingVertical: "10%",
+          },
+          showAcceptScreen && { paddingBottom: "21%" },
+        ]}
+      >
+      {!showAcceptScreen && requestInfo != undefined ? (
         <>
           {/* Show ride request details */}
           <Text style={{ fontSize: 20, fontWeight: "bold" }}>Next Ride</Text>
@@ -76,7 +111,7 @@ export default function RequestAvailable({
 
             <View style={{ width: "7%" }} />
             <Text style={{ fontSize: 16 }}>
-              {requestInfo.locationFrom.name}
+              {requestInfo.locationFrom?.name ?? "Unknown pickup location"}
             </Text>
             {/* TODO: fix the UI for duration */}
             <Text>Duration: {driverToPickupDuration}</Text>
@@ -96,20 +131,29 @@ export default function RequestAvailable({
               style={{ width: 20, height: 20, resizeMode: "contain" }}
             />
             <View style={{ width: "6.5%" }} />
-            <Text style={{ fontSize: 16 }}>{requestInfo.locationTo.name}</Text>
+            <Text style={{ fontSize: 16 }}>{requestInfo.locationTo?.name ?? "Unknown dropoff location"}</Text>
             {/* TODO: fix the UI for duration */}
             <Text>Duration: {pickupToDropoffDuration}</Text>
           </View>
 
+          {/* Line*/}
+          <View
+            style={{
+              borderBottomColor: "#ccc", 
+              borderBottomWidth: 1,
+              marginBottom: 5
+            }}
+          />
+          
           {/* Let's Go Button */}
           <View style={styles.bottomModalButtonContainer}>
             <Pressable
-              style={[styles.bottomModalButton, styles.confirmButton]}
+              style={[styles.bottomModalButton, styles.button]}
               onPress={onLetsGo}
             >
               <Text
                 style={{
-                  color: "#4B2E83",
+                  color: "white",
                   fontSize: 18,
                 }}
               >
@@ -120,25 +164,53 @@ export default function RequestAvailable({
         </>
       ) : (
         <>
-          {/* Title */}
-          <Text style={{ fontSize: 20, fontWeight: "bold" }}>
-            New Ride Request
-          </Text>
+          <View style={{ flexDirection: "row"}}>
+            {/* Left side: Title + Body text */}
+            <View style={{ flex: 2, paddingLeft: "3%" }}>
+              <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 12 }}>
+                New Ride Request
+              </Text>
+              <Text style={{ fontSize: 16 }}>
+                You have a new ride request!
+              </Text>
+              <Text style={{ fontSize: 16 }}>
+                Click 'Accept' to start the ride!
+              </Text>
+            </View>
 
-          {/* Body text */}
-          <Text style={{ fontSize: 16 }}>
-            You have a new ride request! Click 'accept' to start the ride!
-          </Text>
+            {/* Right side: Image */}
+            <View style={{ flex: 1.2, alignItems: "flex-end" }}>
+              <Animated.Image
+                source={require("../assets/images/new-ride-alarm.png")}
+                style={{
+                  width: "80%",
+                  height: "80%",
+                  transform: [{ rotate: swing }],
+                }}
+                resizeMode="contain"
+              />
+            </View>
+          </View>
 
+          {/* Line*/}
+          <View
+            style={{
+              borderBottomColor: "#ccc", 
+              borderBottomWidth: 1,
+              marginTop: 0,     // Small gap above (or 0)
+              marginBottom: 3, // Space below the line
+            }}
+          />
+          
           {/* Accept Request Button */}
-          <View style={styles.bottomModalButtonContainer}>
+          <View style={[styles.bottomModalButtonContainer]}>
             <Pressable
-              style={[styles.bottomModalButton, styles.confirmButton]}
-              onPress={onAccept}
+              style={[styles.bottomModalButton, styles.button]}
+              onPress={handleAccept}
             >
               <Text
                 style={{
-                  color: "#4B2E83",
+                  color: "white",
                   fontSize: 18,
                 }}
               >

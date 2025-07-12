@@ -27,12 +27,42 @@ import NoRequests from "@/components/Driver_NoRequests";
 import HandleRide from "@/components/Driver_HandleRide";
 import Flagging from "@/components/Driver_Flagging";
 import WebSocketService from "@/services/WebSocketService";
+import { Timestamp } from "firebase/firestore";
 
 export default function HomePage() {
+  
+    useEffect(() => {
+    setRequestInfo({
+      requestId: "test123",
+      netid: "student123",
+      driverid: null,
+      requestedAt: Timestamp.now(),
+      completedAt: null,
+      locationFrom: {
+        name: "HUB",
+        coordinates: {
+          latitude: 47.655548,
+          longitude: -122.303200,
+        },
+        address: ""
+      },
+      locationTo: {
+        name: "Odegaard Library",
+        coordinates: {
+          latitude: 47.656887,
+          longitude: -122.311350,
+        },
+        address: ""
+      },
+      numRiders: 1,
+      status: "REQUESTED",
+    });
+  }, []);
+
   /* HOME PAGE STATE */
   const [whichComponent, setWhichComponent] = useState<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
-  >("noRequests");
+  >("requestsAreAvailable");
 
   /* USE EFFECTS */
   useEffect(() => {
