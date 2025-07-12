@@ -67,11 +67,7 @@ export default function RequestAvailable({
       {!showAcceptScreen && requestInfo != undefined ? (
         <>
           {/* Top bar */}
-          <View style={{ 
-            flexDirection: "row", 
-            alignItems: "center", 
-            paddingHorizontal: "5%" 
-          }}>
+          <View style={[ styles.rowCenterContainer, {paddingHorizontal: "5%"} ]}>
             <Text style={[{ fontSize: 24, fontWeight: "bold" }]}>Next Ride</Text>
             <View style={{ width: "48%"}}></View>
             <View style={{ width: "7%", aspectRatio: 1 }}>
@@ -96,17 +92,11 @@ export default function RequestAvailable({
           {/* ------------------- Your loc -> pick up -> drop off graphic  ----------------- */}
           <View style={{ paddingRight: "4%"}}> 
             {/* Your location */}
-            <View
-              style={{
-                marginHorizontal: "12%",
-                flexDirection: "row",
-                alignItems: "center",
-              }}
-            >
+            <View style={[ styles.rowCenterContainer, {paddingHorizontal: "5%"} ]}>
               <View style={{ width: "16%", aspectRatio: 1 }}>
                 <Image
                   source={require("@/assets/images/arrow.png")}
-                  style={[styles.requestAvailableImage]}
+                  style={[styles.requestPageImage]}
                 />
               </View>
 
@@ -114,19 +104,8 @@ export default function RequestAvailable({
             </View>
 
             {/* four dots + driver to pick up duration */}
-            <View
-              style={{
-                marginHorizontal: "3.5%",
-                flexDirection: "row",
-                alignItems: "center"
-              }}
-            >
-              <View style={{ 
-                flexDirection: "row", 
-                alignItems: "center", 
-                justifyContent: "flex-end",
-                paddingRight: "80%",
-              }}>
+            <View style={[ styles.rowCenterContainer, {marginHorizontal: "3.5%"} ]}>
+              <View style={[styles.dotsImage]}>
                 <View style={{ width: "62%"}}>
                   <Text style={{ fontSize: 14, textAlign: "right" }}>{driverToPickupDuration} min</Text>
                 </View>
@@ -134,24 +113,18 @@ export default function RequestAvailable({
                 <View style={{ width: "40%", aspectRatio: 1, marginLeft: 4 }}>
                   <Image
                     source={require("@/assets/images/four-dots.png")}
-                    style={[styles.requestAvailableImage]}
+                    style={[styles.requestPageImage]}
                   />
                 </View>
               </View>
             </View>
 
             {/* Pickup location */}
-            <View
-              style={{
-                marginHorizontal: "15%",
-                flexDirection: "row",
-                alignItems: "center",
-              }}
-            >
+            <View style={[ styles.rowCenterContainer, {paddingHorizontal: "15%"} ]}>
               <View style={{ width: "9%", aspectRatio: 1 }}>
                 <Image
                   source={require("@/assets/images/rider-icon.png")}
-                  style={{ width: "100%", height: "100%", resizeMode: "contain" }}
+                  style={[styles.requestPageImage]}
                 />
               </View>
 
@@ -168,20 +141,8 @@ export default function RequestAvailable({
             </View>
 
             {/* four dots + dropp off duration */}
-            <View
-              style={{
-                marginHorizontal: "3.5%",
-                flexDirection: "row",
-                alignItems: "center"
-              }}
-            >
-              <View style={{ 
-                flexDirection: "row", 
-                alignItems: "center", 
-                justifyContent: "flex-end",
-                paddingRight: "80%",
-                paddingBottom: "2%"
-              }}>
+            <View style={[ styles.rowCenterContainer, {marginHorizontal: "3.5%"} ]}>
+              <View style={[styles.dotsImage, {paddingBottom: "2%"}]}>
                 <View style={{ width: "62%"}}>
                   <Text style={{ fontSize: 14, textAlign: "right" }}>{pickupToDropoffDuration} min</Text>
                 </View>
@@ -189,7 +150,7 @@ export default function RequestAvailable({
                 <View style={{ width: "40%", aspectRatio: 1, marginLeft: 4 }}>
                   <Image
                     source={require("@/assets/images/four-dots.png")}
-                    style={{ width: "100%", height: "100%", resizeMode: "contain" }}
+                    style={[styles.requestPageImage]}
                   />
                 </View>
               </View>
@@ -206,7 +167,7 @@ export default function RequestAvailable({
               <View style={{ width: "10%", aspectRatio: 1 }}>
                 <Image
                   source={require("@/assets/images/location-on.png")}
-                  style={[styles.requestAvailableImage]}
+                  style={[styles.requestPageImage]}
                 />
               </View>
               

@@ -774,11 +774,21 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     marginLeft: 5,
   },
-  requestAvailableImage: {
+  requestPageImage: {
     width: "100%", 
     height: "100%", 
     resizeMode: "contain",
   },
+  dotsImage: {
+    flexDirection: "row", 
+    alignItems: "center", 
+    justifyContent: "flex-end",
+    paddingRight: "80%",
+  },
+  rowCenterContainer: {
+    flexDirection: "row", 
+    alignItems: "center", 
+  }
 });
 
 export const loadingPageCompStyles = StyleSheet.create({
