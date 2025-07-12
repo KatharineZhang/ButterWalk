@@ -30,7 +30,7 @@ import WebSocketService from "@/services/WebSocketService";
 import { Timestamp } from "firebase/firestore";
 
 export default function HomePage() {
-  
+
     useEffect(() => {
     setRequestInfo({
       requestId: "test123",
@@ -44,7 +44,7 @@ export default function HomePage() {
           latitude: 47.655548,
           longitude: -122.303200,
         },
-        address: ""
+        address: "4001 E. Stevens Way NE, Seattle, WA, 98105"
       },
       locationTo: {
         name: "Odegaard Library",
@@ -52,7 +52,7 @@ export default function HomePage() {
           latitude: 47.656887,
           longitude: -122.311350,
         },
-        address: ""
+        address: "4000 15th Ave NE, Seattle, WA, 98105"
       },
       numRiders: 1,
       status: "REQUESTED",

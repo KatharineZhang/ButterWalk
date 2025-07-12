@@ -59,82 +59,165 @@ export default function RequestAvailable({
             backgroundColor: "white",
             paddingHorizontal: 16,
             borderRadius: 10,
-            paddingVertical: "10%",
+            paddingVertical: "8%",
           },
           showAcceptScreen && { paddingBottom: "21%" },
         ]}
       >
       {!showAcceptScreen && requestInfo != undefined ? (
         <>
-          {/* Show ride request details */}
-          <Text style={{ fontSize: 20, fontWeight: "bold" }}>Next Ride</Text>
-          {/* ------------------- Your loc -> pick up -> drop off graphic  ----------------- */}
-
-          {/* Your location */}
-          <View
-            style={{
-              marginHorizontal: "14%",
-              flexDirection: "row",
-              alignItems: "center",
-              paddingBottom: "5%",
-            }}
-          >
-            <View
-              style={{
-                width: 15,
-                height: 15,
-                borderRadius: 13,
-                backgroundColor: "#4B2E83",
-              }}
-            />
-            <View style={{ width: "7%" }} />
-            <Text style={{ fontSize: 16 }}>Your Location</Text>
-          </View>
-
-          {/* Pickup location */}
-          <View
-            style={{
-              marginHorizontal: "14%",
-              flexDirection: "row",
-              alignItems: "center",
-              paddingBottom: "5%",
-            }}
-          >
-            <View
-              style={{
-                width: 15,
-                height: 15,
-                borderRadius: 13,
-                backgroundColor: "#4B2E83",
-              }}
-            />
-
-            <View style={{ width: "7%" }} />
-            <Text style={{ fontSize: 16 }}>
-              {requestInfo.locationFrom?.name ?? "Unknown pickup location"}
+          {/* Top bar */}
+          <View style={{ 
+            flexDirection: "row", 
+            alignItems: "center", 
+            paddingHorizontal: "5%" 
+          }}>
+            <Text style={[{ fontSize: 24, fontWeight: "bold" }]}>Next Ride</Text>
+            <View style={{ width: "48%"}}></View>
+            <View style={{ width: "7%", aspectRatio: 1 }}>
+              <Image 
+                source={require("@/assets/images/profile-filled.png")}
+                style={{ width: "80%", height: "100%", resizeMode: "contain" }}
+              />
+            </View>
+            <Text style={{ fontSize: 17, fontWeight: "bold", marginLeft: 4 }}>
+                ({requestInfo.numRiders})
             </Text>
-            {/* TODO: fix the UI for duration */}
-            <Text>Duration: {driverToPickupDuration}</Text>
           </View>
 
-          {/* Dropoff Location */}
-          <View
-            style={{
-              marginHorizontal: "13.5%",
-              flexDirection: "row",
-              alignItems: "center",
-              paddingBottom: "5%",
-            }}
-          >
-            <Image
-              source={require("@/assets/images/dropoff-location.png")}
-              style={{ width: 20, height: 20, resizeMode: "contain" }}
-            />
-            <View style={{ width: "6.5%" }} />
-            <Text style={{ fontSize: 16 }}>{requestInfo.locationTo?.name ?? "Unknown dropoff location"}</Text>
-            {/* TODO: fix the UI for duration */}
-            <Text>Duration: {pickupToDropoffDuration}</Text>
-          </View>
+          {/* Line*/}
+          <View style={{  
+            borderBottomColor: "#ccc", 
+            borderBottomWidth: 1,
+            marginTop: 12,     
+            marginBottom: 12,}}
+          />
+
+          {/* ------------------- Your loc -> pick up -> drop off graphic  ----------------- */}
+          <View style={{ paddingRight: "4%"}}> 
+            {/* Your location */}
+            <View
+              style={{
+                marginHorizontal: "12%",
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <View style={{ width: "16%", aspectRatio: 1 }}>
+                <Image
+                  source={require("@/assets/images/arrow.png")}
+                  style={[styles.requestAvailableImage]}
+                />
+              </View>
+
+              <Text style={{ fontSize: 17, fontWeight: "bold" }}> Your Location </Text>     
+            </View>
+
+            {/* four dots + driver to pick up duration */}
+            <View
+              style={{
+                marginHorizontal: "3.5%",
+                flexDirection: "row",
+                alignItems: "center"
+              }}
+            >
+              <View style={{ 
+                flexDirection: "row", 
+                alignItems: "center", 
+                justifyContent: "flex-end",
+                paddingRight: "80%",
+              }}>
+                <View style={{ width: "62%"}}>
+                  <Text style={{ fontSize: 14, textAlign: "right" }}>{driverToPickupDuration} min</Text>
+                </View>
+
+                <View style={{ width: "40%", aspectRatio: 1, marginLeft: 4 }}>
+                  <Image
+                    source={require("@/assets/images/four-dots.png")}
+                    style={[styles.requestAvailableImage]}
+                  />
+                </View>
+              </View>
+            </View>
+
+            {/* Pickup location */}
+            <View
+              style={{
+                marginHorizontal: "15%",
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <View style={{ width: "9%", aspectRatio: 1 }}>
+                <Image
+                  source={require("@/assets/images/rider-icon.png")}
+                  style={{ width: "100%", height: "100%", resizeMode: "contain" }}
+                />
+              </View>
+
+              <View style={{ width: "6%" }} />
+
+              <View style={{ flexDirection: "column"}}>
+                <Text style={{ fontSize: 17, fontWeight: "bold" }}>
+                  {requestInfo.locationFrom?.name ?? "Pick Up"}
+                </Text>
+                <Text style={{ fontSize: 14.5}}>
+                  {requestInfo.locationFrom?.address ?? "Pick Up Address"}
+                </Text>
+              </View>
+            </View>
+
+            {/* four dots + dropp off duration */}
+            <View
+              style={{
+                marginHorizontal: "3.5%",
+                flexDirection: "row",
+                alignItems: "center"
+              }}
+            >
+              <View style={{ 
+                flexDirection: "row", 
+                alignItems: "center", 
+                justifyContent: "flex-end",
+                paddingRight: "80%",
+                paddingBottom: "2%"
+              }}>
+                <View style={{ width: "62%"}}>
+                  <Text style={{ fontSize: 14, textAlign: "right" }}>{pickupToDropoffDuration} min</Text>
+                </View>
+
+                <View style={{ width: "40%", aspectRatio: 1, marginLeft: 4 }}>
+                  <Image
+                    source={require("@/assets/images/four-dots.png")}
+                    style={{ width: "100%", height: "100%", resizeMode: "contain" }}
+                  />
+                </View>
+              </View>
+            </View>
+
+            {/* Dropoff Location */}
+            <View
+              style={{
+                marginHorizontal: "15%",
+                flexDirection: "row",
+                paddingBottom: "7%",
+              }}
+            >
+              <View style={{ width: "10%", aspectRatio: 1 }}>
+                <Image
+                  source={require("@/assets/images/location-on.png")}
+                  style={[styles.requestAvailableImage]}
+                />
+              </View>
+              
+              <View style={{ width: "6%" }} />
+
+              <View style={{ flexDirection: "column"}}>
+                <Text style={{ fontSize: 17, fontWeight: "bold" }}>{requestInfo.locationTo?.name ?? "Drop Off"}</Text>
+                <Text style={{ fontSize: 14.5 }}>{requestInfo.locationTo?.address ?? "Drop Off Address"}</Text>
+              </View>
+            </View>
+          </View> 
 
           {/* Line*/}
           <View
@@ -151,14 +234,7 @@ export default function RequestAvailable({
               style={[styles.bottomModalButton, styles.button]}
               onPress={onLetsGo}
             >
-              <Text
-                style={{
-                  color: "white",
-                  fontSize: 18,
-                }}
-              >
-                Let's Go!
-              </Text>
+              <Text style={[styles.buttonLabel]}>Let's Go!</Text>
             </Pressable>
           </View>
         </>
@@ -173,7 +249,7 @@ export default function RequestAvailable({
               <Text style={{ fontSize: 16 }}>
                 You have a new ride request!
               </Text>
-              <Text style={{ fontSize: 16 }}>
+              <Text style={{ fontSize: 16, marginBottom: -15 }}>
                 Click 'Accept' to start the ride!
               </Text>
             </View>
@@ -197,8 +273,8 @@ export default function RequestAvailable({
             style={{
               borderBottomColor: "#ccc", 
               borderBottomWidth: 1,
-              marginTop: 0,     // Small gap above (or 0)
-              marginBottom: 3, // Space below the line
+              marginTop: 0,
+              marginBottom: 3, 
             }}
           />
           
@@ -208,14 +284,7 @@ export default function RequestAvailable({
               style={[styles.bottomModalButton, styles.button]}
               onPress={handleAccept}
             >
-              <Text
-                style={{
-                  color: "white",
-                  fontSize: 18,
-                }}
-              >
-                Accept
-              </Text>
+              <Text style={[styles.buttonLabel]}>Accept</Text>
             </Pressable>
           </View>
         </>

@@ -774,6 +774,11 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     marginLeft: 5,
   },
+  requestAvailableImage: {
+    width: "100%", 
+    height: "100%", 
+    resizeMode: "contain",
+  },
 });
 
 export const loadingPageCompStyles = StyleSheet.create({
