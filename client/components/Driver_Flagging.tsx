@@ -7,47 +7,51 @@ type FlaggingProps = {
   closePopUp: () => void; // Optional prop to close the popup after flagging
 };
 
-// commented out for later use:
-// const FLAG_REASONS = ["Add potential reasons here! "] as const;
 // removed onFlag since we are not using reasons currently
+// const FLAG_REASONS = ["Add potential reasons here! "] as const;
+// commented out for later use^^
+
 export default function Flagging({ closePopUp }: FlaggingProps) {
-  // used for changing modal visibility or not
   const [modalVisible, setModalVisible] = useState(true);
   const [description, setDescription] = useState('');
-  const closeFlag = () => {
+  // helper method to help close the flag popup; this combines the 
+  // passed in closePopUp() method, as well as dismissing the 
+  // keyboard (done for better UI design)
+  const onCloseFlag = () => {
     Keyboard.dismiss();
     closePopUp(); 
     setModalVisible(false);
   }
+
+  // specific helper method for when the submit button is clicked,
+  // calls onCloseFlag as long as an empty description isn't submitted
   const onSubmit = () => {
-    if (description.trim() === '') { 
+    if (description.trim() === '') {
       Alert.alert('Error', 'Please provide a description.');
-      return; // <--- if description is empty, the function stops here
+      return;
     }
-    closeFlag();
+    onCloseFlag();
   }
 
   return (
-    <Modal animationType="fade" transparent={true} visible={modalVisible} onRequestClose={closeFlag}>
+    <Modal animationType="fade" transparent={true} visible={modalVisible} onRequestClose={onCloseFlag}>
+      {/* below helps for the keyboard to disappear once the driver is done with the flag*/}
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.centeredView}> 
           <View style={styles.modalView}>
             <View style={styles.modalHeader}>
               <View style={styles.headerTitleContainer}>
-                <FontAwesome name="flag" size={20} color="#E53935" style={styles.flagIcon} />
+                {/* using FontAwesome for the flag and X icon */}
+                <FontAwesome name="flag" size={20} color="#E53935" style={styles.flagIcon}/>
                 <Text style={styles.modalTitle}>Flag Student</Text>
               </View>
-              <Pressable onPress={closeFlag} style={styles.closeButton}>
+              <Pressable onPress={onCloseFlag} style={styles.closeButton}>
                 <FontAwesome name="times" size={24} color="#666" />
               </Pressable>
           </View>
           <Text style={styles.descriptionLabel}>Provide a brief description</Text>
-            <TextInput
-              style={styles.textInput}
-              multiline={true} // allows multiple lines of text
-              numberOfLines={4} // initial height for 4 lines
-              value={description}
-              onChangeText={setDescription}
+            <TextInput style={styles.textInput} multiline={true} // allows multiple lines of text
+              numberOfLines={4} value={description} onChangeText={setDescription}
               textAlignVertical="top" // aligns text to the top for multiline
             />
             <Pressable onPress={onSubmit} style={styles.submitButton}>
@@ -60,6 +64,8 @@ export default function Flagging({ closePopUp }: FlaggingProps) {
   );
 }
 
+// created a handy style reference, has all the colors, texts
+// and how certain parts should be displayed for the pop-up
 const styles = StyleSheet.create({
   centeredView: {
     flex: 1,
@@ -130,4 +136,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
