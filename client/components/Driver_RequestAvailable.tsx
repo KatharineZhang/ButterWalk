@@ -25,6 +25,7 @@ export default function RequestAvailable({
   // switches between screen showing accept button and next ride details
   // once "Let's Go" button is clicked, component should switch over to HandleRide component based on what is in home.tsx
   const [showAcceptScreen, setShowAcceptScreen] = useState(true);
+  // constants used for animation 
   const rotation = useRef(new Animated.Value(0)).current;
   const swing = rotation.interpolate({
     inputRange: [0, 0.25, 0.5, 0.75, 1],
@@ -64,32 +65,50 @@ export default function RequestAvailable({
           borderRadius: 10,
           paddingVertical: "8%",
         },
-        showAcceptScreen && { paddingBottom: "21%" },
+        showAcceptScreen && { paddingBottom: "21%" }, // the screens require different padding since the containers in each screen took up different sizing
       ]}
       onLayout={(event) => {
         // on render, update the sidebar height to the height of this component
         updateSideBarHeight(event.nativeEvent.layout.height);
       }}
     >
+      {/* shows the screen with the "Let's Go" button and the ride graphic */}
       {!showAcceptScreen && requestInfo != undefined ? (
         <>
           {/* Top bar */}
           <View
-            style={[styles.rowCenterContainer, { paddingHorizontal: "5%" }]}
+            style={[styles.driverRequestRowCenter, { paddingHorizontal: "5%", paddingRight: "5%" }]}
           >
             <Text style={[{ fontSize: 24, fontWeight: "bold" }]}>
               Next Ride
             </Text>
-            <View style={{ width: "48%" }}></View>
-            <View style={{ width: "7%", aspectRatio: 1 }}>
+            <View style={{ flex: 1 }}/>
+            <View style={{ width: "5%", aspectRatio: 1 }}>
               <Image
                 source={require("@/assets/images/profile-filled.png")}
-                style={{ width: "80%", height: "100%", resizeMode: "contain" }}
+                style={{ width: "100%", height: "100%", resizeMode: "contain" }}
               />
             </View>
-            <Text style={{ fontSize: 17, fontWeight: "bold", marginLeft: 4 }}>
-              ({requestInfo.numRiders})
+            <View style={{ width: "1%" }}/>
+            <Text style={{ fontSize: 17 }}>
+              ({requestInfo.numRiders}) 
             </Text>
+            <View style={{ width: "2%" }}/>
+            <View
+              style={{
+                maxWidth: "35%",    // or whatever fits best
+                overflow: "hidden",
+              }}
+            >
+              {/* the styling ensures that when the text reaches a certain width, it will finish with ellipses */}
+              <Text
+                style={{ fontSize: 17, fontWeight: "bold" }}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {requestInfo.netid}
+              </Text>
+            </View>
           </View>
 
           {/* Line*/}
@@ -106,12 +125,12 @@ export default function RequestAvailable({
           <View style={{ paddingRight: "4%" }}>
             {/* Your location */}
             <View
-              style={[styles.rowCenterContainer, { paddingHorizontal: "5%" }]}
+              style={[styles.driverRequestRowCenter, { paddingHorizontal: "12%" }]}
             >
               <View style={{ width: "16%", aspectRatio: 1 }}>
                 <Image
                   source={require("@/assets/images/arrow.png")}
-                  style={[styles.requestPageImage]}
+                  style={[styles.driverRequestPageImage]}
                 />
               </View>
 
@@ -123,10 +142,10 @@ export default function RequestAvailable({
 
             {/* four dots + driver to pick up duration */}
             <View
-              style={[styles.rowCenterContainer, { marginHorizontal: "3.5%" }]}
+              style={[styles.driverRequestRowCenter, { marginHorizontal: "3.5%" }]}
             >
-              <View style={[styles.dotsImage]}>
-                <View style={{ width: "62%" }}>
+              <View style={[styles.driverRequestDotsImage]}>
+                <View style={{ width: "80%" }}>
                   <Text style={{ fontSize: 14, textAlign: "right" }}>
                     {driverToPickupDuration} min
                   </Text>
@@ -135,7 +154,7 @@ export default function RequestAvailable({
                 <View style={{ width: "40%", aspectRatio: 1, marginLeft: 4 }}>
                   <Image
                     source={require("@/assets/images/four-dots.png")}
-                    style={[styles.requestPageImage]}
+                    style={[styles.driverRequestPageImage]}
                   />
                 </View>
               </View>
@@ -143,12 +162,12 @@ export default function RequestAvailable({
 
             {/* Pickup location */}
             <View
-              style={[styles.rowCenterContainer, { paddingHorizontal: "15%" }]}
+              style={[styles.driverRequestRowCenter, { paddingHorizontal: "15%" }]}
             >
               <View style={{ width: "9%", aspectRatio: 1 }}>
                 <Image
                   source={require("@/assets/images/rider-icon.png")}
-                  style={[styles.requestPageImage]}
+                  style={[styles.driverRequestPageImage]}
                 />
               </View>
 
@@ -164,12 +183,12 @@ export default function RequestAvailable({
               </View>
             </View>
 
-            {/* four dots + dropp off duration */}
+            {/* four dots + drop off duration */}
             <View
-              style={[styles.rowCenterContainer, { marginHorizontal: "3.5%" }]}
+              style={[styles.driverRequestRowCenter, { marginHorizontal: "3.5%" }]}
             >
-              <View style={[styles.dotsImage, { paddingBottom: "2%" }]}>
-                <View style={{ width: "62%" }}>
+              <View style={[styles.driverRequestDotsImage, { paddingBottom: "2%" }]}>
+                <View style={{ width: "80%" }}>
                   <Text style={{ fontSize: 14, textAlign: "right" }}>
                     {pickupToDropoffDuration} min
                   </Text>
@@ -178,7 +197,7 @@ export default function RequestAvailable({
                 <View style={{ width: "40%", aspectRatio: 1, marginLeft: 4 }}>
                   <Image
                     source={require("@/assets/images/four-dots.png")}
-                    style={[styles.requestPageImage]}
+                    style={[styles.driverRequestPageImage]}
                   />
                 </View>
               </View>
@@ -195,7 +214,7 @@ export default function RequestAvailable({
               <View style={{ width: "10%", aspectRatio: 1 }}>
                 <Image
                   source={require("@/assets/images/location-on.png")}
-                  style={[styles.requestPageImage]}
+                  style={[styles.driverRequestPageImage]}
                 />
               </View>
 
@@ -233,6 +252,7 @@ export default function RequestAvailable({
         </>
       ) : (
         <>
+          {/* shows the screen with the accept button */}
           <View style={{ flexDirection: "row" }}>
             {/* Left side: Title + Body text */}
             <View style={{ flex: 2, paddingLeft: "3%" }}>

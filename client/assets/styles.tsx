@@ -774,18 +774,18 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     marginLeft: 5,
   },
-  requestPageImage: {
+  driverRequestPageImage: {
     width: "100%", 
     height: "100%", 
     resizeMode: "contain",
   },
-  dotsImage: {
+  driverRequestDotsImage: {
     flexDirection: "row", 
     alignItems: "center", 
     justifyContent: "flex-end",
     paddingRight: "80%",
   },
-  rowCenterContainer: {
+  driverRequestRowCenter: {
     flexDirection: "row", 
     alignItems: "center", 
   }

@@ -33,7 +33,7 @@ export default function HomePage() {
   useEffect(() => {
     setRequestInfo({
       requestId: "test123",
-      netid: "student123",
+      netid: "student123467890",
       driverid: null,
       requestedAt: Timestamp.now(),
       completedAt: null,
@@ -57,7 +57,7 @@ export default function HomePage() {
       status: "REQUESTED",
     });
     setDriverToPickupDuration(10);
-    setPickupToDropoffDuration(3);
+    setPickupToDropoffDuration(10);
   }, []);
 
   /* HOME PAGE STATE */
