@@ -105,9 +105,8 @@ export default function HomePage() {
     // call the websocket call to disconnect the user
     WebSocketService.send({ directive: "DISCONNECT" });
     // redirect the user to the driverOrStudent page
-    router.replace('/driverOrstudent'); // navigate programmatically
+    router.replace("/driverOrstudent"); // navigate programmatically
   };
-
 
   /* NOTIFICATION STATE */
   // what notification to show

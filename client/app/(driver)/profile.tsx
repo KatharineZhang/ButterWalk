@@ -2,14 +2,12 @@
 import { Pressable, View, Text, Image } from "react-native";
 import { styles } from "../../assets/styles";
 
-
 interface ProfileProps {
   isVisible: boolean;
   netid: string;
   onClose: () => void;
   onLogOut: () => void;
 }
-
 
 export default function Profile({
   isVisible,
@@ -18,7 +16,6 @@ export default function Profile({
   netid,
 }: ProfileProps) {
   if (!isVisible) return null;
-
 
   return (
     <View style={styles.overlay}>
@@ -29,7 +26,6 @@ export default function Profile({
             style={styles.closeButtonImage}
           />
         </Pressable>
-
 
         <View style={styles.rowContainer}>
           <View style={styles.imageWrapper}>
@@ -44,7 +40,6 @@ export default function Profile({
           </View>
           <Text style={styles.title}>Driver NetID: {netid}</Text>
         </View>
-
 
         <Pressable onPress={onLogOut} style={styles.logoutButton}>
           <View style={styles.rowContainerButton}>
