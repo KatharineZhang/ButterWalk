@@ -27,43 +27,12 @@ import NoRequests from "@/components/Driver_NoRequests";
 import HandleRide from "@/components/Driver_HandleRide";
 import Flagging from "@/components/Driver_Flagging";
 import WebSocketService from "@/services/WebSocketService";
-import { Timestamp } from "firebase/firestore";
 
 export default function HomePage() {
-  useEffect(() => {
-    setRequestInfo({
-      requestId: "test123",
-      netid: "student123467890",
-      driverid: null,
-      requestedAt: Timestamp.now(),
-      completedAt: null,
-      locationFrom: {
-        name: "HUB",
-        coordinates: {
-          latitude: 47.655548,
-          longitude: -122.3032,
-        },
-        address: "4001 E. Stevens Way NE, Seattle, WA, 98105",
-      },
-      locationTo: {
-        name: "Odegaard Library",
-        coordinates: {
-          latitude: 47.656887,
-          longitude: -122.31135,
-        },
-        address: "4000 15th Ave NE, Seattle, WA, 98105",
-      },
-      numRiders: 1,
-      status: "REQUESTED",
-    });
-    setDriverToPickupDuration(10);
-    setPickupToDropoffDuration(10);
-  }, []);
-
   /* HOME PAGE STATE */
   const [whichComponent, setWhichComponent] = useState<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
-  >("requestsAreAvailable");
+  >("noRequests");
 
   /* USE EFFECTS */
   useEffect(() => {
