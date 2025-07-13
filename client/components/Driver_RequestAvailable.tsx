@@ -25,7 +25,7 @@ export default function RequestAvailable({
   // switches between screen showing accept button and next ride details
   // once "Let's Go" button is clicked, component should switch over to HandleRide component based on what is in home.tsx
   const [showAcceptScreen, setShowAcceptScreen] = useState(true);
-  // constants used for animation 
+  // constants used for animation
   const rotation = useRef(new Animated.Value(0)).current;
   const swing = rotation.interpolate({
     inputRange: [0, 0.25, 0.5, 0.75, 1],
@@ -77,26 +77,27 @@ export default function RequestAvailable({
         <>
           {/* Top bar */}
           <View
-            style={[styles.driverRequestRowCenter, { paddingHorizontal: "5%", paddingRight: "5%" }]}
+            style={[
+              styles.driverRequestRowCenter,
+              { paddingHorizontal: "5%", paddingRight: "5%" },
+            ]}
           >
             <Text style={[{ fontSize: 24, fontWeight: "bold" }]}>
               Next Ride
             </Text>
-            <View style={{ flex: 1 }}/>
+            <View style={{ flex: 1 }} />
             <View style={{ width: "5%", aspectRatio: 1 }}>
               <Image
                 source={require("@/assets/images/profile-filled.png")}
                 style={{ width: "100%", height: "100%", resizeMode: "contain" }}
               />
             </View>
-            <View style={{ width: "1%" }}/>
-            <Text style={{ fontSize: 17 }}>
-              ({requestInfo.numRiders}) 
-            </Text>
-            <View style={{ width: "2%" }}/>
+            <View style={{ width: "1%" }} />
+            <Text style={{ fontSize: 17 }}>({requestInfo.numRiders})</Text>
+            <View style={{ width: "2%" }} />
             <View
               style={{
-                maxWidth: "35%",    // or whatever fits best
+                maxWidth: "35%", // or whatever fits best
                 overflow: "hidden",
               }}
             >
@@ -125,7 +126,10 @@ export default function RequestAvailable({
           <View style={{ paddingRight: "4%" }}>
             {/* Your location */}
             <View
-              style={[styles.driverRequestRowCenter, { paddingHorizontal: "12%" }]}
+              style={[
+                styles.driverRequestRowCenter,
+                { paddingHorizontal: "12%" },
+              ]}
             >
               <View style={{ width: "16%", aspectRatio: 1 }}>
                 <Image
@@ -142,7 +146,10 @@ export default function RequestAvailable({
 
             {/* four dots + driver to pick up duration */}
             <View
-              style={[styles.driverRequestRowCenter, { marginHorizontal: "3.5%" }]}
+              style={[
+                styles.driverRequestRowCenter,
+                { marginHorizontal: "3.5%" },
+              ]}
             >
               <View style={[styles.driverRequestDotsImage]}>
                 <View style={{ width: "80%" }}>
@@ -162,7 +169,10 @@ export default function RequestAvailable({
 
             {/* Pickup location */}
             <View
-              style={[styles.driverRequestRowCenter, { paddingHorizontal: "15%" }]}
+              style={[
+                styles.driverRequestRowCenter,
+                { paddingHorizontal: "15%" },
+              ]}
             >
               <View style={{ width: "9%", aspectRatio: 1 }}>
                 <Image
@@ -185,9 +195,14 @@ export default function RequestAvailable({
 
             {/* four dots + drop off duration */}
             <View
-              style={[styles.driverRequestRowCenter, { marginHorizontal: "3.5%" }]}
+              style={[
+                styles.driverRequestRowCenter,
+                { marginHorizontal: "3.5%" },
+              ]}
             >
-              <View style={[styles.driverRequestDotsImage, { paddingBottom: "2%" }]}>
+              <View
+                style={[styles.driverRequestDotsImage, { paddingBottom: "2%" }]}
+              >
                 <View style={{ width: "80%" }}>
                   <Text style={{ fontSize: 14, textAlign: "right" }}>
                     {pickupToDropoffDuration} min
