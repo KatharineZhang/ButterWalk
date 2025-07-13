@@ -11,6 +11,7 @@ interface RequestAvailableProps {
   pickupToDropoffDuration?: number; // in minutes, might be undefined initially
   onAccept: () => void;
   onLetsGo: () => void;
+  updateSideBarHeight: (height: number) => void;
 }
 
 export default function RequestAvailable({
@@ -19,6 +20,7 @@ export default function RequestAvailable({
   pickupToDropoffDuration, // in minutes, might be undefined initially
   onAccept,
   onLetsGo,
+  updateSideBarHeight,
 }: RequestAvailableProps) {
   // switches between screen showing accept button and next ride details
   // once "Let's Go" button is clicked, component should switch over to HandleRide component based on what is in home.tsx
@@ -64,6 +66,10 @@ export default function RequestAvailable({
         },
         showAcceptScreen && { paddingBottom: "21%" },
       ]}
+      onLayout={(event) => {
+        // on render, update the sidebar height to the height of this component
+        updateSideBarHeight(event.nativeEvent.layout.height);
+      }}
     >
       {!showAcceptScreen && requestInfo != undefined ? (
         <>

@@ -56,6 +56,8 @@ export default function HomePage() {
       numRiders: 1,
       status: "REQUESTED",
     });
+    setDriverToPickupDuration(10);
+    setPickupToDropoffDuration(3);
   }, []);
 
   /* HOME PAGE STATE */
@@ -621,6 +623,7 @@ export default function HomePage() {
         <View style={styles.homePageComponentContainer}>
           <RequestAvailable
             requestInfo={requestInfo}
+            updateSideBarHeight={setCurrentComponentHeight}
             driverToPickupDuration={driverToPickupDuration}
             pickupToDropoffDuration={pickupToDropoffDuration}
             onAccept={onAccept}
