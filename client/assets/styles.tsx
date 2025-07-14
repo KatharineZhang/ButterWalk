@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
 
 //This is absolutely a MESS and we need to fix it.
 // naming conventions are all over the place
@@ -783,6 +783,7 @@ export const styles = StyleSheet.create({
     width: Dimensions.get("window").width,
     height: Dimensions.get("window").height,
     zIndex: 999,
+    pointerEvents: "box-none",
   },
   logoutImage: {
     width: "15%",
@@ -791,7 +792,7 @@ export const styles = StyleSheet.create({
   },
   modal: {
     width: "100%",
-    top: "8%",
+    top: "11%",
     backgroundColor: "white",
     padding: 20,
     alignItems: "left",
@@ -824,7 +825,7 @@ export const styles = StyleSheet.create({
     marginTop: -10,
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
     marginLeft: "5%",
     color: "#4B2E83",
