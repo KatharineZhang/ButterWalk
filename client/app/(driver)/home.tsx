@@ -180,7 +180,7 @@ export default function HomePage() {
   // FOR TESTING UI ONLY, REMOVE LATER
   useEffect(() => {
     setWhichComponent("handleRide");
-    setPhase("waitingForPickup");
+    setPhase("headingToPickup");
   }, []);
 
   // determines if the flagging functionality is do-able by the driver
@@ -703,8 +703,6 @@ export default function HomePage() {
             dropoffProgress={dropoffProgress}
             isNearPickup={isNearPickup}
             isNearDropoff={isNearDropoff}
-            onArriveAtPickup={driverArrivedAtPickup} // callbacks
-            onDrivingToDropoff={driverDrivingToDropOff} //callbacks
           />
         </View>
       ) : whichComponent === "endShift" ? (

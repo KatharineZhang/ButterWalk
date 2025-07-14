@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { View, Text, Button } from "react-native";
+import { View, Text, Button, Pressable } from "react-native";
 import { RideRequest } from "../../server/src/api";
 import { NotificationType } from "./Both_Notification";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import SegmentedProgressBar from "./Both_SegmentedProgressBar";
+import { styles } from "@/assets/styles";
+import { ProgressBar } from "react-native-paper";
 
 interface HandleRideProps {
   requestInfo: RideRequest;
@@ -33,8 +35,6 @@ interface HandleRideProps {
   dropoffProgress: number;
   isNearPickup: boolean;
   isNearDropoff: boolean;
-  onArriveAtPickup: () => void; // new callback for when driver arrives at pickup
-  onDrivingToDropoff: () => void; // new callback for when driver starts driving to dropoff
 }
 
 export default function HandleRide({
@@ -53,8 +53,6 @@ export default function HandleRide({
   dropoffProgress,
   isNearPickup,
   isNearDropoff,
-  onArriveAtPickup,
-  onDrivingToDropoff,
 }: HandleRideProps) {
   // When timer is done in "waitingForPickup" state
   const [timerDone, setTimerDone] = useState(false);
@@ -63,17 +61,29 @@ export default function HandleRide({
   useEffect(() => {
     if (phase === "headingToPickup") {
       changeFlaggingAllowed(false);
-    } else {
-      if (phase === "waitingForPickup") {
-        // Update seconds every second
-        const interval = setInterval(() => {
-          setSeconds((prevSeconds) => prevSeconds - 1);
-        }, 1000);
-        // TODO: make sure timer actually stops
-        return () => clearInterval(interval);
-      }
+    } else if (phase === "waitingForPickup") {
+      // Reset timer when entering waitingForPickup phase, 5 min
+      setSeconds(5 * 60);
+      setTimerDone(false);
+      // Update seconds every second
+      const interval = setInterval(() => {
+        setSeconds((prevSeconds) => {
+          if (prevSeconds <= 0) {
+            return 0; // Stop at 0
+          }
+          return prevSeconds - 1;
+        });
+      }, 1000);
+      return () => clearInterval(interval);
     }
   }, [phase]);
+
+  // Automatically change to arrivedAtDropoff phase when near dropoff
+  useEffect(() => {
+    if (phase === "headingToDropoff" && isNearDropoff) {
+      setPhase("arrivedAtDropoff");
+    }
+  }, [phase, isNearDropoff, setPhase]);
 
   useEffect(() => {
     if (seconds == 60) {
@@ -134,52 +144,123 @@ export default function HandleRide({
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
-              alignItems: "center",
+              alignItems: "flex-start",
               marginBottom: 12,
             }}
           >
             <Text style={{ fontSize: 20, fontWeight: "bold" }}>
               Driving to Pickup
             </Text>
-            <Text style={{ fontSize: 18, fontWeight: "600" }}>
-              {requestInfo?.netid || "Passenger"}
-            </Text>
-          </View>
-          {/* Person icon and number of passengers */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 12,
-            }}
-          >
-            <Ionicons name="person" size={22} color="#4B2E83" />
-            <Text style={{ fontSize: 16, marginLeft: 8 }}>
-              ({requestInfo?.numRiders || 1})
-            </Text>
+            <View style={{ flex: 1, alignItems: "flex-end" }}>
+              <View style={{ alignItems: "flex-start" }}>
+                <Text style={{ fontSize: 18, fontWeight: "400" }}>
+                  {requestInfo?.netid || "Passenger"}
+                </Text>
+                {/* Person icon and number of passengers */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginTop: 4,
+                  }}
+                >
+                  <Ionicons name="person" size={18} color="#888888" />
+                  <Text
+                    style={{ fontSize: 14, marginLeft: 6, color: "#888888" }}
+                  >
+                    ({requestInfo?.numRiders})
+                  </Text>
+                </View>
+              </View>
+            </View>
           </View>
           {/* Grey line */}
           <View
             style={{
               height: 1,
               backgroundColor: "#E0E0E0",
-              marginVertical: 12,
+              marginVertical: 16,
             }}
           />
-          {/* Progress Bar, not working?? */}
-          <SegmentedProgressBar type={1} />
-          {/* Button to confirm pickup, TODO: add 60s timer */}
+          {/* Progress Bar */}
+          {/* Descriptor above the progress bar ( __ min Ride) */}
+          <View
+            style={{
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              left: -20,
+              marginTop: 24,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "bold",
+              }}
+            >
+              {driverToPickupDuration} min Ride
+            </Text>
+          </View>
+          <View
+            style={[
+              styles.progressBarWrapper,
+              {
+                marginTop: 24,
+                marginBottom: 24,
+                width: "100%",
+                alignItems: "center",
+              },
+            ]}
+          >
+            {/* show white circle */}
+            <View style={[styles.circleStart, { backgroundColor: "white" }]} />
+            {/* move purple circle to middle */}
+            <View style={[styles.circleStart, { left: 130 }]} />
+            {/* Progress Bar */}
+            <ProgressBar
+              progress={pickupProgress}
+              color="#C5B4E3"
+              style={{
+                width: "100%",
+                height: 8,
+                backgroundColor: "#E0E0E0",
+                borderRadius: 4,
+              }}
+            />
+            <View style={styles.circleEnd} />
+          </View>
+          {/* If proximity to pickup location is near, 
+          Button to confirm pickup shows TODO: add 60s timer */}
           {isNearPickup && (
-            <View style={{ marginTop: 20 }}>
-              <Button
-                title="I am at pickup location"
-                color="#4B2E83"
-                onPress={() => {
-                  // call the callback to update the state
-                  setPhase("waitingForPickup");
-                  onArriveAtPickup();
+            <View
+              style={{
+                position: "absolute",
+                bottom: 20,
+                left: 24,
+                right: 24,
+              }}
+            >
+              <Pressable
+                style={{
+                  backgroundColor: "#4B2E83",
+                  paddingVertical: 16,
+                  borderRadius: 8,
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
-              />
+                onPress={() => {
+                  // call the callback to move onto next phase
+                  setPhase("waitingForPickup");
+                  driverArrivedAtPickup();
+                }}
+              >
+                <Text
+                  style={{ color: "white", fontSize: 16, fontWeight: "600" }}
+                >
+                  I'm at pickup location
+                </Text>
+              </Pressable>
             </View>
           )}
         </View>
@@ -200,7 +281,7 @@ export default function HandleRide({
             shadowOpacity: 0.1,
             shadowRadius: 8,
             elevation: 10,
-            maxHeight: "50%",
+            height: "50%",
             width: "100%",
             zIndex: 100,
           }}
@@ -210,77 +291,327 @@ export default function HandleRide({
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
-              alignItems: "center",
+              alignItems: "flex-start",
               marginBottom: 12,
             }}
           >
-            <Text style={{ fontSize: 20, fontWeight: "bold" }}>
-              Waiting for Pickup
-            </Text>
-            <Text style={{ fontSize: 18, fontWeight: "600" }}>
-              {requestInfo?.netid || "Passenger"}
-            </Text>
-          </View>
-          {/* Person icon and number of passengers */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 12,
-            }}
-          >
-            <Ionicons name="person" size={22} color="#4B2E83" />
-            <Text style={{ fontSize: 16, marginLeft: 8 }}>
-              ({requestInfo?.numRiders || 1})
-            </Text>
+            <View style={{ flexDirection: "column" }}>
+              <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+                Waiting for Pickup
+              </Text>
+              {/* Timer */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginTop: 4,
+                }}
+              >
+                <Ionicons
+                  name="time-outline"
+                  size={18}
+                  color={seconds <= 0 ? "#FF0000" : "#888888"}
+                />
+                <Text
+                  style={{
+                    fontSize: 16,
+                    marginLeft: 8,
+                    color: seconds <= 0 ? "#FF0000" : "#888888",
+                  }}
+                >
+                  {formatTime(seconds)}
+                </Text>
+              </View>
+            </View>
+            <View style={{ alignItems: "flex-start" }}>
+              <Text style={{ fontSize: 18, fontWeight: "400" }}>
+                {requestInfo?.netid || "Passenger"}
+              </Text>
+              {/* Person icon and number of passengers */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginTop: 4,
+                }}
+              >
+                <Ionicons name="person" size={18} color="#888888" />
+                <Text style={{ fontSize: 14, marginLeft: 6, color: "#888888" }}>
+                  ({requestInfo?.numRiders})
+                </Text>
+              </View>
+            </View>
           </View>
           {/* Grey line */}
           <View
             style={{
               height: 1,
               backgroundColor: "#E0E0E0",
-              marginVertical: 12,
+              marginVertical: 16,
             }}
           />
           {/* Progress Bar */}
-          <SegmentedProgressBar type={1} />
+          {/* Descriptor above the progress bar ( __ min Ride) */}
+          <View
+            style={{
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              left: -20,
+              marginTop: 24,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "bold",
+              }}
+            >
+              {driverToPickupDuration} min Ride
+            </Text>
+          </View>
+          <View
+            style={[
+              styles.progressBarWrapper,
+              {
+                marginTop: 24,
+                marginBottom: 24,
+                width: "100%",
+                alignItems: "center",
+              },
+            ]}
+          >
+            {/* show white circle */}
+            <View style={[styles.circleStart, { backgroundColor: "white" }]} />
+            {/* move purple circle to middle */}
+            <View style={[styles.circleStart, { left: 130 }]} />
+            {/* Progress Bar */}
+            <ProgressBar
+              progress={pickupProgress}
+              color="#C5B4E3"
+              style={[
+                styles.progressBar,
+                {
+                  width: "100%",
+                  height: 8,
+                },
+              ]}
+            />
+            <View style={styles.circleEnd} />
+          </View>
+          {/* Grey line */}
+          <View
+            style={{
+              height: 1,
+              backgroundColor: "#E0E0E0",
+              marginVertical: 16,
+            }}
+          />
           {/* Two buttons side by side */}
           <View
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
-              marginTop: 20,
+              marginTop: "auto",
+              paddingBottom: 20,
             }}
           >
             <View style={{ flex: 1, marginRight: 8 }}>
-              <Button
-                title="I have found my student"
-                color="#4B2E83"
+              {/* Button to confirm student was picked up */}
+              <Pressable
+                style={{
+                  backgroundColor: "#4B2E83",
+                  paddingVertical: 20,
+                  borderRadius: 8,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
                 onPress={() => {
                   // call the callback to update the state
                   setPhase("headingToDropoff");
-                  onDrivingToDropoff();
+                  driverDrivingToDropOff();
                 }}
-              />
+              >
+                <Text
+                  style={{ color: "white", fontSize: 16, fontWeight: "400" }}
+                >
+                  I've found student
+                </Text>
+              </Pressable>
             </View>
             <View style={{ flex: 1, marginLeft: 8 }}>
-              <Button title="Cancel request" color="#888" onPress={onCancel} />
+              {/* Button to cancel ride */}
+              <Pressable
+                style={{
+                  backgroundColor: seconds <= 0 ? "#FF0000" : "#E0E0E0",
+                  paddingVertical: 20,
+                  borderRadius: 8,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onPress={seconds <= 0 ? cancelRide : onCancel}
+              >
+                <Text
+                  style={{
+                    color: seconds <= 0 ? "white" : "black",
+                    fontSize: 16,
+                    fontWeight: "400",
+                  }}
+                >
+                  Cancel request
+                </Text>
+              </Pressable>
             </View>
           </View>
         </View>
       ) : phase === "headingToDropoff" ? (
-        <View>
-          <Text>Heading to Dropoff</Text>
-          <Text>
-            Dropoff Location: {JSON.stringify(requestInfo.locationTo)}
-          </Text>
-          <Button title="Arrived at dropoff" onPress={completeRide} />
+        <View
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "white",
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            padding: 24,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: -2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 10,
+            maxHeight: "50%",
+            width: "100%",
+          }}
+        >
+          {/* title and passenger name */}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              marginBottom: 12,
+            }}
+          >
+            <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+              Driving to Dropoff
+            </Text>
+            <View style={{ flex: 1, alignItems: "flex-end" }}>
+              <View style={{ alignItems: "flex-start" }}>
+                <Text style={{ fontSize: 18, fontWeight: "400" }}>
+                  {requestInfo?.netid || "Passenger"}
+                </Text>
+                {/* Person icon and number of passengers */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginTop: 4,
+                  }}
+                >
+                  <Ionicons name="person" size={18} color="#888888" />
+                  <Text
+                    style={{ fontSize: 14, marginLeft: 6, color: "#888888" }}
+                  >
+                    ({requestInfo?.numRiders})
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+          {/* Grey line */}
+          <View
+            style={{
+              height: 1,
+              backgroundColor: "#E0E0E0",
+              marginVertical: 16,
+            }}
+          />
+          {/* Progress Bar */}
+          {/* Descriptor above the progress bar ( __ min Ride) */}
+
+          {/* If proximity to dropoff location is near, 
+          automatically change to arrivedAtDropoff phase */}
+          {isNearDropoff && setPhase("arrivedAtDropoff")}
         </View>
       ) : (
-        <View>
-          <Text>Arrived at Dropoff</Text>
-          <Text>Thank you for completing the ride!</Text>
-          <Button title="Go Home" onPress={completeRide} />
+        <View
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "white",
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            padding: 24,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: -2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 10,
+            maxHeight: "50%",
+            width: "100%",
+          }}
+        >
+          {/* title and passenger name */}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              marginBottom: 12,
+            }}
+          >
+            <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+              You've Arrived
+            </Text>
+            <View style={{ flex: 1, alignItems: "flex-end" }}>
+              <View style={{ alignItems: "flex-start" }}>
+                <Text style={{ fontSize: 18, fontWeight: "400" }}>
+                  {requestInfo?.netid || "Passenger"}
+                </Text>
+                {/* Person icon and number of passengers */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginTop: 4,
+                  }}
+                >
+                  <Ionicons name="person" size={18} color="#888888" />
+                  <Text
+                    style={{ fontSize: 14, marginLeft: 6, color: "#888888" }}
+                  >
+                    ({requestInfo?.numRiders})
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+          {/* Grey line */}
+          <View
+            style={{
+              height: 1,
+              backgroundColor: "#E0E0E0",
+              marginVertical: 16,
+            }}
+          />
+
+          <Pressable
+            style={{
+              backgroundColor: "#4B2E83",
+              paddingVertical: 16,
+              borderRadius: 8,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            onPress={completeRide}
+          >
+            <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>
+              I've dropped off student
+            </Text>
+          </Pressable>
         </View>
       )}
     </>
