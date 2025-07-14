@@ -480,14 +480,13 @@ export default function HomePage() {
         }}
       >
         <TouchableOpacity
-          style={{ width: 35, height: 35, top: "3%", }}
+          style={{ width: 35, height: 35, top: "3%" }}
           onPress={() => setProfileVisible(true)}
         >
           <View
             style={{
               backgroundColor: "white",
               borderRadius: 100,
-              
             }}
           >
             <Ionicons name="menu" size={35} color="#4B2E83" />

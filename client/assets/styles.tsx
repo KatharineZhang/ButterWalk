@@ -795,7 +795,6 @@ export const styles = StyleSheet.create({
     top: "11%",
     backgroundColor: "white",
     padding: 20,
-    alignItems: "left",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
