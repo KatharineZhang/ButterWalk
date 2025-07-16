@@ -791,7 +791,60 @@ export const styles = StyleSheet.create({
     elevation: 10,
     maxHeight: "50%",
     width: "100%",
-  }
+  },
+
+  driverCancelButton: {
+    paddingVertical: 20,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  driverArriveAtDropOff: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "white",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 10,
+    maxHeight: "50%",
+    width: "100%",
+},
+
+  titlePassengerName: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 12,
+  },
+
+  driverCompleteButton: {
+    backgroundColor: "#4B2E83",
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  driverGreyLine: {
+    height: 1,
+    backgroundColor: "#E0E0E0",
+    marginVertical: 16,
+  },
+
+  driverPersonIcon: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+  },
+
 });
 
 export const loadingPageCompStyles = StyleSheet.create({

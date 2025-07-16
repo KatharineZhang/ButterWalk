@@ -375,10 +375,7 @@ export default function HandleRide({
             <Pressable
               style={{
                 backgroundColor: seconds <= 0 ? "#FF0000" : "#E0E0E0",
-                paddingVertical: 20,
-                borderRadius: 8,
-                alignItems: "center",
-                justifyContent: "center",
+                ...styles.driverCancelButton,
               }}
               onPress={seconds <= 0 ? cancelRide : onCancel}
             >
@@ -398,34 +395,9 @@ export default function HandleRide({
     );
   } else if (phase === "headingToDropoff") {
     content = (
-      <View
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "white",
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          padding: 24,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 10,
-          maxHeight: "50%",
-          width: "100%",
-        }}
-      >
+      <View style={{...styles.driverArriveAtDropOff}}>
         {/* title and passenger name */}
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            marginBottom: 12,
-          }}
-        >
+        <View style={{...styles.titlePassengerName}}>
           <Text style={{ fontSize: 20, fontWeight: "bold" }}>
             Driving to Dropoff
           </Text>
@@ -435,13 +407,7 @@ export default function HandleRide({
                 {requestInfo?.netid || "Passenger"}
               </Text>
               {/* Person icon and number of passengers */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginTop: 4,
-                }}
-              >
+              <View style={{...styles.driverPersonIcon}}>
                 <Ionicons name="person" size={18} color="#888888" />
                 <Text style={{ fontSize: 14, marginLeft: 6, color: "#888888" }}>
                   ({requestInfo?.numRiders})
@@ -451,47 +417,16 @@ export default function HandleRide({
           </View>
         </View>
         {/* Grey line */}
-        <View
-          style={{
-            height: 1,
-            backgroundColor: "#E0E0E0",
-            marginVertical: 16,
-          }}
-        />
+        <View style={{...styles.driverGreyLine}}/>
         {/* Progress Bar */}
         {/* Descriptor above the progress bar ( __ min Ride) */}
       </View>
     );
   } else if (phase === "arrivedAtDropoff") {
     content = (
-      <View
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "white",
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          padding: 24,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 10,
-          maxHeight: "50%",
-          width: "100%",
-        }}
-      >
+      <View style={{...styles.driverArriveAtDropOff,}}>
         {/* title and passenger name */}
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            marginBottom: 12,
-          }}
-        >
+        <View style={{...styles.titlePassengerName}}>
           <Text style={{ fontSize: 20, fontWeight: "bold" }}>
             You've Arrived
           </Text>
@@ -501,13 +436,8 @@ export default function HandleRide({
                 {requestInfo?.netid || "Passenger"}
               </Text>
               {/* Person icon and number of passengers */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginTop: 4,
-                }}
-              >
+              <View style={{...styles.driverPersonIcon}}>
+
                 <Ionicons name="person" size={18} color="#888888" />
                 <Text style={{ fontSize: 14, marginLeft: 6, color: "#888888" }}>
                   ({requestInfo?.numRiders})
@@ -517,22 +447,10 @@ export default function HandleRide({
           </View>
         </View>
         {/* Grey line */}
-        <View
-          style={{
-            height: 1,
-            backgroundColor: "#E0E0E0",
-            marginVertical: 16,
-          }}
-        />
+        <View style={{...styles.driverGreyLine}}/>
 
         <Pressable
-          style={{
-            backgroundColor: "#4B2E83",
-            paddingVertical: 16,
-            borderRadius: 8,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          style={{...styles.driverCompleteButton}}
           onPress={completeRide}
         >
           <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>
