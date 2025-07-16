@@ -19,7 +19,9 @@ export default function Profile({
 
   return (
     <View style={styles.overlay}>
-      <View style={styles.modal}>
+      <View
+        style={[styles.modal, { top: "4%", paddingTop: "13%", zIndex: 100 }]}
+      >
         <Pressable onPress={onClose} style={styles.closeButton}>
           <Image
             source={require("@/assets/images/close_button_profile.png")}
