@@ -608,6 +608,8 @@ export default function HomePage() {
           driverLocation={driverLocation}
           userLocationChanged={userLocationChanged}
           status={rideStatus}
+          startLocation={startLocation}
+          whichComponent={"rideReq"}
         />
         {/* profile pop-up modal */}
         <View style={styles.modalContainer}>
