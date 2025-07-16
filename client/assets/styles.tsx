@@ -859,6 +859,21 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  driverRequestPageImage: {
+    width: "100%", 
+    height: "100%", 
+    resizeMode: "contain",
+  },
+  driverRequestDotsImage: {
+    flexDirection: "row", 
+    alignItems: "center", 
+    justifyContent: "flex-end",
+    paddingRight: "80%",
+  },
+  driverRequestRowCenter: {
+    flexDirection: "row", 
+    alignItems: "center", 
+  }
 });
 
 export const loadingPageCompStyles = StyleSheet.create({
