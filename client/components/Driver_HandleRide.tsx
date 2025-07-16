@@ -122,25 +122,7 @@ export default function HandleRide({
   let content;
   if (phase === "headingToPickup") {
     content = (
-      <View
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "white",
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          padding: 24,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 10,
-          maxHeight: "50%",
-          width: "100%",
-        }}
-      >
+      <View style={styles.driverBottomPanel}>
         {/* title and passenger name */}
         <View
           style={{
