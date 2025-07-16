@@ -774,7 +774,7 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     marginLeft: 5,
   },
-
+  
   // driver profile
   overlay: {
     position: "relative",
