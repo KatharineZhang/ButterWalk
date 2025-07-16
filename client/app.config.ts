@@ -9,7 +9,7 @@ dotenv.config();
 // while also keeping them hidden on git
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "Husky ButterWalk",
+  name: "Husky SafeTrip",
   slug: "husky-betterWalk",
   version: "1.0.0",
   orientation: "portrait",
