@@ -203,7 +203,7 @@ export const styles = StyleSheet.create({
   },
 
   appNameText: {
-    fontSize: 45,
+    fontSize: 40,
     fontWeight: "700",
     letterSpacing: 0,
     color: "black",
@@ -225,7 +225,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "center",
-    margin: '10%',
+    margin: "5%",
   },
   signInGoogleContainer: {
     flexDirection: "row",
@@ -247,11 +247,11 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 12,
     paddingHorizontal: 32,
-    borderRadius: 4,
+    borderRadius: 10,
     // elevation: 3,
     backgroundColor: "#4B2E83",
   },
-  signInButtonText : {
+  signInButtonText: {
     fontSize: 22,
     fontStyle: "italic",
     fontWeight: "700",
@@ -267,7 +267,7 @@ export const styles = StyleSheet.create({
   },
 
   input: {
-    height: '8%',
+    height: "8%",
     width: "100%",
     borderWidth: 2,
     marginVertical: 4,
@@ -275,7 +275,7 @@ export const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#f9f9f9",
     textAlign: "left",
-    borderColor: "#ccc"
+    borderColor: "#ccc",
   },
   inputFocused: {
     borderColor: "#4B2E83",
@@ -783,20 +783,20 @@ export const styles = StyleSheet.create({
     marginLeft: 5,
   },
   driverRequestPageImage: {
-    width: "100%", 
-    height: "100%", 
+    width: "100%",
+    height: "100%",
     resizeMode: "contain",
   },
   driverRequestDotsImage: {
-    flexDirection: "row", 
-    alignItems: "center", 
+    flexDirection: "row",
+    alignItems: "center",
     justifyContent: "flex-end",
     paddingRight: "80%",
   },
   driverRequestRowCenter: {
-    flexDirection: "row", 
-    alignItems: "center", 
-  }
+    flexDirection: "row",
+    alignItems: "center",
+  },
 });
 
 export const loadingPageCompStyles = StyleSheet.create({

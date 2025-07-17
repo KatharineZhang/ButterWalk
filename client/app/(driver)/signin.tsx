@@ -6,7 +6,8 @@ import {
   TextInput,
   Image,
   TouchableWithoutFeedback,
-  Keyboard
+  Keyboard,
+  Dimensions,
 } from "react-native";
 import { useState } from "react";
 import { styles } from "../../assets/styles";
@@ -27,14 +28,14 @@ const Login = () => {
   // check that the driver ID input is correct
   // param: input - the driver id input in the sign in
   const checkDriverIdInput = () => {
-    if (/^\d{7}$/.test(driverId)) {
+    if (/^[a-z]{5,7}$/.test(driverId.toLowerCase())) {
       setSignedIn(true);
-      setNetid("driverId"); // changed this!
+      setNetid(driverId.toLowerCase());
       setErrMsg("");
     } else {
       setDriverId("");
       setSignedIn(false);
-      setErrMsg("Driver ID must be exactly 7 digits.");
+      setErrMsg("Driver ID must be 5 to 7 lowercase letters.");
     }
   };
 
@@ -54,21 +55,30 @@ const Login = () => {
         <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
           <Text style={styles.appNameText}>Husky ButterWalk</Text>
           <Image style={styles.signinLogo} source={butterWalkLogo} />
-          <Text style={styles.signInText}>Driver Sign In</Text> 
-          <View style={{ height: 20 }}></View>
+          <Text style={styles.signInText}>Driver Sign In</Text>
+          <View style={{ height: "7%" }}></View>
 
-          <Text style={{ fontSize: 17, fontWeight: "500", }}>Driver ID</Text>
+          <Text style={{ fontSize: 17, fontWeight: "500" }}>Driver Netid</Text>
+          {errMsg && (
+            <Text style={{ wordWrap: "true", maxWidth: "70%", color: "red" }}>
+              {errMsg}
+            </Text>
+          )}
 
-          {/* driver signin ID input box */}
           <TextInput
             value={driverId}
-            style={[styles.input, driverId && styles.inputFocused]}
+            style={[
+              styles.input,
+              driverId && styles.inputFocused,
+              {
+                width: Dimensions.get("window").width * 0.9,
+                marginBottom: "5%",
+              },
+            ]}
             placeholderTextColor={"#808080"}
             onChangeText={(text: string) => setDriverId(text)}
             autoCapitalize="none"
           />
-
-          <Text style={{ color: "red" }}>{errMsg}</Text>
 
           <Pressable
             style={styles.signInButton}
