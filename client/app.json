@@ -18,6 +18,9 @@
       "bundleIdentifier": "com.butterwalk.butterwalk",
       "config": {
         "googleMapsApiKey": "AIzaSyAi4GiqY4FUMk7CQWB0MxNQIGWOsr_laBw"
+        "googleSignIn": {
+           "reservedClientId": "process.env.EXPO_PUBLIC_IOS_CLIENT_ID",
+        },
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -33,6 +36,9 @@
         "googleMaps": {
           "apiKey": "see app.config.ts"
         }
+        "googleSignIn": {
+           "clientId": "process.env.EXPO_PUBLIC_ANDRIOD_CLIENT_ID",
+        },
       }
     },
     "web": {
