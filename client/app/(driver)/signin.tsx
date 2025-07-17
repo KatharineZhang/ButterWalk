@@ -5,6 +5,8 @@ import {
   Pressable,
   TextInput,
   Image,
+  TouchableWithoutFeedback,
+  Keyboard
 } from "react-native";
 import { useState } from "react";
 import { styles } from "../../assets/styles";
@@ -27,7 +29,7 @@ const Login = () => {
   const checkDriverIdInput = () => {
     if (/^\d{7}$/.test(driverId)) {
       setSignedIn(true);
-      setNetid("driver-netID");
+      setNetid("driverId"); // changed this!
       setErrMsg("");
     } else {
       setDriverId("");
@@ -48,47 +50,36 @@ const Login = () => {
     />
   ) : (
     <View style={styles.container}>
-      <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
-        <Text style={styles.appNameText}>Husky SafeTrip</Text>
-        <Image style={styles.signinLogo} source={butterWalkLogo} />
-        <Text style={styles.signInText}>Driver Sign in</Text>
-        <View style={{ height: 20 }}></View>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
+          <Text style={styles.appNameText}>Husky ButterWalk</Text>
+          <Image style={styles.signinLogo} source={butterWalkLogo} />
+          <Text style={styles.signInText}>Driver Sign In</Text> 
+          <View style={{ height: 20 }}></View>
 
-        <Text style={{ fontSize: 17 }}>Driver ID</Text>
+          <Text style={{ fontSize: 17, fontWeight: "500", }}>Driver ID</Text>
 
-        {/* driver signin ID input box */}
-        <TextInput
-          value={driverId}
-          style={[styles.input, driverId && styles.inputFocused]}
-          placeholder="Driver ID"
-          placeholderTextColor={"#808080"}
-          onChangeText={(text: string) => setDriverId(text)}
-          autoCapitalize="none"
-        />
+          {/* driver signin ID input box */}
+          <TextInput
+            value={driverId}
+            style={[styles.input, driverId && styles.inputFocused]}
+            placeholderTextColor={"#808080"}
+            onChangeText={(text: string) => setDriverId(text)}
+            autoCapitalize="none"
+          />
 
-        <Text style={{ color: "red" }}>{errMsg}</Text>
+          <Text style={{ color: "red" }}>{errMsg}</Text>
 
-        <Pressable
-          style={styles.signInButton}
-          onPress={() => {
-            checkDriverIdInput();
-          }}
-        >
-          <Text style={styles.signInText}>Sign In</Text>
-        </Pressable>
-
-        {/* TEMPORARY Bypass Signin Button */}
-        <View style={{ height: 20 }}></View>
-        <Pressable
-          style={styles.signInButton}
-          onPress={() => {
-            setSignedIn(true);
-            setNetid("driver-netID");
-          }}
-        >
-          <Text style={styles.signInText}>Bypass Signin</Text>
-        </Pressable>
-      </KeyboardAvoidingView>
+          <Pressable
+            style={styles.signInButton}
+            onPress={() => {
+              checkDriverIdInput();
+            }}
+          >
+            <Text style={styles.signInButtonText}>Sign In</Text>
+          </Pressable>
+        </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
     </View>
   );
 };
