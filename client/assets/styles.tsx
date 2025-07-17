@@ -774,8 +774,8 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     marginLeft: 5,
   },
-   /* styling for driver_handle_ride */
-   driverBottomPanel: {
+  /* styling for driver_handle_ride */
+  driverBottomPanel: {
     position: "absolute",
     left: 0,
     right: 0,
@@ -790,9 +790,27 @@ export const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 10,
     maxHeight: "50%",
+    minHeight: "40%",
     width: "100%",
   },
-
+  driverBottomPanelBig: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "white",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 10,
+    height: "50%",
+    width: "100%",
+    zIndex: 100,
+  },
   driverCancelButton: {
     paddingVertical: 20,
     borderRadius: 8,
@@ -816,7 +834,7 @@ export const styles = StyleSheet.create({
     elevation: 10,
     maxHeight: "50%",
     width: "100%",
-},
+  },
 
   titlePassengerName: {
     flexDirection: "row",
@@ -844,7 +862,6 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 4,
   },
-
 });
 
 export const loadingPageCompStyles = StyleSheet.create({
@@ -893,5 +910,4 @@ export const loadingPageCompStyles = StyleSheet.create({
     fontWeight: "400",
     lineHeight: 23,
   },
- 
 });

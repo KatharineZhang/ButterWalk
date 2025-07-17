@@ -13,7 +13,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import Map, { MapRef, calculateDistance, isSameLocation } from "./map";
+import Map, { MapRef, calculateDistance } from "./map";
 import { Redirect, useLocalSearchParams } from "expo-router";
 import RequestAvailable from "@/components/Driver_RequestAvailable";
 import Legend from "@/components/Student_Legend";
@@ -180,7 +180,7 @@ export default function HomePage() {
   // FOR TESTING UI ONLY, REMOVE LATER
   useEffect(() => {
     setWhichComponent("handleRide");
-    setPhase("headingToPickup");
+    setPhase("arrivedAtDropoff");
   }, []);
 
   // determines if the flagging functionality is do-able by the driver
@@ -481,43 +481,42 @@ export default function HomePage() {
   // Track progress when driver location changes and is handling a ride
   useEffect(() => {
     if (whichComponent === "handleRide") {
-      // Check proximity to pickup and dropoff locations
-      if (pickUpLocation.latitude !== 0 && pickUpLocation.longitude !== 0) {
-        setIsNearPickup(isSameLocation(driverLocation, pickUpLocation));
-      }
-      if (dropOffLocation.latitude !== 0 && dropOffLocation.longitude !== 0) {
-        setIsNearDropoff(isSameLocation(driverLocation, dropOffLocation));
+      let pickupProgress = 0;
+      let dropoffProgress = 0;
+
+      // If phase is waitingForPickup, force pickupProgress to 1
+      if (phase === "waitingForPickup") {
+        pickupProgress = 1;
+
+        // if phase is headingtopickup or geadingtodropoff
+      } else if (
+        startLocation.latitude !== 0 &&
+        startLocation.longitude !== 0 &&
+        pickUpLocation.latitude !== 0 &&
+        pickUpLocation.longitude !== 0
+      ) {
+        pickupProgress = calculateProgress(
+          startLocation,
+          driverLocation,
+          pickUpLocation
+        );
       }
 
-      // Calculate progress based on the current phase
-      switch (phase) {
-        case "headingToPickup":
-          if (startLocation.latitude !== 0 && startLocation.longitude !== 0) {
-            const progress = calculateProgress(
-              startLocation,
-              driverLocation,
-              pickUpLocation
-            );
-            setPickupProgress(progress);
-          }
-          break;
-        case "headingToDropoff":
-          // Set pickup progress to 1 since we've already arrived
-          setPickupProgress(1);
-          // Calculate dropoff progress
-          const progress = calculateProgress(
-            pickUpLocation,
-            driverLocation,
-            dropOffLocation
-          );
-          setDropoffProgress(progress);
-          break;
-        case "waitingForPickup":
-        case "arrivedAtDropoff":
-          // Set pickup progress to 1 since we've already arrived
-          setPickupProgress(1);
-          break;
+      if (
+        pickUpLocation.latitude !== 0 &&
+        pickUpLocation.longitude !== 0 &&
+        dropOffLocation.latitude !== 0 &&
+        dropOffLocation.longitude !== 0
+      ) {
+        dropoffProgress = calculateProgress(
+          pickUpLocation,
+          driverLocation,
+          dropOffLocation
+        );
       }
+
+      setPickupProgress(pickupProgress);
+      setDropoffProgress(dropoffProgress);
     }
   }, [driverLocation, phase, whichComponent, requestInfo.requestId]);
 

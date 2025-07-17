@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { View, Text, Button, Pressable } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { RideRequest } from "../../server/src/api";
 import { NotificationType } from "./Both_Notification";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import SegmentedProgressBar from "./Both_SegmentedProgressBar";
 import { styles } from "@/assets/styles";
 import { ProgressBar } from "react-native-paper";
 
@@ -37,6 +36,60 @@ interface HandleRideProps {
   isNearDropoff: boolean;
 }
 
+// a helper function that adds location labels below the progress bar
+function ProgressBarLabels() {
+  return (
+    <View style={styles.locationsContainer}>
+      <View style={{ flexDirection: "row", maxWidth: "50%" }}>
+        <View style={{ alignSelf: "flex-start" }}>
+          <Text style={styles.locationTitle}>Start</Text>
+        </View>
+        <View style={{ left: 60, width: 100, alignItems: "center" }}>
+          <Text style={styles.locationTitle}>Pickup</Text>
+        </View>
+      </View>
+      <View style={[styles.dropOffContainer, { maxWidth: "30%" }]}>
+        <Text style={styles.locationTitle}>Dropoff</Text>
+      </View>
+    </View>
+  );
+}
+
+// a helper function that adds top labels above the progress bar to show ETA
+// to the pickup and dropoff locations
+function ProgressBarTopLabels({
+  driverToPickupDuration,
+  pickupToDropoffDuration,
+}: {
+  driverToPickupDuration: number;
+  pickupToDropoffDuration: number;
+}) {
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        justifyContent: "space-between",
+        width: 320, // match your progressBarWrapper width
+        alignSelf: "center",
+        marginBottom: 4,
+      }}
+    >
+      {/* Left label: driver to pickup */}
+      <View style={{ width: 130, alignItems: "center" }}>
+        <Text style={{ fontSize: 12, fontWeight: "bold" }}>
+          {driverToPickupDuration} min
+        </Text>
+      </View>
+      {/* Right label: pickup to dropoff */}
+      <View style={{ width: 130, alignItems: "center" }}>
+        <Text style={{ fontSize: 12, fontWeight: "bold" }}>
+          {pickupToDropoffDuration} min
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 export default function HandleRide({
   phase,
   setPhase,
@@ -54,8 +107,6 @@ export default function HandleRide({
   isNearPickup,
   isNearDropoff,
 }: HandleRideProps) {
-  console.log("Driver_HandleRide phase:", phase);
-  console.log("Driver_HandleRide isNearDropoff:", isNearDropoff);
   // When timer is done in "waitingForPickup" state
   const [timerDone, setTimerDone] = useState(false);
   const [seconds, setSeconds] = useState(5 * 60); // 5 minutes
@@ -116,7 +167,16 @@ export default function HandleRide({
     return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
   };
 
-  // TODO: fix this UI
+  // Calculate combined progress for the bar, similar to student side
+  // TODO: confirm this is the correct logic
+  let progress = 0;
+  if (phase === "headingToPickup" || phase === "waitingForPickup") {
+    progress = Math.min(Math.max(pickupProgress * 0.5, 0), 0.5); // 0-0.5
+  } else if (phase === "headingToDropoff") {
+    progress = Math.min(Math.max(0.5 + dropoffProgress * 0.5, 0.5), 1); // 0.5-1
+  } else if (phase === "arrivedAtDropoff") {
+    progress = 1;
+  }
 
   // Had to write return statement in if else conditions in order to render phases one at a time
   let content;
@@ -157,48 +217,30 @@ export default function HandleRide({
           </View>
         </View>
         {/* Grey line */}
-        <View
-          style={{
-            height: 1,
-            backgroundColor: "#E0E0E0",
-            marginVertical: 16,
-          }}
-        />
+        <View style={styles.driverGreyLine} />
         {/* Progress Bar */}
-        {/* Descriptor above the progress bar ( __ min Ride) */}
-        <View
-          style={{
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            left: -20,
-            marginTop: 24,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 12,
-              fontWeight: "bold",
-            }}
-          >
-            {driverToPickupDuration} min Ride
-          </Text>
+        <ProgressBarTopLabels
+          driverToPickupDuration={driverToPickupDuration}
+          pickupToDropoffDuration={pickupToDropoffDuration}
+        />
+        <View style={{ width: "100%", alignItems: "center" }}>
+          <View style={styles.progressBarWrapper}>
+            {/* show white circle */}
+            <View style={[styles.circleStart, { backgroundColor: "white" }]} />
+            {/* move purple circle to middle */}
+            <View style={[styles.circleStart, { left: 130 }]} />
+            {/* Progress Bar */}
+            <ProgressBar
+              progress={progress}
+              color="#C5B4E3"
+              style={styles.progressBar}
+            />
+            <View style={styles.circleEnd} />
+          </View>
         </View>
-        <View style={styles.progressBarWrapper}>
-          {/* show white circle */}
-          <View style={[styles.circleStart, { backgroundColor: "white" }]} />
-          {/* move purple circle to middle */}
-          <View style={[styles.circleStart, { left: 130 }]} />
-          {/* Progress Bar */}
-          <ProgressBar
-            progress={pickupProgress}
-            color="#C5B4E3"
-            style={styles.progressBar}
-          />
-          <View style={styles.circleEnd} />
-        </View>
+        <ProgressBarLabels />
         {/* If proximity to pickup location is near, 
-        Button to confirm pickup shows TODO: add 60s timer */}
+        panel grows and button to confirm pickup shows TODO: add 60s timer */}
         {isNearPickup && (
           <View
             style={{
@@ -232,38 +274,12 @@ export default function HandleRide({
     );
   } else if (phase === "waitingForPickup") {
     content = (
-      <View
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "white",
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          padding: 24,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 10,
-          height: "50%",
-          width: "100%",
-          zIndex: 100,
-        }}
-      >
+      <View style={styles.driverBottomPanelBig}>
         {/* Title and passenger name */}
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            marginBottom: 12,
-          }}
-        >
+        <View style={styles.titlePassengerName}>
           <View style={{ flexDirection: "column" }}>
             <Text style={{ fontSize: 20, fontWeight: "bold" }}>
-              Waiting for Pickup
+              Waiting to Pickup
             </Text>
             {/* Timer */}
             <View
@@ -273,6 +289,7 @@ export default function HandleRide({
                 marginTop: 4,
               }}
             >
+              {/* changes to red after countdown reaches 0 */}
               <Ionicons
                 name="time-outline"
                 size={18}
@@ -318,34 +335,46 @@ export default function HandleRide({
         />
         {/* Actual Progress Bar */}
         <View style={styles.progressBarTop}>
-          <View style={styles.progressBarWrapper}>
-            {/* show white circle */}
-            <View style={[styles.circleStart, { backgroundColor: "white" }]} />
-            {/* move purple circle to middle */}
-            <View style={[styles.circleStart, { left: 130 }]} />
-            {/* Progress Bar */}
-            <ProgressBar
-              progress={pickupProgress}
-              color="#C5B4E3"
-              style={styles.progressBar}
-            />
-            <View style={styles.circleEnd} />
+          <ProgressBarTopLabels
+            driverToPickupDuration={driverToPickupDuration}
+            pickupToDropoffDuration={pickupToDropoffDuration}
+          />
+          <View style={{ width: "100%", alignItems: "center" }}>
+            <View style={styles.progressBarWrapper}>
+              {/* show white circle */}
+              <View
+                style={[styles.circleStart, { backgroundColor: "white" }]}
+              />
+              {/* move purple circle to middle (hardcoded like student side) */}
+              <View style={[styles.circleStart, { left: 130 }]} />
+              {/* using flex styling for this progress bar throws an error for some reason? */}
+              <View
+                style={{
+                  width: 320,
+                  height: 15,
+                  backgroundColor: "#E3E3E3",
+                  borderRadius: 6,
+                  overflow: "hidden",
+                  flexDirection: "row",
+                }}
+              >
+                <View
+                  style={{ width: 160, height: 15, backgroundColor: "#C5B4E3" }}
+                />
+              </View>
+              <View style={styles.circleEnd} />
+            </View>
           </View>
+          <ProgressBarLabels />
         </View>
         {/* Grey line */}
-        <View
-          style={{
-            height: 1,
-            backgroundColor: "#E0E0E0",
-            marginVertical: 16,
-          }}
-        />
+
         {/* Two buttons side by side */}
         <View
           style={{
             flexDirection: "row",
             justifyContent: "space-between",
-            marginTop: "auto",
+            marginTop: "5%",
             paddingBottom: 20,
           }}
         >
@@ -377,7 +406,7 @@ export default function HandleRide({
                 backgroundColor: seconds <= 0 ? "#FF0000" : "#E0E0E0",
                 ...styles.driverCancelButton,
               }}
-              onPress={seconds <= 0 ? cancelRide : onCancel}
+              onPress={timerDone ? cancelRide : onCancel}
             >
               <Text
                 style={{
@@ -395,9 +424,9 @@ export default function HandleRide({
     );
   } else if (phase === "headingToDropoff") {
     content = (
-      <View style={{...styles.driverArriveAtDropOff}}>
+      <View style={styles.driverBottomPanel}>
         {/* title and passenger name */}
-        <View style={{...styles.titlePassengerName}}>
+        <View style={styles.titlePassengerName}>
           <Text style={{ fontSize: 20, fontWeight: "bold" }}>
             Driving to Dropoff
           </Text>
@@ -407,7 +436,7 @@ export default function HandleRide({
                 {requestInfo?.netid || "Passenger"}
               </Text>
               {/* Person icon and number of passengers */}
-              <View style={{...styles.driverPersonIcon}}>
+              <View style={styles.driverPersonIcon}>
                 <Ionicons name="person" size={18} color="#888888" />
                 <Text style={{ fontSize: 14, marginLeft: 6, color: "#888888" }}>
                   ({requestInfo?.numRiders})
@@ -417,16 +446,35 @@ export default function HandleRide({
           </View>
         </View>
         {/* Grey line */}
-        <View style={{...styles.driverGreyLine}}/>
+        <View style={styles.driverGreyLine} />
         {/* Progress Bar */}
-        {/* Descriptor above the progress bar ( __ min Ride) */}
+        <ProgressBarTopLabels
+          driverToPickupDuration={driverToPickupDuration}
+          pickupToDropoffDuration={pickupToDropoffDuration}
+        />
+        <View style={{ width: "100%", alignItems: "center" }}>
+          <View style={styles.progressBarWrapper}>
+            {/* show white circle */}
+            <View style={[styles.circleStart, { backgroundColor: "white" }]} />
+            {/* move purple circle to middle */}
+            <View style={[styles.circleStart, { left: 130 }]} />
+            {/* Progress Bar */}
+            <ProgressBar
+              progress={progress}
+              color="#C5B4E3"
+              style={styles.progressBar}
+            />
+            <View style={styles.circleEnd} />
+          </View>
+        </View>
+        <ProgressBarLabels />
       </View>
     );
   } else if (phase === "arrivedAtDropoff") {
     content = (
-      <View style={{...styles.driverArriveAtDropOff,}}>
+      <View style={styles.driverBottomPanelBig}>
         {/* title and passenger name */}
-        <View style={{...styles.titlePassengerName}}>
+        <View style={styles.titlePassengerName}>
           <Text style={{ fontSize: 20, fontWeight: "bold" }}>
             You've Arrived
           </Text>
@@ -436,8 +484,7 @@ export default function HandleRide({
                 {requestInfo?.netid || "Passenger"}
               </Text>
               {/* Person icon and number of passengers */}
-              <View style={{...styles.driverPersonIcon}}>
-
+              <View style={styles.driverPersonIcon}>
                 <Ionicons name="person" size={18} color="#888888" />
                 <Text style={{ fontSize: 14, marginLeft: 6, color: "#888888" }}>
                   ({requestInfo?.numRiders})
@@ -446,13 +493,34 @@ export default function HandleRide({
             </View>
           </View>
         </View>
-        {/* Grey line */}
-        <View style={{...styles.driverGreyLine}}/>
+        {/* Progress Bar Section */}
+        <View style={styles.progressBarTop}>
+          <ProgressBarTopLabels
+            driverToPickupDuration={driverToPickupDuration}
+            pickupToDropoffDuration={pickupToDropoffDuration}
+          />
+          <View style={{ width: "100%", alignItems: "center" }}>
+            <View style={styles.progressBarWrapper}>
+              <View
+                style={[styles.circleStart, { backgroundColor: "white" }]}
+              />
+              <View style={[styles.circleStart, { left: 130 }]} />
+              {/*TODO: MAKE THIS PROGRESS BAR FLEX, if not flex it throws an error?? */}
+              <ProgressBar
+                progress={1}
+                color="#C5B4E3"
+                style={{ width: 320, height: 15, backgroundColor: "#E3E3E3" }}
+              />
+              <View style={styles.circleEnd} />
+            </View>
+          </View>
+          <ProgressBarLabels />
+        </View>
 
-        <Pressable
-          style={{...styles.driverCompleteButton}}
-          onPress={completeRide}
-        >
+        {/* Grey line */}
+        <View style={styles.driverGreyLine} />
+
+        <Pressable style={styles.driverCompleteButton} onPress={completeRide}>
           <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>
             I've dropped off student
           </Text>
