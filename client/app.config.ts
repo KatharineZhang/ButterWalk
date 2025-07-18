@@ -26,7 +26,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: true,
     bundleIdentifier: "com.butterwalk.butterwalk",
     config: {
-      googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY,
+      googleMapsApiKey: process.env.EXPO_PUBLIC_IOS_GMAPS_APIKEY,
     },
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
@@ -40,7 +40,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     package: "com.butterwalk.butterwalk",
     config: {
       googleMaps: {
-        apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY,
+        apiKey: process.env.EXPO_PUBLIC_ANDROID_GMAPS_APIKEY,
       },
     },
   },
