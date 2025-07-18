@@ -922,3 +922,74 @@ export const loadingPageCompStyles = StyleSheet.create({
     lineHeight: 23,
   },
 });
+
+// Created a handy style reference: has all the colors, texts
+// and how certain parts should be displayed for the flag pop-up
+export const driverFlagPopupStyles = StyleSheet.create({
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // dims background
+  },
+  modalView: {
+    margin: "20%",
+    backgroundColor: "white",
+    borderRadius: 20, // rounded corners as in the image
+    padding: "6%",
+    alignItems: "center",
+    width: "70%",
+    maxWidth: 400, // max width for larger screens
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: "5%",
+  },
+  headerTitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  flagIcon: {
+    marginRight: "8%",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  closeButton: {
+    padding: "2%",
+  },
+  descriptionLabel: {
+    fontSize: 16,
+    color: "#555",
+    marginBottom: "8%",
+    alignSelf: "flex-start", // align to left
+  },
+  textInput: {
+    width: "100%",
+    minHeight: 175, // minimum height for the text area
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: "5%",
+    fontSize: 16,
+    color: "#333",
+    marginBottom: "10%",
+  },
+  submitButton: {
+    backgroundColor: "#4b2e83", // purple color
+    paddingVertical: "5%",
+    paddingHorizontal: "10%",
+    borderRadius: 10,
+    alignSelf: "flex-end",
+  },
+  submitButtonText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+});
