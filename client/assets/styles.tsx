@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
 
 //This is absolutely a MESS and we need to fix it.
 // naming conventions are all over the place
@@ -773,6 +773,90 @@ export const styles = StyleSheet.create({
     left: 5,
     fontSize: 12,
     marginLeft: 5,
+  },
+  
+  // driver profile
+  overlay: {
+    position: "relative",
+    top: "100%",
+    left: 0,
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height,
+    zIndex: 999,
+    pointerEvents: "box-none",
+  },
+  logoutImage: {
+    width: "15%",
+    resizeMode: "contain",
+    marginRight: 0,
+  },
+  modal: {
+    width: "100%",
+    top: "11%",
+    backgroundColor: "white",
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    borderRadius: 10,
+  },
+  imageWrapper: {
+    width: Dimensions.get("window").width * 0.2,
+    height: Dimensions.get("window").height * 0.07,
+    position: "relative",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  ellipseImage: {
+    width: "150%",
+    resizeMode: "contain",
+  },
+  userImage: {
+    width: "50%",
+    borderRadius: 20,
+    position: "absolute",
+  },
+  rowContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: "6%",
+    marginTop: -10,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginLeft: "5%",
+    color: "#4B2E83",
+  },
+  closeButton: {
+    borderRadius: 100,
+    marginBottom: 10,
+    width: "10%",
+    alignItems: "center",
+  },
+  closeButtonImage: {
+    width: "60%",
+    resizeMode: "contain",
+    marginLeft: "1800%",
+  },
+  logoutButton: {
+    padding: "5%",
+    backgroundColor: "#4B2E83",
+    borderRadius: 5,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  logoutButtonText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 18,
+  },
+  rowContainerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   driverRequestPageImage: {
     width: "100%", 
