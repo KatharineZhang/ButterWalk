@@ -203,29 +203,31 @@ export const styles = StyleSheet.create({
   },
 
   appNameText: {
-    fontSize: 70,
+    fontSize: 40,
     fontWeight: "700",
     letterSpacing: 0,
     color: "black",
     textAlign: "center",
     fontFamily: "Encode Sans",
+    margin: '0.5%'
   },
   signInText: {
-    fontSize: 25,
+    fontSize: 30,
     fontStyle: "italic",
-    fontWeight: 700,
+    fontWeight: "700",
     letterSpacing: 0,
     color: "black",
     fontFamily: "Encode Sans",
-    textAlign: "center",
+    textAlign: "left",
+    margin: '0.5%'
   },
   signinLogo: {
-    width: 100,
-    height: 100,
+    width: 200,
+    height: 200,
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "center",
-    margin: 30,
+    margin: "5%",
   },
   signInGoogleContainer: {
     flexDirection: "row",
@@ -247,27 +249,46 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 12,
     paddingHorizontal: 32,
-    borderRadius: 4,
+    borderRadius: 10,
     // elevation: 3,
     backgroundColor: "#4B2E83",
+    margin: '0.5%'
   },
-
+  signInButtonText: {
+    fontSize: 22,
+    fontStyle: "italic",
+    fontWeight: "700",
+    letterSpacing: 0,
+    color: "white",
+    fontFamily: "Encode Sans",
+    textAlign: "center",
+  },
   signInbottomImageContainer: {
     resizeMode: "contain",
     width: "80%",
     position: "relative",
   },
-
+  bypassSignInButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12, //12
+    paddingHorizontal: 32, // 32
+    borderRadius: 10,
+    // elevation: 3,
+    backgroundColor: "#4B2E83",
+    margin: '0.5%'
+  },
   input: {
-    height: 50,
+    height: "8%",
     width: "100%",
-    borderWidth: 1,
+    borderWidth: 2,
     marginVertical: 4,
     borderRadius: 10,
     padding: 10,
     backgroundColor: "#f9f9f9",
     textAlign: "left",
     borderColor: "#ccc",
+    margin: '0.5%'
   },
   inputFocused: {
     borderColor: "#4B2E83",
@@ -859,20 +880,20 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
   },
   driverRequestPageImage: {
-    width: "100%", 
-    height: "100%", 
+    width: "100%",
+    height: "100%",
     resizeMode: "contain",
   },
   driverRequestDotsImage: {
-    flexDirection: "row", 
-    alignItems: "center", 
+    flexDirection: "row",
+    alignItems: "center",
     justifyContent: "flex-end",
     paddingRight: "80%",
   },
   driverRequestRowCenter: {
-    flexDirection: "row", 
-    alignItems: "center", 
-  }
+    flexDirection: "row",
+    alignItems: "center",
+  },
 });
 
 export const loadingPageCompStyles = StyleSheet.create({
