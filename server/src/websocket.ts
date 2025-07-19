@@ -57,7 +57,7 @@ export const handleWebSocketMessage = async (
   } catch (e) {
     // we were not given an input of type WebSocketMessage
     console.log(
-      `WEBSOCKET: Incorrect input type. Input: ${message} gave error: ${e}`
+      `WEBSOCKET: Incorrect input type. Input: ${message} gave error: ${(e as Error).message}}`
     );
     return;
   }
@@ -237,6 +237,7 @@ export const handleWebSocketMessage = async (
         }
 
         // this will only be true if we are re-adding the ride back into the pool
+        // if we accept, we had already removed the ride from the queue in VIEW_RIDE so no notification needed
         // the pool was initially empty, so we need to notify drivers
         if (viewDecisionResponse.notifyDrivers) {
           notifyDrivers(true);

@@ -3,12 +3,10 @@ import { app } from "./firebaseConfig";
 import {
   collection,
   doc,
-  DocumentData,
   getDocs,
   getFirestore,
   query,
   QueryConstraint,
-  QuerySnapshot,
   Timestamp,
   Transaction,
   updateDoc,
@@ -191,35 +189,14 @@ export async function getRideRequests(): Promise<RideRequest[]> {
   const rideRequests: RideRequest[] = [];
   inDatabase.forEach((el) => {
     const rideRequest = el.data();
-    // TODO(connor): Type validation
     rideRequests.push(rideRequest as RideRequest);
   });
   return rideRequests;
 }
 
-export async function findActiveRequestByStudentNetid(
-  netid: string
-): Promise<QuerySnapshot<DocumentData, DocumentData>> {
-  // look for the netid and a request that has not been accepted
-  const queryNetid = query(
-    rideRequestsCollection,
-    where("netid", "==", netid),
-    where("status", "in", ["REQUESTED", "VIEWING"])
-  );
-  // run the query
-  const inDatabase = await getDocs(queryNetid);
-  // make sure there is only one active ride
-  if (inDatabase.size != 1) {
-    throw new Error(
-      `There were ${inDatabase.size} ride requests with netid: ${netid}`
-    );
-  }
-  return inDatabase;
-}
-
 /**
- * Updates the status of the provided ride request to the provided status
- * @param status The status to change to
+ * Updates the status of the provided stuent's ride request to the provided status
+ * @param status The status to change to "CANCELED", "COMPLETED", etc.
  * @param netid The netid of the user with the ride request to change
  */
 export async function setRideRequestStatus(
@@ -227,8 +204,17 @@ export async function setRideRequestStatus(
   status: RideRequestStatus,
   netid: string
 ) {
-  const res = await findActiveRequestByStudentNetid(netid);
+  // gets the student's ride that is not complete (COMPLETED or CANCELLED)
+  // and changes its status
+  const queryNetid = query(
+    rideRequestsCollection,
+    where("netid", "==", netid),
+    where("status", "in", ["CANCELLED", "COMPLETED"])
+  );
+  // run the query
+  const res = await getDocs(queryNetid);
   if (res.size !== 1) {
+    // TODO: DOUBLE CHECK THIS
     throw new Error(
       `Expected exactly one active ride request for netid: ${netid}, found ${res.size}`
     );
@@ -238,7 +224,26 @@ export async function setRideRequestStatus(
 }
 
 /**
- * Set the driver id of a ride request
+ * Returns if the student's ride request has been accepted or not
+ * @param netid student's netid
+ * @returns if there is a ride request by that student that has not been accepted, etc.
+ */
+export async function isNotAccepted(netid: string): Promise<boolean> {
+  const queryNetid = query(
+    rideRequestsCollection,
+    where("netid", "==", netid),
+    where("status", "in", ["REQUESTED", "VIEWING"])
+  );
+  // run the query
+  const res = await getDocs(queryNetid);
+  if (res.size == 0) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Set the driver id of a specific student's ride request
  * @param t The associated transaction
  * @param netid netid of the student who owns the ride request to update
  * @param driverid the id of the driver
@@ -248,7 +253,17 @@ export async function setRideRequestDriver(
   netid: string,
   driverid: string
 ) {
-  const res = await findActiveRequestByStudentNetid(netid);
+  // find any ride by student 'netid' that
+  // is not accepted, not processed and not cancelled/completed
+  // aka not processed currently
+  const queryNetid = query(
+    rideRequestsCollection,
+    where("netid", "==", netid),
+    where("status", "in", ["REQUESTED", "VIEWING"])
+  );
+  // run the query
+  const res = await getDocs(queryNetid);
+
   if (res.size !== 1) {
     throw new Error(
       `Expected exactly one active ride request for netid: ${netid}, found ${res.size}`
@@ -258,7 +273,7 @@ export async function setRideRequestDriver(
   await updateDoc(docRef, { driverid: driverid });
 }
 
-// CANCEL RIDE - Update a ride request to canceled
+// CANCEL RIDE - Update a student ride request to canceled
 // Returns: the other id if there was a ride request that was accepted or null if not
 // otherid is the netid of the driver if the driver is the one cancelling
 // or the netid of the student if the student is the one cancelling
@@ -296,36 +311,20 @@ export async function cancelRideRequest(
 
   let otherId: string | null = null;
   for (const doc of result.docs) {
-    // change any active (based on status) request to canceleD
+    // change any active (based on status) request to canceled
     const data = doc.data() as RideRequest;
 
-    // only cancel requests that are not completed
-    if (
-      data.status != "REQUESTED" &&
-      data.status != "DRIVER AT PICK UP" &&
-      data.status != "DRIVING TO PICK UP" &&
-      data.status != "VIEWING"
-    ) {
-      continue;
-    }
-
-    if (
-      data.status === "DRIVING TO PICK UP" ||
-      data.status === "DRIVER AT PICK UP" ||
-      data.status === "VIEWING"
-    ) {
-      // If the cancelled request is being helped by a driver, notify the driver.
-      if (role == "STUDENT") {
-        otherId = data.driverid;
-      } else {
-        otherId = data.netid;
-      }
+    // If the cancelled request is being helped by a driver, notify the driver.
+    if (role == "STUDENT") {
+      otherId = data.driverid;
+    } else {
+      otherId = data.netid;
     }
 
     await setRideRequestStatus(transaction, "CANCELLED", netid);
   }
 
-  // if no one had accepted this ride yet and it was the last one in the pool
+  // if no one had accepted this ride yet and it was the only one in the pool
   // only then, notify the drivers
   if (!otherId && numRidesInPool.length == 1) {
     notify = true;
@@ -435,7 +434,9 @@ export async function blacklistUser(transaction: Transaction, netid: string) {
     const docRef = doc(db, "ProblematicUsers", netid); // get the document by netid
     transaction.update(docRef, { category: "BLACKLISTED" });
   } catch (e) {
-    throw new Error(`User not found in ProblematicUsers table: ${e}`);
+    throw new Error(
+      `User not found in ProblematicUsers table: ${(e as Error).message}`
+    );
   }
 }
 
