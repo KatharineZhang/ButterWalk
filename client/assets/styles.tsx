@@ -209,6 +209,7 @@ export const styles = StyleSheet.create({
     color: "black",
     textAlign: "center",
     fontFamily: "Encode Sans",
+    margin: '0.5%'
   },
   signInText: {
     fontSize: 30,
@@ -218,6 +219,7 @@ export const styles = StyleSheet.create({
     color: "black",
     fontFamily: "Encode Sans",
     textAlign: "left",
+    margin: '0.5%'
   },
   signinLogo: {
     width: 200,
@@ -250,6 +252,7 @@ export const styles = StyleSheet.create({
     borderRadius: 10,
     // elevation: 3,
     backgroundColor: "#4B2E83",
+    margin: '0.5%'
   },
   signInButtonText: {
     fontSize: 22,
@@ -265,7 +268,16 @@ export const styles = StyleSheet.create({
     width: "80%",
     position: "relative",
   },
-
+  bypassSignInButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12, //12
+    paddingHorizontal: 32, // 32
+    borderRadius: 10,
+    // elevation: 3,
+    backgroundColor: "#4B2E83",
+    margin: '0.5%'
+  },
   input: {
     height: "8%",
     width: "100%",
@@ -276,6 +288,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "#f9f9f9",
     textAlign: "left",
     borderColor: "#ccc",
+    margin: '0.5%'
   },
   inputFocused: {
     borderColor: "#4B2E83",
