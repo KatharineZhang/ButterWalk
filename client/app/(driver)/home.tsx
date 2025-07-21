@@ -27,6 +27,7 @@ import NoRequests from "@/components/Driver_NoRequests";
 import HandleRide from "@/components/Driver_HandleRide";
 import Flagging from "@/components/Driver_Flagging";
 import WebSocketService from "@/services/WebSocketService";
+import { useRouter } from "expo-router";
 
 export default function HomePage() {
   /* HOME PAGE STATE */
@@ -95,6 +96,7 @@ export default function HomePage() {
   /* PROFILE STATE */
   const { netid } = useLocalSearchParams<{ netid: string }>();
   const [profileVisible, setProfileVisible] = useState(false);
+  const router = useRouter();
 
   const onLogout = () => {
     // when the user clicks the logout button in the profile or logoutWarning
@@ -103,7 +105,7 @@ export default function HomePage() {
     // call the websocket call to disconnect the user
     WebSocketService.send({ directive: "DISCONNECT" });
     // redirect the user to the driverOrStudent page
-    return <Redirect href={{ pathname: "/driverOrstudent" }} />;
+    router.replace("/driverOrstudent"); // navigate programmatically
   };
 
   /* NOTIFICATION STATE */
@@ -564,7 +566,7 @@ export default function HomePage() {
         }}
       >
         <TouchableOpacity
-          style={{ width: 35, height: 35 }}
+          style={{ width: 35, height: 35, top: "3%" }}
           onPress={() => setProfileVisible(true)}
         >
           <View
@@ -678,6 +680,7 @@ export default function HomePage() {
         <View style={styles.homePageComponentContainer}>
           <RequestAvailable
             requestInfo={requestInfo}
+            updateSideBarHeight={setCurrentComponentHeight}
             driverToPickupDuration={driverToPickupDuration}
             pickupToDropoffDuration={pickupToDropoffDuration}
             onAccept={onAccept}
