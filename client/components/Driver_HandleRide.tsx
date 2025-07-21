@@ -10,15 +10,15 @@ interface HandleRideProps {
   requestInfo: RideRequest;
   driverToPickupDuration: number; // in minutes, might be undefined initially
   pickupToDropoffDuration: number; // in minutes, might be undefined initially
-  changeFlaggingAllowed: (allowed: boolean) => void;
-  completeRide: () => void;
-  changeNotifState: (notif: NotificationType) => void;
-  onCancel: () => void;
   phase:
     | "headingToPickup"
     | "waitingForPickup"
     | "headingToDropoff"
     | "arrivedAtDropoff";
+  changeFlaggingAllowed: (allowed: boolean) => void;
+  completeRide: () => void;
+  changeNotifState: (notif: NotificationType) => void;
+  onCancel: () => void;
   setPhase: (
     phase:
       | "headingToPickup"
@@ -28,6 +28,7 @@ interface HandleRideProps {
   ) => void;
   driverArrivedAtPickup: () => void;
   driverDrivingToDropOff: () => void;
+  setStudentIsLate: (isLate: boolean) => void; // callback to set student late state
 
   // Progress tracking props
   pickupProgress: number;
@@ -103,6 +104,7 @@ export default function HandleRide({
   onCancel,
   driverArrivedAtPickup,
   driverDrivingToDropOff,
+  setStudentIsLate,
   pickupProgress,
   dropoffProgress,
   isNearPickup,
@@ -151,6 +153,7 @@ export default function HandleRide({
       // the timer ran out! cancel the ride
       setTimerDone(true);
       changeFlaggingAllowed(true);
+      setStudentIsLate(true);
     }
   }, [seconds]);
 

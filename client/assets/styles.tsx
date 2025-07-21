@@ -792,7 +792,6 @@ export const styles = StyleSheet.create({
   },
   modal: {
     width: "100%",
-    top: "11%",
     backgroundColor: "white",
     padding: 20,
     shadowColor: "#000",
@@ -800,6 +799,8 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     borderRadius: 10,
+    paddingTop: "13%",
+    zIndex: 100,
   },
   imageWrapper: {
     width: Dimensions.get("window").width * 0.2,
