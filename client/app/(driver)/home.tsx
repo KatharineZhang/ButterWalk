@@ -6,15 +6,15 @@ import {
   ViewRideRequestResponse,
   WebSocketResponse,
 } from "../../../server/src/api";
-import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Pressable,
   TouchableOpacity,
   useWindowDimensions,
   View,
+  Text,
 } from "react-native";
 import Map, { MapRef } from "./map";
-import { Redirect, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import RequestAvailable from "@/components/Driver_RequestAvailable";
 import Legend from "@/components/Student_Legend";
 import Profile from "./profile";
@@ -27,6 +27,8 @@ import NoRequests from "@/components/Driver_NoRequests";
 import HandleRide from "@/components/Driver_HandleRide";
 import Flagging from "@/components/Driver_Flagging";
 import WebSocketService from "@/services/WebSocketService";
+import { useRouter } from "expo-router";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function HomePage() {
   /* HOME PAGE STATE */
@@ -95,6 +97,7 @@ export default function HomePage() {
   /* PROFILE STATE */
   const { netid } = useLocalSearchParams<{ netid: string }>();
   const [profileVisible, setProfileVisible] = useState(false);
+  const router = useRouter();
 
   const onLogout = () => {
     // when the user clicks the logout button in the profile or logoutWarning
@@ -103,7 +106,7 @@ export default function HomePage() {
     // call the websocket call to disconnect the user
     WebSocketService.send({ directive: "DISCONNECT" });
     // redirect the user to the driverOrStudent page
-    return <Redirect href={{ pathname: "/driverOrstudent" }} />;
+    router.replace("/driverOrstudent"); // navigate programmatically
   };
 
   /* NOTIFICATION STATE */
@@ -181,6 +184,8 @@ export default function HomePage() {
   // “heading to drop off location”, or “arrived”
   // All other PAGES and states should have this as FALSE
   const [flaggingAllowed, setFlaggingAllowed] = useState(false);
+  // if the student is late, we want to allow flagging and show a message
+  const [studentIsLate, setStudentIsLate] = useState(false);
   // this is used to control the visibility of the flagging popup
   const [flagPopupVisible, setFlagPopupVisible] = useState(false);
 
@@ -286,7 +291,10 @@ export default function HomePage() {
   const ridesExistListener = (message: WebSocketResponse) => {
     if ("response" in message && message.response === "RIDES_EXIST") {
       const ridesExistMessage = message as RidesExistResponse;
-      if (whichComponent === "noRequests") {
+      if (
+        whichComponent === "noRequests" ||
+        whichComponent === "requestsAreAvailable"
+      ) {
         // if the driver is waiting for a request
         if (ridesExistMessage.ridesExist) {
           // and rides exist, set the component to "requestsAreAvailable"
@@ -353,26 +361,25 @@ export default function HomePage() {
   const viewDecisionListener = (message: WebSocketResponse) => {
     // the logic for when a decision is made on a ride request
     if ("response" in message && message.response === "VIEW_DECISION") {
-      if ("success" in message && message.success == true) {
-        // if the decision was successful, set the current component to "handleRide"
-        setNotifState({
-          text: "Ride accepted successfully",
-          color: "#4B2E83",
-          boldText: "accepted",
-        });
-        setWhichComponent("handleRide");
-      } else {
-        // if the decision was not successful, show a notification and set currentComponent to "noRequests"
-        setNotifState({
-          text: "Failed to accept ride request",
-          color: "#FF0000",
-        });
-        resetAllFields(); // reset all fields
-        setWhichComponent("noRequests"); // go to no requests page
-      }
+      // if the decision was successful, set the current component to "handleRide"
+      setNotifState({
+        text: "Ride accepted successfully",
+        color: "#4B2E83",
+        boldText: "accepted",
+      });
+      setWhichComponent("handleRide");
     } else {
       const errMessage = message as ErrorResponse;
       console.log("Failed to accept ride request: ", errMessage.error);
+
+      // if the decision was not successful,
+      // show a notification and set currentComponent to "noRequests"
+      setNotifState({
+        text: "Failed to accept ride request",
+        color: "#FF0000",
+      });
+      resetAllFields(); // reset all fields
+      setWhichComponent("noRequests"); // go to no requests page
     }
   };
 
@@ -444,7 +451,7 @@ export default function HomePage() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       {/* map component */}
       <Map
         ref={mapRef}
@@ -452,21 +459,13 @@ export default function HomePage() {
         dropOffLocation={dropOffLocation}
         userLocationChanged={(location) => setDriverLocation(location)}
       />
-      {/* the profile component */}
-      {/* TODO: MAKE PROFILE LOOK NOICE LIKE FIGMA */}
-      <View style={styles.modalContainer}>
-        <Profile
-          isVisible={profileVisible}
-          onClose={() => setProfileVisible(false)}
-          onLogOut={onLogout}
-          netid={netid}
-        />
-      </View>
+
       {/* profile button in top left corner*/}
       <View
         style={{
+          zIndex: 100,
           position: "absolute",
-          paddingVertical: 50,
+          paddingVertical: 20,
           paddingHorizontal: 20,
           width: "100%",
           height: "100%",
@@ -478,19 +477,98 @@ export default function HomePage() {
         }}
       >
         <TouchableOpacity
-          style={{ width: 35, height: 35 }}
+          style={{ width: 35, height: 35, top: "3%" }}
           onPress={() => setProfileVisible(true)}
         >
           <View
             style={{
               backgroundColor: "white",
               borderRadius: 100,
+              width: 35,
+              height: 35,
+              justifyContent: "center",
+              alignItems: "center",
             }}
           >
-            <Ionicons name="menu" size={35} color="#4B2E83" />
+            <Ionicons name="menu" size={30} color="#4B2E83" />
           </View>
         </TouchableOpacity>
       </View>
+      {/* the profile component */}
+      <View style={styles.modalContainer}>
+        <Profile
+          isVisible={profileVisible}
+          onClose={() => setProfileVisible(false)}
+          onLogOut={onLogout}
+          netid={netid}
+        />
+      </View>
+
+      {/* Flag button in top right corner*/}
+      {flaggingAllowed && (
+        <TouchableOpacity
+          style={{
+            position: "absolute",
+            // the button needs to be a little lower if part of the student is late message
+            top: studentIsLate ? "7%" : "5%",
+            right: "3%",
+            zIndex: 200,
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.5,
+            shadowRadius: 5,
+            shadowColor: "grey",
+          }}
+          onPress={() => setFlagPopupVisible(true)}
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              borderRadius: 100,
+              width: 70,
+              height: 70,
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 100,
+              position: "absolute",
+              right: 10,
+            }}
+          >
+            <Ionicons name="flag" size={40} color="red" />
+          </View>
+        </TouchableOpacity>
+      )}
+
+      {/* Flagging Message if student is late*/}
+      {studentIsLate && (
+        <View
+          style={{
+            alignItems: "flex-start",
+            position: "absolute",
+            zIndex: 150,
+            backgroundColor: "#4B2E83",
+            marginHorizontal: "2.5%",
+            top: "5%",
+            height: "12%",
+            width: "95%",
+            padding: 20,
+            justifyContent: "center",
+            shadowOpacity: 0.3,
+            borderRadius: 20,
+          }}
+        >
+          <Text style={{ color: "white", fontSize: 15, fontWeight: "bold" }}>
+            Flag this student for being late?
+          </Text>
+        </View>
+      )}
+
+      {/* Flagging Pop-up */}
+      {flagPopupVisible && (
+        <Flagging
+          onFlag={flagStudent}
+          closePopUp={() => setFlagPopupVisible(false)}
+        />
+      )}
 
       {/* Notification */}
       <View
@@ -539,47 +617,6 @@ export default function HomePage() {
         <Legend />
       </View>
 
-      {/* Flag button in top right corner*/}
-      {flaggingAllowed && (
-        <View
-          style={{
-            position: "absolute",
-            right: 10,
-            paddingVertical: 50,
-            paddingHorizontal: 20,
-            width: "100%",
-            height: "100%",
-            shadowOpacity: 0.5,
-            shadowRadius: 5,
-            shadowOffset: { width: 0, height: 1 },
-            shadowColor: "grey",
-            pointerEvents: "box-none",
-          }}
-        >
-          <TouchableOpacity
-            style={{ width: 35, height: 35 }}
-            onPress={() => setFlagPopupVisible(true)}
-          >
-            <View
-              style={{
-                backgroundColor: "white",
-                borderRadius: 100,
-              }}
-            >
-              <Ionicons name="flag" size={35} color="#4B2E83" />
-            </View>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Flagging Pop-up */}
-      {flagPopupVisible && (
-        <Flagging
-          onFlag={flagStudent}
-          closePopUp={() => setFlagPopupVisible(false)}
-        />
-      )}
-
       {/* Decide which component to render */}
       {whichComponent === "noRequests" ? (
         <View style={styles.homePageComponentContainer}>
@@ -612,6 +649,7 @@ export default function HomePage() {
             onCancel={cancelRide}
             driverArrivedAtPickup={driverArrivedAtPickup}
             driverDrivingToDropOff={driverDrivingToDropOff}
+            setStudentIsLate={setStudentIsLate}
           />
         </View>
       ) : whichComponent === "endShift" ? (
@@ -622,6 +660,6 @@ export default function HomePage() {
           />
         </View>
       ) : null}
-    </SafeAreaView>
+    </GestureHandlerRootView>
   );
 }
