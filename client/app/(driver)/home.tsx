@@ -291,7 +291,10 @@ export default function HomePage() {
   const ridesExistListener = (message: WebSocketResponse) => {
     if ("response" in message && message.response === "RIDES_EXIST") {
       const ridesExistMessage = message as RidesExistResponse;
-      if (whichComponent === "noRequests") {
+      if (
+        whichComponent === "noRequests" ||
+        whichComponent === "requestsAreAvailable"
+      ) {
         // if the driver is waiting for a request
         if (ridesExistMessage.ridesExist) {
           // and rides exist, set the component to "requestsAreAvailable"
@@ -358,26 +361,25 @@ export default function HomePage() {
   const viewDecisionListener = (message: WebSocketResponse) => {
     // the logic for when a decision is made on a ride request
     if ("response" in message && message.response === "VIEW_DECISION") {
-      if ("success" in message && message.success == true) {
-        // if the decision was successful, set the current component to "handleRide"
-        setNotifState({
-          text: "Ride accepted successfully",
-          color: "#4B2E83",
-          boldText: "accepted",
-        });
-        setWhichComponent("handleRide");
-      } else {
-        // if the decision was not successful, show a notification and set currentComponent to "noRequests"
-        setNotifState({
-          text: "Failed to accept ride request",
-          color: "#FF0000",
-        });
-        resetAllFields(); // reset all fields
-        setWhichComponent("noRequests"); // go to no requests page
-      }
+      // if the decision was successful, set the current component to "handleRide"
+      setNotifState({
+        text: "Ride accepted successfully",
+        color: "#4B2E83",
+        boldText: "accepted",
+      });
+      setWhichComponent("handleRide");
     } else {
       const errMessage = message as ErrorResponse;
       console.log("Failed to accept ride request: ", errMessage.error);
+
+      // if the decision was not successful,
+      // show a notification and set currentComponent to "noRequests"
+      setNotifState({
+        text: "Failed to accept ride request",
+        color: "#FF0000",
+      });
+      resetAllFields(); // reset all fields
+      setWhichComponent("noRequests"); // go to no requests page
     }
   };
 
