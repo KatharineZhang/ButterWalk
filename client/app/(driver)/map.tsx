@@ -175,9 +175,7 @@ const Map = forwardRef<MapRef, MapProps>(
     // Map UI
     return (
       //putting the map region on the screen
-      <View
-        style={{ flex: 1, position: "absolute", width: "100%", height: "100%" }}
-      >
+      <View>
         <SafeAreaProvider style={{ flex: 1 }} />
         <MapView
           ref={mapRef}
