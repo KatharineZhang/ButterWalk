@@ -774,7 +774,7 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     marginLeft: 5,
   },
-  
+
   // driver profile
   overlay: {
     position: "relative",
@@ -792,7 +792,6 @@ export const styles = StyleSheet.create({
   },
   modal: {
     width: "100%",
-    top: "11%",
     backgroundColor: "white",
     padding: 20,
     shadowColor: "#000",
@@ -800,6 +799,8 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     borderRadius: 10,
+    paddingTop: "13%",
+    zIndex: 100,
   },
   imageWrapper: {
     width: Dimensions.get("window").width * 0.2,
@@ -859,20 +860,20 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
   },
   driverRequestPageImage: {
-    width: "100%", 
-    height: "100%", 
+    width: "100%",
+    height: "100%",
     resizeMode: "contain",
   },
   driverRequestDotsImage: {
-    flexDirection: "row", 
-    alignItems: "center", 
+    flexDirection: "row",
+    alignItems: "center",
     justifyContent: "flex-end",
     paddingRight: "80%",
   },
   driverRequestRowCenter: {
-    flexDirection: "row", 
-    alignItems: "center", 
-  }
+    flexDirection: "row",
+    alignItems: "center",
+  },
 });
 
 export const loadingPageCompStyles = StyleSheet.create({
