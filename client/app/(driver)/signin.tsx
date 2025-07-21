@@ -58,7 +58,7 @@ const Login = () => {
           <Text style={styles.signInText}>Driver Sign In</Text>
           <View style={{ height: "7%" }}></View>
 
-          <Text style={{ fontSize: 17, fontWeight: "500", margin: '0.5%' }}>Driver NetId</Text>
+          <Text style={{ fontSize: 17, fontWeight: "500" }}>Driver Netid</Text>
           {errMsg && (
             <Text style={{ wordWrap: "true", maxWidth: "70%", color: "red" }}>
               {errMsg}
@@ -86,18 +86,7 @@ const Login = () => {
               checkDriverIdInput();
             }}
           >
-          <Text style={styles.signInButtonText}>Sign In</Text>
-          </Pressable>
-          {/* TEMPORARY Bypass Signin Button */}
-          <View style={{ height: 20 }}></View>
-          <Pressable
-            style={styles.bypassSignInButton}
-            onPress={() => {
-              setSignedIn(true);
-              setNetid("driver-netID");
-            }}
-          >
-          <Text style={styles.signInText}>Bypass Signin</Text>
+            <Text style={styles.signInButtonText}>Sign In</Text>
           </Pressable>
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>
