@@ -183,7 +183,6 @@ export default function HandleRide({
     progress = 0.45 + validatedDropoffProgress * 0.45;
   } else if (phase === "arrivedAtDropoff") {
     // Full progress when arrived at dropoff
-  } else if (phase === "arrivedAtDropoff") {
     progress = 1;
   }
 

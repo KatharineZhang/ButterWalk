@@ -774,7 +774,7 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     marginLeft: 5,
   },
-  
+
   // driver profile
   overlay: {
     position: "relative",
@@ -859,20 +859,20 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
   },
   driverRequestPageImage: {
-    width: "100%", 
-    height: "100%", 
+    width: "100%",
+    height: "100%",
     resizeMode: "contain",
   },
   driverRequestDotsImage: {
-    flexDirection: "row", 
-    alignItems: "center", 
+    flexDirection: "row",
+    alignItems: "center",
     justifyContent: "flex-end",
     paddingRight: "80%",
   },
   driverRequestRowCenter: {
-    flexDirection: "row", 
-    alignItems: "center", 
-  }
+    flexDirection: "row",
+    alignItems: "center",
+  },
   /* styling for driver_handle_ride */
   driverBottomPanel: {
     left: 0,

@@ -14,7 +14,7 @@ import {
   View,
 } from "react-native";
 import Map, { MapRef, calculateDistance } from "./map";
-import { Redirect, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import RequestAvailable from "@/components/Driver_RequestAvailable";
 import Legend from "@/components/Student_Legend";
 import Profile from "./profile";
