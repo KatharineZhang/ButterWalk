@@ -180,12 +180,6 @@ export default function HomePage() {
 
   const [phase, setPhase] = useState<HandleRidePhase>("headingToPickup");
 
-  // FOR TESTING UI ONLY, REMOVE LATER
-  useEffect(() => {
-    setWhichComponent("handleRide");
-    setPhase("arrivedAtDropoff");
-  }, []);
-
   // determines if the flagging functionality is do-able by the driver
   // True only for when handleRide’s STATE is “waiting for pick up”,
   // “heading to drop off location”, or “arrived”
