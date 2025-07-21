@@ -29,7 +29,8 @@ export type Command =
   | "DRIVER_ARRIVED_AT_PICKUP"
   | "DRIVER_DRIVING_TO_DROPOFF"
   | "DISCONNECT"
-  | "PLACE_SEARCH";
+  | "PLACE_SEARCH"
+  | "DRIVER_ARRIVED";
 
 // Input types
 export type WebSocketMessage =

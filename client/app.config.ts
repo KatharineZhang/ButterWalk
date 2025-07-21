@@ -14,7 +14,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/butterWalkLogo.png",
-  scheme: "myapp",
+  scheme: "butterwalk",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   splash: {
@@ -49,7 +49,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     output: "static",
     favicon: "./assets/images/butterWalkLogo.png",
   },
-  plugins: ["expo-router"],
+  plugins: ["expo-router", "expo-web-browser", "expo-font"],
   experiments: {
     typedRoutes: true,
   },

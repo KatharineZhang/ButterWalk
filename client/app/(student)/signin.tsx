@@ -24,6 +24,7 @@ import logo from "@/assets/images/GoogleG.png";
 // import butterWalkLogo from "@/assets/images/butterWalkLogo.png";
 import huskyCarImage from "@/assets/images/husky-car.png";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { makeRedirectUri } from "expo-auth-session";
 
 const webClientId = process.env.EXPO_PUBLIC_WEB_CLIENT_ID;
 const iosClientId = process.env.EXPO_PUBLIC_IOS_CLIENT_ID;
@@ -36,11 +37,22 @@ const Login = () => {
   const [errMsg, setErrMsg] = useState("");
   const [netid, setNetid] = useState("");
 
+  const redirectUri = makeRedirectUri({
+    scheme: "butterWalk",
+  });
+
   const config = {
     webClientId,
     iosClientId,
     androidClientId,
+    redirectUri,
   };
+
+  // const config = {
+  //   webClientId,
+  //   iosClientId,
+  //   androidClientId,
+  // };
 
   // Request is needed to make google auth work without errors,
   // but is not explicitly used, hence the override

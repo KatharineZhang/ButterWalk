@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/butterWalkLogo.png",
-    "scheme": "myapp",
+    "scheme": "butterwalk",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -17,10 +17,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.butterwalk.butterwalk",
       "config": {
-        "googleMapsApiKey": "AIzaSyAi4GiqY4FUMk7CQWB0MxNQIGWOsr_laBw"
+        "googleMapsApiKey": "AIzaSyAi4GiqY4FUMk7CQWB0MxNQIGWOsr_laBw",
         "googleSignIn": {
-           "reservedClientId": "process.env.EXPO_PUBLIC_IOS_CLIENT_ID",
-        },
+           "reservedClientId": "process.env.EXPO_PUBLIC_IOS_CLIENT_ID"
+        }
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -35,10 +35,10 @@
       "config": {
         "googleMaps": {
           "apiKey": "see app.config.ts"
-        }
-        "googleSignIn": {
-           "clientId": "process.env.EXPO_PUBLIC_ANDRIOD_CLIENT_ID",
         },
+        "googleSignIn": {
+           "clientId": "process.env.EXPO_PUBLIC_ANDRIOD_CLIENT_ID"
+        }
       }
     },
     "web": {
