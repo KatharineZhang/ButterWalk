@@ -50,7 +50,15 @@ const Login = () => {
       }}
     />
   ) : (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          margin: "10%",
+          alignItems: "center",
+        },
+      ]}
+    >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
           <Text style={styles.appNameText}>Husky ButterWalk</Text>
@@ -71,6 +79,7 @@ const Login = () => {
               styles.input,
               driverId && styles.inputFocused,
               {
+                alignSelf: "center",
                 width: Dimensions.get("window").width * 0.9,
                 marginBottom: "5%",
               },
