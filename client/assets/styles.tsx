@@ -776,7 +776,6 @@ export const styles = StyleSheet.create({
   },
   /* styling for driver_handle_ride */
   driverBottomPanel: {
-    position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
@@ -790,11 +789,11 @@ export const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 10,
     maxHeight: "50%",
-    minHeight: "40%",
+    paddingBottom: "15%",
     width: "100%",
   },
   driverBottomPanelBig: {
-    position: "absolute",
+    paddingBottom: "15%",
     left: 0,
     right: 0,
     bottom: 0,
@@ -807,7 +806,7 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 10,
-    height: "50%",
+    maxHeight: "50%",
     width: "100%",
     zIndex: 100,
   },
@@ -816,24 +815,6 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-  },
-
-  driverArriveAtDropOff: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "white",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 10,
-    maxHeight: "50%",
-    width: "100%",
   },
 
   titlePassengerName: {

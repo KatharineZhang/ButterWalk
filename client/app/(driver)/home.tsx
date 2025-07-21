@@ -702,6 +702,7 @@ export default function HomePage() {
             dropoffProgress={dropoffProgress}
             isNearPickup={isNearPickup}
             isNearDropoff={isNearDropoff}
+            updateSideBarHeight={setCurrentComponentHeight}
           />
         </View>
       ) : whichComponent === "endShift" ? (
