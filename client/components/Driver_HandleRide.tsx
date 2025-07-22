@@ -132,6 +132,8 @@ export default function HandleRide({
         });
       }, 1000);
       return () => clearInterval(interval);
+    } else if (phase === "headingToDropoff" || phase === "arrivedAtDropoff") {
+      setStudentIsLate(false);
     }
   }, [phase]);
 
@@ -201,13 +203,11 @@ export default function HandleRide({
           backgroundColor: "white",
           paddingHorizontal: 16,
           borderRadius: 10,
-          paddingVertical:
+          paddingVertical: "8%",
+          paddingBottom:
             phase === "waitingForPickup" || phase === "arrivedAtDropoff"
-              ? "8%"
-              : "4%",
-        },
-        (phase === "waitingForPickup" || phase === "arrivedAtDropoff") && {
-          paddingBottom: 40,
+              ? 40
+              : "15%",
         },
       ]}
       onLayout={(event) => {
@@ -345,7 +345,7 @@ export default function HandleRide({
                 </Text>
               </View>
             </View>
-            <View style={{ alignItems: "flex-end" }}>
+            <View style={{ alignItems: "flex-end", marginTop: 4 }}>
               <Text style={{ fontSize: 20, fontWeight: "600", color: "#222" }}>
                 {requestInfo?.netid || "Passenger"}
               </Text>
@@ -354,7 +354,7 @@ export default function HandleRide({
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  marginTop: 4,
+                  marginTop: "15%",
                 }}
               >
                 <Ionicons name="person" size={20} color="#888888" />
@@ -574,8 +574,10 @@ export default function HandleRide({
             <ProgressBarLabels />
           </View>
           {/* Grey line */}
-          <View style={styles.driverGreyLine} />
-          <Pressable style={styles.driverCompleteButton} onPress={completeRide}>
+          <Pressable
+            style={[styles.driverCompleteButton, { marginTop: "2%" }]}
+            onPress={completeRide}
+          >
             <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>
               I've dropped off student
             </Text>
