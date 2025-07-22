@@ -259,6 +259,10 @@ export default function HomePage() {
       handleDriverArrived,
       "DRIVER_ARRIVED_AT_PICKUP"
     );
+    WebSocketService.addListener(
+      handleDriverPickedUp,
+      "DRIVER_DRIVING_TO_DROPOFF"
+    );
 
     // get the user's profile on first render
     sendProfile();
@@ -488,6 +492,25 @@ export default function HomePage() {
     ) {
       // the driver has arrived at the pickup location
       setRideStatus("DriverArrived");
+    } else {
+      console.log("Driver arrived response error: ", message);
+    }
+  };
+
+  // WEBSOCKET -- DRIVER CLICKED PICKED UP STUDENT
+  const handleDriverPickedUp = (message: WebSocketResponse) => {
+    if (
+      "response" in message &&
+      message.response === "DRIVER_DRIVING_TO_DROPOFF"
+    ) {
+      // the driver has arrived at the pickup location
+      setRideStatus("RideInProgress");
+      setNotifState({
+        text: "You have been picked up and are on your way to your destination!",
+        color: "#C9FED0",
+      });
+    } else {
+      console.log("Driver arrived at pickup response error: ", message);
     }
   };
 
@@ -767,7 +790,6 @@ export default function HomePage() {
                 setFAQVisible={setFAQVisible}
                 openNavigation={routeToPickup}
                 setNotificationState={setNotifState}
-                changeRideStatus={setRideStatus}
                 goHome={goHome}
                 updateSideBarHeight={setCurrentComponentHeight}
               />
