@@ -26,7 +26,9 @@ import ShiftIsOver from "@/components/Driver_ShiftOver";
 import NoRequests from "@/components/Driver_NoRequests";
 import HandleRide from "@/components/Driver_HandleRide";
 import Flagging from "@/components/Driver_Flagging";
-import WebSocketService from "@/services/WebSocketService";
+import WebSocketService, {
+  WebsocketConnectMessage,
+} from "@/services/WebSocketService";
 import { useRouter } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
@@ -52,6 +54,26 @@ export default function HomePage() {
       driverArrivedAtPickupListener,
       "DRIVER_ARRIVED_AT_PICKUP"
     );
+
+    // Connect to the websocket server
+    // needs to be its own function to avoid async issues
+    const connectWebSocket = async () => {
+      // call our new route
+      const msg: WebsocketConnectMessage = await WebSocketService.connect();
+      if (msg === "Failed to Connect") {
+        console.error("Failed to connect to WebSocket");
+      } else {
+        console.log("WebSocket connected successfully");
+      }
+    };
+    connectWebSocket();
+    // send the CONNECT message with the netid
+    // to log our driver into the server
+    WebSocketService.send({
+      directive: "CONNECT",
+      netid: netid as string,
+      role: "DRIVER",
+    });
   }, []);
 
   // set the initial component based on the current time
