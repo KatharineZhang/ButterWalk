@@ -255,7 +255,10 @@ export default function HomePage() {
       handleRecentLocationResponse,
       "RECENT_LOCATIONS"
     );
-    WebSocketService.addListener(handleDriverArrived, "DRIVER_ARRIVED");
+    WebSocketService.addListener(
+      handleDriverArrived,
+      "DRIVER_ARRIVED_AT_PICKUP"
+    );
 
     // get the user's profile on first render
     sendProfile();
@@ -479,7 +482,10 @@ export default function HomePage() {
   // when the driver has clicked the button saying they have arrived at the pickup location
   // notify the user and change the ride status to DriverArrived
   const handleDriverArrived = (message: WebSocketResponse) => {
-    if ("response" in message && message.response === "DRIVER_ARRIVED") {
+    if (
+      "response" in message &&
+      message.response === "DRIVER_ARRIVED_AT_PICKUP"
+    ) {
       // the driver has arrived at the pickup location
       setRideStatus("DriverArrived");
     }
