@@ -382,7 +382,7 @@ export const handleWebSocketMessage = async (
       break;
 
     default:
-      console.log(`WEBSOCKET: Unknown directive: ${input}`);
+      console.log(`WEBSOCKET: Unknown directive: ${JSON.stringify(input)}`);
       break;
   }
 };
