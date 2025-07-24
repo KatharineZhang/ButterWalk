@@ -169,6 +169,7 @@ export default function HomePage() {
   const [requestInfo, setRequestInfo] = useState<RideRequest>(
     {} as RideRequest
   );
+  const [showAcceptScreen, setShowAcceptScreen] = useState(true);
 
   const onAccept = () => {
     // when the driver clicks "Accept"
@@ -313,9 +314,9 @@ export default function HomePage() {
       resetAllFields();
       setWhichComponent("noRequests");
       setNotifState({
-        text: "Ride cancelled successfully",
-        color: "#4B2E83",
-        boldText: "cancelled",
+        text: "Your ride was canceled",
+        color: "#FFCBCB",
+        boldText: "canceled",
       });
     } else {
       // if not successful, log the error
@@ -351,7 +352,7 @@ export default function HomePage() {
           setWhichComponent("requestsAreAvailable");
           setNotifState({
             text: "New ride request available",
-            color: "#4B2E83",
+            color: "#C9FED0",
             boldText: "new ride",
           });
         } else {
@@ -359,6 +360,7 @@ export default function HomePage() {
           setWhichComponent("noRequests");
         }
       } // if the driver is not waiting for a request, do nothing
+      console.log("rides don't exist anymore but we don't care");
     } else {
       // there was an error in the message!
       const errMessage = message as ErrorResponse;
@@ -368,8 +370,11 @@ export default function HomePage() {
 
   // WEBSOCKET - VIEW_RIDE
   const viewRideListener = (message: WebSocketResponse) => {
-    if ("response" in message && message.response === "VIEW_RIDE") {
+    if ("response" in message && message.response == "VIEW_RIDE") {
       const viewReqResponse = message as ViewRideRequestResponse;
+      console.log("Successfully viewed ride request: ", viewReqResponse);
+      console.log("is ride request info: ", viewReqResponse.rideInfo);
+
       if (viewReqResponse.rideInfo) {
         // if the ride request info exists, then the view was successful
         // set the requestInfo state to the ride request info
@@ -391,12 +396,14 @@ export default function HomePage() {
         setPickupToDropoffDuration(
           viewReqResponse.rideInfo.pickUpToDropOffDuration
         );
+        // Switch to the Let's Go page here not in Driver_RequestAvailable
+        setShowAcceptScreen(false);
       } else {
         // if the ride request info does not exist, then the view was not successful
         // if not successful, show a notification and set currentComponent to "noRequests"
         setNotifState({
           text: "The ride you were trying to view does not exist anymore.",
-          color: "#FF0000",
+          color: "#FFCBCB",
         });
         resetAllFields(); // reset all fields
         setWhichComponent("noRequests"); // go to no requests page
@@ -414,7 +421,7 @@ export default function HomePage() {
       // if the decision was successful, set the current component to "handleRide"
       setNotifState({
         text: "Ride accepted successfully",
-        color: "#4B2E83",
+        color: "#C9FED0",
         boldText: "accepted",
       });
       setWhichComponent("handleRide");
@@ -426,7 +433,7 @@ export default function HomePage() {
       // show a notification and set currentComponent to "noRequests"
       setNotifState({
         text: "Failed to accept ride request",
-        color: "#FF0000",
+        color: "#FFCBCB",
       });
       resetAllFields(); // reset all fields
       setWhichComponent("noRequests"); // go to no requests page
@@ -451,7 +458,7 @@ export default function HomePage() {
       // if not successful, show a notification that the driver could not arrive at the pickup location
       setNotifState({
         text: "Failed to note that driver arrived at pickup location",
-        color: "#FF0000",
+        color: "#FFCBCB",
       });
       setFlagPopupVisible(false); // close the flagging popup
     }
@@ -466,14 +473,14 @@ export default function HomePage() {
         setFlagPopupVisible(false); // close the flagging popup
         setNotifState({
           text: "Student has been flagged",
-          color: "#4B2E83",
+          color: "#C9FED0",
           boldText: "flagged",
         });
       } else {
         // if not successful, show a notification that the student could not be flagged
         setNotifState({
           text: "Failed to flag student",
-          color: "#FF0000",
+          color: "#FFCBCB",
         });
         setFlagPopupVisible(false); // close the flagging popup
       }
@@ -731,6 +738,7 @@ export default function HomePage() {
         <View style={styles.homePageComponentContainer}>
           <RequestAvailable
             requestInfo={requestInfo}
+            showAcceptScreen={showAcceptScreen}
             updateSideBarHeight={setCurrentComponentHeight}
             driverToPickupDuration={driverToPickupDuration}
             pickupToDropoffDuration={pickupToDropoffDuration}
