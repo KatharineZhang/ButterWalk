@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Husky SafeTrip",
-    "slug": "husky-betterwalk",
+    "slug": "butterwalk-uhoipjpt86ctcao8rgq7v",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/butterWalkLogo.png",
@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.butterwalk.butterwalk",
+      "bundleIdentifier": "com.butterwalkios.butterwalk",
       "config": {
         "googleMapsApiKey": "see app.config.ts"
       },
@@ -51,7 +51,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "24a5e20c-9f0d-4a09-9f2d-49ae53b470e5"
+        "projectId": "e25c1389-d0e1-4278-bef6-cdf638047e55"
       },
       "scheme": "butterWalk"
     }

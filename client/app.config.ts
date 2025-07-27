@@ -10,7 +10,7 @@ dotenv.config();
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Husky SafeTrip",
-  slug: "husky-betterWalk",
+  slug: "butterwalk-uhoipjpt86ctcao8rgq7v",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/butterWalkLogo.png",
@@ -24,7 +24,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.butterwalk.butterwalk",
+    bundleIdentifier: "com.butterwalkios.butterwalk",
     config: {
       googleMapsApiKey: process.env.EXPO_PUBLIC_IOS_GMAPS_APIKEY,
     },
