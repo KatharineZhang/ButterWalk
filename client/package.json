@@ -19,8 +19,6 @@
   "dependencies": {
     "@capacitor/cli": "^7.0.1",
     "@capacitor/core": "^7.0.1",
-    "@capacitor/geolocation": "^7.0.0",
-    "@capacitor/google-maps": "^7.0.0",
     "@expo/vector-icons": "^14.1.0",
     "@gorhom/bottom-sheet": "^5.0.6",
     "@react-navigation/native": "^7.0.0",

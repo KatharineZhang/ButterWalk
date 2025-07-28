@@ -1,16 +1,15 @@
 import { ExpoConfig, ConfigContext } from "@expo/config";
 import * as dotenv from "dotenv";
 
+
 // initialize dotenv
 dotenv.config();
 
-// This will replace out app.json on runtime
-// allowing us to use api keys in the .env
-// while also keeping them hidden on git
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "Husky ButterWalk",
-  slug: "husky-betterWalk",
+  name: "Husky SafeTrip",
+  slug: "butterwalk",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/butterWalkLogo.png",
@@ -24,12 +23,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.butterwalk.butterwalk",
-    config: {
-      googleMapsApiKey: process.env.EXPO_PUBLIC_IOS_GMAPS_APIKEY,
-    },
+    bundleIdentifier: "com.butterwalkioshiya.butterwalk",
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
+      NSLocationWhenInUseUsageDescription:
+        "We need your location to show your position on the map.",
     },
   },
   android: {
@@ -40,7 +38,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     package: "com.butterwalk.butterwalk",
     config: {
       googleMaps: {
-        apiKey: process.env.EXPO_PUBLIC_ANDROID_GMAPS_APIKEY,
+        apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY,
       },
     },
   },
@@ -49,8 +47,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     output: "static",
     favicon: "./assets/images/butterWalkLogo.png",
   },
-  plugins: ["expo-router"],
+  plugins: [
+    "expo-router",
+  ],
   experiments: {
     typedRoutes: true,
+  },
+  extra: {
+    eas: {
+      projectId: "400500de-e681-47b9-be13-14802fd28fa7",
+    },
   },
 });

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Husky ButterWalk",
-    "slug": "husky-betterwalk",
+    "name": "Husky SafeTrip",
+    "slug": "butterwalk",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/butterWalkLogo.png",
@@ -15,10 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.butterwalk.butterwalk",
-      "config": {
-        "googleMapsApiKey": "see app.config.ts"
-      },
+      "bundleIdentifier": "com.butterwalkioshiya.butterwalk",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -41,19 +38,28 @@
       "favicon": "./assets/images/butterWalkLogo.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "react-native-maps",
+        {
+          "iosGoogleMapsApiKey": "see app.config.ts",
+          "androidGoogleMapsApiKey": "see app.config.ts"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
     },
+    "developmentClient": true,
     "extra": {
       "router": {
         "origin": false
       },
+      "scheme": "butterWalk",
       "eas": {
-        "projectId": "24a5e20c-9f0d-4a09-9f2d-49ae53b470e5"
-      },
-      "scheme": "butterWalk"
-    }
+        "projectId": "400500de-e681-47b9-be13-14802fd28fa7"
+      }
+    },
+    "owner": "hiyam"
   }
 }
