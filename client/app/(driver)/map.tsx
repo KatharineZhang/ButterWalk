@@ -6,11 +6,11 @@ import {
   useImperativeHandle,
   forwardRef,
 } from "react";
-import MapView, { Polygon, Marker } from "react-native-maps";
+import MapView, { PROVIDER_GOOGLE, Polygon, Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { styles } from "@/assets/styles";
-import { View, Image, Alert, Linking } from "react-native";
+import { Platform, View, Image, Alert, Linking } from "react-native";
 import MapViewDirections from "react-native-maps-directions";
 import { Ionicons } from "@expo/vector-icons";
 import { PurpleZone } from "@/services/ZoneService";
@@ -195,6 +195,7 @@ const Map = forwardRef<MapRef, MapProps>(
         <MapView
           ref={mapRef}
           style={styles.map}
+          provider={Platform.OS === "android" ? PROVIDER_GOOGLE : undefined}
           initialRegion={{
             latitude:
               userLocation.latitude != 0

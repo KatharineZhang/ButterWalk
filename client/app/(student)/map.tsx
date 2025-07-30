@@ -6,7 +6,7 @@ import {
   useImperativeHandle,
   forwardRef,
 } from "react";
-import MapView, { Polygon, Marker, Polyline } from "react-native-maps";
+import MapView, { PROVIDER_GOOGLE, Polygon, Marker, Polyline } from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { styles } from "@/assets/styles";
@@ -14,7 +14,7 @@ import { View, Image, Alert, Linking, Platform } from "react-native";
 import MapViewDirections from "react-native-maps-directions";
 import { Ionicons } from "@expo/vector-icons";
 import { PurpleZone } from "@/services/ZoneService";
-import { PROVIDER_GOOGLE } from "react-native-maps";
+// import { PROVIDER_GOOGLE } from "react-native-maps";
 
 interface MapProps {
   pickUpLocation: { latitude: number; longitude: number };
@@ -246,6 +246,7 @@ const Map = forwardRef<MapRef, MapProps>(
         <MapView
           ref={mapRef}
           style={styles.map}
+          provider={Platform.OS === "android" ? PROVIDER_GOOGLE : undefined}
           initialRegion={{
             latitude:
               userLocation.latitude != 0
@@ -259,7 +260,7 @@ const Map = forwardRef<MapRef, MapProps>(
             longitudeDelta: 0.015,
           }}
           userInterfaceStyle="light"
-          provider={PROVIDER_GOOGLE} // Use Google Maps for the map
+          // provider={PROVIDER_GOOGLE} // Use Google Maps for the map
         >
           {/* show each segment of the purple zone on the map */}
           {PurpleZone.zones.map((zone, index) => (

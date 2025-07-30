@@ -27,9 +27,9 @@ export default function driverOrstudent() {
       </Text>
       <Button
         title="Test Sentry"
-        onPress={() => {
-          Sentry.captureException(new Error('Test error for Sentry'));
-        }}
+        // onPress={() => {
+        //   Sentry.captureException(new Error('Test error for Sentry'));
+        // }}
       />
 
       <View style={{ height: 20 }} />
