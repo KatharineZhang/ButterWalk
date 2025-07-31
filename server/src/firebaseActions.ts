@@ -108,6 +108,7 @@ export async function finishCreatingUser(
   studentNumber: string
 ) {
   // use the net id of the user as the document id
+  // from the Users document in Firebase
   const docRef = doc(usersCollection, netid);
   const docSnap = await transaction.get(docRef);
   if (docSnap.exists()) {
