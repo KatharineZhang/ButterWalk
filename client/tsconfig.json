@@ -1,16 +1,40 @@
+// {
+//   "extends": "expo/tsconfig.base",
+//   "compilerOptions": {
+//     "jsx": "react-jsx",
+//     "strict": true,
+//     "baseUrl": ".",
+//     "paths": {
+//       "@/*": [
+//         "./*"
+//       ],
+//       "expo-auth-session": [
+//         "node_modules/expo-auth-session"
+//       ]
+//     }
+//   },
+//   "include": [
+//     "**/*.ts",
+//     "**/*.tsx",
+//     ".expo/types/**/*.ts",
+//     "expo-env.d.ts"
+//   ],
+// }
+
+
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "jsx": "react-jsx",
     "strict": true,
+    "importHelpers": true,
+    "esModuleInterop": true,
+    "target": "ES2020", // ✅ updated
+    "module": "ESNext",
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "expo-auth-session": [
-        "node_modules/expo-auth-session"
-      ]
+      "@/*": ["./*"],
+      "expo-auth-session": ["node_modules/expo-auth-session"]
     }
   },
   "include": [
@@ -18,5 +42,7 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-  ],
+  ]
 }
+
+

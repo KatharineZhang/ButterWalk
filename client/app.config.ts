@@ -49,6 +49,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     "expo-router",
+    [
+     'sentry-expo',
+      {
+        org: 'butterwalk',
+        project: 'ButterWalk',
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,
