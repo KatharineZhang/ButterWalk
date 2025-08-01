@@ -35,11 +35,13 @@ const Login = () => {
   const [accExists, setAccExists] = useState<boolean | null>(null);
   const [errMsg, setErrMsg] = useState("");
   const [netid, setNetid] = useState("");
-
+  const redirectURI = makeRedirectURI();
+  
   const config = {
     webClientId,
     iosClientId,
     androidClientId,
+    redirectURI
   };
 
   // Request is needed to make google auth work without errors,
