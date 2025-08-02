@@ -295,8 +295,11 @@ export default function HandleRide({
               }}
               onPress={() => {
                 const destination = {
-                  lat: requestInfo.locationFrom?.coordinates?.latitude || 0,
-                  lng: requestInfo.locationFrom?.coordinates?.longitude || 0,
+                  lat:
+                    requestInfo.locationFrom?.coordinates?.latitude || 47.6062,
+                  lng:
+                    requestInfo.locationFrom?.coordinates?.longitude ||
+                    -122.3321,
                   title: "Pickup Location",
                 };
                 openGoogleMapsDirections(destination);
