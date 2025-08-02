@@ -91,7 +91,7 @@ export async function createUser(transaction: Transaction, user: User) {
     // we also add the user in Users (otherwise it throws
     // a bunch of errors!) in FireBase
     transaction.set(docRef, {firstName: user.firstName, lastName: user.lastName, netid: user.netid, studentOrDriver: user.studentOrDriver});
-    transaction.set(docLocationRef, campusLocations);
+    transaction.set(docLocationRef, { locations: campusLocations });
     console.log("Document does not exist, so added default campuslocations");
     return false;
   }
