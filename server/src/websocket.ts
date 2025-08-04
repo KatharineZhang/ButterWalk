@@ -1,11 +1,11 @@
 import WebSocketServer from "ws";
 import { clients, refreshClient } from "./index";
 import {
-  acceptRide,
   addFeedback,
   blacklist,
   cancelRide,
   completeRide,
+  snapLocation,
   location,
   query,
   report,
@@ -16,16 +16,29 @@ import {
   googleAuth,
   profile,
   distanceMatrix,
+  ridesExist,
+  viewRide,
+  handleDriverViewChoice,
+  fetchRecentLocations,
+  driverArrived,
+  getPlaceSearchResults,
+  driverDrivingToDropoff,
 } from "./routes";
 import {
-  AcceptResponse,
   CancelResponse,
   CompleteResponse,
   WebSocketMessage,
   WebSocketResponse,
   GoogleResponse,
   ErrorResponse,
+  RideRequest,
+  SnapLocationResponse,
+  ViewDecisionResponse,
+  RequestRideResponse,
+  RidesExistResponse,
+  ViewRideRequestResponse,
 } from "./api";
+import { Timestamp } from "firebase/firestore";
 
 export const handleWebSocketMessage = async (
   ws: WebSocketServer,
@@ -35,6 +48,7 @@ export const handleWebSocketMessage = async (
   let resp;
   let client;
 
+  //TODO(connor): setup debug and logging utility so this can be compiled away in prod
   console.log(`WEBSOCKET: Received message => ${message}`);
 
   try {
@@ -43,7 +57,7 @@ export const handleWebSocketMessage = async (
   } catch (e) {
     // we were not given an input of type WebSocketMessage
     console.log(
-      `WEBSOCKET: Incorrect input type. Input: ${message} gave error: ${e}`
+      `WEBSOCKET: Incorrect input type. Input: ${message} gave error: ${(e as Error).message}}`
     );
     return;
   }
@@ -122,32 +136,133 @@ export const handleWebSocketMessage = async (
       sendWebSocketMessage(ws, resp);
       break;
 
-    case "REQUEST_RIDE":
-      resp = await requestRide(
-        input.phoneNum,
-        input.netid,
-        input.location,
-        input.destination,
-        input.numRiders
-      );
+    case "REQUEST_RIDE": {
+      const rideRequest: RideRequest = {
+        netid: input.netid,
+        driverid: null,
+        requestedAt: Timestamp.now(),
+        completedAt: null,
+        locationFrom: input.location,
+        locationTo: input.destination,
+        numRiders: input.numRiders,
+        status: "REQUESTED",
+      };
+      resp = await requestRide(rideRequest);
+      if (resp.response == "REQUEST_RIDE") {
+        const requestResp = resp as RequestRideResponse;
+        if (requestResp.notifyDrivers) {
+          notifyDrivers(true);
+        }
+      }
       // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
       break;
+    }
 
-    case "ACCEPT_RIDE":
-      resp = await acceptRide(input.driverid);
-      if ("driver" in resp && "student" in resp) {
-        const acceptResponse = resp as AcceptResponse;
-        // send response back to client (the driver)
-        sendWebSocketMessage(ws, acceptResponse.driver);
+    case "SNAP": {
+      resp = (await snapLocation(
+        input.currLat,
+        input.currLong
+      )) as SnapLocationResponse;
+      sendWebSocketMessage(ws, resp);
+      break;
+    }
 
-        // send response back to corresponding client (the student)
-        sendMessageToNetid(acceptResponse.driver.netid, acceptResponse.student);
+    // new directive for the ride request broker, which sends back a message
+    // of type RidesExistResponse on success. Intended for use with driver
+    // sign on: When the driver opens the app they will only be able to view
+    // a ride to potentially accept when this directive gives back True.
+    case "RIDES_EXIST": {
+      const thereIsARide: boolean | ErrorResponse = await ridesExist();
+      if (typeof thereIsARide === "boolean") {
+        sendWebSocketMessage(ws, {
+          response: "RIDES_EXIST",
+          ridesExist: thereIsARide,
+        });
       } else {
-        // the ErrorResponse case, send only to driver
-        sendWebSocketMessage(ws, resp);
+        sendWebSocketMessage(ws, thereIsARide);
       }
       break;
+    }
+
+    // new directive that will check out the highest ranking ride request to
+    // a driver so they can accept/deny/report etc.
+    case "VIEW_RIDE": {
+      const res = await viewRide(input.driverid, input.driverLocation);
+      if (res.response == "VIEW_RIDE") {
+        const viewResp = res as ViewRideRequestResponse;
+
+        // if we want to notify drivers
+        if (viewResp.notifyDrivers) {
+          // tell the drivers that there are no more rides
+          notifyDrivers(false);
+        }
+      }
+      sendWebSocketMessage(ws, res);
+      break;
+    }
+
+    // new directive that handles the drivers decision after viewing a particular ride
+    // request.
+    // ACCEPT -> accept the ride. Assigns the ride to the driver, begin pick up.
+    // DENY -> Deny the ride request without reporting, returns the req to the pool
+    // TIMEOUT -> Driver didn't decide anything fast enough, return to pool
+    // ERROR -> Unexpected problem, return request to queue
+    case "VIEW_DECISION": {
+      console.log(`here is the input: ${JSON.stringify(input)}`);
+      if (
+        input.decision !== "ACCEPT" &&
+        input.decision !== "DENY" &&
+        input.decision !== "ERROR" &&
+        input.decision !== "TIMEOUT"
+      ) {
+        throw new Error(
+          `input.decsion was ${input.decision}, not a legal type.`
+        );
+      }
+      const res = await handleDriverViewChoice(
+        input.driverid,
+        input.netid,
+        input.decision
+      );
+      if (res.response == "ERROR") {
+        sendWebSocketMessage(ws, res);
+      } else {
+        const viewDecisionResponse = res as ViewDecisionResponse;
+        sendWebSocketMessage(ws, viewDecisionResponse.driver);
+
+        // if there is a message to send to the student, send it
+        if (viewDecisionResponse.student !== undefined) {
+          sendMessageToNetid(input.netid, viewDecisionResponse.student);
+        }
+
+        // this will only be true if we are re-adding the ride back into the pool
+        // if we accept, we had already removed the ride from the queue in VIEW_RIDE so no notification needed
+        // the pool was initially empty, so we need to notify drivers
+        if (viewDecisionResponse.notifyDrivers) {
+          notifyDrivers(true);
+        }
+      }
+      break;
+    }
+
+    case "DRIVER_ARRIVED_AT_PICKUP": {
+      const res = await driverArrived(input.studentNetid);
+      sendWebSocketMessage(ws, res);
+      if (res.response == "DRIVER_ARRIVED_AT_PICKUP" && res.success) {
+        sendMessageToNetid(input.studentNetid, res);
+      }
+      break;
+    }
+
+    case "DRIVER_DRIVING_TO_DROPOFF": {
+      const res = await driverDrivingToDropoff(input.studentNetid);
+      sendWebSocketMessage(ws, res);
+      if (res.response == "DRIVER_DRIVING_TO_DROPOFF" && res.success) {
+        sendMessageToNetid(input.studentNetid, res);
+      }
+      break;
+    }
 
     case "CANCEL":
       resp = await cancelRide(input.netid, input.role);
@@ -160,6 +275,11 @@ export const handleWebSocketMessage = async (
           // send response back to opposite client (the driver usually)
           // this could be the student if the driver cancels after a 5 minute wait
           sendMessageToNetid(cancelResponse.otherNetid, cancelResponse.info);
+        }
+        // if we want to notify drivers
+        if (cancelResponse.notifyDrivers) {
+          // tell the drivers that rides don't exist (false)
+          notifyDrivers(false);
         }
       } else {
         // the ErrorResponse case, send only to original client
@@ -240,7 +360,23 @@ export const handleWebSocketMessage = async (
       break;
 
     case "DISTANCE":
-      resp = await distanceMatrix(input.origin, input.destination, input.mode);
+      resp = await distanceMatrix(
+        input.origin,
+        input.destination,
+        input.mode,
+        input.tag
+      );
+      // send response back to client (the student)
+      sendWebSocketMessage(ws, resp);
+      break;
+    case "RECENT_LOCATIONS":
+      resp = await fetchRecentLocations(input.netid);
+      // send response back to client (the student)
+      sendWebSocketMessage(ws, resp);
+      break;
+
+    case "PLACE_SEARCH":
+      resp = await getPlaceSearchResults(input.query);
       // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
       break;
@@ -285,5 +421,26 @@ export const connectWebsocketToNetid = (
       client.netid = netid;
       client.role = role;
     }
+  });
+};
+
+/**
+ * Notifies all currently connected drivers about the existence/lack of rides.
+ * Sends a `RIDES_EXIST` response message to each driver, indicating whether rides are available.
+ *
+ * @param ridesExist - A boolean indicating if rides currently exist.
+ */
+export const notifyDrivers = (ridesExist: boolean): void => {
+  // the message sent to each driver is that rides exist (or don't)
+  const message: RidesExistResponse = {
+    response: "RIDES_EXIST",
+    ridesExist,
+  };
+
+  // find all the drivers currently connected to the app
+  const drivers = clients.filter((client) => client.role == "DRIVER");
+  // send each of them a message
+  drivers.forEach((driver) => {
+    sendMessageToNetid(driver.netid, message);
   });
 };
