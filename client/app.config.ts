@@ -52,7 +52,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         org: "butterwalk",
         project: "ButterWalk",
-        authToken: process.env.SENTRY_AUTH_TOKEN,
+        authToken: process.env.EXPO_PUBLIC_SENTRY_AUTH_TOKEN,
       },
     ],
   ],
