@@ -5,16 +5,13 @@ import { NotificationType } from "./Both_Notification";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { styles } from "@/assets/styles";
 import { ProgressBar } from "react-native-paper";
+import { HandleRidePhase } from "@/app/(driver)/home";
 
 interface HandleRideProps {
   requestInfo: RideRequest;
   driverToPickupDuration: number; // in minutes, might be undefined initially
   pickupToDropoffDuration: number; // in minutes, might be undefined initially
-  phase:
-    | "headingToPickup"
-    | "waitingForPickup"
-    | "headingToDropoff"
-    | "arrivedAtDropoff";
+  phase: HandleRidePhase;
   changeFlaggingAllowed: (allowed: boolean) => void;
   completeRide: () => void;
   changeNotifState: (notif: NotificationType) => void;
@@ -125,7 +122,7 @@ export default function HandleRide({
       // Update seconds every second
       const interval = setInterval(() => {
         setSeconds((prevSeconds) => {
-          if (prevSeconds <= 0) {
+          if (prevSeconds <= 290) {
             return 0; // Stop at 0
           }
           return prevSeconds - 1;
@@ -151,7 +148,7 @@ export default function HandleRide({
         color: "#FFCBCB",
         boldText: "one minute",
       });
-    } else if (seconds <= 0) {
+    } else if (seconds <= 290) {
       // the timer ran out! cancel the ride
       setTimerDone(true);
       changeFlaggingAllowed(true);
@@ -388,13 +385,13 @@ export default function HandleRide({
                 <Ionicons
                   name="time-outline"
                   size={26}
-                  color={seconds <= 0 ? "#FF0000" : "#4B2E83"}
+                  color={seconds <= 290 ? "#FF0000" : "#4B2E83"}
                 />
                 <Text
                   style={{
                     fontSize: 26,
                     marginLeft: 8,
-                    color: seconds <= 0 ? "#FF0000" : "#4B2E83",
+                    color: seconds <= 290 ? "#FF0000" : "#4B2E83",
                     fontWeight: "bold",
                   }}
                 >
@@ -510,14 +507,14 @@ export default function HandleRide({
               {/* Button to cancel ride, turns red and clickable after 5 min counter */}
               <Pressable
                 style={{
-                  backgroundColor: seconds <= 0 ? "#FF0000" : "#E0E0E0",
+                  backgroundColor: seconds <= 290 ? "#FF0000" : "#E0E0E0",
                   ...styles.driverCancelButton,
                 }}
                 onPress={timerDone ? cancelRide : onCancel}
               >
                 <Text
                   style={{
-                    color: seconds <= 0 ? "white" : "black",
+                    color: seconds <= 290 ? "white" : "black",
                     fontSize: 16,
                     fontWeight: "400",
                   }}

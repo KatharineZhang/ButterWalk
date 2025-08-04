@@ -26,11 +26,16 @@ import ShiftIsOver from "@/components/Driver_ShiftOver";
 import NoRequests from "@/components/Driver_NoRequests";
 import HandleRide from "@/components/Driver_HandleRide";
 import Flagging from "@/components/Driver_Flagging";
-import WebSocketService, {
-  WebsocketConnectMessage,
-} from "@/services/WebSocketService";
+import WebSocketService from "@/services/WebSocketService"; // WebsocketConnectMessage,
 import { useRouter } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+
+export type HandleRidePhase =
+  | "none"
+  | "headingToPickup"
+  | "waitingForPickup"
+  | "headingToDropoff"
+  | "arrivedAtDropoff";
 
 export default function HomePage() {
   /* HOME PAGE STATE */
@@ -38,43 +43,27 @@ export default function HomePage() {
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
   >("noRequests");
 
+  const [seconds, setSeconds] = useState(10);
+  let interval: number;
+
   /* USE EFFECTS */
   useEffect(() => {
-    WebSocketService.addListener(cancelRideListener, "CANCEL");
-    WebSocketService.addListener(completeRideListener, "COMPLETE");
-    WebSocketService.addListener(ridesExistListener, "RIDES_EXIST");
-    WebSocketService.addListener(viewRideListener, "VIEW_RIDE");
-    WebSocketService.addListener(viewDecisionListener, "VIEW_DECISION");
-    WebSocketService.addListener(reportStudentListener, "REPORT");
-    WebSocketService.addListener(
-      driverDrivingToDropOffListener,
-      "DRIVER_DRIVING_TO_DROPOFF"
-    );
-    WebSocketService.addListener(
-      driverArrivedAtPickupListener,
-      "DRIVER_ARRIVED_AT_PICKUP"
-    );
-
-    // Connect to the websocket server
-    // needs to be its own function to avoid async issues
-    const connectWebSocket = async () => {
-      // call our new route
-      const msg: WebsocketConnectMessage = await WebSocketService.connect();
-      if (msg === "Failed to Connect") {
-        console.error("Failed to connect to WebSocket");
-      } else {
-        console.log("WebSocket connected successfully");
-      }
-    };
-    connectWebSocket();
-    // send the CONNECT message with the netid
-    // to log our driver into the server
-    WebSocketService.send({
-      directive: "CONNECT",
-      netid: netid as string,
-      role: "DRIVER",
-    });
+    // start the timer to get ride
+    interval = setInterval(() => {
+      setSeconds((prevSeconds) => prevSeconds - 1);
+    }, 1000);
   }, []);
+
+  useEffect(() => {
+    if (seconds == 0) {
+      // the timer ran out!
+      clearInterval(interval); // stop the timer
+      ridesExistListener({
+        response: "RIDES_EXIST",
+        ridesExist: true, // no rides exist
+      } as RidesExistResponse); // call the rides exist listener with false
+    }
+  }, [seconds]);
 
   // set the initial component based on the current time
   useEffect(() => {
@@ -85,8 +74,10 @@ export default function HomePage() {
         // in shift
         setWhichComponent("noRequests");
       } else {
-        // off shift
-        setWhichComponent("endShift");
+        // always on shift
+        setWhichComponent("noRequests");
+
+        // setWhichComponent("endShift");
       }
     }, 1000 * 1800); // check every half hour
     return () => {
@@ -99,7 +90,7 @@ export default function HomePage() {
   const [driverLocation, setDriverLocation] = useState<{
     latitude: number;
     longitude: number;
-  }>({ latitude: 0, longitude: 0 });
+  }>({ latitude: 47.66529658460914, longitude: -122.31358955835384 }); // start at farmers market
 
   // the pick up location specified in teh ride request response
   const [pickUpLocation, setPickUpLocation] = useState<{
@@ -174,33 +165,59 @@ export default function HomePage() {
     // when the driver clicks "Accept"
     // call "VIEW_RIDE" websocket call to get the ride request info
     // use driverLocation in the request
-    WebSocketService.send({
-      directive: "VIEW_RIDE",
-      driverid: netid,
-      driverLocation: driverLocation,
-    });
+    // WebSocketService.send({
+    //   directive: "VIEW_RIDE",
+    //   driverid: netid,
+    //   driverLocation: driverLocation,
+    // });
+    viewRideListener({
+      response: "VIEW_RIDE",
+      rideInfo: {
+        driverToPickUpDuration: 6,
+        pickUpToDropOffDuration: 5,
+        rideRequest: {
+          netid: "snigsm",
+          numRiders: 2,
+          requestId: "rideId",
+          locationFrom: {
+            name: "Parrington Hall",
+            address: "Parrington Hall, Seattle, WA 98195",
+            coordinates: {
+              latitude: 47.65754509562246,
+              longitude: -122.31026643142364,
+            },
+          },
+          locationTo: {
+            name: "Winkerwerder Forest Laboratory",
+            address: "Winkerwerder Forest Laboratory, Seattle, WA 98195",
+            coordinates: {
+              latitude: 47.65151650481062,
+              longitude: -122.30687840396504,
+            },
+          },
+        },
+      },
+    } as ViewRideRequestResponse); // call the view ride listener with an empty ride request
   };
 
   // Handler for the "Let's Go" action in RequestAvailable
   const onLetsGo = () => {
     // when the driver clicks "Let's Go"
     // call the websocket call "VIEW_DECISION" with "ACCEPT" tag
-    WebSocketService.send({
-      directive: "VIEW_DECISION",
-      driverid: netid,
-      netid: requestInfo.netid,
-      decision: "ACCEPT",
-    });
+    // WebSocketService.send({
+    //   directive: "VIEW_DECISION",
+    //   driverid: netid,
+    //   netid: requestInfo.netid,
+    //   decision: "ACCEPT",
+    // });
+    viewDecisionListener({
+      response: "VIEW_DECISION",
+      success: true,
+    } as WebSocketResponse); // call the view decision listener with a success response
   };
 
   /* EN ROUTE STATE */
-  type HandleRidePhase =
-    | "headingToPickup"
-    | "waitingForPickup"
-    | "headingToDropoff"
-    | "arrivedAtDropoff";
-
-  const [phase, setPhase] = useState<HandleRidePhase>("headingToPickup");
+  const [phase, setPhase] = useState<HandleRidePhase>("none");
 
   // determines if the flagging functionality is do-able by the driver
   // True only for when handleRide’s STATE is “waiting for pick up”,
@@ -238,44 +255,61 @@ export default function HomePage() {
       return; // TODO: handle error case where requestId is not set
     }
     // call the REPORT route
-    WebSocketService.send({
-      directive: "REPORT",
-      netid: requestInfo.netid, // the student netid
-      requestid: requestInfo.requestId, // the ride request id
-      reason,
-    });
+    // WebSocketService.send({
+    //   directive: "REPORT",
+    //   netid: requestInfo.netid, // the student netid
+    //   requestid: requestInfo.requestId, // the ride request id
+    //   reason,
+    // });
+    console.log("Flagging student with reason:", reason);
+    reportStudentListener({
+      response: "REPORT",
+      success: true, // assuming the report was successful
+    } as WebSocketResponse); // call the report listener with a success response
   };
 
   const cancelRide = () => {
     // call the websocket call to cancel the ride
-    WebSocketService.send({
-      directive: "CANCEL",
-      netid,
-      role: "DRIVER",
-    });
+    // WebSocketService.send({
+    //   directive: "CANCEL",
+    //   netid,
+    //   role: "DRIVER",
+    // });
+    cancelRideListener({
+      response: "CANCEL",
+      success: true, // assuming the cancel was successful
+    } as WebSocketResponse); // call the cancel listener with a success response
   };
 
   const completeRide = () => {
-    WebSocketService.send({
-      directive: "COMPLETE",
-      requestid: requestInfo.requestId as string,
-    });
+    completeRideListener({
+      response: "COMPLETE",
+      success: true,
+    } as WebSocketResponse);
   };
 
   const driverArrivedAtPickup = () => {
-    WebSocketService.send({
-      directive: "DRIVER_ARRIVED_AT_PICKUP",
-      driverid: netid,
-      studentNetid: requestInfo.netid,
-    });
+    // WebSocketService.send({
+    //   directive: "DRIVER_ARRIVED_AT_PICKUP",
+    //   driverid: netid,
+    //   studentNetid: requestInfo.netid,
+    // });
+    driverArrivedAtPickupListener({
+      response: "DRIVER_ARRIVED_AT_PICKUP",
+      success: true, // assuming the arrival was successful
+    } as WebSocketResponse); // call the driver arrived at pickup listener with a success response
   };
 
   const driverDrivingToDropOff = () => {
-    WebSocketService.send({
-      directive: "DRIVER_DRIVING_TO_DROPOFF",
-      driverid: netid,
-      studentNetid: requestInfo.netid,
-    });
+    // WebSocketService.send({
+    //   directive: "DRIVER_DRIVING_TO_DROPOFF",
+    //   driverid: netid,
+    //   studentNetid: requestInfo.netid,
+    // });
+    driverDrivingToDropOffListener({
+      response: "DRIVER_DRIVING_TO_DROPOFF",
+      success: true, // assuming the driving to dropoff was successful
+    } as WebSocketResponse); // call the driver driving to dropoff listener with a success response
   };
 
   const resetAllFields = () => {
@@ -314,7 +348,7 @@ export default function HomePage() {
       setWhichComponent("noRequests");
       setNotifState({
         text: "Ride cancelled successfully",
-        color: "#4B2E83",
+        color: "#C9FED0",
         boldText: "cancelled",
       });
     } else {
@@ -351,8 +385,8 @@ export default function HomePage() {
           setWhichComponent("requestsAreAvailable");
           setNotifState({
             text: "New ride request available",
-            color: "#4B2E83",
-            boldText: "new ride",
+            color: "#C9FED0",
+            boldText: "New ride",
           });
         } else {
           // if false, set the component to "noRequests"
@@ -396,7 +430,7 @@ export default function HomePage() {
         // if not successful, show a notification and set currentComponent to "noRequests"
         setNotifState({
           text: "The ride you were trying to view does not exist anymore.",
-          color: "#FF0000",
+          color: "#FFCBCB",
         });
         resetAllFields(); // reset all fields
         setWhichComponent("noRequests"); // go to no requests page
@@ -414,10 +448,11 @@ export default function HomePage() {
       // if the decision was successful, set the current component to "handleRide"
       setNotifState({
         text: "Ride accepted successfully",
-        color: "#4B2E83",
+        color: "#C9FED0",
         boldText: "accepted",
       });
       setWhichComponent("handleRide");
+      setPhase("headingToPickup"); // set the phase to heading to pickup
     } else {
       const errMessage = message as ErrorResponse;
       console.log("Failed to accept ride request: ", errMessage.error);
@@ -426,7 +461,7 @@ export default function HomePage() {
       // show a notification and set currentComponent to "noRequests"
       setNotifState({
         text: "Failed to accept ride request",
-        color: "#FF0000",
+        color: "#FFCBCB",
       });
       resetAllFields(); // reset all fields
       setWhichComponent("noRequests"); // go to no requests page
@@ -451,7 +486,7 @@ export default function HomePage() {
       // if not successful, show a notification that the driver could not arrive at the pickup location
       setNotifState({
         text: "Failed to note that driver arrived at pickup location",
-        color: "#FF0000",
+        color: "#FFCBCB",
       });
       setFlagPopupVisible(false); // close the flagging popup
     }
@@ -466,14 +501,14 @@ export default function HomePage() {
         setFlagPopupVisible(false); // close the flagging popup
         setNotifState({
           text: "Student has been flagged",
-          color: "#4B2E83",
+          color: "#C9FED0",
           boldText: "flagged",
         });
       } else {
         // if not successful, show a notification that the student could not be flagged
         setNotifState({
           text: "Failed to flag student",
-          color: "#FF0000",
+          color: "#FFCBCB",
         });
         setFlagPopupVisible(false); // close the flagging popup
       }
@@ -511,7 +546,7 @@ export default function HomePage() {
       if (phase === "waitingForPickup") {
         pickupProgress = 1;
 
-        // if phase is headingtopickup or geadingtodropoff
+        // if phase is headingtopickup or Headingtodropoff
       } else if (
         startLocation.latitude !== 0 &&
         startLocation.longitude !== 0 &&
@@ -523,6 +558,9 @@ export default function HomePage() {
           driverLocation,
           pickUpLocation
         );
+        if (phase === "headingToPickup") {
+          setIsNearPickup(pickupProgress >= 0.9); // 50 meters
+        }
       }
 
       if (
@@ -536,6 +574,9 @@ export default function HomePage() {
           driverLocation,
           dropOffLocation
         );
+        if (phase === "headingToDropoff") {
+          setIsNearDropoff(dropoffProgress >= 0.9); // 50 meters
+        }
       }
 
       setPickupProgress(pickupProgress);
@@ -557,9 +598,11 @@ export default function HomePage() {
       {/* map component */}
       <Map
         ref={mapRef}
+        startLocation={startLocation}
         pickUpLocation={pickUpLocation}
         dropOffLocation={dropOffLocation}
         userLocationChanged={(location) => setDriverLocation(location)}
+        currState={phase}
       />
 
       {/* profile button in top left corner*/}

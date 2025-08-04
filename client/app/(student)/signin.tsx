@@ -1,9 +1,9 @@
-import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
+import { View, Text, TouchableOpacity, Image } from "react-native";
 import { useState, useEffect } from "react";
 import { styles } from "../../assets/styles";
 import { Redirect } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-// import { makeRedirectUri } from 'expo-auth-session';
+import { makeRedirectUri } from "expo-auth-session";
 
 // need to 'npx expo install expo-web-browser expo-auth-session expo-crypto' ON MAC
 // or 'npm i expo-auth-session@~6.0.3' on windows
@@ -36,13 +36,13 @@ const Login = () => {
   const [accExists, setAccExists] = useState<boolean | null>(null);
   const [errMsg, setErrMsg] = useState("");
   const [netid, setNetid] = useState("");
-  // const redirectURI = makeRedirectUri();
+  const redirectURI = makeRedirectUri();
 
   const config = {
     webClientId,
     iosClientId,
     androidClientId,
-    // redirectURI
+    redirectURI,
   };
 
   // Request is needed to make google auth work without errors,
@@ -156,7 +156,10 @@ const Login = () => {
               width: "95%",
               flexDirection: "row",
             }}
-            onPress={() => promptAsync()}
+            onPress={() => {
+              setAccExists(false);
+              setNetid("student-netID");
+            }}
           >
             <Image style={styles.signInGoogleLogo} source={logo} />
             <Text style={{ fontWeight: "bold", fontSize: 17, marginLeft: 30 }}>
@@ -167,7 +170,7 @@ const Login = () => {
         </View>
 
         {/* TEMPORARY Bypass Button */}
-        <View style={{ paddingBottom: 20 }}>
+        {/* <View style={{ paddingBottom: 20 }}>
           <Pressable
             style={styles.signInButton}
             onPress={() => {
@@ -177,7 +180,7 @@ const Login = () => {
           >
             <Text style={styles.signInText}>Bypass Signin</Text>
           </Pressable>
-        </View>
+        </View> */}
       </View>
     </SafeAreaView>
   );

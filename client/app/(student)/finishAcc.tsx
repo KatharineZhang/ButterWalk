@@ -57,20 +57,20 @@ const finishAcc = () => {
     setStudentNum(studentNumTemp);
     setPreferredName(preferredNameTemp);
 
-    const msg = await WebSocketService.connect();
-    if (msg == "Failed to Connect") {
-      // failed to connect!!
-      console.log("FAILED TO CONNECT TO WS IN FINISHACC");
-    }
+    // const msg = await WebSocketService.connect();
+    // if (msg == "Failed to Connect") {
+    //   // failed to connect!!
+    //   console.log("FAILED TO CONNECT TO WS IN FINISHACC");
+    // }
 
-    // 1. send this to the DB via websocket
-    WebSocketService.send({
-      directive: "FINISH_ACC",
-      netid,
-      phoneNum,
-      studentNum,
-      preferredName,
-    });
+    // // 1. send this to the DB via websocket
+    // WebSocketService.send({
+    //   directive: "FINISH_ACC",
+    //   netid,
+    //   phoneNum,
+    //   studentNum,
+    //   preferredName,
+    // });
     // 2. get the response back (add listener)
     const handleFinishAccMessage = (message: WebSocketResponse) => {
       if ("response" in message && message.response == "FINISH_ACC") {
@@ -83,7 +83,11 @@ const finishAcc = () => {
         }
       }
     };
-    WebSocketService.addListener(handleFinishAccMessage, "FINISH_ACC");
+    // WebSocketService.addListener(handleFinishAccMessage, "FINISH_ACC");
+    handleFinishAccMessage({
+      response: "FINISH_ACC",
+      success: true, // Simulating a successful response for testing
+    });
   };
 
   if (accFinished) {
@@ -135,7 +139,13 @@ const finishAcc = () => {
         />
       </View>
       <View style={{ height: "1%" }} />
-      <Pressable style={styles.button_finishAcc} onPress={setValues}>
+      <Pressable
+        style={styles.button_finishAcc}
+        onPress={() => {
+          setValues();
+          setAccFinished(true);
+        }}
+      >
         <Text style={styles.button_text}>Sign Up</Text>
       </Pressable>
       <Pressable

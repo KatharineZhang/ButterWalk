@@ -66,7 +66,7 @@ export default function Legend() {
         {open && <Text style={styles.legendText}>Start Location</Text>}
       </View>
       <Pressable onPress={() => setOpen(!open)}>
-        {open ? (
+        {!open ? (
           <Feather name="chevrons-right" size={20} />
         ) : (
           <Feather name="chevrons-left" size={20} />

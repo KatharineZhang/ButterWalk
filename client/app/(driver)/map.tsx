@@ -7,21 +7,24 @@ import {
   forwardRef,
 } from "react";
 import MapView, { Polygon, Marker } from "react-native-maps";
-import * as Location from "expo-location";
+// import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { styles } from "@/assets/styles";
-import { View, Image, Alert, Linking } from "react-native";
+import { View, Image, } from "react-native";
 import MapViewDirections from "react-native-maps-directions";
 import { Ionicons } from "@expo/vector-icons";
 import { PurpleZone } from "@/services/ZoneService";
+import { HandleRidePhase } from "./home";
 
 interface MapProps {
+  startLocation: { latitude: number; longitude: number };
   pickUpLocation: { latitude: number; longitude: number };
   dropOffLocation: { latitude: number; longitude: number };
   userLocationChanged: (location: {
     latitude: number;
     longitude: number;
   }) => void;
+  currState: HandleRidePhase; // the current state of the ride
 }
 
 // functions that can be called from the parent component
@@ -35,10 +38,12 @@ export interface MapRef {
 const Map = forwardRef<MapRef, MapProps>(
   (
     {
+      startLocation = { latitude: 0, longitude: 0 },
       pickUpLocation = { latitude: 0, longitude: 0 },
       dropOffLocation = { latitude: 0, longitude: 0 },
       userLocationChanged,
-    },
+      currState = "headingToPickup",
+    }: MapProps,
     ref
   ) => {
     // STATE VARIABLES
@@ -66,23 +71,144 @@ const Map = forwardRef<MapRef, MapProps>(
     // used for map zooming
     const mapRef = useRef<MapView>(null);
 
-    // STATE HOOKS
+    const [seconds, setSeconds] = useState(10);
+
+    /* USE EFFECTS */
     useEffect(() => {
-      // on the first render, get the user's location
-      // and set up listeners
-      watchLocation();
+      // start the timer to get ride
+      const interval = setInterval(() => {
+        if (seconds <= 0) {
+          clearInterval(interval);
+          return;
+        }
+        setSeconds((prevSeconds) => prevSeconds - 1);
+      }, 1000);
+      return () => clearInterval(interval);
     }, []);
+
+    // Track the current index for each route
+    let pickupIndexRef = 0;
+    let dropoffIndexRef = 0;
+    let currStateInterval: number;
+
+    // update the driver's location based on the current state
+    useEffect(() => {
+      if (currState == "none") {
+        // when waiting for request, be at the default location
+        console.log("Waiting, setting user location to default");
+        setUserLocation({
+          latitude: 47.66529658460914, // default to UW Seattle
+          longitude: -122.31358955835384,
+        });
+        userLocationChanged({
+          latitude: 47.66529658460914,
+          longitude: -122.31358955835384,
+        });
+        pickupIndexRef = 0; // reset index
+        dropoffIndexRef = 0; // reset index
+      } else if (currState === "headingToPickup") {
+        console.log("Heading to pickup, starting interval");
+        currStateInterval = setInterval(() => {
+          if (
+            pickupIndexRef >= driverToPickupLocations.length &&
+            currStateInterval !== null
+          ) {
+            console.log("clearing user location interval at end");
+            clearInterval(currStateInterval);
+            pickupIndexRef = 0;
+            return;
+          }
+
+          console.log("Pickup Interval running", pickupIndexRef);
+
+          setUserLocation({
+            latitude: driverToPickupLocations[pickupIndexRef].latitude,
+            longitude: driverToPickupLocations[pickupIndexRef].longitude,
+          });
+          userLocationChanged({
+            latitude: driverToPickupLocations[pickupIndexRef].latitude,
+            longitude: driverToPickupLocations[pickupIndexRef].longitude,
+          });
+          pickupIndexRef++;
+        }, 1000); // update every second
+      } else if (currState == "waitingForPickup") {
+        // when waiting for request, be at the default location
+        console.log("Waiting for pickup, setting user location to default");
+        setUserLocation({
+          latitude: 47.65718628834192, longitude: -122.3100908847018
+        });
+        userLocationChanged({
+          latitude: 47.65718628834192, longitude: -122.3100908847018
+        });
+        clearInterval(currStateInterval);
+        pickupIndexRef = 0; // reset index
+        dropoffIndexRef = 0; // reset index
+      } else if (currState === "headingToDropoff") {
+        console.log("Heading to dropoff, starting interval");
+        currStateInterval = setInterval(() => {
+          if (
+            dropoffIndexRef >= driverToDropOffLocations.length &&
+            currStateInterval !== null
+          ) {
+            console.log("clearing user location interval at end");
+            clearInterval(currStateInterval);
+            dropoffIndexRef = 0;
+            return;
+          }
+
+          console.log("Dropoff Interval running", dropoffIndexRef);
+
+          setUserLocation({
+            latitude: driverToDropOffLocations[dropoffIndexRef].latitude,
+            longitude: driverToDropOffLocations[dropoffIndexRef].longitude,
+          });
+          userLocationChanged({
+            latitude: driverToDropOffLocations[dropoffIndexRef].latitude,
+            longitude: driverToDropOffLocations[dropoffIndexRef].longitude,
+          });
+          dropoffIndexRef++;
+        }, 1000); // update every second
+      } else {
+        // arrived, stay at dropoff location
+        console.log("Arrived at dropoff, setting user location to dropoff");
+        setUserLocation({
+          latitude: 47.651505074534704,
+          longitude: -122.30686063977667,
+        });
+        userLocationChanged({
+          latitude: 47.651505074534704,
+          longitude: -122.30686063977667,
+        });
+        clearInterval(currStateInterval);
+        pickupIndexRef = 0; // reset index
+        dropoffIndexRef = 0; // reset index
+      }
+
+    }, [currState]);
 
     useEffect(() => {
       // when any of our locations change, check if we need to zoom on them
       // this is mainly because our user, pickup and dropoff locations set all the time (to the same values)
       // but we don't necessarily want to zoom in on those location unless they are actually different
-      if (!isSameLocation(userLocation, zoomOn[0])) {
+      // zoom to user's loc or if start loaction is there, use that
+      if (startLocation.latitude !== 0) {
+        // check zoomOn index 0 aka startLocation
+        if (!isSameLocation(startLocation, zoomOn[0])) {
+          setZoomOn((prevZoomOn) => {
+            const newZoomOn = [...prevZoomOn];
+            newZoomOn[0] = startLocation;
+            return newZoomOn;
+          });
+        }
+      } else {
+        // otherwise, use the user's location
+        if (!isSameLocation(userLocation, zoomOn[0])) {
         setZoomOn((prevZoomOn) => {
           const newZoomOn = [...prevZoomOn];
           newZoomOn[0] = userLocation;
           return newZoomOn;
         });
+      }
       }
       // check zoomOn index 1 aka pickUpLocation
       if (!isSameLocation(pickUpLocation, zoomOn[1])) {
@@ -117,41 +243,41 @@ const Map = forwardRef<MapRef, MapProps>(
 
     /* FUNCTIONS */
     // FOLLOW THE USER'S LOCATION
-    async function watchLocation() {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        console.log("Please grant location permission");
-        Alert.alert(
-          "Location Permission Required",
-          "You have denied location access. Please enable it in settings.",
-          [
-            { text: "Cancel", style: "cancel" },
-            { text: "Open Settings", onPress: () => Linking.openSettings() },
-          ]
-        );
-        return;
-      }
+    // async function watchLocation() {
+    //   const { status } = await Location.requestForegroundPermissionsAsync();
+    //   if (status !== "granted") {
+    //     console.log("Please grant location permission");
+    //     Alert.alert(
+    //       "Location Permission Required",
+    //       "You have denied location access. Please enable it in settings.",
+    //       [
+    //         { text: "Cancel", style: "cancel" },
+    //         { text: "Open Settings", onPress: () => Linking.openSettings() },
+    //       ]
+    //     );
+    //     return;
+    //   }
 
-      await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.High,
-          timeInterval: 1000, // Update every second
-          distanceInterval: 1, // Update every meter
-        },
-        (location) => {
-          // when location changes, change our state
-          setUserLocation({
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          });
-          // notify the parent component that the user's location has changed
-          userLocationChanged({
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          });
-        }
-      );
-    }
+    //   await Location.watchPositionAsync(
+    //     {
+    //       accuracy: Location.Accuracy.High,
+    //       timeInterval: 1000, // Update every second
+    //       distanceInterval: 1, // Update every meter
+    //     },
+    //     (location) => {
+    //       // when location changes, change our state
+    //       setUserLocation({
+    //         latitude: location.coords.latitude,
+    //         longitude: location.coords.longitude,
+    //       });
+    //       // notify the parent component that the user's location has changed
+    //       userLocationChanged({
+    //         latitude: location.coords.latitude,
+    //         longitude: location.coords.longitude,
+    //       });
+    //     }
+    //   );
+    // }
 
     // RECENTER
     const recenterMap = () => {
@@ -245,10 +371,11 @@ const Map = forwardRef<MapRef, MapProps>(
           {/* show the directions between the pickup and dropoff locations if they are valid
         if the ride is not currently happening / happened  */}
           {userLocation.latitude !== 0 &&
+          startLocation.latitude !== 0 &&
             pickUpLocation.latitude !== 0 &&
             dropOffLocation.latitude !== 0 && (
               <MapViewDirections
-                origin={userLocation}
+                origin={startLocation}
                 waypoints={[pickUpLocation]}
                 destination={dropOffLocation}
                 apikey={GOOGLE_MAPS_APIKEY}
@@ -294,3 +421,50 @@ export const isSameLocation = (
 };
 
 export default Map;
+
+// farmers market to parrington
+const driverToPickupLocations = [
+  { latitude: 47.66529658460914, longitude: -122.31358955835384 },
+  { latitude: 47.665065369830515, longitude: -122.31444786518557 },
+  { latitude: 47.66494976205713, longitude: -122.31386850807415 },
+  { latitude: 47.66495022618298, longitude: -122.31311791792947 },
+  { latitude: 47.664863520185676, longitude: -122.31251710314729 },
+  { latitude: 47.66487797119523, longitude: -122.31131547358287 },
+  { latitude: 47.66487797119523, longitude: -122.31022113237242 },
+  { latitude: 47.664863520185676, longitude: -122.30967396176719 },
+  { latitude: 47.66412735651641, longitude: -122.3096404891312 },
+  { latitude: 47.66321206084433, longitude: -122.3096404891312 },
+  { latitude: 47.66176733084499, longitude: -122.3097697671799 },
+  { latitude: 47.66095509927256, longitude: -122.3097844740822 },
+  { latitude: 47.66011313857209, longitude: -122.30972564647298 },
+  { latitude: 47.65925736458627, longitude: -122.30968477128673 },
+  { latitude: 47.658514912737736, longitude: -122.30954940014837 },
+  { latitude: 47.657368650554865, longitude: -122.30978146495697 },
+  { latitude: 47.65718628834192, longitude: -122.3100908847018 },
+];
+
+// parrington to winklewerder
+const driverToDropOffLocations = [
+  { latitude: 47.65718628834192, longitude: -122.3100908847018 },
+  { latitude: 47.65741960363522, longitude: -122.30966869133536 },
+  { latitude: 47.6584024032965, longitude: -122.30969014900613 },
+  { latitude: 47.658951606814455, longitude: -122.30964723366453 },
+  { latitude: 47.65981875850166, longitude: -122.3095184876398 },
+  { latitude: 47.65981875850166, longitude: -122.30850997711252 },
+  { latitude: 47.65971759154697, longitude: -122.30743709357286 },
+  { latitude: 47.659052775253414, longitude: -122.30647149838717 },
+  { latitude: 47.658200063702026, longitude: -122.30544153018909 },
+  { latitude: 47.65786764695169, longitude: -122.30462613869895 },
+  { latitude: 47.65710163507817, longitude: -122.30484071540687 },
+  { latitude: 47.65603209026653, longitude: -122.30449739267421 },
+  { latitude: 47.655237144119184, longitude: -122.30464759636976 },
+  { latitude: 47.65441327806877, longitude: -122.30492654609004 },
+  { latitude: 47.65395075108017, longitude: -122.30522695348117 },
+  { latitude: 47.65322804445887, longitude: -122.30524841115195 },
+  { latitude: 47.65279441568511, longitude: -122.30574193758021 },
+  { latitude: 47.65233905698946, longitude: -122.30640709060751 },
+  { latitude: 47.65221619377763, longitude: -122.30667531149331 },
+  { latitude: 47.652078875728186, longitude: -122.30768382202385 },
+  { latitude: 47.651486248342344, longitude: -122.30747857961833 },
+  { latitude: 47.651505074534704, longitude: -122.30686063977667 },
+];

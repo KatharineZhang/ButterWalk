@@ -1,5 +1,6 @@
 import {
   Command,
+  ErrorResponse,
   WebSocketMessage,
   WebSocketResponse,
 } from "../../server/src/api";
@@ -35,14 +36,14 @@ class WebSocketService {
       ? process.env.EXPO_PUBLIC_IP_ADDRESS
       : undefined;
     if (!IP_ADDRESS) {
-      console.error("IP_ADDRESS not found in .env");
+      console.log("IP_ADDRESS not found in .env");
       return Promise.resolve("Failed to Connect");
     }
 
     this.websocket = new WebSocket(`ws://${IP_ADDRESS}:8080/api/`);
 
     if (this.websocket == null) {
-      console.error("WEBSOCKET: Failed to create WebSocket");
+      console.log("WEBSOCKET: Failed to create WebSocket");
       return Promise.resolve("Failed to Connect");
     }
 
@@ -64,7 +65,9 @@ class WebSocketService {
       const message = JSON.parse(event.data) as WebSocketResponse;
       // send message to any component interested in this message type
       const key =
-        message.response == "ERROR" ? message.category : message.response;
+        message.response == "ERROR"
+          ? (message as ErrorResponse).category
+          : message.response;
 
       const handlersToCall: WebSocketResponseHandler[] | undefined =
         this.messageHandlers.get(key);
@@ -81,7 +84,7 @@ class WebSocketService {
     };
 
     this.websocket.onerror = (error: Event) => {
-      console.error(`WEBSOCKET: Error: ${(error as ErrorEvent).message}`);
+      console.log(`WEBSOCKET: Error: ${(error as ErrorEvent).message}`);
     };
   };
 
@@ -124,7 +127,7 @@ class WebSocketService {
       this.websocket.send(JSON.stringify(message));
       return;
     }
-    console.error("No websocket connection");
+    console.log("No websocket connection");
   }
 
   /**
