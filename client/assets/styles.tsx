@@ -267,7 +267,7 @@ export const styles = StyleSheet.create({
   },
 
   input: {
-    height: "8%",
+    height: "10%",
     width: "100%",
     borderWidth: 2,
     marginVertical: 4,
