@@ -58,16 +58,13 @@ const Map = forwardRef<MapRef, MapProps>(
       { latitude: 0, longitude: 0 },
     ]);
 
-
     // GOOGLE MAPS API KEY
     const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
       ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
       : "";
 
-
     // used for map zooming
     const mapRef = useRef<MapView>(null);
-
 
     // STATE HOOKS
     useEffect(() => {
@@ -75,7 +72,7 @@ const Map = forwardRef<MapRef, MapProps>(
       // and set up listeners
       watchLocation();
     }, []);
-        
+
     useEffect(() => {
       // when any of our locations change, check if we need to zoom on them
       // this is mainly because our user, pickup and dropoff locations set all the time (to the same values)
@@ -104,7 +101,7 @@ const Map = forwardRef<MapRef, MapProps>(
         });
       }
     }, [userLocation, pickUpLocation, dropOffLocation]);
-    
+
     useEffect(() => {
       // when we change what we want to zoom on, zoom on it
       recenterMap();
