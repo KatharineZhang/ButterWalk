@@ -272,7 +272,7 @@ export const styles = StyleSheet.create({
     borderWidth: 2,
     marginVertical: 4,
     borderRadius: 10,
-    padding: 10,
+    padding: 5,
     backgroundColor: "#f9f9f9",
     textAlign: "left",
     borderColor: "#ccc",
