@@ -1,7 +1,8 @@
+
 {
   "expo": {
     "name": "Husky SafeTrip",
-    "slug": "husky-betterwalk",
+    "slug": "husky-betterWalk",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/butterWalkLogo.png",
@@ -15,10 +16,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.butterwalk.butterwalk",
-      "config": {
-        "googleMapsApiKey": "AIzaSyAi4GiqY4FUMk7CQWB0MxNQIGWOsr_laBw"
-      },
+      "bundleIdentifier": "com.butterwalkios.butterwalk",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -40,18 +38,28 @@
       "output": "static",
       "favicon": "./assets/images/butterWalkLogo.png"
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router",
+      [
+        "react-native-maps",
+        {
+          "iosGoogleMapsApiKey": "see app.config.ts",
+          "androidGoogleMapsApiKey": "see app.config.ts"
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     },
+    "developmentClient": true,
     "extra": {
       "router": {
         "origin": false
       },
+      "scheme": "butterWalk",
       "eas": {
         "projectId": "24a5e20c-9f0d-4a09-9f2d-49ae53b470e5"
-      },
-      "scheme": "butterWalk"
+      }
     }
   }
 }
