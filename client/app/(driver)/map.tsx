@@ -15,7 +15,6 @@ import MapViewDirections from "react-native-maps-directions";
 import { Ionicons } from "@expo/vector-icons";
 import { PurpleZone } from "@/services/ZoneService";
 
-
 interface MapProps {
   pickUpLocation: { latitude: number; longitude: number };
   dropOffLocation: { latitude: number; longitude: number };
@@ -25,13 +24,11 @@ interface MapProps {
   }) => void;
 }
 
-
 // functions that can be called from the parent component
 // using the ref
 export interface MapRef {
   recenterMap: () => void; // recenter the map on the user's location
 }
-
 
 // Simple renders the points passing in through the props
 // and keeps track of the user's location
@@ -50,7 +47,6 @@ const Map = forwardRef<MapRef, MapProps>(
       latitude: number;
       longitude: number;
     }>({ latitude: 0, longitude: 0 });
-
 
     // what locations to focus on when zooming in on the map
     // in the format: [userLocation, pickUpLocation, dropOffLocation]
@@ -79,8 +75,7 @@ const Map = forwardRef<MapRef, MapProps>(
       // and set up listeners
       watchLocation();
     }, []);
-
-
+        
     useEffect(() => {
       // when any of our locations change, check if we need to zoom on them
       // this is mainly because our user, pickup and dropoff locations set all the time (to the same values)
@@ -109,13 +104,11 @@ const Map = forwardRef<MapRef, MapProps>(
         });
       }
     }, [userLocation, pickUpLocation, dropOffLocation]);
-
-
+    
     useEffect(() => {
       // when we change what we want to zoom on, zoom on it
       recenterMap();
     }, [zoomOn]);
-
 
     useImperativeHandle(
       ref,
@@ -124,7 +117,6 @@ const Map = forwardRef<MapRef, MapProps>(
         recenterMap,
       })
     );
-
 
     /* FUNCTIONS */
     // FOLLOW THE USER'S LOCATION
@@ -142,7 +134,6 @@ const Map = forwardRef<MapRef, MapProps>(
         );
         return;
       }
-
 
       await Location.watchPositionAsync(
         {
@@ -165,12 +156,10 @@ const Map = forwardRef<MapRef, MapProps>(
       );
     }
 
-
     // RECENTER
     const recenterMap = () => {
       centerMapOnLocations(zoomOn);
     };
-
 
     // CENTER MAP ON LOCATIONS
     const centerMapOnLocations = (
@@ -185,7 +174,6 @@ const Map = forwardRef<MapRef, MapProps>(
         animated: true,
       });
     };
-
 
     // Map UI
     return (
@@ -252,6 +240,7 @@ const Map = forwardRef<MapRef, MapProps>(
                 backgroundColor: "white",
                 borderRadius: 50,
                 borderWidth: 2,
+                // opacity: 0.8,
               }}
             >
               <Ionicons name="car-sharp" size={30} color="black" />
@@ -277,7 +266,6 @@ const Map = forwardRef<MapRef, MapProps>(
   }
 );
 
-
 // HELPER FOR USE EFFECT: calculate the distance between two points to check if we should update the zoomOn state
 export const calculateDistance = (
   point1: { latitude: number; longitude: number },
@@ -300,7 +288,6 @@ export const calculateDistance = (
   return d * 0.6213711922; // return distance in miles
 };
 
-
 export const isSameLocation = (
   point1: { latitude: number; longitude: number },
   point2: { latitude: number; longitude: number }
@@ -309,6 +296,5 @@ export const isSameLocation = (
   const SAME_LOCATION_THRESHOLD = 0.02; // 0.02 miles
   return calculateDistance(point1, point2) < SAME_LOCATION_THRESHOLD;
 };
-
 
 export default Map;

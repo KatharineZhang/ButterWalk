@@ -23,7 +23,7 @@ import {
 } from "../../../server/src/api";
 import RideRequestForm from "@/components/Student_RideRequestForm";
 import ConfirmRide from "@/components/Student_ConfirmRide";
-import Notification from "@/components/notification";
+import Notification from "@/components/Both_Notification";
 import FAQ from "./faq";
 import { Ionicons } from "@expo/vector-icons";
 import { styles } from "@/assets/styles";
@@ -255,7 +255,14 @@ export default function HomePage() {
       handleRecentLocationResponse,
       "RECENT_LOCATIONS"
     );
-    WebSocketService.addListener(handleDriverArrived, "DRIVER_ARRIVED");
+    WebSocketService.addListener(
+      handleDriverArrived,
+      "DRIVER_ARRIVED_AT_PICKUP"
+    );
+    WebSocketService.addListener(
+      handleDriverPickedUp,
+      "DRIVER_DRIVING_TO_DROPOFF"
+    );
 
     // get the user's profile on first render
     sendProfile();
@@ -479,9 +486,31 @@ export default function HomePage() {
   // when the driver has clicked the button saying they have arrived at the pickup location
   // notify the user and change the ride status to DriverArrived
   const handleDriverArrived = (message: WebSocketResponse) => {
-    if ("response" in message && message.response === "DRIVER_ARRIVED") {
+    if (
+      "response" in message &&
+      message.response === "DRIVER_ARRIVED_AT_PICKUP"
+    ) {
       // the driver has arrived at the pickup location
       setRideStatus("DriverArrived");
+    } else {
+      console.log("Driver arrived response error: ", message);
+    }
+  };
+
+  // WEBSOCKET -- DRIVER CLICKED PICKED UP STUDENT
+  const handleDriverPickedUp = (message: WebSocketResponse) => {
+    if (
+      "response" in message &&
+      message.response === "DRIVER_DRIVING_TO_DROPOFF"
+    ) {
+      // the driver has arrived at the pickup location
+      setRideStatus("RideInProgress");
+      setNotifState({
+        text: "You have been picked up and are on your way to your destination!",
+        color: "#C9FED0",
+      });
+    } else {
+      console.log("Driver arrived at pickup response error: ", message);
     }
   };
 
@@ -763,7 +792,6 @@ export default function HomePage() {
                 setFAQVisible={setFAQVisible}
                 openNavigation={routeToPickup}
                 setNotificationState={setNotifState}
-                changeRideStatus={setRideStatus}
                 goHome={goHome}
                 updateSideBarHeight={setCurrentComponentHeight}
               />

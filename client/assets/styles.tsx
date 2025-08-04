@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
 
 //This is absolutely a MESS and we need to fix it.
 // naming conventions are all over the place
@@ -203,30 +203,29 @@ export const styles = StyleSheet.create({
   },
 
   appNameText: {
-    fontSize: 70,
+    fontSize: 40,
     fontWeight: "700",
     letterSpacing: 0,
     color: "black",
     textAlign: "center",
     fontFamily: "Encode Sans",
-
   },
   signInText: {
-    fontSize: 25,
+    fontSize: 30,
     fontStyle: "italic",
-    fontWeight: 700,
+    fontWeight: "700",
     letterSpacing: 0,
     color: "black",
     fontFamily: "Encode Sans",
-    textAlign: "center",
+    textAlign: "left",
   },
   signinLogo: {
-    width: 100,
-    height: 100,
+    width: 200,
+    height: 200,
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "center",
-    margin: 30,
+    margin: "5%",
   },
   signInGoogleContainer: {
     flexDirection: "row",
@@ -248,11 +247,19 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 12,
     paddingHorizontal: 32,
-    borderRadius: 4,
+    borderRadius: 10,
     // elevation: 3,
     backgroundColor: "#4B2E83",
   },
-
+  signInButtonText: {
+    fontSize: 22,
+    fontStyle: "italic",
+    fontWeight: "700",
+    letterSpacing: 0,
+    color: "white",
+    fontFamily: "Encode Sans",
+    textAlign: "center",
+  },
   signInbottomImageContainer: {
     resizeMode: "contain",
     width: "80%",
@@ -260,9 +267,9 @@ export const styles = StyleSheet.create({
   },
 
   input: {
-    height: 50,
+    height: "8%",
     width: "100%",
-    borderWidth: 1,
+    borderWidth: 2,
     marginVertical: 4,
     borderRadius: 10,
     padding: 10,
@@ -325,7 +332,9 @@ export const styles = StyleSheet.create({
     marginLeft: 3,
   },
   modalContainer: {
-    flex: 1, justifyContent: "flex-end", alignItems: "center"
+    flex: 1,
+    justifyContent: "flex-end",
+    alignItems: "center",
   },
   fullModalView: {
     backgroundColor: "#E4E2F0",
@@ -596,7 +605,7 @@ export const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "white",
     padding: 16,
-    borderRadius:10,
+    borderRadius: 10,
     width: "100%",
   },
   progressBarTop: {
@@ -673,30 +682,30 @@ export const styles = StyleSheet.create({
     zIndex: 2,
   },
   locationsContainer: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      width: "90%",
-      marginTop: 15,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "90%",
+    marginTop: 15,
   },
   pickUpContainer: {
-      alignItems: "flex-start",
-      maxWidth: "40%"
+    alignItems: "flex-start",
+    maxWidth: "40%",
   },
   dropOffContainer: {
-      alignItems: "flex-end",
-      maxWidth: "40%"
+    alignItems: "flex-end",
+    maxWidth: "40%",
   },
   locationTitle: {
-      fontWeight: "bold",
-      fontSize: 12,
-      marginBottom: 3,
+    fontWeight: "bold",
+    fontSize: 12,
+    marginBottom: 3,
   },
   locationSubtitle: {
     fontWeight: "bold",
     fontSize: 12,
     color: "#4B2E83",
     marginBottom: 3,
-  },  
+  },
   locationText: {
     fontSize: 12,
   },
@@ -704,6 +713,7 @@ export const styles = StyleSheet.create({
     position: "absolute",
     width: "100%",
     height: "100%",
+    bottom: 0,
     shadowRadius: 5,
     shadowOpacity: 0.4,
     shadowOffset: { width: 0, height: -7 },
@@ -764,12 +774,183 @@ export const styles = StyleSheet.create({
   // legend
   legendContainer: {
     flexDirection: "row",
-          alignItems: "center",
-          marginBottom: 7,
+    alignItems: "center",
+    marginBottom: 7,
   },
   legendText: {
-    left: 5, fontSize: 12, marginLeft: 5 
-  }
+    left: 5,
+    fontSize: 12,
+    marginLeft: 5,
+  },
+
+  // driver profile
+  overlay: {
+    position: "relative",
+    top: "100%",
+    left: 0,
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height,
+    zIndex: 999,
+    pointerEvents: "box-none",
+  },
+  logoutImage: {
+    width: "15%",
+    resizeMode: "contain",
+    marginRight: 0,
+  },
+  modal: {
+    width: "100%",
+    backgroundColor: "white",
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    borderRadius: 10,
+    paddingTop: "13%",
+    zIndex: 100,
+  },
+  imageWrapper: {
+    width: Dimensions.get("window").width * 0.2,
+    height: Dimensions.get("window").height * 0.07,
+    position: "relative",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  ellipseImage: {
+    width: "150%",
+    resizeMode: "contain",
+  },
+  userImage: {
+    width: "50%",
+    borderRadius: 20,
+    position: "absolute",
+  },
+  rowContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: "6%",
+    marginTop: -10,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginLeft: "5%",
+    color: "#4B2E83",
+  },
+  closeButton: {
+    borderRadius: 100,
+    marginBottom: 10,
+    width: "10%",
+    alignItems: "center",
+  },
+  closeButtonImage: {
+    width: "60%",
+    resizeMode: "contain",
+    marginLeft: "1800%",
+  },
+  logoutButton: {
+    padding: "5%",
+    backgroundColor: "#4B2E83",
+    borderRadius: 5,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  logoutButtonText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 18,
+  },
+  rowContainerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  driverRequestPageImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "contain",
+  },
+  driverRequestDotsImage: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    paddingRight: "80%",
+  },
+  driverRequestRowCenter: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  /* styling for driver_handle_ride */
+  driverBottomPanel: {
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "white",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 10,
+    maxHeight: "50%",
+    paddingBottom: "15%",
+    width: "100%",
+  },
+  driverBottomPanelBig: {
+    paddingBottom: "15%",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "white",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 10,
+    maxHeight: "50%",
+    width: "100%",
+    zIndex: 100,
+  },
+  driverCancelButton: {
+    paddingVertical: 20,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  titlePassengerName: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 12,
+  },
+
+  driverCompleteButton: {
+    backgroundColor: "#4B2E83",
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  driverGreyLine: {
+    height: 1,
+    backgroundColor: "#E0E0E0",
+    marginVertical: 16,
+  },
+
+  driverPersonIcon: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+  },
 });
 
 export const loadingPageCompStyles = StyleSheet.create({
@@ -817,5 +998,76 @@ export const loadingPageCompStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "400",
     lineHeight: 23,
+  },
+});
+
+// Created a handy style reference: has all the colors, texts
+// and how certain parts should be displayed for the flag pop-up
+export const driverFlagPopupStyles = StyleSheet.create({
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // dims background
+  },
+  modalView: {
+    margin: "20%",
+    backgroundColor: "white",
+    borderRadius: 20, // rounded corners as in the image
+    padding: "6%",
+    alignItems: "center",
+    width: "70%",
+    maxWidth: 400, // max width for larger screens
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: "5%",
+  },
+  headerTitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  flagIcon: {
+    marginRight: "8%",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  closeButton: {
+    padding: "2%",
+  },
+  descriptionLabel: {
+    fontSize: 16,
+    color: "#555",
+    marginBottom: "8%",
+    alignSelf: "flex-start", // align to left
+  },
+  textInput: {
+    width: "100%",
+    minHeight: 175, // minimum height for the text area
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: "5%",
+    fontSize: 16,
+    color: "#333",
+    marginBottom: "10%",
+  },
+  submitButton: {
+    backgroundColor: "#4b2e83", // purple color
+    paddingVertical: "5%",
+    paddingHorizontal: "10%",
+    borderRadius: 10,
+    alignSelf: "flex-end",
+  },
+  submitButtonText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });

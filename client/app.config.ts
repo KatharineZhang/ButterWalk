@@ -9,7 +9,7 @@ dotenv.config();
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Husky SafeTrip",
-  slug: "butterwalk",
+  slug: "husky-betterWalk",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/butterWalkLogo.png",

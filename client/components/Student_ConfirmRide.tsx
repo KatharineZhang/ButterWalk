@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   useWindowDimensions,
 } from "react-native";
-import SegmentedProgressBar from "./SegmentedProgressBar";
+import SegmentedProgressBar from "./Both_SegmentedProgressBar";
 
 interface ConfirmRideProps {
   pickUpLoc: string;
