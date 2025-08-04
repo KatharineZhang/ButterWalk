@@ -86,7 +86,12 @@ export async function createUser(transaction: Transaction, user: User) {
     }
   } else {
     console.log("User does NOT exist in the database");
-    transaction.set(docLocationRef, campusLocations);
+    // before, only RecentLocations in FireBase was being updated with 
+    // the new user, however with the below line,
+    // we also add the user in Users (otherwise it throws
+    // a bunch of errors!) in FireBase
+    transaction.set(docRef, {firstName: user.firstName, lastName: user.lastName, netid: user.netid, studentOrDriver: user.studentOrDriver});
+    transaction.set(docLocationRef, { locations: campusLocations });
     console.log("Document does not exist, so added default campuslocations");
     return false;
   }
@@ -103,6 +108,7 @@ export async function finishCreatingUser(
   studentNumber: string
 ) {
   // use the net id of the user as the document id
+  // from the Users document in Firebase
   const docRef = doc(usersCollection, netid);
   const docSnap = await transaction.get(docRef);
   if (docSnap.exists()) {
