@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.butterwalkioshiya.butterwalk",
+      "bundleIdentifier": "com.butterwalk.butterwalk",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }

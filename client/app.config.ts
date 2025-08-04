@@ -23,7 +23,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.butterwalkioshiya.butterwalk",
+    bundleIdentifier: "com.butterwalk.butterwalk",
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
       NSLocationWhenInUseUsageDescription:
@@ -50,10 +50,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     "expo-router",
     [
-     'sentry-expo',
+      "sentry-expo",
       {
-        org: 'butterwalk',
-        project: 'ButterWalk',
+        org: "butterwalk",
+        project: "ButterWalk",
         authToken: process.env.SENTRY_AUTH_TOKEN,
       },
     ],

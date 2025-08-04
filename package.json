@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "sentry-expo": "^7.2.0"
+  }
+}
