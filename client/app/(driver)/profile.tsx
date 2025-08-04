@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import { Pressable, View, Text, Image } from "react-native";
+import { Pressable, View, Text, Image, Dimensions } from "react-native";
 import { styles } from "../../assets/styles";
 
 interface ProfileProps {
@@ -28,14 +28,21 @@ export default function Profile({
         </Pressable>
 
         <View style={styles.rowContainer}>
-          <View style={styles.imageWrapper}>
+          <View
+            style={{
+              padding: 10,
+              borderRadius: 100,
+              borderWidth: 3,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
             <Image
-              source={require("@/assets/images/Ellipse 215.png")}
-              style={styles.ellipseImage}
-            />
-            <Image
+              style={{
+                width: Dimensions.get("window").width * 0.07,
+                height: Dimensions.get("window").width * 0.07,
+              }}
               source={require("@/assets/images/user.png")}
-              style={styles.userImage}
             />
           </View>
           <Text style={styles.title}>Driver NetID: {netid}</Text>

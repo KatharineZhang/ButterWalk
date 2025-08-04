@@ -5,27 +5,21 @@ import { FontAwesome6 } from "@expo/vector-icons";
 import { styles } from "@/assets/styles";
 
 export default function Legend() {
-  const [width, setWidth] = React.useState(40);
-
+  const [open, setOpen] = React.useState(false);
   return (
     <View
       style={{
         backgroundColor: "white",
         borderRadius: 10,
         shadowOpacity: 0.5,
-        width: width,
         padding: 10,
       }}
     >
-      <View
-        style={{ flexDirection: "row", alignItems: "center", marginBottom: 7 }}
-      >
+      <View style={styles.legendContainer}>
         <FontAwesome6 name="location-dot" size={24} color="#d02323" />
-        {width != 40 && <Text style={styles.legendText}>Destination</Text>}
+        {open && <Text style={styles.legendText}>Destination</Text>}
       </View>
-      <View
-        style={{ flexDirection: "row", alignItems: "center", marginBottom: 7 }}
-      >
+      <View style={styles.legendContainer}>
         <View
           style={{
             borderRadius: 13,
@@ -34,11 +28,9 @@ export default function Legend() {
             width: 20,
           }}
         />
-        {width != 40 && <Text style={styles.legendText}>Pick Up Location</Text>}
+        {open && <Text style={styles.legendText}>Pick Up Location</Text>}
       </View>
-      <View
-        style={{ flexDirection: "row", alignItems: "center", marginBottom: 7 }}
-      >
+      <View style={styles.legendContainer}>
         <View
           style={{
             borderRadius: 13,
@@ -58,7 +50,7 @@ export default function Legend() {
             }}
           />
         </View>
-        {width != 40 && <Text style={styles.legendText}>Your Location</Text>}
+        {open && <Text style={styles.legendText}>Your Location</Text>}
       </View>
       <View style={styles.legendContainer}>
         <View
@@ -71,13 +63,13 @@ export default function Legend() {
             width: 20,
           }}
         />
-        {width != 40 && <Text style={styles.legendText}>Start Location</Text>}
+        {open && <Text style={styles.legendText}>Start Location</Text>}
       </View>
-      <Pressable onPress={() => setWidth(width === 40 ? 150 : 40)}>
-        {width == 40 ? (
-          <Feather style={{ width: 40 }} name="chevrons-right" size={20} />
+      <Pressable onPress={() => setOpen(!open)}>
+        {open ? (
+          <Feather name="chevrons-right" size={20} />
         ) : (
-          <Feather style={{ width: 40 }} name="chevrons-left" size={20} />
+          <Feather name="chevrons-left" size={20} />
         )}
       </Pressable>
     </View>
