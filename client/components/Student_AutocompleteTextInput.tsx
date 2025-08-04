@@ -30,6 +30,8 @@ const AutoCompleteInput: React.FC<AutoCompleteInputProps> = ({
         onSubmitEditing={enterPressed}
         placeholder={placeholder}
         placeholderTextColor="#888"
+        autoComplete="off"
+        autoCapitalize="none"
       />
     </View>
   );

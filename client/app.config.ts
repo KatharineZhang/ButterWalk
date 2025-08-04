@@ -25,11 +25,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.butterwalk.butterwalk",
-    config: {
-      googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY,
-    },
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
+      NSLocationWhenInUseUsageDescription:
+        "We need your location to show your position on the map.",
     },
   },
   android: {
@@ -49,8 +48,23 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     output: "static",
     favicon: "./assets/images/butterWalkLogo.png",
   },
-  plugins: ["expo-router"],
+  plugins: [
+    "expo-router",
+    [
+      "sentry-expo",
+      {
+        org: "butterwalk",
+        project: "ButterWalk",
+        authToken: process.env.EXPO_PUBLIC_SENTRY_AUTH_TOKEN,
+      },
+    ],
+  ],
   experiments: {
     typedRoutes: true,
+  },
+  extra: {
+    eas: {
+      projectId: "24a5e20c-9f0d-4a09-9f2d-49ae53b470e5",
+    },
   },
 });

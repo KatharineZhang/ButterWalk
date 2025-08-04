@@ -16,9 +16,6 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.butterwalk.butterwalk",
-      "config": {
-        "googleMapsApiKey": "AIzaSyAi4GiqY4FUMk7CQWB0MxNQIGWOsr_laBw"
-      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -40,10 +37,20 @@
       "output": "static",
       "favicon": "./assets/images/butterWalkLogo.png"
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router",
+      [
+        "react-native-maps",
+        {
+          "iosGoogleMapsApiKey": "see app.config.ts",
+          "androidGoogleMapsApiKey": "see app.config.ts"
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     },
+    "developmentClient": true,
     "extra": {
       "router": {
         "origin": false
