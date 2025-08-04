@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Husky SafeTrip",
+    "name": "Husky ButterWalk",
     "slug": "husky-betterwalk",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -40,7 +40,9 @@
       "output": "static",
       "favicon": "./assets/images/butterWalkLogo.png"
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router"
+    ],
     "experiments": {
       "typedRoutes": true
     },

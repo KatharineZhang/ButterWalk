@@ -5,9 +5,18 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "expo-auth-session": ["node_modules/expo-auth-session"]
+      "@/*": [
+        "./*"
+      ],
+      "expo-auth-session": [
+        "node_modules/expo-auth-session"
+      ]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ],
 }

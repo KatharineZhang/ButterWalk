@@ -10,8 +10,8 @@ import {
   Pressable,
   ImageSourcePropType,
 } from "react-native";
-import OnboardingItem from "../components/Both_OnboardingItem";
-import Paginator from "@/components/Both_OnboardingPaginator";
+import OnboardingItem from "../components/OnboardingItem";
+import Paginator from "@/components/Paginator";
 import { Link, router } from "expo-router";
 
 //Onboarding Page
@@ -42,7 +42,7 @@ export default function Onboarding() {
       {currentIndex === pages.length - 1 ? (
         // Content for last page without overlay panel
         <View style={styles.lastPageContent}>
-          <View style={{ marginBottom: "20%" }}>
+          <View style={{ marginBottom: 190 }}>
             <Text style={[styles.overlayText, { paddingHorizontal: 60 }]}>
               {pages[currentIndex].title}
             </Text>
@@ -52,7 +52,7 @@ export default function Onboarding() {
           </View>
 
           <View style={styles.navigationContainer}>
-            <Link href={"/driverOrstudent"} asChild>
+            <Link href={"/(student)/signin"} asChild>
               <Pressable style={styles.navigationButton}>
                 <Text style={styles.navigationButtonText}>Skip</Text>
               </Pressable>
@@ -60,7 +60,7 @@ export default function Onboarding() {
             <Paginator data={pages} scrollX={scrollX} />
             <Pressable
               style={styles.startedButton}
-              onPress={() => router.push("/driverOrstudent")}
+              onPress={() => router.push("/(student)/signin")}
             >
               <Text style={styles.startedButtonText}>Get Started</Text>
             </Pressable>
@@ -74,7 +74,7 @@ export default function Onboarding() {
             {pages[currentIndex].text}
           </Text>
           <View style={styles.navigationContainer}>
-            <Link href={"/driverOrstudent"} asChild>
+            <Link href={"/(student)/signin"} asChild>
               <Pressable style={styles.navigationButton}>
                 <Text style={styles.navigationButtonText}>Skip</Text>
               </Pressable>

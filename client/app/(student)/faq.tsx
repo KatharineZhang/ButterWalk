@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { styles } from "@/assets/styles";
-import Accordion, { AccordionProps } from "@/components/Student_FAQAccordian";
-import PopUpModal from "@/components/Student_PopUpModal";
-import { JSX } from "react";
+import Accordion, { AccordionProps } from "@/components/Accordian";
+import PopUpModal from "@/components/PopUpModal";
 import { Text, ScrollView, View } from "react-native";
 
 // FAQ component that displays a list of frequently asked questions
@@ -18,7 +17,7 @@ function FAQ({ isVisible, onClose }: FAQProps) {
   const qandA: JSX.Element = (
     <ScrollView>
       <View style={{ height: 60 }} />
-      <Text style={styles.faqHeader}>Husky SafeTrip FAQ</Text>
+      <Text style={styles.faqHeader}>RideSafe+ FAQ</Text>
       <Text style={styles.faqSubtitle}>University of Washington</Text>
       <View style={{ height: 10 }} />
 
@@ -48,13 +47,6 @@ function FAQ({ isVisible, onClose }: FAQProps) {
 // FAQ data
 const faqContent: AccordionProps[] = [
   {
-    title: "Why can't I get picked up from Earl's?",
-    content:
-      "Earl's and other locations that serve alcohol are not allowed to be used as pickup or drop-off points. " +
-      "Your driver can refuse to give you a ride if you come from these locations or are intoxicated. " +
-      "Please be respectful of our drivers and the service we provide.",
-  },
-  {
     title: "What are the hours of service?",
     content:
       "The hours of operation are listed below:" +
@@ -70,7 +62,7 @@ const faqContent: AccordionProps[] = [
       "Additionally, both locations must fall within the boundaries outlined below. " +
       "\n\nFor detailed boundary information, please refer to this page:",
     link: "https://www.google.com/maps/d/u/0/viewer?mid=1vw5w2MFNwZ9YZak1vCWRTEMaUGI-EBQ&ll=47.65994679136626%2C-122.30518874999999&z=14",
-    linkText: "UW Husky SafeTrip Boundary Map",
+    linkText: "UW RideSafe+ Boundary Map",
     image: require("@/assets/images/faq-boundary.png"),
   },
   {
@@ -91,11 +83,6 @@ const faqContent: AccordionProps[] = [
     title: "Is this service free for everybody?",
     content:
       "Our service is completely free for UW students and staff members! Please make sure you have your UW ID to confirm your identity at pickup.",
-  },
-  {
-    title: "How can I change my profile name?",
-    content:
-      "Since we draw information from your UW email, you need to go to your UW google account then Profile Info and change your name in the nickname field for it to update in the app.",
   },
 ];
 
