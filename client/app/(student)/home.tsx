@@ -314,7 +314,7 @@ export default function HomePage() {
   }, [whichComponent]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: number;
     let index = 0;
     if (rideStatus === "DriverEnRoute") {
       interval = setInterval(() => {

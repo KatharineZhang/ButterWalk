@@ -84,32 +84,39 @@ const Map = forwardRef<MapRef, MapProps>(
     }, [driverLocation]);
 
     useEffect(() => {
-      let interval: NodeJS.Timeout | null = null;
+      let interval: number | null = null; // interval for updating the user's location
       let index = 0;
-    
+
       if (rideStatus === "RideCompleted") {
         setRidePath([]);
+        setUserLocation({
+          latitude: 47.65528726113183,
+          longitude: -122.306791271836,
+        });
       } else if (rideStatus === "WaitingForRide") {
         interval = setInterval(() => {
-          if (index >= user_Suz_to_AllenSouth_goto.length && interval !== null) {
+          if (
+            index >= user_Suz_to_AllenSouth_goto.length &&
+            interval !== null
+          ) {
             console.log("clearing user location interval at end");
             clearInterval(interval);
             index = 0;
             return;
-          } 
+          }
 
           console.log("Interval running", index);
-    
+
           setUserLocation({
             latitude: user_Suz_to_AllenSouth_goto[index].latitude,
             longitude: user_Suz_to_AllenSouth_goto[index].longitude,
           });
-    
+
           userLocationChanged({
             latitude: user_Suz_to_AllenSouth_goto[index].latitude,
             longitude: user_Suz_to_AllenSouth_goto[index].longitude,
           });
-    
+
           index++;
         }, 1000);
       } else {
