@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.butterwalkios.butterwalk",
+      "bundleIdentifier": "com.butterwalk.butterwalk",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -55,10 +55,10 @@
       "router": {
         "origin": false
       },
-      "scheme": "butterWalk",
       "eas": {
         "projectId": "24a5e20c-9f0d-4a09-9f2d-49ae53b470e5"
-      }
+      },
+      "scheme": "butterWalk"
     }
   }
 }

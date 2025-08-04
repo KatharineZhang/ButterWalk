@@ -1,14 +1,13 @@
 import { styles } from "@/assets/styles";
 import { Link } from "expo-router";
-import { Button, View, Text, Pressable } from "react-native";
-import * as Sentry from 'sentry-expo';
+import { View, Text, Pressable } from "react-native";
+import * as Sentry from "sentry-expo";
 
 Sentry.init({
-  dsn: 'https://16af6dee84f28f5b28487764feb725a6@o4509688035016704.ingest.us.sentry.io/4509688215896064',
+  dsn: "https://16af6dee84f28f5b28487764feb725a6@o4509688035016704.ingest.us.sentry.io/4509688215896064",
   enableInExpoDevelopment: true,
   debug: true, // optional
 });
-
 
 export default function driverOrstudent() {
   return (
@@ -30,12 +29,6 @@ export default function driverOrstudent() {
       >
         To start, are you a UW Student or a UWPD Driver?
       </Text>
-      <Button
-        title="Test Sentry"
-        onPress={() => {
-          Sentry.Native.captureException(new Error('Test error from simple button'));
-        }}
-      />
       <View style={{ height: 20 }} />
       <View style={styles.buttonContainer}>
         <Link href={"/(driver)/signin"} asChild>

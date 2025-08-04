@@ -1,11 +1,12 @@
 import { ExpoConfig, ConfigContext } from "@expo/config";
 import * as dotenv from "dotenv";
 
-
 // initialize dotenv
 dotenv.config();
 
-
+// This will replace out app.json on runtime
+// allowing us to use api keys in the .env
+// while also keeping them hidden on git
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Husky SafeTrip",
@@ -23,7 +24,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.butterwalkios.butterwalk",
+    bundleIdentifier: "com.butterwalk.butterwalk",
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
       NSLocationWhenInUseUsageDescription:
@@ -50,11 +51,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     "expo-router",
     [
-     'sentry-expo',
+      "sentry-expo",
       {
-        org: 'butterwalk',
-        project: 'ButterWalk',
-        authToken: process.env.SENTRY_AUTH_TOKEN,
+        org: "butterwalk",
+        project: "ButterWalk",
+        authToken: process.env.EXPO_PUBLIC_SENTRY_AUTH_TOKEN,
       },
     ],
   ],

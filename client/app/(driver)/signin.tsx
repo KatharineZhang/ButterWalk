@@ -1,83 +1,104 @@
 import {
   View,
   Text,
-  TextInput,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Pressable,
+  TextInput,
+  Image,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Dimensions,
 } from "react-native";
 import { useState } from "react";
+import { styles } from "../../assets/styles";
 import { Redirect } from "expo-router";
-import { styles } from "@/assets/styles";
+import * as WebBrowser from "expo-web-browser";
+
+// @ts-expect-error the image does exists so get rid of the error
+import butterWalkLogo from "@/assets/images/butterWalkLogo.png";
+
+WebBrowser.maybeCompleteAuthSession();
 
 const Login = () => {
-  const [netid, setNetID] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [signedIn, setSignedIn] = useState(false);
+  const [driverId, setDriverId] = useState<string>("");
+  const [signedIn, setSignedIn] = useState<boolean | null>(false);
+  const [errMsg, setErrMsg] = useState("");
+  const [netid, setNetid] = useState("");
 
-  const signIn = async () => {
-    setLoading(true);
-    setNetID(netid.trim());
-
-    if (!netid) {
-      alert("Driver Net ID is required");
-      setLoading(false);
-
-      return;
-    }
-
-    try {
+  // check that the driver ID input is correct
+  // param: input - the driver id input in the sign in
+  const checkDriverIdInput = () => {
+    if (/^[a-z]{5,7}$/.test(driverId.toLowerCase())) {
       setSignedIn(true);
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(error.message);
-        alert("Sign In Failed" + error.message);
-      } else {
-        console.error("An unknown error occurred");
-      }
-    } finally {
-      setLoading(false);
+      setNetid(driverId.toLowerCase());
+      setErrMsg("");
+    } else {
+      setDriverId("");
+      setSignedIn(false);
+      setErrMsg("Driver ID must be 5 to 7 lowercase letters.");
     }
-    setLoading(false);
   };
 
-  if (signedIn) {
-    return (
-      <Redirect
-        href={{
-          pathname: "/(driver)/map",
-          params: {
-            netid: netid != "" ? netid.replace("@uw.edu", "") : "driver-netID",
-          },
-        }}
-      />
-    );
-  }
-  return (
-    <View style={styles.container}>
-      <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
-        <TextInput
-          value={netid}
-          style={styles.input}
-          placeholder="UW Police Department Driver NetID"
-          placeholderTextColor={"#808080"}
-          onChangeText={(text) => setNetID(text)}
-          autoCapitalize="none"
-        ></TextInput>
-        {loading ? (
-          <ActivityIndicator size="large" color="#0000ff" />
-        ) : (
-          <>
-            <Pressable style={styles.button} onPress={signIn}>
-              <Text style={styles.text}>Log In</Text>
-            </Pressable>
-            <Text>For easier dev testing (will be removed later) </Text>
-            <Pressable style={styles.button} onPress={() => setSignedIn(true)}>
-              <Text style={styles.text}>Bypass Signin</Text>
-            </Pressable>
-          </>
-        )}
-      </KeyboardAvoidingView>
+  // if signed in successfully, redirect
+  return signedIn && netid ? (
+    <Redirect
+      href={{
+        pathname: "/(driver)/home",
+        params: {
+          netid: netid,
+        },
+      }}
+    />
+  ) : (
+    <View
+      style={[
+        styles.container,
+        {
+          margin: "10%",
+          alignItems: "center",
+        },
+      ]}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
+          <Text style={styles.appNameText}>Husky ButterWalk</Text>
+          <Image style={styles.signinLogo} source={butterWalkLogo} />
+          <Text style={styles.signInText}>Driver Sign In</Text>
+          <View style={{ height: "7%" }}></View>
+
+          <Text style={{ fontSize: 17, fontWeight: "500" }}>Driver Netid</Text>
+          {errMsg && (
+            <Text style={{ wordWrap: "true", maxWidth: "70%", color: "red" }}>
+              {errMsg}
+            </Text>
+          )}
+
+          <TextInput
+            value={driverId}
+            style={[
+              styles.input,
+              driverId && styles.inputFocused,
+              {
+                alignSelf: "center",
+                width: Dimensions.get("window").width * 0.9,
+                marginBottom: "5%",
+              },
+            ]}
+            placeholderTextColor={"#808080"}
+            onChangeText={(text: string) => setDriverId(text)}
+            autoCapitalize="none"
+          />
+
+          <Pressable
+            style={styles.signInButton}
+            onPress={() => {
+              checkDriverIdInput();
+            }}
+          >
+            <Text style={styles.signInButtonText}>Sign In</Text>
+          </Pressable>
+        </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
     </View>
   );
 };

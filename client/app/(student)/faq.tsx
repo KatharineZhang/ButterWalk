@@ -18,7 +18,7 @@ function FAQ({ isVisible, onClose }: FAQProps) {
   const qandA: JSX.Element = (
     <ScrollView>
       <View style={{ height: 60 }} />
-      <Text style={styles.faqHeader}>Husky ButterWalk FAQ</Text>
+      <Text style={styles.faqHeader}>Husky SafeTrip FAQ</Text>
       <Text style={styles.faqSubtitle}>University of Washington</Text>
       <View style={{ height: 10 }} />
 
@@ -70,7 +70,7 @@ const faqContent: AccordionProps[] = [
       "Additionally, both locations must fall within the boundaries outlined below. " +
       "\n\nFor detailed boundary information, please refer to this page:",
     link: "https://www.google.com/maps/d/u/0/viewer?mid=1vw5w2MFNwZ9YZak1vCWRTEMaUGI-EBQ&ll=47.65994679136626%2C-122.30518874999999&z=14",
-    linkText: "UW Husky ButterWalk Boundary Map",
+    linkText: "UW Husky SafeTrip Boundary Map",
     image: require("@/assets/images/faq-boundary.png"),
   },
   {

@@ -1,4 +1,10 @@
-import { View, Text, TouchableOpacity, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Pressable,
+  ActivityIndicator,
+} from "react-native";
 import { styles } from "../assets/styles";
 import React, { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -34,7 +40,6 @@ interface HandleRideProps {
     color: string;
     boldText?: string;
   }) => void; // show a notification to the user by calling this function
-  changeRideStatus: (status: RideStatus) => void; // update the ride status based on button press
   goHome: () => void; // callback function to go back to the ride request form
   updateSideBarHeight: (height: number) => void; // callback function to update the height of the sidebar
 }
@@ -54,7 +59,6 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   setFAQVisible,
   openNavigation,
   setNotificationState,
-  changeRideStatus,
   goHome,
   updateSideBarHeight,
 }) => {
@@ -144,6 +148,10 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
 
   // height expansion
   const [expanded, setExpanded] = useState(false); // if the progress bar is expanded or not
+
+  // show the waiting for driver confirmation during pickup
+  const [showWaitingForConfirmation, setShowWaitingForConfirmation] =
+    useState(false);
 
   return (
     <View
@@ -346,23 +354,50 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
         </View>
       )}
       {/* I Found My Driver Button */}
-      {status == "DriverArrived" && (
-        <View
-          style={[styles.bottomModalButtonContainer, { paddingHorizontal: 10 }]}
-        >
-          <Pressable
+      {status === "DriverArrived" &&
+        (showWaitingForConfirmation === false ? (
+          <View
             style={[
-              styles.bottomModalButton,
-              { borderWidth: 2, backgroundColor: "#4B2E83" },
+              styles.bottomModalButtonContainer,
+              { paddingHorizontal: 10 },
             ]}
-            onPress={() => {
-              changeRideStatus("RideInProgress");
-            }}
           >
-            <Text style={styles.buttonText}>I Found My Driver</Text>
-          </Pressable>
-        </View>
-      )}
+            <Pressable
+              style={[
+                styles.bottomModalButton,
+                { borderWidth: 2, backgroundColor: "#4B2E83" },
+              ]}
+              onPress={() => {
+                setShowWaitingForConfirmation(true);
+              }}
+            >
+              <Text style={styles.buttonText}>I Found My Driver</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View
+            style={[
+              styles.bottomModalButtonContainer,
+              {
+                paddingHorizontal: 10,
+                alignItems: "center",
+                paddingVertical: "7%",
+                flexDirection: "row",
+                justifyContent: "center",
+              },
+            ]}
+          >
+            <ActivityIndicator
+              size="small"
+              color="#4B2E83"
+              style={{ margin: "2%" }}
+            />
+            <Text style={{ fontStyle: "italic", fontSize: 18 }}>
+              Waiting For Driver Confirmation...
+            </Text>
+          </View>
+        ))}
+
       {/* Go Home Button */}
       {status == "RideCompleted" && (
         <View

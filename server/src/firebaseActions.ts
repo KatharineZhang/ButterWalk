@@ -135,7 +135,20 @@ export async function finishCreatingUser(
 export async function addRideRequestToPool(
   t: Transaction,
   rideRequest: RideRequest
-): Promise<string> {
+): Promise<{ requestid: string; notifyDrivers: boolean }> {
+  let notify: boolean = false;
+  // how many rides were there in pool before add this one?
+  const inThePool = query(
+    rideRequestsCollection,
+    where("status", "==", "REQUESTED")
+  );
+  const result = await getDocs(inThePool);
+  // if there was previously 0 (before we add)
+  // we need to notify drivers that rides now exist!!
+  if (result.size == 0) {
+    notify = true;
+  }
+
   // make sure there are no pending rides in the database by this user
   const queryExistingRide = query(
     rideRequestsCollection,
@@ -159,7 +172,7 @@ export async function addRideRequestToPool(
   rideRequest.status = "REQUESTED";
   const docRef = doc(rideRequestsCollection);
   t.set(docRef, rideRequest);
-  return docRef.id;
+  return { requestid: docRef.id, notifyDrivers: notify };
 }
 
 /**
@@ -176,15 +189,14 @@ export async function getRideRequests(): Promise<RideRequest[]> {
   const rideRequests: RideRequest[] = [];
   inDatabase.forEach((el) => {
     const rideRequest = el.data();
-    // TODO(connor): Type validation
     rideRequests.push(rideRequest as RideRequest);
   });
   return rideRequests;
 }
 
 /**
- * Updates the status of the provided ride request to the provided status
- * @param status The status to change to
+ * Updates the status of the provided stuent's ride request to the provided status
+ * @param status The status to change to "CANCELED", "COMPLETED", etc.
  * @param netid The netid of the user with the ride request to change
  */
 export async function setRideRequestStatus(
@@ -192,15 +204,46 @@ export async function setRideRequestStatus(
   status: RideRequestStatus,
   netid: string
 ) {
-  const res = query(rideRequestsCollection, where("netid", "==", netid));
-  const snapshot = await getDocs(res);
-  snapshot.forEach(async (doc) => {
-    await updateDoc(doc.ref, { status: status });
-  });
+  // gets the student's ride that is not complete (COMPLETED or CANCELLED)
+  // and changes its status
+  const queryNetid = query(
+    rideRequestsCollection,
+    where("netid", "==", netid),
+    where("status", "in", ["CANCELLED", "COMPLETED"])
+  );
+  // run the query
+  const res = await getDocs(queryNetid);
+  if (res.size !== 1) {
+    // TODO: DOUBLE CHECK THIS
+    throw new Error(
+      `Expected exactly one active ride request for netid: ${netid}, found ${res.size}`
+    );
+  }
+  const docRef = res.docs[0].ref;
+  await updateDoc(docRef, { status: status });
 }
 
 /**
- * Set the driver id of a ride request
+ * Returns if the student's ride request has been accepted or not
+ * @param netid student's netid
+ * @returns if there is a ride request by that student that has not been accepted, etc.
+ */
+export async function isNotAccepted(netid: string): Promise<boolean> {
+  const queryNetid = query(
+    rideRequestsCollection,
+    where("netid", "==", netid),
+    where("status", "in", ["REQUESTED", "VIEWING"])
+  );
+  // run the query
+  const res = await getDocs(queryNetid);
+  if (res.size == 0) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Set the driver id of a specific student's ride request
  * @param t The associated transaction
  * @param netid netid of the student who owns the ride request to update
  * @param driverid the id of the driver
@@ -210,67 +253,84 @@ export async function setRideRequestDriver(
   netid: string,
   driverid: string
 ) {
-  const res = query(rideRequestsCollection, where("netid", "==", netid));
-  const snapshot = await getDocs(res);
-  snapshot.forEach(async (doc) => {
-    await updateDoc(doc.ref, { driverid: driverid });
-  });
+  // find any ride by student 'netid' that
+  // is not accepted, not processed and not cancelled/completed
+  // aka not processed currently
+  const queryNetid = query(
+    rideRequestsCollection,
+    where("netid", "==", netid),
+    where("status", "in", ["REQUESTED", "VIEWING"])
+  );
+  // run the query
+  const res = await getDocs(queryNetid);
+
+  if (res.size !== 1) {
+    throw new Error(
+      `Expected exactly one active ride request for netid: ${netid}, found ${res.size}`
+    );
+  }
+  const docRef = res.docs[0].ref;
+  await updateDoc(docRef, { driverid: driverid });
 }
 
-// CANCEL RIDE - Update a ride request to canceled
-// returns the driver id if there was a ride request that was accepted or null if not
+// CANCEL RIDE - Update a student ride request to canceled
+// Returns: the other id if there was a ride request that was accepted or null if not
+// otherid is the netid of the driver if the driver is the one cancelling
+// or the netid of the student if the student is the one cancelling
+// notifyDrivers is true if there are no more rides in the pool after cancellation
+// and we need to notify drivers that rides no longer exist
 export async function cancelRideRequest(
   transaction: Transaction,
   netid: string,
   role: "STUDENT" | "DRIVER"
-): Promise<string | null> {
+): Promise<{ otherId: string | null; notifyDrivers: boolean }> {
+  //tracks if need to notif drivers if no more rides exist after cancellation
+  let notify: boolean = false;
+  // save the num rides in pool for later
+  const numRidesInPool = await getRideRequests();
+
   // look through all the ride requests made by this specific user using the status
   let queryRequests;
   if (role == "STUDENT") {
     // student query
-    queryRequests = query(rideRequestsCollection, where("netid", "==", netid));
+    queryRequests = query(
+      rideRequestsCollection,
+      where("netid", "==", netid),
+      where("status", "not-in", ["CANCELLED", "COMPLETED"])
+    );
   } else {
     // driver query
     queryRequests = query(
       rideRequestsCollection,
-      where("driverid", "==", netid)
+      where("driverid", "==", netid),
+      where("status", "not-in", ["CANCELLED", "COMPLETED"])
     );
   }
   // transaction doesn't support querying docs
-  const docs = await getDocs(queryRequests);
+  const result = await getDocs(queryRequests);
 
-  let otherid: string | null = null;
-  for (const doc of docs.docs) {
-    // change any active (based on status) request to canceleD
+  let otherId: string | null = null;
+  for (const doc of result.docs) {
+    // change any active (based on status) request to canceled
     const data = doc.data() as RideRequest;
 
-    // only cancel requests that are not completed
-    if (
-      data.status != "REQUESTED" &&
-      data.status != "DRIVER AT PICK UP" &&
-      data.status != "DRIVING TO PICK UP" &&
-      data.status != "VIEWING"
-    ) {
-      continue;
-    }
-
-    if (
-      data.status === "DRIVING TO PICK UP" ||
-      data.status === "DRIVER AT PICK UP" ||
-      data.status === "VIEWING"
-    ) {
-      // If the cancalled request is being helped by a driver, notify the driver.
-      if (role == "STUDENT") {
-        otherid = data.driverid;
-      } else {
-        otherid = data.netid;
-      }
+    // If the cancelled request is being helped by a driver, notify the driver.
+    if (role == "STUDENT") {
+      otherId = data.driverid;
+    } else {
+      otherId = data.netid;
     }
 
     await setRideRequestStatus(transaction, "CANCELLED", netid);
   }
 
-  return otherid; // return the driver id if there was a ride request that was accepted
+  // if no one had accepted this ride yet and it was the only one in the pool
+  // only then, notify the drivers
+  if (!otherId && numRidesInPool.length == 1) {
+    notify = true;
+  }
+
+  return { otherId, notifyDrivers: notify }; // return the driver id if there was a ride request that was accepted
 }
 
 // COMPLETE RIDE - Update a ride request to completed
@@ -374,7 +434,9 @@ export async function blacklistUser(transaction: Transaction, netid: string) {
     const docRef = doc(db, "ProblematicUsers", netid); // get the document by netid
     transaction.update(docRef, { category: "BLACKLISTED" });
   } catch (e) {
-    throw new Error(`User not found in ProblematicUsers table: ${e}`);
+    throw new Error(
+      `User not found in ProblematicUsers table: ${(e as Error).message}`
+    );
   }
 }
 
