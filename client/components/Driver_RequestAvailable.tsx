@@ -2,7 +2,7 @@
 import { styles } from "@/assets/styles";
 import { View, Text, Pressable, Image } from "react-native";
 import { RideRequest } from "../../server/src/api";
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { Animated, Easing } from "react-native";
 
 interface RequestAvailableProps {
@@ -12,19 +12,20 @@ interface RequestAvailableProps {
   onAccept: () => void;
   onLetsGo: () => void;
   updateSideBarHeight: (height: number) => void;
+  // switches between screen showing accept button and next ride details
+  // once "Let's Go" button is clicked, component should switch over to HandleRide component based on what is in home.tsx
+  showAcceptScreen: boolean;
 }
 
 export default function RequestAvailable({
   requestInfo, // might be undefined initially
   driverToPickupDuration, // in minutes, might be undefined initially
   pickupToDropoffDuration, // in minutes, might be undefined initially
+  showAcceptScreen, // used to switch to the next screen
   onAccept,
   onLetsGo,
   updateSideBarHeight,
 }: RequestAvailableProps) {
-  // switches between screen showing accept button and next ride details
-  // once "Let's Go" button is clicked, component should switch over to HandleRide component based on what is in home.tsx
-  const [showAcceptScreen, setShowAcceptScreen] = useState(true);
   // constants used for animation
   const rotation = useRef(new Animated.Value(0)).current;
   const swing = rotation.interpolate({
@@ -35,7 +36,6 @@ export default function RequestAvailable({
   // changes the screen when the driver clicks accept
   const handleAccept = () => {
     onAccept();
-    setShowAcceptScreen(false);
   };
 
   // animation for clock

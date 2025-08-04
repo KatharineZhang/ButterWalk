@@ -453,9 +453,11 @@ export const viewRide = async (
       return {
         response: "VIEW_RIDE",
         rideExists: true,
-        rideRequest: bestRequest,
-        driverToPickUpDuration,
-        pickUpToDropOffDuration,
+        rideInfo: {
+          rideRequest: bestRequest,
+          driverToPickUpDuration,
+          pickUpToDropOffDuration,
+        },
         notifyDrivers: notify,
       };
     });

@@ -382,7 +382,7 @@ export const handleWebSocketMessage = async (
       break;
 
     default:
-      console.log(`WEBSOCKET: Unknown directive: ${input}`);
+      console.log(`WEBSOCKET: Unknown directive: ${JSON.stringify(input)}`);
       break;
   }
 };
@@ -439,6 +439,9 @@ export const notifyDrivers = (ridesExist: boolean): void => {
 
   // find all the drivers currently connected to the app
   const drivers = clients.filter((client) => client.role == "DRIVER");
+  console.log(
+    `WEBSOCKET: Notifying ${drivers} drivers about ride existence: ${ridesExist}`
+  );
   // send each of them a message
   drivers.forEach((driver) => {
     sendMessageToNetid(driver.netid, message);

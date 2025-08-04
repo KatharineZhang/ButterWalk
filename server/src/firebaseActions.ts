@@ -87,7 +87,7 @@ export async function createUser(transaction: Transaction, user: User) {
   } else {
     console.log("User does NOT exist in the database");
     transaction.set(docLocationRef, campusLocations);
-    console.log("Document does not exist, so added default campuslocations");
+    console.log("Document does not exist, so added default campus locations");
     return false;
   }
 }
@@ -209,7 +209,7 @@ export async function setRideRequestStatus(
   const queryNetid = query(
     rideRequestsCollection,
     where("netid", "==", netid),
-    where("status", "in", ["CANCELLED", "COMPLETED"])
+    where("status", "not-in", ["CANCELLED", "COMPLETED"])
   );
   // run the query
   const res = await getDocs(queryNetid);
