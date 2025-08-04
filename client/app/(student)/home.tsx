@@ -131,13 +131,13 @@ export default function HomePage() {
   /* PROFILE STATE AND METHODS */
   const [profileVisible, setProfileVisible] = useState(false);
   const user = {
-    "netid": "1nv35t0r",
-    "firstName": "Inv",
-    "lastName": "Estor",
+    "netid": "dubsdawg",
+    "firstName": "Dubs",
+    "lastName": "Dawg",
     "phoneNumber": "555-123-4567",
     "studentNumber": "S12345678",
     "studentOrDriver": "STUDENT",
-    "preferredName": "Dempsey Investor"
+    "preferredName": "Dubs Dawg"
   } as User;
 
   /* CONFIRM RIDE STATE AND METHODS */
