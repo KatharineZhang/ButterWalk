@@ -9,7 +9,7 @@ dotenv.config();
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Husky SafeTrip",
-  slug: "butterwalk",
+  slug: "husky-betterWalk",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/butterWalkLogo.png",
@@ -23,7 +23,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.butterwalkioshiya.butterwalk",
+    bundleIdentifier: "com.butterwalkios.butterwalk",
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
       NSLocationWhenInUseUsageDescription:
@@ -63,7 +63,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   extra: {
     eas: {
-      projectId: "400500de-e681-47b9-be13-14802fd28fa7",
+      projectId: "24a5e20c-9f0d-4a09-9f2d-49ae53b470e5",
     },
   },
 });
