@@ -19,7 +19,6 @@ import {
   ridesExist,
   viewRide,
   handleDriverViewChoice,
-  fetchRecentLocations,
   driverArrived,
   getPlaceSearchResults,
   driverDrivingToDropoff,
@@ -366,11 +365,6 @@ export const handleWebSocketMessage = async (
         input.mode,
         input.tag
       );
-      // send response back to client (the student)
-      sendWebSocketMessage(ws, resp);
-      break;
-    case "RECENT_LOCATIONS":
-      resp = await fetchRecentLocations(input.netid);
       // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
       break;
