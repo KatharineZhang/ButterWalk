@@ -4,6 +4,9 @@ import * as dotenv from "dotenv";
 // initialize dotenv
 dotenv.config();
 
+// This will replace out app.json on runtime
+// allowing us to use api keys in the .env
+// while also keeping them hidden on git
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Husky SafeTrip",
