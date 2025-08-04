@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Image, Pressable } from "react-native";
+import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
 import { useState, useEffect } from "react";
 import { styles } from "../../assets/styles";
 import { Redirect } from "expo-router";
