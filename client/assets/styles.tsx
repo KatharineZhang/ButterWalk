@@ -778,9 +778,8 @@ export const styles = StyleSheet.create({
     marginBottom: 7,
   },
   legendText: {
-    left: 5,
     fontSize: 12,
-    marginLeft: 5,
+    marginLeft: 10,
   },
 
   // driver profile
@@ -809,22 +808,6 @@ export const styles = StyleSheet.create({
     borderRadius: 10,
     paddingTop: "13%",
     zIndex: 100,
-  },
-  imageWrapper: {
-    width: Dimensions.get("window").width * 0.2,
-    height: Dimensions.get("window").height * 0.07,
-    position: "relative",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  ellipseImage: {
-    width: "150%",
-    resizeMode: "contain",
-  },
-  userImage: {
-    width: "50%",
-    borderRadius: 20,
-    position: "absolute",
   },
   rowContainer: {
     flexDirection: "row",
