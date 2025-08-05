@@ -244,6 +244,7 @@ export default function HomePage() {
       requestid: requestInfo.requestId, // the ride request id
       reason,
     });
+    setStudentIsLate(false); // get ride of the student is late message
   };
 
   const cancelRide = () => {
