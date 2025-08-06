@@ -12,7 +12,7 @@ dotenv.config();
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "Husky SafeTrip",
+  name: "SafeTrip",
   slug: "husky-betterWalk",
   version: "1.0.0",
   orientation: "portrait",

@@ -314,9 +314,10 @@ export default function HomePage() {
       setWhichComponent("noRequests");
       setNotifState({
         text: "Ride cancelled successfully",
-        color: "#4B2E83",
+        color: "#C9FED0",
         boldText: "cancelled",
       });
+      setStudentIsLate(false);
     } else {
       // if not successful, log the error
       const errMessage = message as ErrorResponse;
@@ -351,7 +352,7 @@ export default function HomePage() {
           setWhichComponent("requestsAreAvailable");
           setNotifState({
             text: "New ride request available",
-            color: "#4B2E83",
+            color: "#C9FED0",
             boldText: "new ride",
           });
         } else {
@@ -396,7 +397,7 @@ export default function HomePage() {
         // if not successful, show a notification and set currentComponent to "noRequests"
         setNotifState({
           text: "The ride you were trying to view does not exist anymore.",
-          color: "#FF0000",
+          color: "#FFCBCB",
         });
         resetAllFields(); // reset all fields
         setWhichComponent("noRequests"); // go to no requests page
@@ -414,7 +415,7 @@ export default function HomePage() {
       // if the decision was successful, set the current component to "handleRide"
       setNotifState({
         text: "Ride accepted successfully",
-        color: "#4B2E83",
+        color: "#C9FED0",
         boldText: "accepted",
       });
       setWhichComponent("handleRide");
@@ -426,7 +427,7 @@ export default function HomePage() {
       // show a notification and set currentComponent to "noRequests"
       setNotifState({
         text: "Failed to accept ride request",
-        color: "#FF0000",
+        color: "#FFCBCB",
       });
       resetAllFields(); // reset all fields
       setWhichComponent("noRequests"); // go to no requests page
@@ -451,7 +452,7 @@ export default function HomePage() {
       // if not successful, show a notification that the driver could not arrive at the pickup location
       setNotifState({
         text: "Failed to note that driver arrived at pickup location",
-        color: "#FF0000",
+        color: "#FFCBCB",
       });
       setFlagPopupVisible(false); // close the flagging popup
     }
@@ -466,14 +467,15 @@ export default function HomePage() {
         setFlagPopupVisible(false); // close the flagging popup
         setNotifState({
           text: "Student has been flagged",
-          color: "#4B2E83",
+          color: "#C9FED0",
           boldText: "flagged",
         });
+        setStudentIsLate(false); // get rid of the student is late message
       } else {
         // if not successful, show a notification that the student could not be flagged
         setNotifState({
           text: "Failed to flag student",
-          color: "#FF0000",
+          color: "#FFCBCB",
         });
         setFlagPopupVisible(false); // close the flagging popup
       }
