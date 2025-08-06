@@ -74,6 +74,7 @@ export default function HomePage() {
       netid: netid as string,
       role: "DRIVER",
     });
+    seeIfRidesExist();
   }, []);
 
   // set the initial component based on the current time
@@ -84,6 +85,7 @@ export default function HomePage() {
       if (TimeService.inServicableTime()) {
         // in shift
         setWhichComponent("noRequests");
+        seeIfRidesExist();
       } else {
         // off shift
         setWhichComponent("endShift");
@@ -155,6 +157,7 @@ export default function HomePage() {
 
   /* WAITING FOR REQUEST STATE */
   const seeIfRidesExist = () => {
+    console.log("seeing if rides exist");
     // call the websocket call to see if rides exist
     WebSocketService.send({
       directive: "RIDES_EXIST",
@@ -353,14 +356,16 @@ export default function HomePage() {
           setNotifState({
             text: "New ride request available",
             color: "#C9FED0",
-            boldText: "new ride",
+            boldText: "New ride",
           });
         } else {
           // if false, set the component to "noRequests"
           setWhichComponent("noRequests");
         }
-      } // if the driver is not waiting for a request, do nothing
-      console.log("rides don't exist anymore but we don't care");
+      } else {
+        // if the driver is not waiting for a request, do nothing
+        console.log("rides don't exist anymore but we don't care");
+      }
     } else {
       // there was an error in the message!
       const errMessage = message as ErrorResponse;

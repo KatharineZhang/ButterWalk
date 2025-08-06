@@ -195,7 +195,8 @@ export const handleWebSocketMessage = async (
         // if we want to notify drivers
         if (viewResp.notifyDrivers) {
           // tell the drivers that there are no more rides
-          notifyDrivers(false);
+          // but don't notify this accepting driver
+          notifyDrivers(false, input.driverid);
         }
       }
       sendWebSocketMessage(ws, res);
@@ -429,8 +430,12 @@ export const connectWebsocketToNetid = (
  * Sends a `RIDES_EXIST` response message to each driver, indicating whether rides are available.
  *
  * @param ridesExist - A boolean indicating if rides currently exist.
+ * @param excludeNetid - the driver who triggered this notification will not receive it.
  */
-export const notifyDrivers = (ridesExist: boolean): void => {
+export const notifyDrivers = (
+  ridesExist: boolean,
+  excludeNetid?: string
+): void => {
   // the message sent to each driver is that rides exist (or don't)
   const message: RidesExistResponse = {
     response: "RIDES_EXIST",
@@ -438,10 +443,20 @@ export const notifyDrivers = (ridesExist: boolean): void => {
   };
 
   // find all the drivers currently connected to the app
-  const drivers = clients.filter((client) => client.role == "DRIVER");
+  let drivers = clients.filter((client) => client.role == "DRIVER");
   console.log(
-    `WEBSOCKET: Notifying ${drivers} drivers about ride existence: ${ridesExist}`
+    `WEBSOCKET: Notifying ${JSON.stringify(drivers)} drivers about ride existence: ${ridesExist}`
   );
+
+  // if we want to exclude a netid, remove them from the list
+  if (excludeNetid) {
+    // keep everyone who is NOT excludeNetid
+    drivers = drivers.filter((client) => client.netid != excludeNetid);
+    console.log(
+      `WEBSOCKET: UPDATED Notifying ${JSON.stringify(drivers)} drivers about ride existence: ${ridesExist}`
+    );
+  }
+
   // send each of them a message
   drivers.forEach((driver) => {
     sendMessageToNetid(driver.netid, message);
