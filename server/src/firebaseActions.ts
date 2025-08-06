@@ -34,7 +34,7 @@ const problematicUsersCollection = collection(db, "ProblematicUsers");
 const feedbackCollection = collection(db, "Feedback");
 const recentlocationsCollection = collection(db, "RecentLocations");
 
-// RECENT_LOCATIONS - get the recent locations of a user
+// PROFILE - get the recent locations of a user
 export async function getRecentLocations(
   transaction: Transaction,
   netid: string
