@@ -6,11 +6,16 @@ import {
   useImperativeHandle,
   forwardRef,
 } from "react";
-import MapView, { Polygon, Marker, Polyline } from "react-native-maps";
+import MapView, {
+  PROVIDER_GOOGLE,
+  Polygon,
+  Marker,
+  Polyline,
+} from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { styles } from "@/assets/styles";
-import { View, Image, Alert, Linking } from "react-native";
+import { View, Image, Alert, Linking, Platform } from "react-native";
 import MapViewDirections from "react-native-maps-directions";
 import { Ionicons } from "@expo/vector-icons";
 import { PurpleZone } from "@/services/ZoneService";
@@ -19,6 +24,7 @@ interface MapProps {
   pickUpLocation: { latitude: number; longitude: number };
   dropOffLocation: { latitude: number; longitude: number };
   driverLocation: { latitude: number; longitude: number };
+  startLocation: { latitude: number; longitude: number };
   userLocationChanged: (location: {
     latitude: number;
     longitude: number;
@@ -29,7 +35,15 @@ interface MapProps {
     | "DriverArrived" // the driver is at the pickup location
     | "RideInProgress" // the driver is taking the student to dropoff location
     | "RideCompleted"; // the driver arrived at the dropoff location
+  whichComponent:
+    | "rideReq"
+    | "confirmRide"
+    | "Loading"
+    | "waitForRide"
+    | "handleRide";
 }
+
+// const production = false; //TODO: remove?
 
 // functions that can be called from the parent component
 // using the ref
@@ -45,7 +59,9 @@ const Map = forwardRef<MapRef, MapProps>(
       driverLocation = { latitude: 0, longitude: 0 },
       pickUpLocation = { latitude: 0, longitude: 0 },
       dropOffLocation = { latitude: 0, longitude: 0 },
+      startLocation = { latitude: 0, longitude: 0 },
       status,
+      whichComponent,
       userLocationChanged,
     },
     ref
@@ -93,9 +109,22 @@ const Map = forwardRef<MapRef, MapProps>(
     }, [status]);
 
     // GOOGLE MAPS API KEY
-    const GOOGLE_MAPS_APIKEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
-      ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
-      : "";
+    const GOOGLE_MAPS_APIKEY =
+      // production
+      //   ? Platform.OS == "ios"
+      //     ? process.env.EXPO_PUBLIC_IOS_GMAPS_APIKEY
+      //       ? process.env.EXPO_PUBLIC_IOS_GMAPS_APIKEY
+      //       : ""
+      //     : Platform.OS == "android"
+      //       ? process.env.EXPO_PUBLIC_ANDROID_GMAPS_APIKEY
+      //         ? process.env.EXPO_PUBLIC_ANDROID_GMAPS_APIKEY
+      //         : ""
+      //       : // default case
+      //         ""
+      //   : // local
+      process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
+        ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY
+        : "";
 
     // used for map zooming
     const mapRef = useRef<MapView>(null);
@@ -222,6 +251,7 @@ const Map = forwardRef<MapRef, MapProps>(
         <MapView
           ref={mapRef}
           style={styles.map}
+          provider={Platform.OS === "android" ? PROVIDER_GOOGLE : undefined}
           initialRegion={{
             latitude:
               userLocation.latitude != 0
@@ -250,16 +280,28 @@ const Map = forwardRef<MapRef, MapProps>(
               latitude: pickUpLocation.latitude,
               longitude: pickUpLocation.longitude,
             }}
-            title={"pickUpLocation"}
+            title={"Pickup Location"}
           >
             <View style={[styles.circleStart, { borderWidth: 0 }]}></View>
           </Marker>
           <Marker
             coordinate={{
+              latitude: startLocation.latitude + 0.0001, // offset to avoid overlap with user marker
+              longitude: startLocation.longitude + 0.0001,
+            }}
+            title={"Start Location"}
+          >
+            <View
+              style={[styles.circleStart, { backgroundColor: "white" }]}
+            ></View>
+          </Marker>
+
+          <Marker
+            coordinate={{
               latitude: dropOffLocation.latitude,
               longitude: dropOffLocation.longitude,
             }}
-            title={"dropOffLocation"}
+            title={"Dropoff Location"}
           >
             <Image
               source={require("../../assets/images/dropoff-location.png")}
@@ -272,7 +314,7 @@ const Map = forwardRef<MapRef, MapProps>(
                 latitude: userLocation.latitude,
                 longitude: userLocation.longitude,
               }}
-              title={"userLocation"}
+              title={"Your Location"}
             >
               <View
                 style={{
@@ -307,40 +349,28 @@ const Map = forwardRef<MapRef, MapProps>(
                 backgroundColor: "white",
                 borderRadius: 50,
                 borderWidth: 2,
-                // opacity: 0.8,
               }}
             >
-              {/* <Ionicons name="locate-sharp" size={25} color="black" /> */}
               <Ionicons name="car-sharp" size={30} color="black" />
             </View>
           </Marker>
-          {/* show the directions between the pickup and dropoff locations if they are valid
-        if the ride is not currently happening / happened  */}
-          {status !== "RideInProgress" && status !== "RideCompleted"
-            ? userLocation.latitude === 0
-              ? pickUpLocation.latitude !== 0 &&
-                dropOffLocation.latitude !== 0 && (
-                  <MapViewDirections
-                    origin={pickUpLocation}
-                    destination={dropOffLocation}
-                    apikey={GOOGLE_MAPS_APIKEY}
-                    strokeWidth={3}
-                    strokeColor="#4B2E83"
-                  />
-                )
-              : userLocation.latitude !== 0 &&
-                pickUpLocation.latitude !== 0 &&
-                dropOffLocation.latitude !== 0 && (
-                  <MapViewDirections
-                    origin={userLocation}
-                    waypoints={[pickUpLocation]}
-                    destination={dropOffLocation}
-                    apikey={GOOGLE_MAPS_APIKEY}
-                    strokeWidth={3}
-                    strokeColor="#000000"
-                  />
-                )
-            : null}
+          {/* show the directions between the pickup and dropoff locations if they are valid,
+          a ride has been requested, and if the ride is not currently happening / happened */}
+          {whichComponent === "handleRide" &&
+            status !== "RideInProgress" &&
+            status !== "RideCompleted" &&
+            startLocation.latitude !== 0 &&
+            pickUpLocation.latitude !== 0 &&
+            dropOffLocation.latitude !== 0 && (
+              <MapViewDirections
+                origin={startLocation}
+                waypoints={[pickUpLocation]}
+                destination={dropOffLocation}
+                apikey={GOOGLE_MAPS_APIKEY}
+                strokeWidth={3}
+                strokeColor="#4B2E83"
+              />
+            )}
 
           {/* show the path of the ride if it is in progress. 
         Used to plot the path of the driver during the ride */}
