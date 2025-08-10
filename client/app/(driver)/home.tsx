@@ -278,6 +278,7 @@ export default function HomePage() {
     setStartLocation({ latitude: 0, longitude: 0 });
     setIsNearPickup(false);
     setIsNearDropoff(false);
+    setPhase("headingToPickup");
   };
 
   /* END SHIFT STATE */
@@ -396,6 +397,7 @@ export default function HomePage() {
         boldText: "accepted",
       });
       setWhichComponent("handleRide");
+      setPhase("headingToPickup");
     } else {
       const errMessage = message as ErrorResponse;
       console.log("Failed to accept ride request: ", errMessage.error);
@@ -486,7 +488,7 @@ export default function HomePage() {
       let dropoffProgress = 0;
 
       // If phase is waitingForPickup, force pickupProgress to 1
-      if (phase === "waitingForPickup") {
+    if (phase === "waitingForPickup") {
         pickupProgress = 1;
 
         // if phase is headingtopickup or geadingtodropoff
@@ -515,6 +517,16 @@ export default function HomePage() {
           dropOffLocation
         );
       }
+
+    // when heading to pickup, flip the flag as you get close
+    if (phase === "headingToPickup") {
+      setIsNearPickup(pickupProgress >= 0.9);
+    }
+
+    // when heading to dropoff, flip the flag as you get close
+    if (phase === "headingToDropoff") {
+      setIsNearDropoff(dropoffProgress >= 0.9);
+    }
 
       setPickupProgress(pickupProgress);
       setDropoffProgress(dropoffProgress);
