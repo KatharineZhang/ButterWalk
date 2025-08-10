@@ -25,7 +25,6 @@ import {
   driverDrivingToDropoff,
 } from "./routes";
 import {
-  CancelResponse,
   CompleteResponse,
   WebSocketMessage,
   WebSocketResponse,
@@ -37,6 +36,7 @@ import {
   RequestRideResponse,
   RidesExistResponse,
   ViewRideRequestResponse,
+  WrapperCancelResponse,
 } from "./api";
 import { Timestamp } from "firebase/firestore";
 
@@ -269,7 +269,7 @@ export const handleWebSocketMessage = async (
       resp = await cancelRide(input.netid, input.role);
       if ("info" in resp) {
         // if there is info, we know it is a CancelResponse
-        const cancelResponse = resp as CancelResponse;
+        const cancelResponse = resp as WrapperCancelResponse;
         // send response back to client (usually the student)
         sendWebSocketMessage(ws, cancelResponse.info);
         if (cancelResponse.otherNetid) {

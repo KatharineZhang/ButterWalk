@@ -21,6 +21,15 @@ import {
   User,
   LocationType,
   RideRequestStatus,
+  type_canceled,
+  type_requested,
+  CANCELED_STATUS,
+  REQUESTED_STATUS,
+  COMPLETED_STATUS,
+  VIEWING_STATUS,
+  DRIVING_TO_PICK_UP_STATUS,
+  DRIVER_AT_PICK_UP_STATUS,
+  DRIVING_TO_DESTINATION_STATUS,
 } from "./api";
 
 export const db = getFirestore(app);
@@ -86,11 +95,16 @@ export async function createUser(transaction: Transaction, user: User) {
     }
   } else {
     console.log("User does NOT exist in the database");
-    // before, only RecentLocations in FireBase was being updated with 
+    // before, only RecentLocations in FireBase was being updated with
     // the new user, however with the below line,
     // we also add the user in Users (otherwise it throws
     // a bunch of errors!) in FireBase
-    transaction.set(docRef, {firstName: user.firstName, lastName: user.lastName, netid: user.netid, studentOrDriver: user.studentOrDriver});
+    transaction.set(docRef, {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      netid: user.netid,
+      studentOrDriver: user.studentOrDriver,
+    });
     transaction.set(docLocationRef, { locations: campusLocations });
     console.log("Document does not exist, so added default campuslocations");
     return false;
@@ -146,7 +160,7 @@ export async function addRideRequestToPool(
   // how many rides were there in pool before add this one?
   const inThePool = query(
     rideRequestsCollection,
-    where("status", "==", "REQUESTED")
+    where("status", "==", REQUESTED_STATUS)
   );
   const result = await getDocs(inThePool);
   // if there was previously 0 (before we add)
@@ -160,11 +174,11 @@ export async function addRideRequestToPool(
     rideRequestsCollection,
     where("netid", "==", rideRequest.netid),
     where("status", "in", [
-      "REQUESTED",
-      "VIEWING",
-      "DRIVING TO PICK UP",
-      "DRIVER AT PICK UP",
-      "DRIVING TO DESTINATION",
+      REQUESTED_STATUS,
+      VIEWING_STATUS,
+      DRIVING_TO_PICK_UP_STATUS,
+      DRIVER_AT_PICK_UP_STATUS,
+      DRIVING_TO_DESTINATION_STATUS,
     ])
   );
   const inDatabase = await getDocs(queryExistingRide); // get the document by netid
@@ -175,7 +189,7 @@ export async function addRideRequestToPool(
   rideRequest.completedAt = null;
   rideRequest.driverid = null;
   rideRequest.requestedAt = Timestamp.now();
-  rideRequest.status = "REQUESTED";
+  rideRequest.status = REQUESTED_STATUS;
   const docRef = doc(rideRequestsCollection);
   t.set(docRef, rideRequest);
   return { requestid: docRef.id, notifyDrivers: notify };
@@ -184,12 +198,12 @@ export async function addRideRequestToPool(
 /**
  * Used for the ride request pool, returns all currently REQUESTED
  * ride requests.
- * @returns a list of RideRequests with status "REQUESTED"
+ * @returns a list of RideRequests with status REQUESTED_STATUS
  */
 export async function getRideRequests(): Promise<RideRequest[]> {
   const queryRides = query(
     rideRequestsCollection,
-    where("status", "==", "REQUESTED")
+    where("status", "==", REQUESTED_STATUS)
   );
   const inDatabase = await getDocs(queryRides);
   const rideRequests: RideRequest[] = [];
@@ -202,27 +216,27 @@ export async function getRideRequests(): Promise<RideRequest[]> {
 
 /**
  * Updates the status of the provided stuent's ride request to the provided status
- * @param status The status to change to "CANCELED", "COMPLETED", etc.
- * @param netid The netid of the user with the ride request to change
+ * @param status The status to change to CANCELED_STATUS, COMPLETED_STATUS, etc.
+ * @param student_netid The netid of the STUDENT with the ride request to change
  */
 export async function setRideRequestStatus(
   t: Transaction,
   status: RideRequestStatus,
-  netid: string
+  student_netid: string
 ) {
-  // gets the student's ride that is not complete (COMPLETED or CANCELLED)
+  // gets the student's ride that is not complete (COMPLETED or CANCELED_STATUS)
   // and changes its status
   const queryNetid = query(
     rideRequestsCollection,
-    where("netid", "==", netid),
-    where("status", "not-in", ["CANCELLED", "COMPLETED"])
+    where("netid", "==", student_netid),
+    where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS])
   );
   // run the query
   const res = await getDocs(queryNetid);
   if (res.size !== 1) {
     // TODO: DOUBLE CHECK THIS
     throw new Error(
-      `Expected exactly one active ride request for netid: ${netid}, found ${res.size}`
+      `Expected exactly one active ride request for netid: ${student_netid}, found ${res.size}`
     );
   }
   const docRef = res.docs[0].ref;
@@ -238,7 +252,7 @@ export async function isNotAccepted(netid: string): Promise<boolean> {
   const queryNetid = query(
     rideRequestsCollection,
     where("netid", "==", netid),
-    where("status", "in", ["REQUESTED", "VIEWING"])
+    where("status", "in", [REQUESTED_STATUS, VIEWING_STATUS])
   );
   // run the query
   const res = await getDocs(queryNetid);
@@ -260,12 +274,12 @@ export async function setRideRequestDriver(
   driverid: string
 ) {
   // find any ride by student 'netid' that
-  // is not accepted, not processed and not cancelled/completed
+  // is not accepted, not processed and not CANCELED_STATUS/COMPLETED_STATUS
   // aka not processed currently
   const queryNetid = query(
     rideRequestsCollection,
     where("netid", "==", netid),
-    where("status", "in", ["REQUESTED", "VIEWING"])
+    where("status", "in", [REQUESTED_STATUS, VIEWING_STATUS])
   );
   // run the query
   const res = await getDocs(queryNetid);
@@ -279,19 +293,25 @@ export async function setRideRequestDriver(
   await updateDoc(docRef, { driverid: driverid });
 }
 
-// CANCEL RIDE - Update a student ride request to canceled
+// CANCEL RIDE - Update a student ride request to CANCELED_STATUS
 // Returns: the other id if there was a ride request that was accepted or null if not
-// otherid is the netid of the driver if the driver is the one cancelling
-// or the netid of the student if the student is the one cancelling
-// notifyDrivers is true if there are no more rides in the pool after cancellation
+// otherid is the netid of the driver if the driver is the one canceling
+// or the netid of the student if the student is the one canceling
+// notifyDrivers is true if there are no more rides in the pool after cancelation
 // and we need to notify drivers that rides no longer exist
 export async function cancelRideRequest(
   transaction: Transaction,
   netid: string,
   role: "STUDENT" | "DRIVER"
-): Promise<{ otherId: string | null; notifyDrivers: boolean }> {
-  //tracks if need to notif drivers if no more rides exist after cancellation
+): Promise<{
+  otherId: string | null;
+  notifyDrivers: boolean;
+  newRideStatus: type_canceled | type_requested;
+}> {
+  //tracks if need to notif drivers if no more rides exist after cancelation
   let notify: boolean = false;
+  // assume until we change this that we are canceling the ride
+  let newRideStatus: type_canceled | type_requested = CANCELED_STATUS;
   // save the num rides in pool for later
   const numRidesInPool = await getRideRequests();
 
@@ -302,14 +322,14 @@ export async function cancelRideRequest(
     queryRequests = query(
       rideRequestsCollection,
       where("netid", "==", netid),
-      where("status", "not-in", ["CANCELLED", "COMPLETED"])
+      where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS])
     );
   } else {
     // driver query
     queryRequests = query(
       rideRequestsCollection,
       where("driverid", "==", netid),
-      where("status", "not-in", ["CANCELLED", "COMPLETED"])
+      where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS])
     );
   }
   // transaction doesn't support querying docs
@@ -317,17 +337,35 @@ export async function cancelRideRequest(
 
   let otherId: string | null = null;
   for (const doc of result.docs) {
-    // change any active (based on status) request to canceled
+    // change any active (based on status) request to CANCELED_STATUS
     const data = doc.data() as RideRequest;
 
-    // If the cancelled request is being helped by a driver, notify the driver.
+    // If the CANCELED_STATUS request is being helped by a driver, notify the driver.
     if (role == "STUDENT") {
       otherId = data.driverid;
+      // if the student cancels, the ride is always just CANCELED_STATUS
+      await setRideRequestStatus(transaction, CANCELED_STATUS, netid);
     } else {
-      otherId = data.netid;
+      otherId = data.netid; // this is the student's netid
+      if (
+        data.status != DRIVING_TO_DESTINATION_STATUS &&
+        data.status != DRIVER_AT_PICK_UP_STATUS
+      ) {
+        // if the ride is not currently happening, or the driver is not at the pickup location
+        // then any cancelation (say the driver signs out or app crashes)
+        // should put the student back into the pool, not cancel the ride
+        // ride status could be VIEWING or DRIVING TO PICK UP (hopefully not COMPLETED or CANCELED_STATUS)
+        await setRideRequestStatus(transaction, REQUESTED_STATUS, otherId);
+        newRideStatus = REQUESTED_STATUS;
+        // erase the driver from the request
+        await setRideRequestDriver(transaction, data.netid, "");
+      } else {
+        // the driver is waiting to start the ride and so a cancelation should actually cancel the ride
+        // in the case that a cancelation occurs when status in DRIVING TO DROPOFF, we can't really
+        // put the ride back in the queue, so we will cancel in this case too
+        await setRideRequestStatus(transaction, CANCELED_STATUS, otherId);
+      }
     }
-
-    await setRideRequestStatus(transaction, "CANCELLED", netid);
   }
 
   // if no one had accepted this ride yet and it was the only one in the pool
@@ -336,10 +374,10 @@ export async function cancelRideRequest(
     notify = true;
   }
 
-  return { otherId, notifyDrivers: notify }; // return the driver id if there was a ride request that was accepted
+  return { otherId, notifyDrivers: notify, newRideStatus }; // return the driver id if there was a ride request that was accepted
 }
 
-// COMPLETE RIDE - Update a ride request to completed
+// COMPLETE RIDE - Update a ride request to COMPLETED_STATUS
 export async function completeRideRequest(
   transaction: Transaction,
   requestid: string
@@ -348,7 +386,10 @@ export async function completeRideRequest(
   const docRef = doc(rideRequestsCollection, requestid); // get the document by id
   const docSnap = await transaction.get(docRef);
 
-  if (docSnap.exists() && docSnap.data().status != "DRIVING TO DESTINATION") {
+  if (
+    docSnap.exists() &&
+    docSnap.data().status != DRIVING_TO_DESTINATION_STATUS
+  ) {
     throw new Error(
       "Only can complete a ride that is 'DRIVING TO DESTINATION' not " +
         docSnap.data().status
@@ -402,10 +443,10 @@ export async function completeRideRequest(
     locations: oldLocations,
   });
 
-  // mark the ride request as completed in the ride requests table
+  // mark the ride request as COMPLETED_STATUS in the ride requests table
   transaction.update(docRef, {
     completedAt: Timestamp.now(),
-    status: "COMPLETED",
+    status: COMPLETED_STATUS,
   });
   return netids;
 }
@@ -452,9 +493,9 @@ export async function getOtherNetId(netid: string): Promise<string> {
     rideRequestsCollection,
     where("netid", "==", netid),
     where("status", "in", [
-      "DRIVING TO PICK UP",
-      "DRIVER AT PICK UP",
-      "DRIVING TO DESTINATION",
+      DRIVING_TO_PICK_UP_STATUS,
+      DRIVER_AT_PICK_UP_STATUS,
+      DRIVING_TO_DESTINATION_STATUS,
     ])
   );
   // if something is returned here, the user is a student
@@ -475,9 +516,9 @@ export async function getOtherNetId(netid: string): Promise<string> {
     rideRequestsCollection,
     where("driverid", "==", netid),
     where("status", "in", [
-      "DRIVING TO PICK UP",
-      "DRIVER AT PICK UP",
-      "DRIVING TO DESTINATION",
+      DRIVING_TO_PICK_UP_STATUS,
+      DRIVER_AT_PICK_UP_STATUS,
+      DRIVING_TO_DESTINATION_STATUS,
     ])
   );
   docs = await getDocs(queryDriver);

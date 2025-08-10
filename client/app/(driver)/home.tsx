@@ -64,9 +64,15 @@ export default function HomePage() {
         console.error("Failed to connect to WebSocket");
       } else {
         console.log("WebSocket connected successfully");
+        // wait till we hit this case to do any subsequent action
+        afterConnectionSucceeds();
       }
     };
     connectWebSocket();
+  }, []);
+
+  // Any action we need to do after the client side connects to the websocket
+  const afterConnectionSucceeds = () => {
     // send the CONNECT message with the netid
     // to log our driver into the server
     WebSocketService.send({
@@ -75,7 +81,7 @@ export default function HomePage() {
       role: "DRIVER",
     });
     seeIfRidesExist();
-  }, []);
+  };
 
   // set the initial component based on the current time
   useEffect(() => {
@@ -311,7 +317,7 @@ export default function HomePage() {
   /* WEBSOCKET Listeners */
   // WEBSOCKET - CANCEL
   const cancelRideListener = (message: WebSocketResponse) => {
-    // recived a message that ride is cancelled
+    // recived a message that ride is canceled
     if ("response" in message && message.response === "CANCEL") {
       // if successful, set the current component to "noRequests"
       resetAllFields();

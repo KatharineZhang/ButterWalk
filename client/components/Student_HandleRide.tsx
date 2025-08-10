@@ -102,7 +102,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   useEffect(() => {
     if (seconds == 60) {
       setNotificationState({
-        text: "Your ride will be cancelled in one minute.",
+        text: "Your ride will be canceled in one minute.",
         color: "#FFCBCB",
         boldText: "one minute",
       });

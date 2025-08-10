@@ -127,7 +127,7 @@ class WebSocketService {
       this.websocket.send(JSON.stringify(message));
       return;
     }
-    console.error("No websocket connection");
+    console.log("No websocket connection");
   }
 
   /**

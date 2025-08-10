@@ -10,6 +10,7 @@ import Map, { calculateDistance, isSameLocation, MapRef } from "./map";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
 import {
+  CancelResponse,
   DistanceResponse,
   ErrorResponse,
   LocationResponse,
@@ -40,7 +41,7 @@ export default function HomePage() {
   const [FAQVisible, setFAQVisible] = useState(false);
   // which bottom component to show
   const [whichComponent, setWhichComponent] = useState<
-    "rideReq" | "confirmRide" | "Loading" | "waitForRide" | "handleRide"
+    "rideReq" | "confirmRide" | "Loading" | "handleRide"
   >("rideReq");
 
   // what notification to show
@@ -185,14 +186,16 @@ export default function HomePage() {
   // the amount of minutes it will take to walk to the pickup location
   const [walkDuration, setWalkDuration] = useState(0);
 
-  // the reason could be that the user clicked the cancel button
+  // the reason could be that:
+  // the driver canceled (no action on student side),
+  // user clicked the cancel button
   // or the timer ran out
-  const cancelReason = useRef<"button" | "timer">("button");
+  const cancelReason = useRef<"none" | "button" | "timer">("none");
 
   // the user wishes to cancel the ride
   // we want to send a cancel request to the server
   const cancelRide = (reason: "button" | "timer") => {
-    cancelReason.current = reason;
+    cancelReason.current = reason; // note what method they used to cancel
     // call cancel route
     WebSocketService.send({ directive: "CANCEL", netid, role: "STUDENT" });
   };
@@ -247,8 +250,8 @@ export default function HomePage() {
     WebSocketService.addListener(handleLocation, "LOCATION");
     WebSocketService.addListener(handleRequestRide, "REQUEST_RIDE");
     WebSocketService.addListener(handleAccept, "ACCEPT_RIDE");
-    WebSocketService.addListener(handleCompleteOrCancel, "CANCEL");
-    WebSocketService.addListener(handleCompleteOrCancel, "COMPLETE");
+    WebSocketService.addListener(handleCancel, "CANCEL");
+    WebSocketService.addListener(handleComplete, "COMPLETE");
     WebSocketService.addListener(handleWaitTime, "WAIT_TIME");
     WebSocketService.addListener(handleDistance, "DISTANCE");
     WebSocketService.addListener(
@@ -441,44 +444,79 @@ export default function HomePage() {
     }
   };
 
-  // WEBSOCKET -- CANCEL / COMPLETE RIDE
+  // WEBSOCKET -- CANCEL
+  const handleCancel = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "CANCEL") {
+      const cancelResp = message as CancelResponse;
+      // if we are waiting for the ride, we don't need to know that a driver viewed and canceled on us
+      // only notify the student if they previously were told a driver was coming and now they are not
+      if (
+        cancelResp.newRideStatus == "REQUESTED" &&
+        rideStatus != "WaitingForRide"
+      ) {
+        // our ride is back in the queue!
+        // set the ride status back to waiting for ride
+        // but stay on handle ride component
+        setRideStatus("WaitingForRide");
+        setNotifState({
+          text: "Your driver canceled the ride. Please wait for another driver",
+          color: "#FFCBCB",
+        });
+      } else {
+        resetAllFields();
+        // go back to ride request component
+        setWhichComponent("rideReq");
+
+        // set the notif state based on the reason for cancelation
+        switch (cancelReason.current) {
+          case "none":
+            // if we did not cancel, the driver did
+            setNotifState({
+              text: "Your driver has canceled this ride.",
+              color: "#FFCBCB",
+              boldText: "canceled",
+            });
+            break;
+          case "button":
+            // we clicked the cancel button
+            setNotifState({
+              text: "Ride successfully canceled",
+              color: "#FFCBCB",
+              boldText: "canceled",
+            });
+            break;
+          case "timer":
+            // the timer ran out
+            setNotifState({
+              text: "Your ride was canceled— timer ran out",
+              color: "#FFCBCB",
+              boldText: "canceled",
+            });
+            break;
+        }
+      }
+    } else {
+      console.log("Cancel Ride error: " + (message as ErrorResponse).error);
+    }
+  };
+
+  // WEBSOCKET -- COMPLETE RIDE
   // handle the case when the ride is completed or canceled
-  const handleCompleteOrCancel = (message: WebSocketResponse) => {
-    if (
-      "response" in message &&
-      (message.response === "COMPLETE" || message.response === "CANCEL")
-    ) {
+  const handleComplete = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "COMPLETE") {
       resetAllFields();
       // go back to ride request component
       setWhichComponent("rideReq");
 
-      // show the notification based on the response
-      if (message.response === "CANCEL") {
-        // set the notif state based on the reason for cancellation
-        if (cancelReason.current === "button") {
-          setNotifState({
-            text: "Ride successfully canceled",
-            color: "#FFCBCB",
-            boldText: "canceled",
-          });
-        } else {
-          setNotifState({
-            text: "Your ride was canceled— timer ran out",
-            color: "#FFCBCB",
-            boldText: "canceled",
-          });
-        }
-      } else {
-        // wait until we recieve message with the ride completed
-        // for us to set the student's ride status to completed
-        setRideStatus("RideCompleted");
-        setRideProgress(1); // set the ride progress to 1 to show the user they have arrived
-        setNotifState({
-          text: "Ride successfully completed!",
-          color: "#C9FED0",
-          boldText: "completed",
-        });
-      }
+      // wait until we recieve message with the ride completed
+      // for us to set the student's ride status to completed
+      setRideStatus("RideCompleted");
+      setRideProgress(1); // set the ride progress to 1 to show the user they have arrived
+      setNotifState({
+        text: "Ride successfully completed!",
+        color: "#C9FED0",
+        boldText: "completed",
+      });
     }
   };
 

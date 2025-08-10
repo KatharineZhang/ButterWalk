@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 import { AuthSessionResult } from "expo-auth-session";
 import {
   ErrorResponse,
-  CancelResponse,
   GeneralResponse,
   FinishAccCreationResponse,
   RequestRideResponse,
@@ -27,6 +26,7 @@ import {
   GooglePlaceSearchBadLocationTypes,
   PlaceSearchResponse,
   PurpleZone,
+  WrapperCancelResponse,
 } from "./api";
 import {
   addFeedbackToDb,
@@ -450,6 +450,10 @@ export const viewRide = async (
       // take the ride out of the "pool"
       // by changing its status to VIEWING
       setRideRequestStatus(t, "VIEWING", bestRequest.netid);
+      // when a driver is viewing a ride, no other driver can view it
+      // so we can just add the driver id to the ride request now
+      // for future use (if cancel, can set state back to viewing)
+      setRideRequestDriver(t, bestRequest.netid, driverid);
       return {
         response: "VIEW_RIDE",
         rideExists: true,
@@ -639,7 +643,7 @@ And if there driver needs to be notified, the json object returned TO THE DRIVER
 export const cancelRide = async (
   netid: string,
   role: "STUDENT" | "DRIVER"
-): Promise<CancelResponse | ErrorResponse> => {
+): Promise<WrapperCancelResponse | ErrorResponse> => {
   try {
     return await runTransaction(db, async (transaction) => {
       const response = await cancelRideRequest(transaction, netid, role);
@@ -647,7 +651,11 @@ export const cancelRide = async (
         // if we have an accepted ride, we have annetid of the opposite user
         return {
           response: "CANCEL",
-          info: { response: "CANCEL", success: true },
+          info: {
+            response: "CANCEL",
+            success: true,
+            newRideStatus: response.newRideStatus,
+          },
           otherNetid: response.otherId,
           notifyDrivers: response.notifyDrivers,
         };
@@ -655,7 +663,11 @@ export const cancelRide = async (
       // no driver specified in this pending request case!
       return {
         response: "CANCEL",
-        info: { response: "CANCEL", success: true },
+        info: {
+          response: "CANCEL",
+          success: true,
+          newRideStatus: response.newRideStatus,
+        },
         notifyDrivers: response.notifyDrivers,
       };
     });
