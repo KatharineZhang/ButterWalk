@@ -64,9 +64,15 @@ export default function HomePage() {
         console.error("Failed to connect to WebSocket");
       } else {
         console.log("WebSocket connected successfully");
+        // wait till we hit this case to do any subsequent action
+        afterConnectionSucceeds();
       }
     };
     connectWebSocket();
+  }, []);
+
+  // Any action we need to do after the client side connects to the websocket
+  const afterConnectionSucceeds = () => {
     // send the CONNECT message with the netid
     // to log our driver into the server
     WebSocketService.send({
@@ -74,7 +80,8 @@ export default function HomePage() {
       netid: netid as string,
       role: "DRIVER",
     });
-  }, []);
+    seeIfRidesExist();
+  };
 
   // set the initial component based on the current time
   useEffect(() => {
@@ -84,6 +91,7 @@ export default function HomePage() {
       if (TimeService.inServicableTime()) {
         // in shift
         setWhichComponent("noRequests");
+        seeIfRidesExist();
       } else {
         // off shift
         setWhichComponent("endShift");
@@ -155,6 +163,7 @@ export default function HomePage() {
 
   /* WAITING FOR REQUEST STATE */
   const seeIfRidesExist = () => {
+    console.log("seeing if rides exist");
     // call the websocket call to see if rides exist
     WebSocketService.send({
       directive: "RIDES_EXIST",
@@ -169,6 +178,7 @@ export default function HomePage() {
   const [requestInfo, setRequestInfo] = useState<RideRequest>(
     {} as RideRequest
   );
+  const [showAcceptScreen, setShowAcceptScreen] = useState(true);
 
   const onAccept = () => {
     // when the driver clicks "Accept"
@@ -307,15 +317,15 @@ export default function HomePage() {
   /* WEBSOCKET Listeners */
   // WEBSOCKET - CANCEL
   const cancelRideListener = (message: WebSocketResponse) => {
-    // recived a message that ride is cancelled
+    // recived a message that ride is canceled
     if ("response" in message && message.response === "CANCEL") {
       // if successful, set the current component to "noRequests"
       resetAllFields();
       setWhichComponent("noRequests");
       setNotifState({
-        text: "Ride cancelled successfully",
-        color: "#C9FED0",
-        boldText: "cancelled",
+        text: "Your ride was canceled",
+        color: "#FFCBCB",
+        boldText: "canceled",
       });
       setStudentIsLate(false);
     } else {
@@ -353,13 +363,16 @@ export default function HomePage() {
           setNotifState({
             text: "New ride request available",
             color: "#C9FED0",
-            boldText: "new ride",
+            boldText: "New ride",
           });
         } else {
           // if false, set the component to "noRequests"
           setWhichComponent("noRequests");
         }
-      } // if the driver is not waiting for a request, do nothing
+      } else {
+        // if the driver is not waiting for a request, do nothing
+        console.log("rides don't exist anymore but we don't care");
+      }
     } else {
       // there was an error in the message!
       const errMessage = message as ErrorResponse;
@@ -369,8 +382,11 @@ export default function HomePage() {
 
   // WEBSOCKET - VIEW_RIDE
   const viewRideListener = (message: WebSocketResponse) => {
-    if ("response" in message && message.response === "VIEW_RIDE") {
+    if ("response" in message && message.response == "VIEW_RIDE") {
       const viewReqResponse = message as ViewRideRequestResponse;
+      console.log("Successfully viewed ride request: ", viewReqResponse);
+      console.log("is ride request info: ", viewReqResponse.rideInfo);
+
       if (viewReqResponse.rideInfo) {
         // if the ride request info exists, then the view was successful
         // set the requestInfo state to the ride request info
@@ -392,6 +408,8 @@ export default function HomePage() {
         setPickupToDropoffDuration(
           viewReqResponse.rideInfo.pickUpToDropOffDuration
         );
+        // Switch to the Let's Go page here not in Driver_RequestAvailable
+        setShowAcceptScreen(false);
       } else {
         // if the ride request info does not exist, then the view was not successful
         // if not successful, show a notification and set currentComponent to "noRequests"
@@ -733,6 +751,7 @@ export default function HomePage() {
         <View style={styles.homePageComponentContainer}>
           <RequestAvailable
             requestInfo={requestInfo}
+            showAcceptScreen={showAcceptScreen}
             updateSideBarHeight={setCurrentComponentHeight}
             driverToPickupDuration={driverToPickupDuration}
             pickupToDropoffDuration={pickupToDropoffDuration}

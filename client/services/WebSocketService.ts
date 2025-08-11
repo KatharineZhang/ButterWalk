@@ -1,5 +1,6 @@
 import {
   Command,
+  ErrorResponse,
   WebSocketMessage,
   WebSocketResponse,
 } from "../../server/src/api";
@@ -64,7 +65,9 @@ class WebSocketService {
       const message = JSON.parse(event.data) as WebSocketResponse;
       // send message to any component interested in this message type
       const key =
-        message.response == "ERROR" ? message.category : message.response;
+        message.response == "ERROR"
+          ? (message as ErrorResponse).category
+          : message.response;
 
       const handlersToCall: WebSocketResponseHandler[] | undefined =
         this.messageHandlers.get(key);
@@ -124,7 +127,7 @@ class WebSocketService {
       this.websocket.send(JSON.stringify(message));
       return;
     }
-    console.error("No websocket connection");
+    console.log("No websocket connection");
   }
 
   /**

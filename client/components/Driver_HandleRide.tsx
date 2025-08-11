@@ -147,7 +147,7 @@ export default function HandleRide({
   useEffect(() => {
     if (seconds == 60) {
       changeNotifState({
-        text: "Your ride will be cancelled in one minute.",
+        text: "Your ride will be canceled in one minute.",
         color: "#FFCBCB",
         boldText: "one minute",
       });
@@ -161,7 +161,7 @@ export default function HandleRide({
 
   const cancelRide = () => {
     changeNotifState({
-      text: "Ride cancelled",
+      text: "Ride canceled",
       color: "#FF0000",
     });
     onCancel();

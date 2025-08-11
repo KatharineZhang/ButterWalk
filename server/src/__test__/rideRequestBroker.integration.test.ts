@@ -265,7 +265,7 @@ describe("Websocket Integration", () => {
       locationTo: "jest",
       studentLocation: "my puter",
       numRiders: 100,
-      status: "CANCELLED",
+      status: "CANCELED",
     });
     await addDoc(rideRequestsCollection, {
       netid: "1111111",
