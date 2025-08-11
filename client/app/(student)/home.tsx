@@ -16,7 +16,6 @@ import {
   LocationResponse,
   LocationType,
   ProfileResponse,
-  RecentLocationResponse,
   RequestRideResponse,
   User,
   WaitTimeResponse,
@@ -255,10 +254,6 @@ export default function HomePage() {
     WebSocketService.addListener(handleWaitTime, "WAIT_TIME");
     WebSocketService.addListener(handleDistance, "DISTANCE");
     WebSocketService.addListener(
-      handleRecentLocationResponse,
-      "RECENT_LOCATIONS"
-    );
-    WebSocketService.addListener(
       handleDriverArrived,
       "DRIVER_ARRIVED_AT_PICKUP"
     );
@@ -269,8 +264,6 @@ export default function HomePage() {
 
     // get the user's profile on first render
     sendProfile();
-    // get the user's locations on first render
-    sendRecentLocation();
   }, []);
 
   // logic that should happen when the component FIRST changes
@@ -403,27 +396,10 @@ export default function HomePage() {
     if (message.response === "PROFILE") {
       const profileMessage = message as ProfileResponse;
       setUser(profileMessage.user as User);
+      setRecentLocations(profileMessage.locations as LocationType[]);
     } else {
       // something went wrong
       console.log("Profile response error: ", message);
-    }
-  };
-
-  // WEBSOCKET -- RECENT_LOCATION
-  const sendRecentLocation = async () => {
-    WebSocketService.send({
-      directive: "RECENT_LOCATIONS",
-      netid: netid,
-    });
-  };
-
-  const handleRecentLocationResponse = (message: WebSocketResponse) => {
-    if (message.response === "RECENT_LOCATIONS") {
-      const locationMessage = message as RecentLocationResponse;
-      setRecentLocations(locationMessage.locations as LocationType[]);
-    } else {
-      // something went wrong
-      console.log("Recent location response error: ", message);
     }
   };
 
@@ -675,6 +651,8 @@ export default function HomePage() {
           driverLocation={driverLocation}
           userLocationChanged={userLocationChanged}
           status={rideStatus}
+          startLocation={startLocation}
+          whichComponent={"rideReq"}
         />
         {/* profile pop-up modal */}
         <View style={styles.modalContainer}>

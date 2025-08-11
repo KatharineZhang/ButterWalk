@@ -327,6 +327,7 @@ export default function HomePage() {
         color: "#FFCBCB",
         boldText: "canceled",
       });
+      setStudentIsLate(false);
     } else {
       // if not successful, log the error
       const errMessage = message as ErrorResponse;
@@ -487,6 +488,7 @@ export default function HomePage() {
           color: "#C9FED0",
           boldText: "flagged",
         });
+        setStudentIsLate(false); // get rid of the student is late message
       } else {
         // if not successful, show a notification that the student could not be flagged
         setNotifState({
