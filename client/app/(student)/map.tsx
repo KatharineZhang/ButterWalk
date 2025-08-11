@@ -6,7 +6,12 @@ import {
   useImperativeHandle,
   forwardRef,
 } from "react";
-import MapView, { Polygon, Marker, Polyline } from "react-native-maps";
+import MapView, {
+  PROVIDER_GOOGLE,
+  Polygon,
+  Marker,
+  Polyline,
+} from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { styles } from "@/assets/styles";
@@ -249,6 +254,7 @@ const Map = forwardRef<MapRef, MapProps>(
         <MapView
           ref={mapRef}
           style={styles.map}
+          provider={Platform.OS === "android" ? PROVIDER_GOOGLE : undefined}
           initialRegion={{
             latitude:
               userLocation.latitude != 0

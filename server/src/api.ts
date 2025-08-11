@@ -21,7 +21,6 @@ export type Command =
   | "PROFILE"
   | "DISTANCE"
   | "ERROR"
-  | "RECENT_LOCATIONS"
   | "PLACE_SEARCH"
   | "VIEW_RIDE"
   | "RIDES_EXIST"
@@ -33,7 +32,6 @@ export type Command =
 
 // Input types
 export type WebSocketMessage =
-  | { directive: "RECENT_LOCATIONS"; netid: string }
   | { directive: "DISCONNECT" }
   | { directive: "CONNECT"; netid: string; role: "STUDENT" | "DRIVER" } // TODO: REMOVE THIS ONCE BYPASS SIGNIN IS REMOVED
   | {
@@ -166,14 +164,7 @@ export type WebSocketResponse =
   | RidesExistResponse
   | ViewRideRequestResponse
   | ViewDecisionResponse
-  | RecentLocationResponse
-  | RecentLocationResponse
   | PlaceSearchResponse;
-
-export type RecentLocationResponse = {
-  response: "RECENT_LOCATIONS";
-  locations: LocationType[];
-};
 
 export type LocationType = {
   name: string;
@@ -262,11 +253,20 @@ export type RidesExistResponse = {
   ridesExist: boolean;
 };
 
-export type CancelResponse = {
+// cancel ride info + extra info for routes.tsx to tell websocket.ts
+export type WrapperCancelResponse = {
   response: "CANCEL";
-  info: { response: "CANCEL"; success: true }; // of type GeneralResponse
+  info: CancelResponse;
   otherNetid?: string;
   notifyDrivers: boolean;
+};
+
+// What actually gets sent to each user
+export type CancelResponse = {
+  response: "CANCEL";
+  success: true;
+  // what the status of the ride is after cancelation. Could be canceled or REQUESTED
+  newRideStatus: type_canceled | type_requested;
 };
 
 export type CompleteResponse = {
@@ -291,6 +291,7 @@ export type QueryResponse = {
 export type ProfileResponse = {
   response: "PROFILE";
   user: User;
+  locations: LocationType[];
 };
 
 export type ErrorResponse = {
@@ -431,25 +432,31 @@ export type Feedback = {
  * Possible states of RideRequest.status
  */
 export type RideRequestStatus =
-  // Cancelled for any reason
-  | "CANCELLED"
-  // Student is waiting for a driver to accept their ride
-  | "REQUESTED"
-  // Driver has temporarily checked out a ride that they
-  // can choose to accept or deny
-  | "VIEWING"
-  // Driver accepted the ride and is driving to the pick
-  // up location. Ride Request should have an associated
-  // driver id
-  | "DRIVING TO PICK UP"
-  // Driver arrived at pick up location
-  | "DRIVER AT PICK UP"
-  // Driver picked up the student and is driving with them
-  // to the student's chosen destination
-  | "DRIVING TO DESTINATION"
-  // Ride is complete
-  | "COMPLETED";
+  | type_canceled
+  | type_requested
+  | type_viewing
+  | type_drivingToPickUp
+  | type_driverAtPickUp
+  | type_drivingToDestination
+  | type_completed;
 
+// Ride request TYPE constants. please use these to avoid misspelling
+export type type_canceled = "CANCELED";
+export type type_requested = "REQUESTED";
+export type type_viewing = "VIEWING";
+export type type_drivingToPickUp = "DRIVING TO PICK UP";
+export type type_driverAtPickUp = "DRIVER AT PICK UP";
+export type type_drivingToDestination = "DRIVING TO DESTINATION";
+export type type_completed = "COMPLETED";
+
+// Ride request status constants. please use these to avoid misspelling
+export const REQUESTED_STATUS = "REQUESTED";
+export const CANCELED_STATUS = "CANCELED";
+export const VIEWING_STATUS = "VIEWING";
+export const DRIVING_TO_PICK_UP_STATUS = "DRIVING TO PICK UP";
+export const DRIVER_AT_PICK_UP_STATUS = "DRIVER AT PICK UP";
+export const DRIVING_TO_DESTINATION_STATUS = "DRIVING TO DESTINATION";
+export const COMPLETED_STATUS = "COMPLETED";
 /**
  * RideRequest represents a students request for a ride, with all the information necessary
  * to rank, assign, and complete a ride.
@@ -507,7 +514,7 @@ export type RideRequest = {
   /**
    * Status of the ride request.
    * - `CANCELED`: The ride request was canceled for any reason (could indicate
-   * cancellation by the student, cancellation by the driver, or an error).
+   * cancelation by the student, cancelation by the driver, or an error).
    * - `REQUESTED`: The ride request is waiting in the queue: the student who
    * made the ride request is waiting for a driver to accept their ride. This
    * is the only state which indicates that the ride is part of the "pool", and
@@ -518,7 +525,7 @@ export type RideRequest = {
    * - `ACCEPTED`: **SHOULD BE DEPRECATED ASAP** Represents that a ride request
    * is either in progress or has been accepted by a driver who has not yet
    * picked up the student. Does not have the necessary level of granularity to
-   * handle cancellation edge cases or ride request broker behavior.
+   * handle cancelation edge cases or ride request broker behavior.
    * - `AWAITING PICK UP`: The ride request was accepted by a driver after being
    * checked out to them for viewing and is in the pick up stage, i.e. the driver
    * is driving to go pick up the student, the student is waiting to be picked up,
@@ -540,6 +547,7 @@ export type ProblematicUser = {
   category: "REPORTED" | "BLACKLISTED";
 };
 
+// Database structure for storing recent locations of a user
 export type RecentLocation = {
   netid: string;
   locations: LocationType[];

@@ -18,7 +18,7 @@ function FAQ({ isVisible, onClose }: FAQProps) {
   const qandA: JSX.Element = (
     <ScrollView>
       <View style={{ height: 60 }} />
-      <Text style={styles.faqHeader}>Husky SafeTrip FAQ</Text>
+      <Text style={styles.faqHeader}>SafeTrip FAQ</Text>
       <Text style={styles.faqSubtitle}>University of Washington</Text>
       <View style={{ height: 10 }} />
 
@@ -60,7 +60,7 @@ const faqContent: AccordionProps[] = [
       "The hours of operation are listed below:" +
       "6:30 p.m. — 2 a.m. daily EXCEPT University holidays or when the University suspends operations.",
     link: "https://police.uw.edu/safety-escort-services/?_gl=1*nynm91*_ga*MTc1NDAwNzM1OC4xNjg3MDEzNDQ0*_ga_3T65WK0BM8*MTczODE4NzY0OC43My4xLjE3MzgxODc2ODQuMC4wLjA.*_gcl_au*MTU4NjcxMjM0Mi4xNzM2Mjc0MTE3*_ga_JLHM9WH4JV*MTczODE4NzY0OC43My4xLjE3MzgxODc2ODQuMC4wLjA.",
-    linkText: "UW Husky SafeTrip Website",
+    linkText: "UW SafeTrip Website",
   },
   {
     title: "Where is the zone of operation?",
@@ -70,7 +70,7 @@ const faqContent: AccordionProps[] = [
       "Additionally, both locations must fall within the boundaries outlined below. " +
       "\n\nFor detailed boundary information, please refer to this page:",
     link: "https://www.google.com/maps/d/u/0/viewer?mid=1vw5w2MFNwZ9YZak1vCWRTEMaUGI-EBQ&ll=47.65994679136626%2C-122.30518874999999&z=14",
-    linkText: "UW Husky SafeTrip Boundary Map",
+    linkText: "UW SafeTrip Boundary Map",
     image: require("@/assets/images/faq-boundary.png"),
   },
   {

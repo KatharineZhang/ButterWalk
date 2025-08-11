@@ -1,5 +1,6 @@
-// components/profile.tsx
-import { Pressable, View, Text } from "react-native";
+/* eslint-disable @typescript-eslint/no-require-imports */
+import { Pressable, View, Text, Image, Dimensions } from "react-native";
+import { styles } from "../../assets/styles";
 
 interface ProfileProps {
   isVisible: boolean;
@@ -14,31 +15,49 @@ export default function Profile({
   onLogOut,
   netid,
 }: ProfileProps) {
-  // TODO: fix this styling!!
-  return isVisible ? (
-    <View>
-      <Pressable
-        onPress={onClose}
-        style={{ padding: 10, backgroundColor: "lightgray", borderRadius: 5 }}
-      >
-        <Text>Close Profile</Text>
-      </Pressable>
-      <Pressable
-        onPress={onLogOut}
-        style={{
-          padding: 10,
-          backgroundColor: "red",
-          borderRadius: 5,
-          marginTop: 10,
-        }}
-      >
-        <Text style={{ color: "white" }}>Sign Out</Text>
-      </Pressable>
-      <View style={{ padding: 20 }}>
-        <Text style={{ fontSize: 18, fontWeight: "bold" }}>Profile</Text>
-        <Text style={{ marginTop: 10 }}>NetID: {netid}</Text>
-        {/* Add more profile details here */}
+  if (!isVisible) return null;
+
+  return (
+    <View style={styles.overlay}>
+      <View style={styles.modal}>
+        <Pressable onPress={onClose} style={styles.closeButton}>
+          <Image
+            source={require("@/assets/images/close_button_profile.png")}
+            style={styles.closeButtonImage}
+          />
+        </Pressable>
+
+        <View style={styles.rowContainer}>
+          <View
+            style={{
+              padding: 10,
+              borderRadius: 100,
+              borderWidth: 3,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Image
+              style={{
+                width: Dimensions.get("window").width * 0.07,
+                height: Dimensions.get("window").width * 0.07,
+              }}
+              source={require("@/assets/images/user.png")}
+            />
+          </View>
+          <Text style={styles.title}>Driver NetID: {netid}</Text>
+        </View>
+
+        <Pressable onPress={onLogOut} style={styles.logoutButton}>
+          <View style={styles.rowContainerButton}>
+            <Image
+              source={require("@/assets/images/sign-out-alt.png")}
+              style={styles.logoutImage}
+            />
+            <Text style={styles.logoutButtonText}>Log Out</Text>
+          </View>
+        </Pressable>
       </View>
     </View>
-  ) : null;
+  );
 }

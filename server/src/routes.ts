@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 import { AuthSessionResult } from "expo-auth-session";
 import {
   ErrorResponse,
-  CancelResponse,
   GeneralResponse,
   FinishAccCreationResponse,
   RequestRideResponse,
@@ -26,6 +25,7 @@ import {
   GooglePlaceSearchBadLocationTypes,
   PlaceSearchResponse,
   PurpleZone,
+  WrapperCancelResponse,
 } from "./api";
 import {
   addFeedbackToDb,
@@ -44,7 +44,7 @@ import {
   setRideRequestStatus,
   setRideRequestDriver,
   getRecentLocations,
-  findActiveRequestByStudentNetid,
+  isNotAccepted,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { highestRank, rankOf } from "./rankingAlgorithm";
@@ -257,7 +257,7 @@ export const snapLocation = async (
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Error getting snap location: ${e}`,
+      error: `Error getting snap location: ${(e as Error).message}}`,
       category: "SNAP",
     };
   }
@@ -341,11 +341,9 @@ export const requestRide = async (
       throw new Error(`requestid was null`);
     }
   } catch (e: unknown) {
-    // TODO(connor): introduce a debugging and logging utility and or proper error
-    // handling so this is not necessary.
     return {
       response: "ERROR",
-      error: `${e}`,
+      error: `Error adding new ride request to the database: ${(e as Error).message}`,
       category: "REQUEST_RIDE",
     };
   }
@@ -358,13 +356,15 @@ export const requestRide = async (
 export const ridesExist = async (): Promise<boolean | ErrorResponse> => {
   try {
     return await runTransaction(db, async () => {
+      // get all REQUESTED rides
       const rideRequests: RideRequest[] = await getRideRequests();
+      // check if there are actually rides
       return rideRequests.length !== 0;
     });
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Error getting ride requests from the database: ${e}`,
+      error: `Error getting ride requests from the database: ${(e as Error).message}`,
       category: "REQUEST_RIDE",
     };
   }
@@ -387,9 +387,9 @@ export const viewRide = async (
     longitude: number;
   }
 ): Promise<ViewRideRequestResponse | ErrorResponse> => {
-  let associatedUser: User | null = null;
   try {
     return await runTransaction(db, async (t) => {
+      // get REQUESTED rides
       const rideRequests: RideRequest[] = await getRideRequests();
       if (rideRequests.length === 0) {
         return {
@@ -398,12 +398,15 @@ export const viewRide = async (
           notifyDrivers: false,
         };
       }
+      // get the best ride
+      // currently this is the ride requested earliest in time
       const bestRequest: RideRequest = highestRank(
         rideRequests,
         driverid,
         driverLocation
       );
 
+      // get some stats on the ride
       const driverToPickUpDuration = await getDuration(
         driverLocation,
         bestRequest.locationFrom.coordinates,
@@ -419,6 +422,7 @@ export const viewRide = async (
         }
       });
 
+      // get stats on ride part 2
       const pickUpToDropOffDuration = await getDuration(
         bestRequest.locationFrom.coordinates,
         bestRequest.locationTo.coordinates,
@@ -434,12 +438,6 @@ export const viewRide = async (
         }
       });
 
-      const userNetid = bestRequest.netid;
-      associatedUser = await getProfile(t, userNetid);
-      if (associatedUser === null) {
-        throw new Error(`Didn't find any User during view ride.`);
-      }
-
       // before we take the request out of the queue,
       // check if this was the last request before empty
       let notify = false;
@@ -447,20 +445,29 @@ export const viewRide = async (
       if (numReqs.length == 1) {
         notify = true;
       }
-      setRideRequestStatus(t, "VIEWING", associatedUser.netid);
+
+      // take the ride out of the "pool"
+      // by changing its status to VIEWING
+      setRideRequestStatus(t, "VIEWING", bestRequest.netid);
+      // when a driver is viewing a ride, no other driver can view it
+      // so we can just add the driver id to the ride request now
+      // for future use (if cancel, can set state back to viewing)
+      setRideRequestDriver(t, bestRequest.netid, driverid);
       return {
         response: "VIEW_RIDE",
         rideExists: true,
-        rideRequest: bestRequest,
-        driverToPickUpDuration,
-        pickUpToDropOffDuration,
+        rideInfo: {
+          rideRequest: bestRequest,
+          driverToPickUpDuration,
+          pickUpToDropOffDuration,
+        },
         notifyDrivers: notify,
       };
     });
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Unknown problem during viewRide: ${e}`,
+      error: `Unknown problem during viewRide: ${(e as Error).message}}`,
       category: "VIEW_RIDE",
     };
   }
@@ -481,152 +488,74 @@ export const handleDriverViewChoice = async (
   decision: "ACCEPT" | "DENY" | "TIMEOUT" | "ERROR"
 ): Promise<ViewDecisionResponse | ErrorResponse> => {
   try {
-    await findActiveRequestByStudentNetid(netid);
+    return await runTransaction(db, async (t) => {
+      if (decision === "ACCEPT") {
+        // this will throw an error if the student's ride is no longer simply requested/viewed
+        if (await isNotAccepted(netid)) {
+          setRideRequestDriver(t, netid, driverid);
+          setRideRequestStatus(t, "DRIVING TO PICK UP", netid);
+          return {
+            response: "VIEW_DECISION",
+            driver: {
+              response: "VIEW_DECISION",
+              success: true,
+            },
+            student: {
+              response: "ACCEPT_RIDE",
+              success: true,
+            },
+            notifyDrivers: false, // already notified drivers during VIEW_RIDE
+          };
+        } else {
+          throw new Error(
+            `Request is no longer available for decision: ${decision}`
+          );
+        }
+      } else if (
+        decision === "DENY" ||
+        decision === "TIMEOUT" ||
+        decision === "ERROR"
+      ) {
+        // check if the pool was empty and the ride we are about to
+        // add back in the queue is the first one in the pool
+        let notify = false;
+        const numReqs = await getRideRequests();
+        if (numReqs.length == 0) {
+          notify = true;
+        }
+        // make sure the ride has not been accepted / processed by the time we make our decision
+        if (await isNotAccepted(netid)) {
+          // reset the status to put the request put it back in the queue
+          setRideRequestStatus(t, "REQUESTED", netid);
+          return {
+            response: "VIEW_DECISION",
+            driver: {
+              response: "VIEW_DECISION",
+              success: true,
+            },
+            student: undefined,
+            notifyDrivers: notify,
+          };
+        } else {
+          // ride was taken by someone else!
+          throw new Error(
+            `Request is no longer available for decision: ${decision}`
+          );
+        }
+      }
+      // A bad decision was passed in
+      return {
+        response: "ERROR",
+        error: `Invalid decision or missing parameters. ${decision}`,
+        category: "VIEW_RIDE",
+      };
+    });
   } catch (e) {
-    // for the driver to make a decision on the ride,
-    // the request must still be in viewing/requested mode
-    // (aka no other driver has accepted it and is currently processing it)
-    // if it is not, or the some other error occured, return an error
     return {
       response: "ERROR",
-      error: `Couldn't find active request for ${netid}. Error: ${e}`,
+      error: `Unexpected Error during handleDriverViewChoice: ${(e as Error).message}}`,
       category: "VIEW_RIDE",
     };
-  }
-
-  if (decision === "ACCEPT") {
-    /**
-     * Change the status of the ride request with the given
-     * rideRequestId to be `DRIVING TO PICK UP`,
-     * assigning the ride to the given driver
-     */
-    try {
-      return await runTransaction(db, async (t) => {
-        setRideRequestStatus(t, "DRIVING TO PICK UP", netid);
-        setRideRequestDriver(t, netid, driverid);
-        return {
-          response: "VIEW_DECISION",
-          driver: {
-            response: "VIEW_DECISION",
-            success: true,
-          },
-          student: {
-            response: "ACCEPT_RIDE",
-            success: true,
-          },
-          notifyDrivers: false,
-        };
-      });
-    } catch (e) {
-      return {
-        response: "ERROR",
-        error: `Unexpected Error during handleDriverViewChoie: ${e}`,
-        category: "VIEW_RIDE",
-      };
-    }
-  } else if (decision === "DENY") {
-    /**
-     * Change the status of the ride request with the given
-     * id back to `REQUESTED`, returning it to the pool.
-     */
-    try {
-      return await runTransaction(db, async (t) => {
-        // before we take the request out of the queue,
-        // check if the pool was empty before we put this one back in
-        let notify = false;
-        const numReqs = await getRideRequests();
-        if (numReqs.length == 0) {
-          notify = true;
-        }
-
-        setRideRequestStatus(t, "REQUESTED", netid);
-        return {
-          response: "VIEW_DECISION",
-          driver: {
-            response: "VIEW_DECISION",
-            success: true,
-          },
-          student: undefined,
-          notifyDrivers: notify,
-        };
-      });
-    } catch (e) {
-      return {
-        response: "ERROR",
-        error: `Unexpected Error during handleDriverViewChoice: ${e}`,
-        category: "VIEW_RIDE",
-      };
-    }
-  } else if (decision === "TIMEOUT") {
-    /**
-     * Change the status of the ride request with the given id
-     * back to `REQUESTED`, returning it to the pool.
-     */
-    try {
-      return await runTransaction(db, async (t) => {
-        // before we take the request out of the queue,
-        // check if the pool was empty before we put this one back in
-        let notify = false;
-        const numReqs = await getRideRequests();
-        if (numReqs.length == 0) {
-          notify = true;
-        }
-
-        setRideRequestStatus(t, "REQUESTED", netid);
-        return {
-          response: "VIEW_DECISION",
-          driver: {
-            response: "VIEW_DECISION",
-            success: true,
-          },
-          student: undefined,
-          notifyDrivers: notify,
-        };
-      });
-    } catch (e) {
-      return {
-        response: "ERROR",
-        error: `Unexpected Error during handleDriverViewChocie: ${e}`,
-        category: "VIEW_RIDE",
-      };
-    }
-  } else if (decision === "ERROR") {
-    /**
-     * Change the status of the ride request with the given id
-     * back to `REQUESTED`, returning it to the pool. Do any
-     * additional logging or error handling for unexpected
-     * behavior.
-     */
-    try {
-      return await runTransaction(db, async (t) => {
-        // before we take the request out of the queue,
-        // check if the pool was empty before we put this one back in
-        let notify = false;
-        const numReqs = await getRideRequests();
-        if (numReqs.length == 0) {
-          notify = true;
-        }
-
-        setRideRequestStatus(t, "REQUESTED", netid);
-        return {
-          response: "VIEW_DECISION",
-          driver: {
-            response: "VIEW_DECISION",
-            success: true,
-          },
-          student: undefined,
-          notifyDrivers: notify,
-        };
-      });
-    } catch (e) {
-      return {
-        response: "ERROR",
-        error: `Unexpected Error during handleDriverViewChoice: ${e}`,
-        category: "VIEW_RIDE",
-      };
-    }
-  } else {
-    throw new Error(`decision: ${decision} was not a valid string.`);
   }
 };
 
@@ -645,17 +574,17 @@ export const driverArrived = async (
     await runTransaction(db, async (t) => {
       await setRideRequestStatus(t, "DRIVER AT PICK UP", netid);
     });
+    return {
+      response: "DRIVER_ARRIVED_AT_PICKUP",
+      success: true,
+    };
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Unexpected Error during driverArrived: ${e}`,
-      category: "VIEW_RIDE",
+      error: `Unexpected Error during driverArrived: ${(e as Error).message}`,
+      category: "DRIVER_ARRIVED_AT_PICKUP",
     };
   }
-  return {
-    response: "DRIVER_ARRIVED_AT_PICKUP",
-    success: true,
-  };
 };
 
 /**
@@ -673,17 +602,17 @@ export const driverDrivingToDropoff = async (
     await runTransaction(db, async (t) => {
       await setRideRequestStatus(t, "DRIVING TO DESTINATION", netid);
     });
+    return {
+      response: "DRIVER_DRIVING_TO_DROPOFF",
+      success: true,
+    };
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Unexpected Error during driverPickedUpStudent: ${e}`,
-      category: "VIEW_RIDE",
+      error: `Unexpected Error during driverPickedUpStudent: ${(e as Error).message}}`,
+      category: "DRIVER_DRIVING_TO_DROPOFF",
     };
   }
-  return {
-    response: "DRIVER_DRIVING_TO_DROPOFF",
-    success: true,
-  };
 };
 
 /* Allows the student to cancel a ride and updates the server and notifies the user. 
@@ -713,7 +642,7 @@ And if there driver needs to be notified, the json object returned TO THE DRIVER
 export const cancelRide = async (
   netid: string,
   role: "STUDENT" | "DRIVER"
-): Promise<CancelResponse | ErrorResponse> => {
+): Promise<WrapperCancelResponse | ErrorResponse> => {
   try {
     return await runTransaction(db, async (transaction) => {
       const response = await cancelRideRequest(transaction, netid, role);
@@ -721,7 +650,11 @@ export const cancelRide = async (
         // if we have an accepted ride, we have annetid of the opposite user
         return {
           response: "CANCEL",
-          info: { response: "CANCEL", success: true },
+          info: {
+            response: "CANCEL",
+            success: true,
+            newRideStatus: response.newRideStatus,
+          },
           otherNetid: response.otherId,
           notifyDrivers: response.notifyDrivers,
         };
@@ -729,15 +662,18 @@ export const cancelRide = async (
       // no driver specified in this pending request case!
       return {
         response: "CANCEL",
-        info: { response: "CANCEL", success: true },
+        info: {
+          response: "CANCEL",
+          success: true,
+          newRideStatus: response.newRideStatus,
+        },
         notifyDrivers: response.notifyDrivers,
       };
     });
   } catch (e) {
-    // if there is an error, return { success: false, error: 'Error canceling ride request.'};
     return {
       response: "ERROR",
-      error: `Error canceling ride request: ${e}`,
+      error: `Error canceling ride request: ${(e as Error).message}}`,
       category: "CANCEL",
     };
   }
@@ -773,7 +709,7 @@ export const completeRide = async (
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Unexpected Error during completeRide: ${e}`,
+      error: `Unexpected Error during completeRide: ${(e as Error).message}}`,
       category: "COMPLETE",
     };
   }
@@ -814,7 +750,7 @@ export const addFeedback = async (
     // if there is an error, return { success: false, error: 'Error adding feedback to the database.'};
     return {
       response: "ERROR",
-      error: `Error adding feedback to the database: ${e}`,
+      error: `Error adding feedback to the database: ${(e as Error).message}}`,
       category: "ADD_FEEDBACK",
     };
   }
@@ -889,7 +825,7 @@ export const blacklist = async (
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Error blacklisting student: ${e}`,
+      error: `Error blacklisting student: ${(e as Error).message}}`,
       category: "BLACKLIST",
     };
   }
@@ -1166,7 +1102,7 @@ export const location = async (
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Error getting other netid: ${e}`,
+      error: `Error getting other netid: ${(e as Error).message}}`,
       category: "LOCATION",
     };
   }
@@ -1197,7 +1133,7 @@ export const query = async (
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Error querying feedback: ${e}`,
+      error: `Error querying feedback: ${(e as Error).message}}`,
       category: "QUERY",
     };
   }
@@ -1222,7 +1158,7 @@ export const profile = async (
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Error getting profile: ${e}`,
+      error: `Error getting profile: ${(e as Error).message}}`,
       category: "PROFILE",
     };
   }

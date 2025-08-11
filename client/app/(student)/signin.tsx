@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { styles } from "../../assets/styles";
 import { Redirect } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
+// import { makeRedirectUri } from 'expo-auth-session';
 
 // need to 'npx expo install expo-web-browser expo-auth-session expo-crypto' ON MAC
 // or 'npm i expo-auth-session@~6.0.3' on windows
@@ -35,11 +36,13 @@ const Login = () => {
   const [accExists, setAccExists] = useState<boolean | null>(null);
   const [errMsg, setErrMsg] = useState("");
   const [netid, setNetid] = useState("");
+  // const redirectURI = makeRedirectUri();
 
   const config = {
     webClientId,
     iosClientId,
     androidClientId,
+    // redirectURI
   };
 
   // Request is needed to make google auth work without errors,
@@ -169,7 +172,7 @@ const Login = () => {
             style={styles.signInButton}
             onPress={() => {
               setAccExists(false);
-              setNetid("student-netID");
+              setNetid("snigsm");
             }}
           >
             <Text style={styles.signInText}>Bypass Signin</Text>
