@@ -20,7 +20,7 @@ export default function LogoutWarning({ onLogout }: Props) {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    top: 0,
+    top: "10%",
     padding: 16,
     margin: 16,
     backgroundColor: "#ffe4e1",
