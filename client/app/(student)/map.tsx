@@ -19,7 +19,6 @@ import { View, Image, Alert, Linking, Platform } from "react-native";
 import MapViewDirections from "react-native-maps-directions";
 import { Ionicons } from "@expo/vector-icons";
 import { PurpleZone } from "@/services/ZoneService";
-import { PROVIDER_GOOGLE } from "react-native-maps";
 
 interface MapProps {
   pickUpLocation: { latitude: number; longitude: number };
@@ -268,7 +267,6 @@ const Map = forwardRef<MapRef, MapProps>(
             longitudeDelta: 0.015,
           }}
           userInterfaceStyle="light"
-          provider={PROVIDER_GOOGLE} // Use Google Maps for the map
         >
           {/* show each segment of the purple zone on the map */}
           {PurpleZone.zones.map((zone, index) => (
