@@ -12,6 +12,7 @@ import {
   useWindowDimensions,
   View,
   Text,
+  Alert,
 } from "react-native";
 import Map, { MapRef, calculateDistance } from "./map";
 import { useLocalSearchParams } from "expo-router";
@@ -92,7 +93,13 @@ export default function HomePage() {
       seeIfRidesExist();
     } else {
       // off shift
-      setWhichComponent("endShift");
+      Alert.alert(
+        "Service Unavailable",
+        "Service is only available between 6:30 PM and 2:00 AM (but i'll allow it this time...)"
+      );
+      setWhichComponent("noRequests");
+      seeIfRidesExist();
+      // setWhichComponent("endShift");
     }
   };
 
