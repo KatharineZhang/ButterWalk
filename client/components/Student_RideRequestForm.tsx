@@ -357,9 +357,9 @@ export default function RideRequestForm({
     if (!TimeService.inServicableTime()) {
       Alert.alert(
         "Service Unavailable",
-        "Service is only available between 6:30 PM and 2:00 AM"
+        "Service is only available between 6:30 PM and 2:00 AM (but i'll allow it this time...)"
       );
-      return;
+      // return;
     }
 
     // Both location should be in the purple zone
