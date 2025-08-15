@@ -545,7 +545,7 @@ export default function HomePage() {
       if (phase === "waitingForPickup") {
         pickupProgress = 1;
 
-        // if phase is headingtopickup or geadingtodropoff
+        // if phase is headingtopickup or Headingtodropoff
       } else if (
         startLocation.latitude !== 0 &&
         startLocation.longitude !== 0 &&
@@ -557,6 +557,9 @@ export default function HomePage() {
           driverLocation,
           pickUpLocation
         );
+        if (phase === "headingToPickup") {
+          setIsNearPickup(pickupProgress >= 0.9); // 50 meters
+        }
       }
 
       if (
@@ -570,6 +573,9 @@ export default function HomePage() {
           driverLocation,
           dropOffLocation
         );
+        if (phase === "headingToDropoff") {
+          setIsNearDropoff(dropoffProgress >= 0.9); // 50 meters
+        }
       }
 
       setPickupProgress(pickupProgress);
