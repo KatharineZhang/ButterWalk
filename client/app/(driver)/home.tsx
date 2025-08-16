@@ -560,6 +560,13 @@ export default function HomePage() {
 
       setPickupProgress(pickupProgress);
       setDropoffProgress(dropoffProgress);
+
+      if (phase === "headingToPickup") {
+        setIsNearPickup(pickupProgress >= 0.9);
+      }
+      if (phase === "headingToDropoff") {
+        setIsNearDropoff(dropoffProgress >= 0.9);
+      }
     }
   }, [driverLocation, phase, whichComponent, requestInfo.requestId]);
 
