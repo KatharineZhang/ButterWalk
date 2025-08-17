@@ -549,7 +549,6 @@ export default function HomePage() {
           case "waitingForPickup":
             pickupProgress = 1; // At pickup location
             setIsNearPickup(true);
-            dropoffProgress = 0; // Not yet heading to dropoff
             setIsNearDropoff(false);
             break;
           case "headingToDropoff":
@@ -570,8 +569,6 @@ export default function HomePage() {
             setIsNearDropoff(true); // At dropoff location
             break;
           default:
-            pickupProgress = 0; // Not handling a ride
-            dropoffProgress = 0; // Not handling a ride
             setIsNearPickup(false);
             setIsNearDropoff(false);
             break;
