@@ -13,7 +13,7 @@ import {
   View,
   Text,
 } from "react-native";
-import Map, { MapRef, calculateProgressAlongRoute } from "./map";
+import Map, { MapRef, calculateDistance } from "./map";
 import { useLocalSearchParams } from "expo-router";
 import RequestAvailable from "@/components/Driver_RequestAvailable";
 import Legend from "@/components/Student_Legend";
@@ -123,12 +123,6 @@ export default function HomePage() {
 
   // retain a reference to the map to call functions on it later
   const mapRef = useRef<MapRef>(null);
-
-  // the route that the driver will take to pick up and drop off the student
-  // this is set by MapViewDirections
-  const [route, setRoute] = useState<{ latitude: number; longitude: number }[]>(
-    []
-  );
 
   /* PROFILE STATE */
   const { netid } = useLocalSearchParams<{ netid: string }>();
@@ -544,11 +538,9 @@ export default function HomePage() {
         pickUpLocation.latitude !== 0 &&
         pickUpLocation.longitude !== 0
       ) {
-        // calculate progress along the current route
-        pickupProgress = calculateProgressAlongRoute(
-          route,
+        pickupProgress = calculateProgress(
+          startLocation,
           driverLocation,
-          undefined, // no start location needed for pickup
           pickUpLocation
         );
       }
@@ -559,10 +551,9 @@ export default function HomePage() {
         dropOffLocation.latitude !== 0 &&
         dropOffLocation.longitude !== 0
       ) {
-        dropoffProgress = calculateProgressAlongRoute(
-          route,
+        dropoffProgress = calculateProgress(
+          pickUpLocation,
           driverLocation,
-          pickUpLocation, // start location is the pickup location
           dropOffLocation
         );
       }
@@ -589,7 +580,6 @@ export default function HomePage() {
         pickUpLocation={pickUpLocation}
         dropOffLocation={dropOffLocation}
         userLocationChanged={(location) => setDriverLocation(location)}
-        routeChanged={(path) => setRoute(path)}
       />
 
       {/* profile button in top left corner*/}
@@ -802,3 +792,26 @@ export default function HomePage() {
     </GestureHandlerRootView>
   );
 }
+
+/**
+ * Helper function to calculate the progress of the driver from start to destination
+ * @param start - starting coordinates
+ * @param current - current coordinates
+ * @param dest - destination coordinates
+ * @returns progress as a number between 0 and 1
+ */
+const calculateProgress = (
+  start: { latitude: number; longitude: number },
+  current: { latitude: number; longitude: number },
+  dest: { latitude: number; longitude: number }
+): number => {
+  // calculate the distance between the two coordinates
+  const distance = calculateDistance(start, dest);
+  // the distance between the current location and the destination
+  // is the remaining distance to the destination
+  // use this to calc progress because the driver may not be
+  // driving in a straight line from the start location
+  const remaining = calculateDistance(current, dest);
+  const currentDistance = distance - remaining;
+  return currentDistance / distance; // remaining distance
+};

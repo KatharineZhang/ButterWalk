@@ -22,7 +22,6 @@ interface MapProps {
     latitude: number;
     longitude: number;
   }) => void;
-  routeChanged: (path: { latitude: number; longitude: number }[]) => void;
 }
 
 // functions that can be called from the parent component
@@ -39,7 +38,6 @@ const Map = forwardRef<MapRef, MapProps>(
       pickUpLocation = { latitude: 0, longitude: 0 },
       dropOffLocation = { latitude: 0, longitude: 0 },
       userLocationChanged,
-      routeChanged,
     },
     ref
   ) => {
@@ -257,12 +255,6 @@ const Map = forwardRef<MapRef, MapProps>(
                 apikey={GOOGLE_MAPS_APIKEY}
                 strokeWidth={3}
                 strokeColor="#000000"
-                onReady={(result) => {
-                  // if the path is not empty, set the path to the result
-                  if (result && result.coordinates.length > 0) {
-                    routeChanged(result.coordinates);
-                  }
-                }}
               />
             )}
         </MapView>
@@ -302,81 +294,4 @@ export const isSameLocation = (
   return calculateDistance(point1, point2) < SAME_LOCATION_THRESHOLD;
 };
 
-/**
- * Calculate the progress along a route based on the user's location.
- *
- * @param path The route path as an array of points (as given by MapViewDirections)
- * @param userLocation The user's current location
- * @param startLoc Optional start location to calculate progress if we olnly want to
- * calculate progress along a segment of the route
- * @param endLoc Optional end location to calculate progress if we olnly want to
- * calculate progress along a segment of the route
- * @returns
- */
-export const calculateProgressAlongRoute = (
-  path: { latitude: number; longitude: number }[],
-  userLocation: { latitude: number; longitude: number },
-  startLoc?: { latitude: number; longitude: number },
-  endLoc?: { latitude: number; longitude: number }
-): number => {
-  if (!path || path.length === 0) {
-    return 0; // No path available
-  }
-
-  // if startLoc is defined, find the index of the startLoc point in the path
-  // otherwise, use index 0 as the startLoc point
-  const start: number = startLoc ? findPathIndex(path, startLoc) : 0;
-
-  // if end is defined, find the index of the end point in the path
-  // otherwise, use the last point in the path as the end point
-  const end: number = endLoc ? findPathIndex(path, endLoc) : path.length - 1;
-
-  let numTimesmovingFarther = 0;
-  let minDistance = Infinity;
-  let closestPointIndex = -1;
-
-  // find the closest point to the user's location within start - end
-  // iterate through the path to find the closest point on route to user
-  // (it could be the last point so include the end point in the loop)
-  for (let i = start; i <= end; i++) {
-    const curr = path[i];
-    // if we can get closer
-    if (minDistance >= calculateDistance(curr, userLocation)) {
-      numTimesmovingFarther = 0; // reset the counter
-      minDistance = calculateDistance(curr, userLocation);
-      closestPointIndex = i;
-    } else {
-      numTimesmovingFarther++;
-      // if we have repeatedly moved further away from the closest point
-      if (numTimesmovingFarther >= 3) {
-        break; // if we are getting further away, break
-      }
-    }
-  }
-  // if we didn't find a valid closest point, return 0 as progress
-  if (closestPointIndex === -1) {
-    return 0; // No valid closest point found
-  }
-  // return a fraction of our index over the endLoc index
-  // this will give us a value between 0 and 1
-  return closestPointIndex / end; // Return progress as a fraction of the path length
-};
-
-/**
- * Helper function to find the index of a location in a route.
- *
- * @param route
- * @param location
- * @returns
- */
-const findPathIndex = (
-  route: { latitude: number; longitude: number }[],
-  location: { latitude: number; longitude: number }
-): number => {
-  return route.findIndex(
-    (point) =>
-      point.latitude === location.latitude &&
-      point.longitude === location.longitude
-  );
-};
 export default Map;
