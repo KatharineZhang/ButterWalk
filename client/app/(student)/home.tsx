@@ -590,7 +590,6 @@ export default function HomePage() {
       setNotifState({
         text: errorMessage.error,
         color: "#FFCBCB",
-        boldText: "error",
       });
       // go back to request ride
       setWhichComponent("rideReq");

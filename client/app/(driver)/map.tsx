@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { PurpleZone } from "@/services/ZoneService";
 
 interface MapProps {
+  startLocation: { latitude: number; longitude: number };
   pickUpLocation: { latitude: number; longitude: number };
   dropOffLocation: { latitude: number; longitude: number };
   userLocationChanged: (location: {
@@ -35,6 +36,7 @@ export interface MapRef {
 const Map = forwardRef<MapRef, MapProps>(
   (
     {
+      startLocation = { latitude: 0, longitude: 0 },
       pickUpLocation = { latitude: 0, longitude: 0 },
       dropOffLocation = { latitude: 0, longitude: 0 },
       userLocationChanged,
@@ -132,6 +134,11 @@ const Map = forwardRef<MapRef, MapProps>(
         return;
       }
 
+      setUserLocation({
+        latitude: 47.76186489356248,
+        longitude: -122.13715942210601,
+      }); // set initial location to a default value})
+
       await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High,
@@ -206,10 +213,21 @@ const Map = forwardRef<MapRef, MapProps>(
           ))}
           <Marker
             coordinate={{
+              latitude: startLocation.latitude + 0.0001, // offset to avoid overlap with user marker
+              longitude: startLocation.longitude + 0.0001,
+            }}
+            title={"Start Location"}
+          >
+            <View
+              style={[styles.circleStart, { backgroundColor: "white" }]}
+            ></View>
+          </Marker>
+          <Marker
+            coordinate={{
               latitude: pickUpLocation.latitude,
               longitude: pickUpLocation.longitude,
             }}
-            title={"pickUpLocation"}
+            title={"Pick Up Location"}
           >
             <View style={[styles.circleStart, { borderWidth: 0 }]}></View>
           </Marker>
@@ -218,7 +236,7 @@ const Map = forwardRef<MapRef, MapProps>(
               latitude: dropOffLocation.latitude,
               longitude: dropOffLocation.longitude,
             }}
-            title={"dropOffLocation"}
+            title={"Drop Off Location"}
           >
             <Image
               source={require("../../assets/images/dropoff-location.png")}
@@ -230,7 +248,7 @@ const Map = forwardRef<MapRef, MapProps>(
               latitude: userLocation.latitude,
               longitude: userLocation.longitude,
             }}
-            title={"userLocation"}
+            title={"Your Location"}
           >
             <View
               style={{
