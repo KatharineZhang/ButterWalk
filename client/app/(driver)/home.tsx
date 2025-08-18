@@ -378,7 +378,7 @@ export default function HomePage() {
         }
       } else {
         // if the driver is not waiting for a request, do nothing
-        console.log("We got a rides exist message, but we don't care.");
+        console.log("We got a RIDES_EXIST message, but we don't care.");
       }
     } else {
       // there was an error in the message!
