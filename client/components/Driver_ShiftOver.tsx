@@ -59,11 +59,10 @@ export default function ShiftIsOver({
         <Text style={{ fontSize: 20, fontWeight: "bold" }}>
           Your Shift is Over
         </Text>
-        <View style={{ height: "20%" }} />
+        <View style={{ height: "10%" }} />
         <Text style={{ fontSize: 15 }}>
           Log back in when it is your next shift to see new requests.
         </Text>
-        <View style={{ height: 20 }} />
       </View>
     </View>
   );
