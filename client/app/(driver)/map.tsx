@@ -134,11 +134,6 @@ const Map = forwardRef<MapRef, MapProps>(
         return;
       }
 
-      setUserLocation({
-        latitude: 47.76186489356248,
-        longitude: -122.13715942210601,
-      }); // set initial location to a default value})
-
       await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High,
