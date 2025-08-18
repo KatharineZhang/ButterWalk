@@ -80,25 +80,32 @@ export default function HomePage() {
       netid: netid as string,
       role: "DRIVER",
     });
-    seeIfRidesExist();
+    checkIfTime();
   };
 
   // set the initial component based on the current time
+  const checkIfTime = () => {
+    console.log("checking shift time");
+    if (TimeService.inServicableTime()) {
+      // in shift
+      setWhichComponent("noRequests");
+      seeIfRidesExist();
+    } else {
+      // off shift
+      setWhichComponent("endShift");
+    }
+  };
+
+  // check if the user should be logged out based on the current time
   useEffect(() => {
-    // check if the user should be logged out based on the current time
     const interval = setInterval(() => {
       // check current time and compare with the shift hours
-      if (TimeService.inServicableTime()) {
-        // in shift
-        setWhichComponent("noRequests");
-        seeIfRidesExist();
-      } else {
-        // off shift
-        setWhichComponent("endShift");
+      if (interval != 0) {
+        checkIfTime();
       }
     }, 1000 * 1800); // check every half hour
     return () => {
-      // clear the interval when the component unmounts
+      // clear the interval when the component unmounts aka you leave home.tsx
       clearInterval(interval);
     };
   }, []);
@@ -377,7 +384,7 @@ export default function HomePage() {
         }
       } else {
         // if the driver is not waiting for a request, do nothing
-        console.log("rides don't exist anymore but we don't care");
+        console.log("We got a RIDES_EXIST message, but we don't care.");
       }
     } else {
       // there was an error in the message!
