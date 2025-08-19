@@ -3,11 +3,6 @@ import { useState, useEffect } from "react";
 import { styles } from "../../assets/styles";
 import { Redirect } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-// import { makeRedirectUri } from 'expo-auth-session';
-
-// need to 'npx expo install expo-web-browser expo-auth-session expo-crypto' ON MAC
-// or 'npm i expo-auth-session@~6.0.3' on windows
-import * as Google from "expo-auth-session/providers/google";
 
 import {
   WebSocketResponse,
@@ -15,8 +10,8 @@ import {
   ErrorResponse,
 } from "../../../server/src/api";
 import WebSocketService, {
-  WebsocketConnectMessage,
-} from "../../services/WebSocketService";
+  WebsocketConnectMessage
+} from "../../services/WebSocketService"; // WebsocketConnectMessage,
 
 // Images
 // @ts-expect-error the image does exists so get rid of the error
@@ -26,9 +21,9 @@ import logo from "@/assets/images/GoogleG.png";
 import huskyCarImage from "@/assets/images/husky-car.png";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const webClientId = process.env.EXPO_PUBLIC_WEB_CLIENT_ID;
-const iosClientId = process.env.EXPO_PUBLIC_IOS_CLIENT_ID;
-const androidClientId = process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID;
+import { useAuthRequest, makeRedirectUri, exchangeCodeAsync } from "expo-auth-session";
+
+const androidClientId = '31898801148-fu8ji5l2k42coc833csqqg8hovei99ua.apps.googleusercontent.com';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -36,31 +31,38 @@ const Login = () => {
   const [accExists, setAccExists] = useState<boolean | null>(null);
   const [errMsg, setErrMsg] = useState("");
   const [netid, setNetid] = useState("");
-  // const redirectURI = makeRedirectUri();
+    
+  const discovery = {
+    authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+    tokenEndpoint: 'https://oauth2.googleapis.com/token',
+  }; 
 
-  const config = {
-    webClientId,
-    iosClientId,
-    androidClientId,
-    // redirectURI
-  };
+  const redirectUri = makeRedirectUri({scheme: 'com.betterwalk.betterwalk'});
+  console.log(redirectUri);
+  // 
 
   // Request is needed to make google auth work without errors,
   // but is not explicitly used, hence the override
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [request, response, promptAsync] = Google.useAuthRequest(config);
+  const [request, response, promptAsync] = useAuthRequest({
+      clientId: androidClientId,
+      scopes: ['openid', 'profile', 'email'],
+      redirectUri,
+    }, discovery);
 
   const handleSigninMessage = (message: WebSocketResponse) => {
     if ("response" in message && message.response == "SIGNIN") {
       const signinResp = message as SignInResponse;
-
       if (signinResp.alreadyExists) {
         setAccExists(true);
+        setNetid(signinResp.netid);
+        //router.push("/(student)/home");
       } else {
-        setAccExists(false); // redundant but I just want to make sure
+        setAccExists(false);
+        setNetid(signinResp.netid);
+        //console.log(netid);
+        //router.push("/(student)/finishAcc"); // redundant but I just want to make sure
       }
-
-      setNetid(signinResp.netid);
     } else {
       // there was a signin related error
       const errorResp = message as ErrorResponse;
@@ -71,23 +73,48 @@ const Login = () => {
   WebSocketService.addListener(handleSigninMessage, "SIGNIN");
 
   useEffect(() => {
-    const connectWebSocket = async () => {
-      // call our new route
-      const msg: WebsocketConnectMessage = await WebSocketService.connect();
-      if (msg == "Connected Successfully") {
-        if (response) {
-          WebSocketService.send({
-            directive: "SIGNIN",
-            response,
-            role: "STUDENT",
-          });
+      const handleAuthAndExchange = async () => {
+      // Check for a successful response from the initial auth request.
+      if (response?.type === "success" && response.params.code) {
+        try {
+          // Exchange the authorization code for tokens.
+          const tokenResult = await exchangeCodeAsync(
+            {
+              clientId: androidClientId,
+              redirectUri: redirectUri,
+              code: response.params.code,
+              // PKCE: The code verifier is required for security.
+              extraParams: { code_verifier: request?.codeVerifier || '' },
+            },
+            discovery
+          );
+
+          // At this point, the tokenResult object contains your tokens!
+          console.log("Tokens received:", tokenResult);
+
+          // You can now connect and send the tokens to your server.
+          const msg: WebsocketConnectMessage = await WebSocketService.connect();
+          if (msg == "Connected Successfully") {
+            if (response) {
+              WebSocketService.send({
+              directive: "SIGNIN",
+              response: { ...response, authentication: tokenResult },
+              role: "STUDENT",
+              });
+            }
+          } else {
+            console.log("failed to connect!!!");
+          }
+        } catch (error) {
+          console.error("Error exchanging code for token:", error);
+          setErrMsg("Sign-in failed. Please try again.");
         }
-      } else {
-        console.log("failed to connect!!!");
       }
     };
-    connectWebSocket();
-  }, [response]);
+    if (request && response) {
+      handleAuthAndExchange();
+    }
+  }, [response, request]);
 
   return accExists == true && netid ? (
     <Redirect
