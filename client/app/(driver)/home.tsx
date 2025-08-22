@@ -117,6 +117,13 @@ export default function HomePage() {
     };
   }, []);
 
+  // Set start location when ride is accepted
+  useEffect(() => {
+    if (whichComponent == "handleRide") {
+      setStartLocation(driverLocation);
+    }
+  }, [whichComponent]);
+
   /* MAP STATE */
   const [driverLocation, setDriverLocation] = useState<{
     latitude: number;
@@ -177,7 +184,6 @@ export default function HomePage() {
 
   /* WAITING FOR REQUEST STATE */
   const seeIfRidesExist = () => {
-    console.log("seeing if rides exist");
     // call the websocket call to see if rides exist
     WebSocketService.send({
       directive: "RIDES_EXIST",
@@ -385,7 +391,7 @@ export default function HomePage() {
         }
       } else {
         // if the driver is not waiting for a request, do nothing
-        console.log("rides exist / don't anymore but we don't care");
+        console.log("We got a RIDES_EXIST message, but we don't care.");
       }
     } else {
       // there was an error in the message!
@@ -450,6 +456,7 @@ export default function HomePage() {
         color: "#C9FED0",
         boldText: "accepted",
       });
+      setStartLocation(driverLocation);
       setWhichComponent("handleRide");
     } else {
       const errMessage = message as ErrorResponse;
@@ -541,62 +548,57 @@ export default function HomePage() {
       let pickupProgress = 0;
       let dropoffProgress = 0;
 
-      // If phase is waitingForPickup, force pickupProgress to 1
-      if (phase === "waitingForPickup") {
-        pickupProgress = 1;
-
-        // if phase is headingtopickup or Headingtodropoff
-      } else if (
-        startLocation.latitude !== 0 &&
-        startLocation.longitude !== 0 &&
-        pickUpLocation.latitude !== 0 &&
-        pickUpLocation.longitude !== 0
-      ) {
-        pickupProgress = calculateProgress(
-          startLocation,
-          driverLocation,
-          pickUpLocation
-        );
-        if (phase === "headingToPickup") {
-          setIsNearPickup(pickupProgress >= 0.9); // 50 meters
+      if (startLocation.latitude !== 0 && startLocation.longitude !== 0) {
+        switch (phase) {
+          case "headingToPickup":
+            // Calculate progress from start location to pickup location
+            pickupProgress = calculateProgress(
+              startLocation,
+              driverLocation,
+              pickUpLocation
+            );
+            setIsNearPickup(pickupProgress >= 0.9); // Near pickup if progress is 90% or more
+            setIsNearDropoff(false); // Not near dropoff yet
+            break;
+          case "waitingForPickup":
+            pickupProgress = 1; // At pickup location
+            setIsNearPickup(true);
+            setIsNearDropoff(false);
+            break;
+          case "headingToDropoff":
+            // Calculate progress from pickup to dropoff
+            pickupProgress = 1; // Already at pickup
+            dropoffProgress = calculateProgress(
+              pickUpLocation,
+              driverLocation,
+              dropOffLocation
+            );
+            setIsNearDropoff(dropoffProgress >= 0.9); // Near dropoff if progress is 90% or more
+            setIsNearPickup(false); // Not near pickup anymore
+            break;
+          case "arrivedAtDropoff":
+            pickupProgress = 1; // Already at pickup
+            dropoffProgress = 1; // Already at dropoff
+            setIsNearPickup(false); // Not near pickup anymore
+            setIsNearDropoff(true); // At dropoff location
+            break;
+          default:
+            setIsNearPickup(false);
+            setIsNearDropoff(false);
+            break;
         }
+        setPickupProgress(pickupProgress);
+        setDropoffProgress(dropoffProgress);
       }
-
-      if (
-        pickUpLocation.latitude !== 0 &&
-        pickUpLocation.longitude !== 0 &&
-        dropOffLocation.latitude !== 0 &&
-        dropOffLocation.longitude !== 0
-      ) {
-        dropoffProgress = calculateProgress(
-          pickUpLocation,
-          driverLocation,
-          dropOffLocation
-        );
-        if (phase === "headingToDropoff") {
-          setIsNearDropoff(dropoffProgress >= 0.9); // 50 meters
-        }
-      }
-
-      setPickupProgress(pickupProgress);
-      setDropoffProgress(dropoffProgress);
     }
   }, [driverLocation, phase, whichComponent, requestInfo.requestId]);
-
-  // Set start location when ride is accepted
-  useEffect(() => {
-    if (whichComponent === "handleRide" && requestInfo.requestId) {
-      if (startLocation.latitude === 0 && startLocation.longitude === 0) {
-        setStartLocation(driverLocation);
-      }
-    }
-  }, [whichComponent, requestInfo.requestId]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       {/* map component */}
       <Map
         ref={mapRef}
+        startLocation={startLocation}
         pickUpLocation={pickUpLocation}
         dropOffLocation={dropOffLocation}
         userLocationChanged={(location) => setDriverLocation(location)}

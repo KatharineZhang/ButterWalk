@@ -21,7 +21,9 @@
         "googleMapsApiKey": "see app.config.ts"
       },
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "This app uses your location to match you with nearby rides.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app uses your location to match you with nearby rides even in the background."
       }
     },
     "android": {

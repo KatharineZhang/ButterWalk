@@ -608,7 +608,7 @@ export default function RideRequestForm({
 
   // Handle increase of riders
   const handleIncreaseRiders = () => {
-    if (numRiders < 4) {
+    if (numRiders < 3) {
       setNumRiders(numRiders + 1);
       animateRiders();
     }
