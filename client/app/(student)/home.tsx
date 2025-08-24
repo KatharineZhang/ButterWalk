@@ -739,7 +739,7 @@ export default function HomePage() {
           </Pressable>
 
           {/* Side map legend */}
-          <Legend />
+          <Legend role={"STUDENT"}></Legend>
         </View>
 
         {/* Figure out which component to render */}

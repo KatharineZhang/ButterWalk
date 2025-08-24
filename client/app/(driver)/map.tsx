@@ -12,13 +12,14 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { styles } from "@/assets/styles";
 import { Platform, View, Image, Alert, Linking } from "react-native";
 import MapViewDirections from "react-native-maps-directions";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { PurpleZone } from "@/services/ZoneService";
 
 interface MapProps {
   startLocation: { latitude: number; longitude: number };
   pickUpLocation: { latitude: number; longitude: number };
   dropOffLocation: { latitude: number; longitude: number };
+  studentLocation: { latitude: number; longitude: number };
   userLocationChanged: (location: {
     latitude: number;
     longitude: number;
@@ -39,6 +40,7 @@ const Map = forwardRef<MapRef, MapProps>(
       startLocation = { latitude: 0, longitude: 0 },
       pickUpLocation = { latitude: 0, longitude: 0 },
       dropOffLocation = { latitude: 0, longitude: 0 },
+      studentLocation = { latitude: 0, longitude: 0 },
       userLocationChanged,
     },
     ref
@@ -254,6 +256,27 @@ const Map = forwardRef<MapRef, MapProps>(
               }}
             >
               <Ionicons name="car-sharp" size={30} color="black" />
+            </View>
+          </Marker>
+          <Marker
+            coordinate={{
+              latitude: studentLocation.latitude,
+              longitude: studentLocation.longitude,
+            }}
+            title={"Student's Location"}
+          >
+            <View
+              style={{
+                backgroundColor: "white",
+                borderRadius: 50,
+                borderWidth: 2,
+                width: 35,
+                height: 35,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <FontAwesome6 name="person-walking" size={24} color="black" />
             </View>
           </Marker>
           {/* show the directions between the pickup and dropoff locations if they are valid

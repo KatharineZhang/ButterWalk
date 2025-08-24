@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   ErrorResponse,
+  LocationResponse,
   RideRequest,
   RidesExistResponse,
   ViewRideRequestResponse,
@@ -46,6 +47,7 @@ export default function HomePage() {
     WebSocketService.addListener(viewRideListener, "VIEW_RIDE");
     WebSocketService.addListener(viewDecisionListener, "VIEW_DECISION");
     WebSocketService.addListener(reportStudentListener, "REPORT");
+    WebSocketService.addListener(locationListener, "LOCATION");
     WebSocketService.addListener(
       driverDrivingToDropOffListener,
       "DRIVER_DRIVING_TO_DROPOFF"
@@ -135,8 +137,37 @@ export default function HomePage() {
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
 
+  // The driver's location when they started the ride
+  const [startLocation, setStartLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  }>({ latitude: 0, longitude: 0 });
+
+  // The student's location
+  const [studentLocation, setStudentLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  }>({ latitude: 0, longitude: 0 });
+
   // retain a reference to the map to call functions on it later
   const mapRef = useRef<MapRef>(null);
+
+  // function to be called when the user's location changes
+  const userLocationChanged = (location: {
+    latitude: number;
+    longitude: number;
+  }) => {
+    setDriverLocation(location);
+    // send the location to the student once the ride is accepted
+    if (whichComponent === "handleRide" && requestInfo.netid) {
+      WebSocketService.send({
+        directive: "LOCATION",
+        id: netid,
+        latitude: location.latitude,
+        longitude: location.longitude,
+      });
+    }
+  };
 
   /* PROFILE STATE */
   const { netid } = useLocalSearchParams<{ netid: string }>();
@@ -243,12 +274,6 @@ export default function HomePage() {
   // A number between 0 and 1 that represents the progress of the driver
   // from the pickup location to the dropoff location
   const [dropoffProgress, setDropoffProgress] = useState(0);
-
-  // The driver's location when they started the ride
-  const [startLocation, setStartLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  }>({ latitude: 0, longitude: 0 });
 
   // Track if driver is close to pickup location
   const [isNearPickup, setIsNearPickup] = useState(false);
@@ -534,6 +559,27 @@ export default function HomePage() {
     }
   };
 
+  // WEBSOCKET - LOCATION
+  const locationListener = (message: WebSocketResponse) => {
+    // logic for when a location update is received
+    if ("response" in message && message.response === "LOCATION") {
+      // if successful, do nothing
+      const locationMessage = message as LocationResponse;
+      if (whichComponent == "handleRide" && phase == "waitingForPickup") {
+        setStudentLocation({
+          latitude: locationMessage.latitude,
+          longitude: locationMessage.longitude,
+        });
+      } else {
+        // if the driver is not waiting of the pickup, hide the student location
+        setStartLocation({ latitude: 0, longitude: 0 });
+      }
+    } else {
+      const errMessage = message as ErrorResponse;
+      console.log("Failed to send location: ", errMessage.error);
+    }
+  };
+
   /* PROGRESS TRACKING EFFECTS */
   // Track progress when driver location changes and is handling a ride
   useEffect(() => {
@@ -594,7 +640,8 @@ export default function HomePage() {
         startLocation={startLocation}
         pickUpLocation={pickUpLocation}
         dropOffLocation={dropOffLocation}
-        userLocationChanged={(location) => setDriverLocation(location)}
+        studentLocation={studentLocation}
+        userLocationChanged={userLocationChanged}
       />
 
       {/* profile button in top left corner*/}
@@ -751,7 +798,7 @@ export default function HomePage() {
         </Pressable>
 
         {/* Side map legend */}
-        <Legend />
+        <Legend role={"DRIVER"}></Legend>
       </View>
 
       {/* Decide which component to render */}
