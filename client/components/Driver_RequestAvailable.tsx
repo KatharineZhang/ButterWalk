@@ -6,15 +6,15 @@ import { useRef, useEffect } from "react";
 import { Animated, Easing } from "react-native";
 
 interface RequestAvailableProps {
-  requestInfo?: RideRequest;
+  requestInfo: RideRequest;
+  // switches between screen showing accept button and next ride details
+  // once "Let's Go" button is clicked, component should switch over to HandleRide component based on what is in home.tsx
+  showAcceptScreen: boolean;
   driverToPickupDuration?: number; // in minutes, might be undefined initially
   pickupToDropoffDuration?: number; // in minutes, might be undefined initially
   onAccept: () => void;
   onLetsGo: () => void;
   updateSideBarHeight: (height: number) => void;
-  // switches between screen showing accept button and next ride details
-  // once "Let's Go" button is clicked, component should switch over to HandleRide component based on what is in home.tsx
-  showAcceptScreen: boolean;
 }
 
 export default function RequestAvailable({
@@ -72,8 +72,8 @@ export default function RequestAvailable({
         updateSideBarHeight(event.nativeEvent.layout.height);
       }}
     >
-      {/* shows the screen with the "Let's Go" button and the ride graphic */}
-      {!showAcceptScreen && requestInfo != undefined ? (
+      {/* shows the screen with the "Let's Go" button and the ride graphic. Make sure requestInfo is populated to go to this page */}
+      {!showAcceptScreen && requestInfo.netid != undefined ? (
         <>
           {/* Top bar */}
           <View
