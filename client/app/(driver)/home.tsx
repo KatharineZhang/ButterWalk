@@ -567,7 +567,8 @@ export default function HomePage() {
   const locationListener = (message: WebSocketResponse) => {
     // logic for when a location update is received
     if ("response" in message && message.response === "LOCATION") {
-      // if successful, do nothing
+      // store the student's location if the driver is waiting for the pickup
+      // otherwise, hide the student's location
       const locationMessage = message as LocationResponse;
       if (whichComponent == "handleRide" && phase == "waitingForPickup") {
         setStudentLocation({
