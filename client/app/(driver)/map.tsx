@@ -326,7 +326,7 @@ export const isSameLocation = (
   point2: { latitude: number; longitude: number }
 ) => {
   // check if the distance between two points is less than the threshold
-  const SAME_LOCATION_THRESHOLD = 0.02; // 0.02 miles
+  const SAME_LOCATION_THRESHOLD = 0.05; // 0.05 miles
   return calculateDistance(point1, point2) < SAME_LOCATION_THRESHOLD;
 };
 

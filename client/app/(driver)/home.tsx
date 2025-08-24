@@ -14,7 +14,7 @@ import {
   View,
   Text,
 } from "react-native";
-import Map, { MapRef, calculateDistance } from "./map";
+import Map, { MapRef, calculateDistance, isSameLocation } from "./map";
 import { useLocalSearchParams } from "expo-router";
 import RequestAvailable from "@/components/Driver_RequestAvailable";
 import Legend from "@/components/Student_Legend";
@@ -596,7 +596,11 @@ export default function HomePage() {
               driverLocation,
               pickUpLocation
             );
-            setIsNearPickup(pickupProgress >= 0.9); // Near pickup if progress is 90% or more
+            // if isNearPickup is already true, don't change it back to false
+            // but set it to true if driver is within 500 feet of pickup location
+            if (isSameLocation(driverLocation, pickUpLocation)) {
+              setIsNearPickup(true);
+            }
             setIsNearDropoff(false); // Not near dropoff yet
             break;
           case "waitingForPickup":
@@ -612,7 +616,11 @@ export default function HomePage() {
               driverLocation,
               dropOffLocation
             );
-            setIsNearDropoff(dropoffProgress >= 0.9); // Near dropoff if progress is 90% or more
+            // if isNearDropoff is already true, don't change it back to false
+            // but set it to true if driver is within 500 feet of dropoff location
+            if (isSameLocation(driverLocation, dropOffLocation)) {
+              setIsNearDropoff(true);
+            }
             setIsNearPickup(false); // Not near pickup anymore
             break;
           case "arrivedAtDropoff":
