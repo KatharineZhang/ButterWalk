@@ -2,7 +2,7 @@
 import { styles } from "@/assets/styles";
 import { View, Text, Pressable, Image } from "react-native";
 import { RideRequest } from "../../server/src/api";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Animated, Easing } from "react-native";
 
 interface RequestAvailableProps {
@@ -32,10 +32,12 @@ export default function RequestAvailable({
     inputRange: [0, 0.25, 0.5, 0.75, 1],
     outputRange: ["30deg", "0deg", "-30deg", "0deg", "30deg"],
   });
+  const [showLoading, setShowLoading] = useState(false);
 
   // changes the screen when the driver clicks accept
   const handleAccept = () => {
     onAccept();
+    setShowLoading(true);
   };
 
   // animation for clock
@@ -308,12 +310,25 @@ export default function RequestAvailable({
 
           {/* Accept Request Button */}
           <View style={[styles.bottomModalButtonContainer]}>
-            <Pressable
-              style={[styles.bottomModalButton, styles.button]}
-              onPress={handleAccept}
-            >
-              <Text style={[styles.buttonLabel]}>Accept</Text>
-            </Pressable>
+            {showLoading ? (
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontStyle: "italic",
+                  marginBottom: 8,
+                  alignSelf: "center",
+                }}
+              >
+                Retrieving Your Ride...
+              </Text>
+            ) : (
+              <Pressable
+                style={[styles.bottomModalButton, styles.button]}
+                onPress={handleAccept}
+              >
+                <Text style={[styles.buttonLabel]}>Accept</Text>
+              </Pressable>
+            )}
           </View>
         </>
       )}

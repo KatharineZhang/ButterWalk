@@ -460,7 +460,11 @@ export default function HomePage() {
       }
     } else {
       const errMessage = message as ErrorResponse;
-      console.log("Failed to view ride request: ", errMessage.error);
+      setNotifState({
+        text: "Failed to view ride request: " + errMessage.error,
+        color: "#FFCBCB",
+      });
+      setWhichComponent("noRequests"); // go to no requests page
     }
   };
 
