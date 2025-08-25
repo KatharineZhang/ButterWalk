@@ -114,20 +114,13 @@ const Login = () => {
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
-          <Text
-            style={{
-              fontSize: 35,
-              fontWeight: "500",
-              color: "#4B2E83",
-              marginBottom: 20,
-            }}
-          >
+          <Text style={[styles.heading, { marginBottom: "5%" }]}>
             Welcome Student!
           </Text>
           <Image
             style={[
               styles.signInbottomImageContainer,
-              { flex: 0.5, marginBottom: "10%" },
+              { flex: 0.5, marginBottom: "5%" },
             ]}
             source={huskyCarImage}
             resizeMode="contain"
