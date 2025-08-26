@@ -16,7 +16,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.butterwalkios.butterwalk",
+      "bundleIdentifier": "com.butterwalk.butterwalk",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "This app uses your location to match you with nearby rides.",
