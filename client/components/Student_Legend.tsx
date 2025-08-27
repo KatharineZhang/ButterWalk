@@ -109,9 +109,9 @@ export default function Legend(role: LegendProps) {
       )}
       <Pressable onPress={() => setOpen(!open)}>
         {open ? (
-          <Feather name="chevrons-right" size={20} />
-        ) : (
           <Feather name="chevrons-left" size={20} />
+        ) : (
+          <Feather name="chevrons-right" size={20} />
         )}
       </Pressable>
     </View>
