@@ -1,105 +1,183 @@
-import {
-  View,
-  Text,
-  KeyboardAvoidingView,
-  Pressable,
-  TextInput,
-  Image,
-  TouchableWithoutFeedback,
-  Keyboard,
-  Dimensions,
-} from "react-native";
-import { useState } from "react";
+import { View, Text, TouchableOpacity, Image } from "react-native";
+import { useState, useEffect } from "react";
 import { styles } from "../../assets/styles";
-import { Redirect } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
+import * as Google from "expo-auth-session/providers/google";
 
-// @ts-expect-error the image does exists so get rid of the error
-import butterWalkLogo from "@/assets/images/butterWalkLogo.png";
+import {
+  WebSocketResponse,
+  SignInResponse,
+  ErrorResponse,
+} from "../../../server/src/api";
+import WebSocketService, {
+  WebsocketConnectMessage,
+} from "../../services/WebSocketService";
+
+// Images
+// @ts-expect-error the image does exist
+import logo from "@/assets/images/GoogleG.png";
+// @ts-expect-error the image does exist
+import huskyCarImage from "@/assets/images/husky-car.png";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Loading from "../oauthredirect";
+
+const webClientId = process.env.EXPO_PUBLIC_WEB_CLIENT_ID;
+const iosClientId = process.env.EXPO_PUBLIC_IOS_CLIENT_ID;
+const androidClientId = process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID;
 
 WebBrowser.maybeCompleteAuthSession();
 
 const Login = () => {
-  const [driverId, setDriverId] = useState<string>("");
-  const [signedIn, setSignedIn] = useState<boolean | null>(false);
+  const [accExists, setAccExists] = useState<boolean | null>(null);
+  // used to determine if loading page should be shown
+  const [isAuthenticating, setIsAuthenticating] = useState(() => !!response);
   const [errMsg, setErrMsg] = useState("");
   const [netid, setNetid] = useState("");
 
-  // check that the driver ID input is correct
-  // param: input - the driver id input in the sign in
-  const checkDriverIdInput = () => {
-    if (/^[a-z]{5,7}$/.test(driverId.toLowerCase())) {
-      setSignedIn(true);
-      setNetid(driverId.toLowerCase());
-      setErrMsg("");
+  const router = useRouter();
+
+  const config = {
+    webClientId,
+    iosClientId,
+    androidClientId,
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [request, response, promptAsync] = Google.useAuthRequest(config);
+
+  const handleSigninMessage = (message: WebSocketResponse) => {
+    if ("response" in message && message.response == "SIGNIN") {
+      const signinResp = message as SignInResponse;
+
+      // sets accExists, netId, and isAuthenticating so that we know which page to show
+      setAccExists(signinResp.alreadyExists);
+      setNetid(signinResp.netid);
+      setIsAuthenticating(false);
+
+      if (signinResp.alreadyExists) {
+        // if account already exists
+        router.push("/(student)/home");
+      } else {
+        router.push("/(student)/finishAcc"); // otherwise we go to finishAcc page
+      }
     } else {
-      setDriverId("");
-      setSignedIn(false);
-      setErrMsg("Driver ID must be 5 to 7 lowercase letters.");
+      const errorResp = message as ErrorResponse;
+      setErrMsg(errorResp.error);
+      setIsAuthenticating(false);
     }
   };
 
-  // if signed in successfully, redirect
-  return signedIn && netid ? (
-    <Redirect
-      href={{
-        pathname: "/(driver)/home",
-        params: {
-          netid: netid,
-        },
-      }}
-    />
-  ) : (
-    <View
-      style={[
-        styles.container,
-        {
-          margin: "10%",
-          alignItems: "center",
-        },
-      ]}
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
-          <Text style={styles.appNameText}>Husky ButterWalk</Text>
-          <Image style={styles.signinLogo} source={butterWalkLogo} />
-          <Text style={styles.signInText}>Driver Sign In</Text>
-          <View style={{ height: "7%" }}></View>
+  useEffect(() => {
+    WebSocketService.addListener(handleSigninMessage, "SIGNIN");
+    return () => {
+      WebSocketService.removeListener(handleSigninMessage, "SIGNIN");
+    };
+  }, []);
 
-          <Text style={{ fontSize: 17, fontWeight: "500" }}>Driver Netid</Text>
-          {errMsg && (
-            <Text style={{ wordWrap: "true", maxWidth: "70%", color: "red" }}>
-              {errMsg}
-            </Text>
-          )}
+  useEffect(() => {
+    const connectWebSocket = async () => {
+      if (response) {
+        setIsAuthenticating(true); // show loading while waiting
+        const msg: WebsocketConnectMessage = await WebSocketService.connect();
+        if (msg === "Connected Successfully") {
+          console.log("Signing in once");
+          WebSocketService.send({
+            directive: "SIGNIN",
+            response,
+            role: "STUDENT",
+          });
+        } else {
+          setErrMsg("Failed to connect!!!");
+          setIsAuthenticating(false);
+        }
+      }
+    };
+    connectWebSocket();
+  }, [response]);
 
-          <TextInput
-            value={driverId}
-            style={[
-              styles.input,
-              driverId && styles.inputFocused,
-              {
-                alignSelf: "center",
-                width: Dimensions.get("window").width * 0.9,
-                marginBottom: "5%",
-              },
-            ]}
-            placeholderTextColor={"#808080"}
-            onChangeText={(text: string) => setDriverId(text)}
-            autoCapitalize="none"
-          />
+  // Redirects
+  if (isAuthenticating) {
+    //shows loading page if we are in the process of authenticating
+    return <Loading />;
+  }
+  if (accExists === true && netid) {
+    return (
+      <Redirect href={{ pathname: "/(student)/home", params: { netid } }} />
+    );
+  }
+  if (accExists === false && netid) {
+    return (
+      <Redirect
+        href={{ pathname: "/(student)/finishAcc", params: { netid } }}
+      />
+    );
+  }
 
-          <Pressable
-            style={styles.signInButton}
-            onPress={() => {
-              checkDriverIdInput();
+  // Default welcome screen
+  return (
+    <SafeAreaView style={[styles.container, { padding: 20 }]}>
+      <View style={{ flex: 1, width: "100%", justifyContent: "space-between" }}>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <Text
+            style={{
+              fontSize: 35,
+              fontWeight: "500",
+              color: "#4B2E83",
+              marginBottom: 20,
             }}
           >
-            <Text style={styles.signInButtonText}>Sign In</Text>
-          </Pressable>
-        </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
-    </View>
+            Welcome Student!
+          </Text>
+          <Image
+            style={[
+              styles.signInbottomImageContainer,
+              { flex: 0.5, marginBottom: "10%" },
+            ]}
+            source={huskyCarImage}
+            resizeMode="contain"
+          />
+          <Text
+            style={{
+              fontSize: 20,
+              textAlign: "center",
+              fontWeight: "500",
+              color: "#4B2E83",
+              lineHeight: 30,
+              marginVertical: 20,
+            }}
+          >
+            Start your SafeTrip journey by signing in with your UW email
+          </Text>
+
+          <TouchableOpacity
+            style={{
+              borderColor: "#4B2E83",
+              borderWidth: 2,
+              height: 50,
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: 10,
+              width: "95%",
+              flexDirection: "row",
+            }}
+            onPress={() => {
+              promptAsync();
+              // when we press this button, we are in the process of authenticating
+              setIsAuthenticating(true);
+            }}
+          >
+            <Image style={styles.signInGoogleLogo} source={logo} />
+            <Text style={{ fontWeight: "bold", fontSize: 17, marginLeft: 30 }}>
+              Sign in with UW Email
+            </Text>
+          </TouchableOpacity>
+          <Text style={{ color: "red", marginTop: 10 }}>{errMsg}</Text>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
