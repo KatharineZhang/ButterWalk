@@ -100,10 +100,24 @@ const finishAcc = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>Create Account</Text>
+    <View style={[styles.container, { padding: 20 }]}>
+      <Text style={[styles.heading, { textAlign: "center" }]}>
+        Finish Creating Your Account
+      </Text>
+      <Text
+        style={{
+          fontSize: 16,
+          textAlign: "center",
+          fontWeight: "500",
+          color: "#4B2E83",
+          paddingVertical: "5%",
+        }}
+      >
+        It seems like this is your first time signing into our app! Please input
+        a few more details before we get started!
+      </Text>
 
-      <View style={[styles.formContainer, { width: "90%" }]}>
+      <View style={{ width: "95%" }}>
         <Text style={styles.description}>Preferred Name</Text>
         <TextInput
           value={preferredName}
@@ -134,7 +148,6 @@ const finishAcc = () => {
           autoCapitalize="none"
         />
       </View>
-      <View style={{ height: "1%" }} />
       <Pressable style={styles.button_finishAcc} onPress={setValues}>
         <Text style={styles.button_text}>Sign Up</Text>
       </Pressable>

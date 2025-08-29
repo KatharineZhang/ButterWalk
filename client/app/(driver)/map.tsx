@@ -12,12 +12,14 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { styles } from "@/assets/styles";
 import { Platform, View, Image, Alert, Linking } from "react-native";
 import MapViewDirections from "react-native-maps-directions";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { PurpleZone } from "@/services/ZoneService";
 
 interface MapProps {
+  startLocation: { latitude: number; longitude: number };
   pickUpLocation: { latitude: number; longitude: number };
   dropOffLocation: { latitude: number; longitude: number };
+  studentLocation: { latitude: number; longitude: number };
   userLocationChanged: (location: {
     latitude: number;
     longitude: number;
@@ -35,8 +37,10 @@ export interface MapRef {
 const Map = forwardRef<MapRef, MapProps>(
   (
     {
+      startLocation = { latitude: 0, longitude: 0 },
       pickUpLocation = { latitude: 0, longitude: 0 },
       dropOffLocation = { latitude: 0, longitude: 0 },
+      studentLocation = { latitude: 0, longitude: 0 },
       userLocationChanged,
     },
     ref
@@ -206,10 +210,21 @@ const Map = forwardRef<MapRef, MapProps>(
           ))}
           <Marker
             coordinate={{
+              latitude: startLocation.latitude + 0.0001, // offset to avoid overlap with user marker
+              longitude: startLocation.longitude + 0.0001,
+            }}
+            title={"Start Location"}
+          >
+            <View
+              style={[styles.circleStart, { backgroundColor: "white" }]}
+            ></View>
+          </Marker>
+          <Marker
+            coordinate={{
               latitude: pickUpLocation.latitude,
               longitude: pickUpLocation.longitude,
             }}
-            title={"pickUpLocation"}
+            title={"Pick Up Location"}
           >
             <View style={[styles.circleStart, { borderWidth: 0 }]}></View>
           </Marker>
@@ -218,7 +233,7 @@ const Map = forwardRef<MapRef, MapProps>(
               latitude: dropOffLocation.latitude,
               longitude: dropOffLocation.longitude,
             }}
-            title={"dropOffLocation"}
+            title={"Drop Off Location"}
           >
             <Image
               source={require("../../assets/images/dropoff-location.png")}
@@ -230,7 +245,7 @@ const Map = forwardRef<MapRef, MapProps>(
               latitude: userLocation.latitude,
               longitude: userLocation.longitude,
             }}
-            title={"userLocation"}
+            title={"Your Location"}
           >
             <View
               style={{
@@ -241,6 +256,27 @@ const Map = forwardRef<MapRef, MapProps>(
               }}
             >
               <Ionicons name="car-sharp" size={30} color="black" />
+            </View>
+          </Marker>
+          <Marker
+            coordinate={{
+              latitude: studentLocation.latitude,
+              longitude: studentLocation.longitude,
+            }}
+            title={"Student's Location"}
+          >
+            <View
+              style={{
+                backgroundColor: "white",
+                borderRadius: 50,
+                borderWidth: 2,
+                width: 35,
+                height: 35,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <FontAwesome6 name="person-walking" size={24} color="black" />
             </View>
           </Marker>
           {/* show the directions between the pickup and dropoff locations if they are valid
@@ -290,7 +326,7 @@ export const isSameLocation = (
   point2: { latitude: number; longitude: number }
 ) => {
   // check if the distance between two points is less than the threshold
-  const SAME_LOCATION_THRESHOLD = 0.02; // 0.02 miles
+  const SAME_LOCATION_THRESHOLD = 0.05; // 0.05 miles
   return calculateDistance(point1, point2) < SAME_LOCATION_THRESHOLD;
 };
 

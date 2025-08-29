@@ -426,18 +426,17 @@ export default function HomePage() {
       const cancelResp = message as CancelResponse;
       // if we are waiting for the ride, we don't need to know that a driver viewed and canceled on us
       // only notify the student if they previously were told a driver was coming and now they are not
-      if (
-        cancelResp.newRideStatus == "REQUESTED" &&
-        rideStatus != "WaitingForRide"
-      ) {
-        // our ride is back in the queue!
-        // set the ride status back to waiting for ride
-        // but stay on handle ride component
-        setRideStatus("WaitingForRide");
-        setNotifState({
-          text: "Your driver canceled the ride. Please wait for another driver",
-          color: "#FFCBCB",
-        });
+      if (cancelResp.newRideStatus == "REQUESTED") {
+        if (rideStatus != "WaitingForRide") {
+          // our ride is back in the queue!
+          // set the ride status back to waiting for ride
+          // but stay on handle ride component
+          setRideStatus("WaitingForRide");
+          setNotifState({
+            text: "Your driver canceled the ride. Please wait for another driver",
+            color: "#FFCBCB",
+          });
+        } // otherwise do nothing (we were already waiting for a ride)
       } else {
         resetAllFields();
         // go back to ride request component
@@ -590,7 +589,6 @@ export default function HomePage() {
       setNotifState({
         text: errorMessage.error,
         color: "#FFCBCB",
-        boldText: "error",
       });
       // go back to request ride
       setWhichComponent("rideReq");
@@ -740,7 +738,7 @@ export default function HomePage() {
           </Pressable>
 
           {/* Side map legend */}
-          <Legend />
+          <Legend role={"STUDENT"}></Legend>
         </View>
 
         {/* Figure out which component to render */}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   ErrorResponse,
+  LocationResponse,
   RideRequest,
   RidesExistResponse,
   ViewRideRequestResponse,
@@ -13,7 +14,7 @@ import {
   View,
   Text,
 } from "react-native";
-import Map, { MapRef, calculateDistance } from "./map";
+import Map, { MapRef, calculateDistance, isSameLocation } from "./map";
 import { useLocalSearchParams } from "expo-router";
 import RequestAvailable from "@/components/Driver_RequestAvailable";
 import Legend from "@/components/Student_Legend";
@@ -46,6 +47,7 @@ export default function HomePage() {
     WebSocketService.addListener(viewRideListener, "VIEW_RIDE");
     WebSocketService.addListener(viewDecisionListener, "VIEW_DECISION");
     WebSocketService.addListener(reportStudentListener, "REPORT");
+    WebSocketService.addListener(locationListener, "LOCATION");
     WebSocketService.addListener(
       driverDrivingToDropOffListener,
       "DRIVER_DRIVING_TO_DROPOFF"
@@ -80,28 +82,42 @@ export default function HomePage() {
       netid: netid as string,
       role: "DRIVER",
     });
-    seeIfRidesExist();
+    checkIfTime();
   };
 
   // set the initial component based on the current time
+  const checkIfTime = () => {
+    console.log("checking shift time");
+    if (TimeService.inServicableTime()) {
+      // in shift
+      setWhichComponent("noRequests");
+      seeIfRidesExist();
+    } else {
+      // off shift
+      setWhichComponent("endShift");
+    }
+  };
+
+  // check if the user should be logged out based on the current time
   useEffect(() => {
-    // check if the user should be logged out based on the current time
     const interval = setInterval(() => {
       // check current time and compare with the shift hours
-      if (TimeService.inServicableTime()) {
-        // in shift
-        setWhichComponent("noRequests");
-        seeIfRidesExist();
-      } else {
-        // off shift
-        setWhichComponent("endShift");
+      if (interval != 0) {
+        checkIfTime();
       }
     }, 1000 * 1800); // check every half hour
     return () => {
-      // clear the interval when the component unmounts
+      // clear the interval when the component unmounts aka you leave home.tsx
       clearInterval(interval);
     };
   }, []);
+
+  // Set start location when ride is accepted
+  useEffect(() => {
+    if (whichComponent == "handleRide") {
+      setStartLocation(driverLocation);
+    }
+  }, [whichComponent]);
 
   /* MAP STATE */
   const [driverLocation, setDriverLocation] = useState<{
@@ -121,8 +137,37 @@ export default function HomePage() {
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
 
+  // The driver's location when they started the ride
+  const [startLocation, setStartLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  }>({ latitude: 0, longitude: 0 });
+
+  // The student's location
+  const [studentLocation, setStudentLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  }>({ latitude: 0, longitude: 0 });
+
   // retain a reference to the map to call functions on it later
   const mapRef = useRef<MapRef>(null);
+
+  // function to be called when the user's location changes
+  const userLocationChanged = (location: {
+    latitude: number;
+    longitude: number;
+  }) => {
+    setDriverLocation(location);
+    // send the location to the student once the ride is accepted
+    if (whichComponent === "handleRide" && requestInfo.netid) {
+      WebSocketService.send({
+        directive: "LOCATION",
+        id: netid,
+        latitude: location.latitude,
+        longitude: location.longitude,
+      });
+    }
+  };
 
   /* PROFILE STATE */
   const { netid } = useLocalSearchParams<{ netid: string }>();
@@ -163,7 +208,6 @@ export default function HomePage() {
 
   /* WAITING FOR REQUEST STATE */
   const seeIfRidesExist = () => {
-    console.log("seeing if rides exist");
     // call the websocket call to see if rides exist
     WebSocketService.send({
       directive: "RIDES_EXIST",
@@ -230,12 +274,6 @@ export default function HomePage() {
   // A number between 0 and 1 that represents the progress of the driver
   // from the pickup location to the dropoff location
   const [dropoffProgress, setDropoffProgress] = useState(0);
-
-  // The driver's location when they started the ride
-  const [startLocation, setStartLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  }>({ latitude: 0, longitude: 0 });
 
   // Track if driver is close to pickup location
   const [isNearPickup, setIsNearPickup] = useState(false);
@@ -371,7 +409,7 @@ export default function HomePage() {
         }
       } else {
         // if the driver is not waiting for a request, do nothing
-        console.log("rides don't exist anymore but we don't care");
+        console.log("We got a RIDES_EXIST message, but we don't care.");
       }
     } else {
       // there was an error in the message!
@@ -422,7 +460,11 @@ export default function HomePage() {
       }
     } else {
       const errMessage = message as ErrorResponse;
-      console.log("Failed to view ride request: ", errMessage.error);
+      setNotifState({
+        text: "Failed to view ride request: " + errMessage.error,
+        color: "#FFCBCB",
+      });
+      setWhichComponent("noRequests"); // go to no requests page
     }
   };
 
@@ -436,6 +478,7 @@ export default function HomePage() {
         color: "#C9FED0",
         boldText: "accepted",
       });
+      setStartLocation(driverLocation);
       setWhichComponent("handleRide");
     } else {
       const errMessage = message as ErrorResponse;
@@ -520,6 +563,28 @@ export default function HomePage() {
     }
   };
 
+  // WEBSOCKET - LOCATION
+  const locationListener = (message: WebSocketResponse) => {
+    // logic for when a location update is received
+    if ("response" in message && message.response === "LOCATION") {
+      // store the student's location if the driver is waiting for the pickup
+      // otherwise, hide the student's location
+      const locationMessage = message as LocationResponse;
+      if (whichComponent == "handleRide" && phase == "waitingForPickup") {
+        setStudentLocation({
+          latitude: locationMessage.latitude,
+          longitude: locationMessage.longitude,
+        });
+      } else {
+        // if the driver is not waiting of the pickup, hide the student location
+        setStartLocation({ latitude: 0, longitude: 0 });
+      }
+    } else {
+      const errMessage = message as ErrorResponse;
+      console.log("Failed to send location: ", errMessage.error);
+    }
+  };
+
   /* PROGRESS TRACKING EFFECTS */
   // Track progress when driver location changes and is handling a ride
   useEffect(() => {
@@ -527,59 +592,69 @@ export default function HomePage() {
       let pickupProgress = 0;
       let dropoffProgress = 0;
 
-      // If phase is waitingForPickup, force pickupProgress to 1
-      if (phase === "waitingForPickup") {
-        pickupProgress = 1;
-
-        // if phase is headingtopickup or geadingtodropoff
-      } else if (
-        startLocation.latitude !== 0 &&
-        startLocation.longitude !== 0 &&
-        pickUpLocation.latitude !== 0 &&
-        pickUpLocation.longitude !== 0
-      ) {
-        pickupProgress = calculateProgress(
-          startLocation,
-          driverLocation,
-          pickUpLocation
-        );
+      if (startLocation.latitude !== 0 && startLocation.longitude !== 0) {
+        switch (phase) {
+          case "headingToPickup":
+            // Calculate progress from start location to pickup location
+            pickupProgress = calculateProgress(
+              startLocation,
+              driverLocation,
+              pickUpLocation
+            );
+            // if isNearPickup is already true, don't change it back to false
+            // but set it to true if driver is within 500 feet of pickup location
+            if (isSameLocation(driverLocation, pickUpLocation)) {
+              setIsNearPickup(true);
+            }
+            setIsNearDropoff(false); // Not near dropoff yet
+            break;
+          case "waitingForPickup":
+            pickupProgress = 1; // At pickup location
+            setIsNearPickup(true);
+            setIsNearDropoff(false);
+            break;
+          case "headingToDropoff":
+            // Calculate progress from pickup to dropoff
+            pickupProgress = 1; // Already at pickup
+            dropoffProgress = calculateProgress(
+              pickUpLocation,
+              driverLocation,
+              dropOffLocation
+            );
+            // if isNearDropoff is already true, don't change it back to false
+            // but set it to true if driver is within 500 feet of dropoff location
+            if (isSameLocation(driverLocation, dropOffLocation)) {
+              setIsNearDropoff(true);
+            }
+            setIsNearPickup(false); // Not near pickup anymore
+            break;
+          case "arrivedAtDropoff":
+            pickupProgress = 1; // Already at pickup
+            dropoffProgress = 1; // Already at dropoff
+            setIsNearPickup(false); // Not near pickup anymore
+            setIsNearDropoff(true); // At dropoff location
+            break;
+          default:
+            setIsNearPickup(false);
+            setIsNearDropoff(false);
+            break;
+        }
+        setPickupProgress(pickupProgress);
+        setDropoffProgress(dropoffProgress);
       }
-
-      if (
-        pickUpLocation.latitude !== 0 &&
-        pickUpLocation.longitude !== 0 &&
-        dropOffLocation.latitude !== 0 &&
-        dropOffLocation.longitude !== 0
-      ) {
-        dropoffProgress = calculateProgress(
-          pickUpLocation,
-          driverLocation,
-          dropOffLocation
-        );
-      }
-
-      setPickupProgress(pickupProgress);
-      setDropoffProgress(dropoffProgress);
     }
   }, [driverLocation, phase, whichComponent, requestInfo.requestId]);
-
-  // Set start location when ride is accepted
-  useEffect(() => {
-    if (whichComponent === "handleRide" && requestInfo.requestId) {
-      if (startLocation.latitude === 0 && startLocation.longitude === 0) {
-        setStartLocation(driverLocation);
-      }
-    }
-  }, [whichComponent, requestInfo.requestId]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       {/* map component */}
       <Map
         ref={mapRef}
+        startLocation={startLocation}
         pickUpLocation={pickUpLocation}
         dropOffLocation={dropOffLocation}
-        userLocationChanged={(location) => setDriverLocation(location)}
+        studentLocation={studentLocation}
+        userLocationChanged={userLocationChanged}
       />
 
       {/* profile button in top left corner*/}
@@ -736,7 +811,7 @@ export default function HomePage() {
         </Pressable>
 
         {/* Side map legend */}
-        <Legend />
+        <Legend role={"DRIVER"}></Legend>
       </View>
 
       {/* Decide which component to render */}
