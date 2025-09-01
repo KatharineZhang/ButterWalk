@@ -20,7 +20,7 @@ export default function ShiftIsOver({
   useEffect(() => {
     changeNotifState({
       text: "Your shift is over. Log back in when it is your next shift to see new requests.",
-      color: "#FF0000",
+      color: "#FFCBCB",
       boldText: "shift is over",
     });
   }, []);

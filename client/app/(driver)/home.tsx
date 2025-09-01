@@ -37,7 +37,7 @@ export default function HomePage() {
   /* HOME PAGE STATE */
   const [whichComponent, setWhichComponent] = useState<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
-  >("noRequests");
+  >("endShift");
 
   /* USE EFFECTS */
   useEffect(() => {
