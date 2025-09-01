@@ -17,7 +17,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/butterWalkLogo.png",
-  scheme: "myapp",
+  scheme: "com.butterwalk.butterwalk",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   splash: {
