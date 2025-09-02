@@ -60,19 +60,9 @@ const Login = () => {
       setNetid(signinResp.netid);
       if (accExists === false) {
         // needs to create their account for the first time!
-        router.push({
-          pathname: "/(student)/finishAcc",
-          params: {
-            netid: signinResp.netid,
-          },
-        });
+        router.push("/(student)/finishAcc");
       } else {
-        router.push({
-          pathname: "/(student)/home",
-          params: {
-            netid: signinResp.netid,
-          },
-        });
+        router.push("/(student)/home");
       }
     } else {
       // there was a signin related error
