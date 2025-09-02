@@ -82,6 +82,11 @@ const Map = forwardRef<MapRef, MapProps>(
     }, []);
 
     useEffect(() => {
+      // when the pickup location changes, update the waypoints
+      setWaypoints([pickUpLocation]);
+    }, [pickUpLocation]);
+
+    useEffect(() => {
       // check if we have reached the waypoint
       // when the user reaches the waypoint, remove it from the directions
       // so we only route to the dropoff location at that point
@@ -111,8 +116,6 @@ const Map = forwardRef<MapRef, MapProps>(
           newZoomOn[2] = pickUpLocation;
           return newZoomOn;
         });
-        // update the waypoints if the pickup location changes
-        setWaypoints([pickUpLocation]);
       }
       // check zoomOn index 2 aka dropOffLocation
       if (!isSameLocation(dropOffLocation, zoomOn[2])) {
