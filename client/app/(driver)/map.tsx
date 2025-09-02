@@ -51,6 +51,10 @@ const Map = forwardRef<MapRef, MapProps>(
       latitude: number;
       longitude: number;
     }>({ latitude: 0, longitude: 0 });
+    // waypoints (add stops along the route) for directions
+    const [waypoints, setWaypoints] = useState<
+      { latitude: number; longitude: number }[]
+    >([pickUpLocation]);
 
     // what locations to focus on when zooming in on the map
     // in the format: [userLocation, pickUpLocation, dropOffLocation]
@@ -78,6 +82,18 @@ const Map = forwardRef<MapRef, MapProps>(
     }, []);
 
     useEffect(() => {
+      // check if we have reached the waypoint
+      // when the user reaches the waypoint, remove it from the directions
+      // so we only route to the dropoff location at that point
+      if (waypoints.length > 0) {
+        if (isSameLocation(userLocation, pickUpLocation)) {
+          console.log("Reached waypoint, clearing waypoints");
+          setWaypoints([]);
+        }
+      }
+    }, [userLocation]);
+
+    useEffect(() => {
       // when any of our locations change, check if we need to zoom on them
       // this is mainly because our user, pickup and dropoff locations set all the time (to the same values)
       // but we don't necessarily want to zoom in on those location unless they are actually different
@@ -95,6 +111,8 @@ const Map = forwardRef<MapRef, MapProps>(
           newZoomOn[2] = pickUpLocation;
           return newZoomOn;
         });
+        // update the waypoints if the pickup location changes
+        setWaypoints([pickUpLocation]);
       }
       // check zoomOn index 2 aka dropOffLocation
       if (!isSameLocation(dropOffLocation, zoomOn[2])) {
@@ -286,7 +304,7 @@ const Map = forwardRef<MapRef, MapProps>(
             dropOffLocation.latitude !== 0 && (
               <MapViewDirections
                 origin={userLocation}
-                waypoints={[pickUpLocation]}
+                waypoints={waypoints}
                 destination={dropOffLocation}
                 apikey={GOOGLE_MAPS_APIKEY}
                 strokeWidth={3}
