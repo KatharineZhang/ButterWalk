@@ -38,6 +38,7 @@ export const db = getFirestore(app);
 
 // Our tables / collections in the database
 export const usersCollection = collection(db, "Users");
+const driversCollection = collection(db, "Drivers");
 const rideRequestsCollection = collection(db, "RideRequests");
 const problematicUsersCollection = collection(db, "ProblematicUsers");
 const feedbackCollection = collection(db, "Feedback");
@@ -145,6 +146,26 @@ export async function finishCreatingUser(
     return false;
   }
 }
+
+// SIGN IN - check if the driverid exists in the database
+export async function verifyDriverId(
+  t: Transaction,
+  driverid: string
+): Promise<boolean> {
+  // check if the driverid exists in the Drivers collection
+  const queryDriver = query(
+    driversCollection,
+    where("driverid", "==", driverid)
+  );
+  const docs = await getDocs(queryDriver);
+  // if there is exactly one document with that driverid, return true
+  if (docs.size == 1) {
+    return true;
+  }
+  // otherwise, return false
+  return false;
+}
+
 
 /**
  * Adds a new ride request to the database/pool, always with the status 'REQUESTED'

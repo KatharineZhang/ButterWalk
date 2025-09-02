@@ -1,9 +1,8 @@
 import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
 import { useState, useEffect } from "react";
 import { styles } from "../../assets/styles";
-import { Redirect } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-// import { makeRedirectUri } from 'expo-auth-session';
 
 // need to 'npx expo install expo-web-browser expo-auth-session expo-crypto' ON MAC
 // or 'npm i expo-auth-session@~6.0.3' on windows
@@ -11,8 +10,8 @@ import * as Google from "expo-auth-session/providers/google";
 
 import {
   WebSocketResponse,
-  SignInResponse,
   ErrorResponse,
+  StudentSignInResponse,
 } from "../../../server/src/api";
 import WebSocketService, {
   WebsocketConnectMessage,
@@ -25,6 +24,7 @@ import logo from "@/assets/images/GoogleG.png";
 // import butterWalkLogo from "@/assets/images/butterWalkLogo.png";
 import huskyCarImage from "@/assets/images/husky-car.png";
 import { SafeAreaView } from "react-native-safe-area-context";
+//import Loading from "../oauthredirect";
 
 const webClientId = process.env.EXPO_PUBLIC_WEB_CLIENT_ID;
 const iosClientId = process.env.EXPO_PUBLIC_IOS_CLIENT_ID;
@@ -36,13 +36,11 @@ const Login = () => {
   const [accExists, setAccExists] = useState<boolean | null>(null);
   const [errMsg, setErrMsg] = useState("");
   const [netid, setNetid] = useState("");
-  // const redirectURI = makeRedirectUri();
 
   const config = {
     webClientId,
     iosClientId,
     androidClientId,
-    // redirectURI
   };
 
   // Request is needed to make google auth work without errors,
@@ -52,15 +50,20 @@ const Login = () => {
 
   const handleSigninMessage = (message: WebSocketResponse) => {
     if ("response" in message && message.response == "SIGNIN") {
-      const signinResp = message as SignInResponse;
-
+      const signinResp = message as StudentSignInResponse;
+      const router = useRouter();
       if (signinResp.alreadyExists) {
         setAccExists(true);
       } else {
         setAccExists(false); // redundant but I just want to make sure
       }
-
       setNetid(signinResp.netid);
+      if (accExists === false) {
+        // needs to create their account for the first time!
+        router.push("/(student)/finishAcc");
+      } else {
+        router.push("/(student)/home");
+      }
     } else {
       // there was a signin related error
       const errorResp = message as ErrorResponse;

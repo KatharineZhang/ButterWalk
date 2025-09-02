@@ -36,8 +36,9 @@ export type WebSocketMessage =
   | { directive: "CONNECT"; netid: string; role: "STUDENT" | "DRIVER" } // TODO: REMOVE THIS ONCE BYPASS SIGNIN IS REMOVED
   | {
       directive: "SIGNIN";
-      response: AuthSessionResult;
+      response: AuthSessionResult | null; // null if driver signing in
       role: "STUDENT" | "DRIVER";
+      netid?: string; // only needed if driver
     }
   | {
       directive: "FINISH_ACC";
@@ -149,7 +150,7 @@ export type ConnectMessage = {
 // Response types
 export type WebSocketResponse =
   | GeneralResponse
-  | SignInResponse
+  | StudentSignInResponse
   | FinishAccCreationResponse
   | SnapLocationResponse
   | RequestRideResponse
@@ -180,7 +181,7 @@ export type GeneralResponse = {
   success: true;
 };
 
-export type SignInResponse = {
+export type StudentSignInResponse = {
   response: "SIGNIN";
   success: true;
   alreadyExists: boolean;
@@ -416,6 +417,11 @@ export type User = {
   studentNumber: string | null;
   studentOrDriver: "STUDENT" | "DRIVER";
   preferredName?: string; // if the account has been finished, there will be a preferred name
+};
+
+// CREATE TABLE Drivers (driverid varchar(20) PRIMARY KEY);
+export type Driver = {
+  driverid: string;
 };
 
 // CREATE TABLE Feedback (feedbackid int PRIMARY KEY, rating float, textFeedback text,
