@@ -348,9 +348,9 @@ export default function RideRequestForm({
       );
       Alert.alert(
         "Service Unavailable",
-        `Service is not available on ${holiday?.name}`
+        `Service is not available on ${holiday?.name} (but i'll allow it this time...)`
       );
-      return;
+      // return;
     }
 
     // check if within service hours
