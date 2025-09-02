@@ -10,8 +10,8 @@ import * as Google from "expo-auth-session/providers/google";
 
 import {
   WebSocketResponse,
-  SignInResponse,
   ErrorResponse,
+  StudentSignInResponse,
 } from "../../../server/src/api";
 import WebSocketService, {
   WebsocketConnectMessage,
@@ -50,7 +50,7 @@ const Login = () => {
 
   const handleSigninMessage = (message: WebSocketResponse) => {
     if ("response" in message && message.response == "SIGNIN") {
-      const signinResp = message as SignInResponse;
+      const signinResp = message as StudentSignInResponse;
       const router = useRouter();
       if (signinResp.alreadyExists) {
         setAccExists(true);
