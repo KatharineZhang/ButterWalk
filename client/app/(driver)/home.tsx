@@ -14,7 +14,7 @@ import {
   View,
   Text,
 } from "react-native";
-import Map, { MapRef, calculateDistance, isSameLocation } from "./map";
+import Map, { MapRef, isSameLocation } from "./map";
 import { useLocalSearchParams } from "expo-router";
 import RequestAvailable from "@/components/Driver_RequestAvailable";
 import Legend from "@/components/Student_Legend";
