@@ -58,10 +58,17 @@ const Login = () => {
         setAccExists(false); // redundant but I just want to make sure
       }
       setNetid(signinResp.netid);
-      if(accExists === false) { // needs to create their account for the first time!
-        router.push("/(student)/finishAcc");
+      if (accExists === false) {
+        // needs to create their account for the first time!
+        router.push({
+          pathname: "/(student)/finishAcc",
+          params: { netid: signinResp.netid },
+        });
       } else {
-        router.push("/(student)/home");
+        router.push({
+          pathname: "/(student)/home",
+          params: { netid: signinResp.netid },
+        });
       }
     } else {
       // there was a signin related error
