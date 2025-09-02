@@ -57,7 +57,7 @@ const Map = forwardRef<MapRef, MapProps>(
     >([pickUpLocation]);
 
     // what locations to focus on when zooming in on the map
-    // in the format: [userLocation, pickUpLocation, dropOffLocation]
+    // in the format: [userLocation/startLocation, pickUpLocation, dropOffLocation]
     const [zoomOn, setZoomOn] = useState<
       { latitude: number; longitude: number }[]
     >([
@@ -102,18 +102,34 @@ const Map = forwardRef<MapRef, MapProps>(
       // when any of our locations change, check if we need to zoom on them
       // this is mainly because our user, pickup and dropoff locations set all the time (to the same values)
       // but we don't necessarily want to zoom in on those location unless they are actually different
-      if (!isSameLocation(userLocation, zoomOn[0])) {
-        setZoomOn((prevZoomOn) => {
-          const newZoomOn = [...prevZoomOn];
-          newZoomOn[0] = userLocation;
-          return newZoomOn;
-        });
+
+      // If there is a start location, then there is a ride and we don't want to zoom on each user's location change
+      // this allows the user to move the map around, and only re-center when they click the recenter button
+      // if there is no start location, then we want to zoom on the user's location changes
+      if (startLocation.latitude !== 0) {
+        // check zoomOn index 0 aka startLocation
+        if (!isSameLocation(startLocation, zoomOn[0])) {
+          setZoomOn((prevZoomOn) => {
+            const newZoomOn = [...prevZoomOn];
+            newZoomOn[0] = startLocation;
+            return newZoomOn;
+          });
+        }
+      } else {
+        // otherwise, use the user's location
+        if (!isSameLocation(userLocation, zoomOn[0])) {
+          setZoomOn((prevZoomOn) => {
+            const newZoomOn = [...prevZoomOn];
+            newZoomOn[0] = userLocation;
+            return newZoomOn;
+          });
+        }
       }
       // check zoomOn index 1 aka pickUpLocation
       if (!isSameLocation(pickUpLocation, zoomOn[1])) {
         setZoomOn((prevZoomOn) => {
           const newZoomOn = [...prevZoomOn];
-          newZoomOn[2] = pickUpLocation;
+          newZoomOn[1] = pickUpLocation;
           return newZoomOn;
         });
       }
@@ -121,7 +137,7 @@ const Map = forwardRef<MapRef, MapProps>(
       if (!isSameLocation(dropOffLocation, zoomOn[2])) {
         setZoomOn((prevZoomOn) => {
           const newZoomOn = [...prevZoomOn];
-          newZoomOn[3] = dropOffLocation;
+          newZoomOn[2] = dropOffLocation;
           return newZoomOn;
         });
       }
