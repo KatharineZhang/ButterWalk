@@ -645,6 +645,23 @@ export default function HomePage() {
     }
   }, [driverLocation, phase, whichComponent, requestInfo.requestId]);
 
+  // phase management things
+  useEffect(() => {
+    if (phase === "headingToPickup") {
+      setFlaggingAllowed(false);
+    } else if (phase === "headingToDropoff" || phase === "arrivedAtDropoff") {
+      setStudentIsLate(false);
+    }
+  }, [phase]);
+
+  // Automatically change to arrivedAtDropoff phase when near dropoff
+  // keep this in home to avoid potential repeated logic in HandleRide
+  useEffect(() => {
+    if (phase === "headingToDropoff" && isNearDropoff) {
+      setPhase("arrivedAtDropoff");
+    }
+  }, [phase, isNearDropoff, setPhase]);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       {/* map component */}

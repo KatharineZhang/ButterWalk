@@ -108,7 +108,6 @@ export default function HandleRide({
   pickupProgress,
   dropoffProgress,
   isNearPickup,
-  isNearDropoff,
   updateSideBarHeight,
 }: HandleRideProps) {
   // When timer is done in "waitingForPickup" state
@@ -116,9 +115,7 @@ export default function HandleRide({
   const [seconds, setSeconds] = useState(5 * 60); // 5 minutes
 
   useEffect(() => {
-    if (phase === "headingToPickup") {
-      changeFlaggingAllowed(false);
-    } else if (phase === "waitingForPickup") {
+    if (phase === "waitingForPickup") {
       // Reset timer when entering waitingForPickup phase, 5 min
       setSeconds(5 * 60);
       setTimerDone(false);
@@ -132,17 +129,8 @@ export default function HandleRide({
         });
       }, 1000);
       return () => clearInterval(interval);
-    } else if (phase === "headingToDropoff" || phase === "arrivedAtDropoff") {
-      setStudentIsLate(false);
     }
   }, [phase]);
-
-  // Automatically change to arrivedAtDropoff phase when near dropoff
-  useEffect(() => {
-    if (phase === "headingToDropoff" && isNearDropoff) {
-      setPhase("arrivedAtDropoff");
-    }
-  }, [phase, isNearDropoff, setPhase]);
 
   useEffect(() => {
     if (seconds == 60) {
