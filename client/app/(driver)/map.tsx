@@ -52,6 +52,10 @@ const Map = forwardRef<MapRef, MapProps>(
       latitude: number;
       longitude: number;
     }>({ latitude: 0, longitude: 0 });
+    // the waypoints for the route, currently only the pickup location
+    const [waypoints, setWaypoints] = useState<
+      { latitude: number; longitude: number }[]
+    >([pickUpLocation]);
 
     // what locations to focus on when zooming in on the map
     // in the format: [userLocation, pickUpLocation, dropOffLocation]
@@ -85,6 +89,23 @@ const Map = forwardRef<MapRef, MapProps>(
       }, 1000);
       return () => clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+      // when the pickup location changes, update the waypoints
+      setWaypoints([pickUpLocation]);
+    }, [pickUpLocation]);
+
+    useEffect(() => {
+      // check if we have reached the waypoint
+      // when the user reaches the waypoint, remove it from the directions
+      // so we only route to the dropoff location at that point
+      if (waypoints.length > 0) {
+        if (isSameLocation(userLocation, pickUpLocation)) {
+          console.log("Reached waypoint, clearing waypoints");
+          setWaypoints([]);
+        }
+      }
+    }, [userLocation]);
 
     // Track the current index for each route
     let pickupIndexRef = 0;
@@ -135,10 +156,12 @@ const Map = forwardRef<MapRef, MapProps>(
         // when waiting for request, be at the default location
         console.log("Waiting for pickup, setting user location to default");
         setUserLocation({
-          latitude: 47.65718628834192, longitude: -122.3100908847018
+          latitude: 47.65718628834192,
+          longitude: -122.3100908847018,
         });
         userLocationChanged({
-          latitude: 47.65718628834192, longitude: -122.3100908847018
+          latitude: 47.65718628834192,
+          longitude: -122.3100908847018,
         });
         clearInterval(currStateInterval);
         pickupIndexRef = 0; // reset index
@@ -183,7 +206,6 @@ const Map = forwardRef<MapRef, MapProps>(
         pickupIndexRef = 0; // reset index
         dropoffIndexRef = 0; // reset index
       }
-
     }, [currState]);
 
     useEffect(() => {
@@ -203,18 +225,18 @@ const Map = forwardRef<MapRef, MapProps>(
       } else {
         // otherwise, use the user's location
         if (!isSameLocation(userLocation, zoomOn[0])) {
-        setZoomOn((prevZoomOn) => {
-          const newZoomOn = [...prevZoomOn];
-          newZoomOn[0] = userLocation;
-          return newZoomOn;
-        });
-      }
+          setZoomOn((prevZoomOn) => {
+            const newZoomOn = [...prevZoomOn];
+            newZoomOn[0] = userLocation;
+            return newZoomOn;
+          });
+        }
       }
       // check zoomOn index 1 aka pickUpLocation
       if (!isSameLocation(pickUpLocation, zoomOn[1])) {
         setZoomOn((prevZoomOn) => {
           const newZoomOn = [...prevZoomOn];
-          newZoomOn[2] = pickUpLocation;
+          newZoomOn[1] = pickUpLocation;
           return newZoomOn;
         });
       }
@@ -222,7 +244,7 @@ const Map = forwardRef<MapRef, MapProps>(
       if (!isSameLocation(dropOffLocation, zoomOn[2])) {
         setZoomOn((prevZoomOn) => {
           const newZoomOn = [...prevZoomOn];
-          newZoomOn[3] = dropOffLocation;
+          newZoomOn[2] = dropOffLocation;
           return newZoomOn;
         });
       }
@@ -371,12 +393,12 @@ const Map = forwardRef<MapRef, MapProps>(
           {/* show the directions between the pickup and dropoff locations if they are valid
         if the ride is not currently happening / happened  */}
           {userLocation.latitude !== 0 &&
-          startLocation.latitude !== 0 &&
+            startLocation.latitude !== 0 &&
             pickUpLocation.latitude !== 0 &&
             dropOffLocation.latitude !== 0 && (
               <MapViewDirections
-                origin={startLocation}
-                waypoints={[pickUpLocation]}
+                origin={userLocation}
+                waypoints={waypoints}
                 destination={dropOffLocation}
                 apikey={GOOGLE_MAPS_APIKEY}
                 strokeWidth={3}
