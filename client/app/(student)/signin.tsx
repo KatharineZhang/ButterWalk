@@ -1,4 +1,4 @@
-import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
+import { View, Text, TouchableOpacity, Image } from "react-native";
 import { useState, useEffect } from "react";
 import { styles } from "../../assets/styles";
 import { Redirect, useRouter } from "expo-router";
@@ -71,7 +71,13 @@ const Login = () => {
       setErrMsg(errorResp.error);
     }
   };
-  WebSocketService.addListener(handleSigninMessage, "SIGNIN");
+  
+  useEffect(() => {
+    WebSocketService.addListener(handleSigninMessage, "SIGNIN");
+    return () => {
+      WebSocketService.removeListener(handleSigninMessage, "SIGNIN");
+    };
+  }, []);
 
   useEffect(() => {
     const connectWebSocket = async () => {
@@ -160,19 +166,6 @@ const Login = () => {
             </Text>
           </TouchableOpacity>
           <Text style={{ color: "red", marginTop: 10 }}>{errMsg}</Text>
-        </View>
-
-        {/* TEMPORARY Bypass Button */}
-        <View style={{ paddingBottom: 20 }}>
-          <Pressable
-            style={styles.signInButton}
-            onPress={() => {
-              setAccExists(false);
-              setNetid("snigsm");
-            }}
-          >
-            <Text style={styles.signInText}>Bypass Signin</Text>
-          </Pressable>
         </View>
       </View>
     </SafeAreaView>

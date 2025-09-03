@@ -57,12 +57,6 @@ const finishAcc = () => {
     setStudentNum(studentNumTemp);
     setPreferredName(preferredNameTemp);
 
-    const msg = await WebSocketService.connect();
-    if (msg == "Failed to Connect") {
-      // failed to connect!!
-      console.log("FAILED TO CONNECT TO WS IN FINISHACC");
-    }
-
     // 1. send this to the DB via websocket
     WebSocketService.send({
       directive: "FINISH_ACC",
@@ -150,20 +144,6 @@ const finishAcc = () => {
       </View>
       <Pressable style={styles.button_finishAcc} onPress={setValues}>
         <Text style={styles.button_text}>Sign Up</Text>
-      </Pressable>
-      <Pressable
-        style={[styles.button, { position: "absolute", bottom: "5%" }]}
-        onPress={() => {
-          // temporary connection to websocket since we aren't going through the sign in process
-          WebSocketService.send({
-            directive: "CONNECT",
-            netid: netid as string,
-            role: "STUDENT",
-          });
-          setAccFinished(true);
-        }}
-      >
-        <Text style={styles.text}>Bypass Signin</Text>
       </Pressable>
     </View>
   );
