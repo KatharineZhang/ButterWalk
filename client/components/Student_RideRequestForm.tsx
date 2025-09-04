@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   Alert,
+  FlatList,
+  Dimensions,
 } from "react-native";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
@@ -99,6 +101,10 @@ export default function RideRequestForm({
   const [whichPanel, setWhichPanel] = useState<
     "RideReq" | "NumberRiders" | "LocationSuggestions"
   >("RideReq");
+
+  // height of the campus location list in the Ride Request form (25% of screen height)
+  const screenHeight = Dimensions.get("window").height;
+  const suggestionListHeight = screenHeight * 0.25;
 
   // Bottom Sheet Reference needed to expand the bottom sheet
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -634,6 +640,46 @@ export default function RideRequestForm({
     bottomSheetRef.current?.expand();
   };
 
+  const shouldShowRecent =
+    campusAPIResults.length === 0 && placeSearchResults.length === 0;
+
+  type FormattedResult = {
+    key: string;
+    name: string;
+    address: string | null;
+    type: "recent" | "campus" | "place";
+  };
+
+  const formattedResults: FormattedResult[] = shouldShowRecent
+    ? recentLocations.map((item) => ({
+        key: item.name, // unique key
+        name: item.name,
+        address: item.address,
+        type: "recent" as const,
+      }))
+    : [
+        ...campusAPIResults.map((item, index) => ({
+          key: `campus-${index}`,
+          name: item,
+          address: null,
+          type: "campus" as const,
+        })),
+        ...placeSearchResults
+          .filter((item) => item?.name && !campusAPIResults.includes(item.name))
+          .map((item, index) => ({
+            key: `place-${index}`,
+            name: item.name,
+            address: item.address,
+            type: "place" as const,
+          })),
+      ];
+
+    const filteredResults = formattedResults.filter(
+  (item) => item.name !== chosenPickup && item.name !== chosenDropoff
+);
+  // use the filtered results for rendering
+  console.log("number of formatted results: ", filteredResults.length);
+
   /* PANEL UI */
   // the ride request panel
   const RideRequest: JSX.Element = (
@@ -678,110 +724,147 @@ export default function RideRequestForm({
             <View style={{ height: 20 }} />
             <SegmentedProgressBar type={1} />
             <View style={{ height: 20 }} />
-
-            {/* Location and Destination Icons */}
-            <View
+          </View>
+          {/* Location and Destination Icons */}
+          <View
+            style={{
+              borderRadius: 13,
+              backgroundColor: "#4B2E83",
+              position: "absolute",
+              zIndex: 3,
+              top: 110,
+              left: 13,
+              height: 15,
+              width: 15,
+            }}
+          />
+          <Image
+            source={require("@/assets/images/dashed-line.png")}
+            style={{
+              zIndex: 3,
+              position: "absolute",
+              top: 132,
+              left: 19,
+              width: 2,
+              height: 40,
+            }}
+          />
+          <Image
+            source={require("@/assets/images/dropoff-location.png")}
+            style={{
+              position: "absolute",
+              zIndex: 3,
+              top: 177,
+              left: 10,
+              height: 20,
+              width: 20,
+            }}
+          />
+          {/* Location and Destination Inputs */}
+          <AutocompleteInput
+            onPress={() => {
+              setCurrentQuery("pickup");
+              expand();
+            }}
+            query={pickUpQuery}
+            setQuery={setPickUpQuery}
+            enterPressed={enterPressed}
+            placeholder="Pick Up Location"
+            data={campusAPIResults}
+          />
+          <AutocompleteInput
+            onPress={() => {
+              setCurrentQuery("dropoff");
+              expand();
+            }}
+            query={dropOffQuery}
+            setQuery={setDropOffQuery}
+            enterPressed={enterPressed}
+            placeholder="Drop Off Location"
+            data={campusAPIResults}
+          />
+          {/* Next Button */}
+          <View
+            style={{
+              flex: 0.1,
+              justifyContent: "flex-end",
+            }}
+          >
+            <TouchableOpacity
               style={{
-                borderRadius: 13,
-                backgroundColor: "#4B2E83",
-                position: "absolute",
-                zIndex: 3,
-                top: 110,
-                left: 13,
-                height: 15,
-                width: 15,
-              }}
-            />
-            <Image
-              source={require("@/assets/images/dashed-line.png")}
-              style={{
-                zIndex: 3,
-                position: "absolute",
-                top: 132,
-                left: 19,
-                width: 2,
-                height: 40,
-              }}
-            />
-            <Image
-              source={require("@/assets/images/dropoff-location.png")}
-              style={{
-                position: "absolute",
-                zIndex: 3,
-                top: 177,
-                left: 10,
-                height: 20,
-                width: 20,
-              }}
-            />
-            <View
-              style={{
-                zIndex: 2,
-              }}
-            >
-              {/* Location and Destination Inputs */}
-              <AutocompleteInput
-                onPress={() => {
-                  setCurrentQuery("pickup");
-                  expand();
-                }}
-                query={pickUpQuery}
-                setQuery={setPickUpQuery}
-                enterPressed={enterPressed}
-                placeholder="Pick Up Location"
-                data={campusAPIResults}
-              />
-              <AutocompleteInput
-                onPress={() => {
-                  setCurrentQuery("dropoff");
-                  expand();
-                }}
-                query={dropOffQuery}
-                setQuery={setDropOffQuery}
-                enterPressed={enterPressed}
-                placeholder="Drop Off Location"
-                data={campusAPIResults}
-              />
-            </View>
-            {/* Next Button */}
-            <View
-              style={{
-                flex: 0.1,
+                flexDirection: "row",
+                alignItems: "center",
+                marginVertical: 10,
                 justifyContent: "flex-end",
               }}
+              onPress={goToNumberRiders}
             >
-              <TouchableOpacity
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginVertical: 10,
-                  justifyContent: "flex-end",
-                }}
-                onPress={goToNumberRiders}
-              >
-                <Text style={{ fontStyle: "italic" }}>
-                  Choose # of passengers
-                </Text>
-                <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
-              </TouchableOpacity>
-            </View>
+              <Text style={{ fontStyle: "italic" }}>
+                Choose # of passengers
+              </Text>
+              <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
+            </TouchableOpacity>
           </View>
         </View>
         {/* Autocomplete Suggestions */}
 
-        <View style={{ flex: 1 }}>
-          <ScrollView style={{ flex: 1 }}>
-            {/* Add the Current Location to the Top of the results*/}
-            {currentQuery == "pickup" && (
+        <View style={{ flex: 1, height: suggestionListHeight }}>
+          <FlatList
+            data={filteredResults}
+            keyExtractor={(item) => item.key}
+            ListHeaderComponent={
+              currentQuery === "pickup" ? (
+                <TouchableOpacity
+                  onPress={() => handleSelection("Current Location")}
+                  key="current-location"
+                  style={{
+                    padding: 16,
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#ccc",
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <View
+                    style={{
+                      borderRadius: 50,
+                      backgroundColor: "#EEEEEE",
+                      width: 35,
+                      height: 35,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <FontAwesome6
+                      name="location-crosshairs"
+                      size={18}
+                      color="black"
+                    />
+                  </View>
+                  <View style={{ width: 10 }} />
+                  <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+                    Current Location
+                  </Text>
+                </TouchableOpacity>
+              ) : null
+            }
+            renderItem={({
+              item,
+            }: {
+              item: {
+                key: string;
+                name: string;
+                address: string | null;
+                type: "recent" | "campus" | "place";
+              };
+            }) => (
               <TouchableOpacity
-                onPress={() => handleSelection("Current Location")}
-                key={"Current Location"}
+                onPress={() => handleSelection(item.name)}
                 style={{
                   padding: 16,
                   borderBottomWidth: 1,
                   borderBottomColor: "#ccc",
                   flexDirection: "row",
-                  justifyContent: "flex-start",
                   alignItems: "center",
                 }}
               >
@@ -795,169 +878,68 @@ export default function RideRequestForm({
                     justifyContent: "center",
                   }}
                 >
-                  <FontAwesome6
-                    name="location-crosshairs"
-                    size={18}
-                    color="black"
-                  />
-                </View>
-                <View style={{ width: 10 }} />
-                <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                  Current Location
-                </Text>
-              </TouchableOpacity>
-            )}
-            {/* Then render any campus API results*/}
-            {campusAPIResults.map((item) => (
-              <TouchableOpacity
-                onPress={() => handleSelection(item)}
-                key={item}
-                style={{
-                  padding: 16,
-                  borderBottomWidth: 1,
-                  borderBottomColor: "#ccc",
-                  flexDirection: "row",
-                  justifyContent: "flex-start",
-                  alignItems: "center",
-                }}
-              >
-                <View
-                  style={{
-                    borderRadius: 50,
-                    backgroundColor: "#EEEEEE",
-                    width: 35,
-                    height: 35,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <FontAwesome6
-                    name="building-columns"
-                    size={18}
-                    color="black"
-                  />
+                  {item.type === "campus" && (
+                    <FontAwesome6
+                      name="building-columns"
+                      size={18}
+                      color="black"
+                    />
+                  )}
+                  {item.type === "place" && (
+                    <FontAwesome6 name="location-dot" size={18} color="black" />
+                  )}
+                  {item.type === "recent" && (
+                    <Ionicons name="receipt" size={18} color="black" />
+                  )}
                 </View>
                 <View style={{ width: 10 }} />
                 <View style={{ maxWidth: "80%" }}>
-                  <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                    {item}
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: "bold",
+                      marginBottom: item.address ? 5 : 0,
+                    }}
+                  >
+                    {item.name}
                   </Text>
+                  {item.address && (
+                    <Text style={{ fontSize: 14 }}>{item.address}</Text>
+                  )}
                 </View>
               </TouchableOpacity>
-            ))}
-            {/* Then show the place search results */}
-            {placeSearchResults
-              .filter((item) => !campusAPIResults.includes(item.name))
-              .map((item) => (
-                <TouchableOpacity
-                  onPress={() => handleSelection(item.name)}
-                  key={item.name}
-                  style={{
-                    padding: 16,
-                    borderBottomWidth: 1,
-                    borderBottomColor: "#ccc",
-                    flexDirection: "row",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                  }}
-                >
-                  <View
-                    style={{
-                      borderRadius: 50,
-                      backgroundColor: "#EEEEEE",
-                      width: 35,
-                      height: 35,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <FontAwesome6 name="location-dot" size={18} color="black" />
-                  </View>
-                  <View style={{ width: 10 }} />
-                  <View style={{ maxWidth: "80%" }}>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontWeight: "bold",
-                        marginBottom: 5,
-                      }}
-                    >
-                      {item.name}
-                    </Text>
-                    <Text style={{ fontSize: 14 }}>{item.address}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            {/* If there are no campuse or place search results or the user hasn't typed anything yet,
-            show the recent locations results*/}
-            {placeSearchResults.length == 0 &&
-              campusAPIResults.length == 0 &&
-              recentLocations.map((item) => (
-                <TouchableOpacity
-                  onPress={() => handleSelection(item.name)}
-                  key={item.name}
-                  style={{
-                    padding: 16,
-                    borderBottomWidth: 1,
-                    borderBottomColor: "#ccc",
-                    flexDirection: "row",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                  }}
-                >
-                  <View
-                    style={{
-                      borderRadius: 50,
-                      backgroundColor: "#EEEEEE",
-                      width: 35,
-                      height: 35,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Ionicons name="receipt" size={18} color="black" />
-                  </View>
-                  <View style={{ width: 10 }} />
-                  <View style={{ maxWidth: "80%" }}>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontWeight: "bold",
-                        marginBottom: 5,
-                      }}
-                    >
-                      {item.name}
-                    </Text>
-                    <Text style={{ fontSize: 14 }}>{item.address}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-          </ScrollView>
+            )}
+            ListEmptyComponent={
+              <Text style={{ padding: 20, textAlign: "center", color: "#666" }}>
+                No suggestions found.
+              </Text>
+            }
+          />
         </View>
+        {/* Confirmation Modal */}
+        <PopUpModal
+          type="half"
+          isVisible={confirmationModalVisible}
+          onClose={() => {
+            setConfirmationModalVisible(false);
+            darkenScreen(false);
+          }}
+          content={
+            <View style={{ padding: 20 }}>
+              <Text style={styles.formHeader}>Confirm Pickup Location</Text>
+              <Text style={styles.description}>
+                Setting your pickup location to: {closestBuilding}
+              </Text>
+              <Pressable
+                onPress={confirmPickUpLocation}
+                style={styles.sendButton}
+              >
+                <Text style={styles.buttonLabel}>Confirm</Text>
+              </Pressable>
+            </View>
+          }
+        />
       </BottomDrawer>
-      {/* Confirmation Modal */}
-      <PopUpModal
-        type="half"
-        isVisible={confirmationModalVisible}
-        onClose={() => {
-          setConfirmationModalVisible(false);
-          darkenScreen(false);
-        }}
-        content={
-          <View style={{ padding: 20 }}>
-            <Text style={styles.formHeader}>Confirm Pickup Location</Text>
-            <Text style={styles.description}>
-              Setting your pickup location to: {closestBuilding}
-            </Text>
-            <Pressable
-              onPress={confirmPickUpLocation}
-              style={styles.sendButton}
-            >
-              <Text style={styles.buttonLabel}>Confirm</Text>
-            </Pressable>
-          </View>
-        }
-      />
     </View>
   );
 
