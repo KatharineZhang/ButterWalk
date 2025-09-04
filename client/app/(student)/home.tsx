@@ -441,7 +441,7 @@ export default function HomePage() {
         resetAllFields();
         // go back to ride request component
         setWhichComponent("rideReq");
-
+        console.log("the component is now: " + whichComponent);
         // set the notif state based on the reason for cancelation
         switch (cancelReason.current) {
           case "none":

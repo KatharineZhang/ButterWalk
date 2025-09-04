@@ -354,13 +354,13 @@ export default function RideRequestForm({
     }
 
     // check if within service hours
-    if (!TimeService.inServicableTime()) {
-      Alert.alert(
-        "Service Unavailable",
-        "Service is only available between 6:30 PM and 2:00 AM"
-      );
-      return;
-    }
+    // if (!TimeService.inServicableTime()) {
+    //   Alert.alert(
+    //     "Service Unavailable",
+    //     "Service is only available between 6:30 PM and 2:00 AM"s
+    //   );
+    //   return;
+    // }
 
     // Both location should be in the purple zone
     // check that at least one location is on campus
@@ -530,6 +530,7 @@ export default function RideRequestForm({
   /* USE EFFECTS */
   // upon first render, set up the state
   useEffect(() => {
+    console.log("RideRequestForm rendered");
     // add the listener for the distance response
     WebSocketService.addListener(handleDistanceTopThree, "DISTANCE");
     // listen for the snap location response
@@ -564,6 +565,8 @@ export default function RideRequestForm({
       (currentQuery == "pickup" && pickUpQuery == "") ||
       (currentQuery == "dropoff" && dropOffQuery == "")
     ) {
+      console.log("pickupquery: ", pickUpQuery);
+      console.log("dropoffquery: ", dropOffQuery);
       setCampusAPIResults([]);
       setPlaceSearchResults([]);
       return;
