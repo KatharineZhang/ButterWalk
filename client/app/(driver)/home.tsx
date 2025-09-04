@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   ErrorResponse,
+  // LocationResponse,
   RideRequest,
   RidesExistResponse,
   ViewRideRequestResponse,
@@ -66,25 +67,39 @@ export default function HomePage() {
   }, [seconds]);
 
   // set the initial component based on the current time
+  const checkIfTime = () => {
+    console.log("checking shift time");
+    if (TimeService.inServicableTime()) {
+      // in shift
+      setWhichComponent("noRequests");
+      seeIfRidesExist();
+    } else {
+      // off shift
+      setWhichComponent("noRequests");
+      // setWhichComponent("endShift");
+    }
+  };
+
+  // check if the user should be logged out based on the current time
   useEffect(() => {
-    // check if the user should be logged out based on the current time
     const interval = setInterval(() => {
       // check current time and compare with the shift hours
-      if (TimeService.inServicableTime()) {
-        // in shift
-        setWhichComponent("noRequests");
-      } else {
-        // always on shift
-        setWhichComponent("noRequests");
-
-        // setWhichComponent("endShift");
+      if (interval != 0) {
+        checkIfTime();
       }
     }, 1000 * 1800); // check every half hour
     return () => {
-      // clear the interval when the component unmounts
+      // clear the interval when the component unmounts aka you leave home.tsx
       clearInterval(interval);
     };
   }, []);
+
+  // Set start location when ride is accepted
+  useEffect(() => {
+    if (whichComponent == "handleRide") {
+      setStartLocation(driverLocation);
+    }
+  }, [whichComponent]);
 
   /* MAP STATE */
   const [driverLocation, setDriverLocation] = useState<{
@@ -104,8 +119,31 @@ export default function HomePage() {
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
 
+  // The student's location
+  // const [studentLocation] = useState<{
+  //   latitude: number;
+  //   longitude: number;
+  // }>({latitude: 47.65718628834192, longitude: -122.3100908847018 });
+
   // retain a reference to the map to call functions on it later
   const mapRef = useRef<MapRef>(null);
+
+  // function to be called when the user's location changes
+  // const userLocationChanged = (location: {
+  //   latitude: number;
+  //   longitude: number;
+  // }) => {
+  //   setDriverLocation(location);
+  //   // send the location to the student once the ride is accepted
+  //   if (whichComponent === "handleRide" && requestInfo.netid) {
+  //     WebSocketService.send({
+  //       directive: "LOCATION",
+  //       id: netid,
+  //       latitude: location.latitude,
+  //       longitude: location.longitude,
+  //     });
+  //   }
+  // };
 
   /* PROFILE STATE */
   const { netid } = useLocalSearchParams<{ netid: string }>();
@@ -147,9 +185,7 @@ export default function HomePage() {
   /* WAITING FOR REQUEST STATE */
   const seeIfRidesExist = () => {
     // call the websocket call to see if rides exist
-    WebSocketService.send({
-      directive: "RIDES_EXIST",
-    });
+    // do nothing
   };
 
   /* INCOMING RIDE REQUEST STATE */
@@ -160,6 +196,7 @@ export default function HomePage() {
   const [requestInfo, setRequestInfo] = useState<RideRequest>(
     {} as RideRequest
   );
+  const [showAcceptScreen, setShowAcceptScreen] = useState(true);
 
   const onAccept = () => {
     // when the driver clicks "Accept"
@@ -238,8 +275,9 @@ export default function HomePage() {
   // from the pickup location to the dropoff location
   const [dropoffProgress, setDropoffProgress] = useState(0);
 
-  // Total distance of the route (from startLocation to dropOffLocation)
-  const [totalDistance, setTotalDistance] = useState(0);
+  // Total distances for progress calculation
+  const [totalPickupDistance, setTotalPickupDistance] = useState(0);
+  const [totalDropoffDistance, setTotalDropoffDistance] = useState(0);
 
   // The driver's location when they started the ride
   const [startLocation, setStartLocation] = useState<{
@@ -334,7 +372,8 @@ export default function HomePage() {
     // Reset progress tracking states
     setPickupProgress(0);
     setDropoffProgress(0);
-    setTotalDistance(0);
+    setTotalPickupDistance(0);
+    setTotalDropoffDistance(0);
     setStartLocation({ latitude: 0, longitude: 0 });
     setIsNearPickup(false);
     setIsNearDropoff(false);
@@ -345,16 +384,17 @@ export default function HomePage() {
   /* WEBSOCKET Listeners */
   // WEBSOCKET - CANCEL
   const cancelRideListener = (message: WebSocketResponse) => {
-    // recived a message that ride is cancelled
+    // recived a message that ride is canceled
     if ("response" in message && message.response === "CANCEL") {
       // if successful, set the current component to "noRequests"
       resetAllFields();
       setWhichComponent("noRequests");
       setNotifState({
-        text: "Ride cancelled successfully",
-        color: "#C9FED0",
-        boldText: "cancelled",
+        text: "Your ride was canceled",
+        color: "#FFCBCB",
+        boldText: "canceled",
       });
+      setStudentIsLate(false);
     } else {
       // if not successful, log the error
       const errMessage = message as ErrorResponse;
@@ -396,7 +436,10 @@ export default function HomePage() {
           // if false, set the component to "noRequests"
           setWhichComponent("noRequests");
         }
-      } // if the driver is not waiting for a request, do nothing
+      } else {
+        // if the driver is not waiting for a request, do nothing
+        console.log("We got a RIDES_EXIST message, but we don't care.");
+      }
     } else {
       // there was an error in the message!
       const errMessage = message as ErrorResponse;
@@ -406,8 +449,11 @@ export default function HomePage() {
 
   // WEBSOCKET - VIEW_RIDE
   const viewRideListener = (message: WebSocketResponse) => {
-    if ("response" in message && message.response === "VIEW_RIDE") {
+    if ("response" in message && message.response == "VIEW_RIDE") {
       const viewReqResponse = message as ViewRideRequestResponse;
+      console.log("Successfully viewed ride request: ", viewReqResponse);
+      console.log("is ride request info: ", viewReqResponse.rideInfo);
+
       if (viewReqResponse.rideInfo) {
         // if the ride request info exists, then the view was successful
         // set the requestInfo state to the ride request info
@@ -429,6 +475,8 @@ export default function HomePage() {
         setPickupToDropoffDuration(
           viewReqResponse.rideInfo.pickUpToDropOffDuration
         );
+        // Switch to the Let's Go page here not in Driver_RequestAvailable
+        setShowAcceptScreen(false);
       } else {
         // if the ride request info does not exist, then the view was not successful
         // if not successful, show a notification and set currentComponent to "noRequests"
@@ -441,7 +489,11 @@ export default function HomePage() {
       }
     } else {
       const errMessage = message as ErrorResponse;
-      console.log("Failed to view ride request: ", errMessage.error);
+      setNotifState({
+        text: "Failed to view ride request: " + errMessage.error,
+        color: "#FFCBCB",
+      });
+      setWhichComponent("noRequests"); // go to no requests page
     }
   };
 
@@ -455,6 +507,7 @@ export default function HomePage() {
         color: "#C9FED0",
         boldText: "accepted",
       });
+      setStartLocation(driverLocation);
       setWhichComponent("handleRide");
       setPhase("headingToPickup"); // set the phase to heading to pickup
     } else {
@@ -508,6 +561,7 @@ export default function HomePage() {
           color: "#C9FED0",
           boldText: "flagged",
         });
+        setStudentIsLate(false); // get rid of the student is late message
       } else {
         // if not successful, show a notification that the student could not be flagged
         setNotifState({
@@ -538,6 +592,29 @@ export default function HomePage() {
       );
     }
   };
+
+  // WEBSOCKET - LOCATION
+  // not needed rn
+  // const locationListener = (message: WebSocketResponse) => {
+  //   // logic for when a location update is received
+  //   if ("response" in message && message.response === "LOCATION") {
+  //     // store the student's location if the driver is waiting for the pickup
+  //     // otherwise, hide the student's location
+  //     const locationMessage = message as LocationResponse;
+  //     if (whichComponent == "handleRide" && phase == "waitingForPickup") {
+  //       setStudentLocation({
+  //         latitude: locationMessage.latitude,
+  //         longitude: locationMessage.longitude,
+  //       });
+  //     } else {
+  //       // if the driver is not waiting of the pickup, hide the student location
+  //       setStartLocation({ latitude: 0, longitude: 0 });
+  //     }
+  //   } else {
+  //     const errMessage = message as ErrorResponse;
+  //     console.log("Failed to send location: ", errMessage.error);
+  //   }
+  // };
 
   /* PROGRESS TRACKING EFFECTS */
   // Track progress when driver location changes and is handling a ride
@@ -592,27 +669,52 @@ export default function HomePage() {
   }, [driverLocation, phase, whichComponent, requestInfo.requestId]);
 
   // Calculate progress based on total distance and remaining distance for non-linear tracking
-  const calculateProgress = () => {
-    const remainingDistance = mapRef.current?.distance || 0;
+  const calculateProgress = (): number => {
+    if (phase === "headingToPickup") {
+      const remainingDistance = mapRef.current?.pickupDistance || 0;
+      // if map renders for first time, set totalDistance
+      if (totalPickupDistance === 0 && remainingDistance > 0) {
+        setTotalPickupDistance(remainingDistance);
+        // return 0 progress since ride should not have started yet
+        return 0;
+      }
 
-    // if map renders for first time, set totalDistance
-    if (totalDistance === 0 && remainingDistance > 0) {
-      setTotalDistance(remainingDistance);
-      // return 0 progress since ride should not have started yet
+      // Only calculate progress if we have both total and remaining distance
+      if (totalPickupDistance > 0 && remainingDistance > 0) {
+        // Progress = (Total Distance - Remaining Distance) / Total Distance
+        const progress = Math.max(
+          0,
+          Math.min(
+            1,
+            (totalPickupDistance - remainingDistance) / totalPickupDistance
+          )
+        );
+        return progress;
+      }
+
+      // set to 0 if no valid distances
       return 0;
+    } else if (phase === "headingToDropoff") {
+      const remainingDistance = mapRef.current?.dropoffDistance || 0;
+      // if map renders for first time, set totalDistance
+      if (totalDropoffDistance === 0 && remainingDistance > 0) {
+        setTotalDropoffDistance(remainingDistance);
+        // return 0 progress since ride should not have started yet
+        return 0;
+      }
+      // Only calculate progress if we have both total and remaining distance
+      if (totalDropoffDistance > 0 && remainingDistance > 0) {
+        // Progress = (Total Distance - Remaining Distance) / Total Distance
+        const progress = Math.max(
+          0,
+          Math.min(
+            1,
+            (totalDropoffDistance - remainingDistance) / totalDropoffDistance
+          )
+        );
+        return progress;
+      }
     }
-
-    // Only calculate progress if we have both total and remaining distance
-    if (totalDistance > 0 && remainingDistance > 0) {
-      // Progress = (Total Distance - Remaining Distance) / Total Distance
-      const progress = Math.max(
-        0,
-        Math.min(1, (totalDistance - remainingDistance) / totalDistance)
-      );
-      return progress;
-    }
-
-    // set to 0 if no valid distances
     return 0;
   };
 
@@ -631,6 +733,7 @@ export default function HomePage() {
       <Map
         ref={mapRef}
         startLocation={startLocation}
+        studentLocation={{ latitude: 0, longitude: 0 }}
         pickUpLocation={pickUpLocation}
         dropOffLocation={dropOffLocation}
         userLocationChanged={(location) => setDriverLocation(location)}
@@ -791,7 +894,7 @@ export default function HomePage() {
         </Pressable>
 
         {/* Side map legend */}
-        <Legend />
+        <Legend role={"DRIVER"}></Legend>
       </View>
 
       {/* Decide which component to render */}
@@ -806,6 +909,7 @@ export default function HomePage() {
         <View style={styles.homePageComponentContainer}>
           <RequestAvailable
             requestInfo={requestInfo}
+            showAcceptScreen={showAcceptScreen}
             updateSideBarHeight={setCurrentComponentHeight}
             driverToPickupDuration={driverToPickupDuration}
             pickupToDropoffDuration={pickupToDropoffDuration}
@@ -837,10 +941,7 @@ export default function HomePage() {
         </View>
       ) : whichComponent === "endShift" ? (
         <View style={styles.homePageComponentContainer}>
-          <ShiftIsOver
-            updateSideBarHeight={setCurrentComponentHeight}
-            changeNotifState={setNotifState}
-          />
+          <ShiftIsOver updateSideBarHeight={setCurrentComponentHeight} />
         </View>
       ) : null}
     </GestureHandlerRootView>

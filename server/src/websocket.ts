@@ -19,13 +19,12 @@ import {
   ridesExist,
   viewRide,
   handleDriverViewChoice,
-  fetchRecentLocations,
   driverArrived,
   getPlaceSearchResults,
   driverDrivingToDropoff,
+  checkIfDriverSignin,
 } from "./routes";
 import {
-  CancelResponse,
   CompleteResponse,
   WebSocketMessage,
   WebSocketResponse,
@@ -37,6 +36,7 @@ import {
   RequestRideResponse,
   RidesExistResponse,
   ViewRideRequestResponse,
+  WrapperCancelResponse,
 } from "./api";
 import { Timestamp } from "firebase/firestore";
 
@@ -88,13 +88,17 @@ export const handleWebSocketMessage = async (
 
     case "SIGNIN": {
       if (input.response == null) {
-        // early fail if the token is null
-        resp = {
-          response: "ERROR",
-          error: "The passed in response token is null",
-          category: "SIGNIN",
-        } as ErrorResponse;
+        // we do not have an auth token to process
+        // check if this was sent from a driver
+        resp = await checkIfDriverSignin(input.role, input.netid);
+        if (input.netid && resp.response == "SIGNIN" && resp.success) {
+          // if there was a driverid passed in (to make typescript happy)
+          // and verification was successful
+          // connect the websocket to this driver
+          connectWebsocketToNetid(ws, input.netid, "DRIVER");
+        }
       } else {
+        // the student is signing in with google auth
         // call google auth method
         const authResp: GoogleResponse = await googleAuth(input.response);
         if ("userInfo" in authResp) {
@@ -195,7 +199,8 @@ export const handleWebSocketMessage = async (
         // if we want to notify drivers
         if (viewResp.notifyDrivers) {
           // tell the drivers that there are no more rides
-          notifyDrivers(false);
+          // but don't notify this accepting driver
+          notifyDrivers(false, input.driverid);
         }
       }
       sendWebSocketMessage(ws, res);
@@ -268,7 +273,7 @@ export const handleWebSocketMessage = async (
       resp = await cancelRide(input.netid, input.role);
       if ("info" in resp) {
         // if there is info, we know it is a CancelResponse
-        const cancelResponse = resp as CancelResponse;
+        const cancelResponse = resp as WrapperCancelResponse;
         // send response back to client (usually the student)
         sendWebSocketMessage(ws, cancelResponse.info);
         if (cancelResponse.otherNetid) {
@@ -369,11 +374,6 @@ export const handleWebSocketMessage = async (
       // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
       break;
-    case "RECENT_LOCATIONS":
-      resp = await fetchRecentLocations(input.netid);
-      // send response back to client (the student)
-      sendWebSocketMessage(ws, resp);
-      break;
 
     case "PLACE_SEARCH":
       resp = await getPlaceSearchResults(input.query);
@@ -382,7 +382,7 @@ export const handleWebSocketMessage = async (
       break;
 
     default:
-      console.log(`WEBSOCKET: Unknown directive: ${input}`);
+      console.log(`WEBSOCKET: Unknown directive: ${JSON.stringify(input)}`);
       break;
   }
 };
@@ -429,8 +429,12 @@ export const connectWebsocketToNetid = (
  * Sends a `RIDES_EXIST` response message to each driver, indicating whether rides are available.
  *
  * @param ridesExist - A boolean indicating if rides currently exist.
+ * @param excludeNetid - the driver who triggered this notification will not receive it.
  */
-export const notifyDrivers = (ridesExist: boolean): void => {
+export const notifyDrivers = (
+  ridesExist: boolean,
+  excludeNetid?: string
+): void => {
   // the message sent to each driver is that rides exist (or don't)
   const message: RidesExistResponse = {
     response: "RIDES_EXIST",
@@ -438,7 +442,20 @@ export const notifyDrivers = (ridesExist: boolean): void => {
   };
 
   // find all the drivers currently connected to the app
-  const drivers = clients.filter((client) => client.role == "DRIVER");
+  let drivers = clients.filter((client) => client.role == "DRIVER");
+  console.log(
+    `WEBSOCKET: Notifying ${JSON.stringify(drivers)} drivers about ride existence: ${ridesExist}`
+  );
+
+  // if we want to exclude a netid, remove them from the list
+  if (excludeNetid) {
+    // keep everyone who is NOT excludeNetid
+    drivers = drivers.filter((client) => client.netid != excludeNetid);
+    console.log(
+      `WEBSOCKET: UPDATED Notifying ${JSON.stringify(drivers)} drivers about ride existence: ${ridesExist}`
+    );
+  }
+
   // send each of them a message
   drivers.forEach((driver) => {
     sendMessageToNetid(driver.netid, message);

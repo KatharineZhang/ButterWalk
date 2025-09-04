@@ -29,13 +29,13 @@ const Login = () => {
   // param: input - the driver id input in the sign in
   const checkDriverIdInput = () => {
     if (/^[a-z]{5,7}$/.test(driverId.toLowerCase())) {
-      setSignedIn(true);
       setNetid(driverId.toLowerCase());
       setErrMsg("");
+      setSignedIn(true);
     } else {
       setDriverId("");
-      setSignedIn(false);
       setErrMsg("Driver ID must be 5 to 7 lowercase letters.");
+      setSignedIn(false);
     }
   };
 

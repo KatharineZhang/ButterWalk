@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 import { AuthSessionResult } from "expo-auth-session";
 import {
   ErrorResponse,
-  CancelResponse,
   GeneralResponse,
   FinishAccCreationResponse,
   RequestRideResponse,
@@ -13,7 +12,7 @@ import {
   Feedback,
   ProblematicUser,
   CompleteResponse,
-  SignInResponse,
+  StudentSignInResponse,
   GoogleResponse,
   ProfileResponse,
   User,
@@ -21,12 +20,12 @@ import {
   ViewRideRequestResponse,
   ViewDecisionResponse,
   SnapLocationResponse,
-  RecentLocationResponse,
   PlaceSearchResult,
   GooglePlaceSearchResponse,
   GooglePlaceSearchBadLocationTypes,
   PlaceSearchResponse,
   PurpleZone,
+  WrapperCancelResponse,
 } from "./api";
 import {
   addFeedbackToDb,
@@ -46,6 +45,9 @@ import {
   setRideRequestDriver,
   getRecentLocations,
   isNotAccepted,
+  // we want this import for when we have a drivers collection
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  verifyDriverId,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { highestRank, rankOf } from "./rankingAlgorithm";
@@ -132,7 +134,7 @@ export const signIn = async (
   firstName: string,
   lastName: string,
   studentOrDriver: "STUDENT" | "DRIVER"
-): Promise<SignInResponse | ErrorResponse> => {
+): Promise<StudentSignInResponse | ErrorResponse> => {
   if (!netid || !firstName || !lastName) {
     return {
       response: "ERROR",
@@ -160,6 +162,76 @@ export const signIn = async (
     };
   }
 };
+
+export const checkIfDriverSignin = async (
+  role: "STUDENT" | "DRIVER",
+  netid?: string
+): Promise<GeneralResponse | ErrorResponse> => {
+  let resp;
+  let driverValid = false;
+  try {
+    // we do not have an auth token to process
+    // check if this was sent from a driver
+    switch (role) {
+      case "DRIVER":
+        // make sure the netid is not null
+        if (!netid) {
+          return {
+            response: "ERROR",
+            error: "The passed in driver netid is null",
+            category: "SIGNIN",
+          } as ErrorResponse;
+        }
+
+        driverValid = true; // TODO: remove this line when we have a drivers collection
+        // check if the driverid exists in the database
+        // ** TODO: Uncomment the following when we have a drivers collection **
+        // driverValid = await runTransaction(db, async (transaction) => {
+        //   return await verifyDriverId(transaction, netid);
+        // });
+
+        // if the driver id is valid, return a successful signin response
+        if (driverValid) {
+          // send a general response that signin was successful
+          resp = {
+            response: "SIGNIN",
+            success: true,
+          } as GeneralResponse;
+        } else {
+          // the driver id was not valid
+          resp = {
+            response: "ERROR",
+            error: "Driver ID is not valid.",
+            category: "SIGNIN",
+          } as ErrorResponse;
+        }
+        break;
+      case "STUDENT":
+        // else, something is wrong in student's signin
+        // early fail if the token is null
+        resp = {
+          response: "ERROR",
+          error: "The passed in response token is null",
+          category: "SIGNIN",
+        } as ErrorResponse;
+        break;
+      default:
+        resp = {
+          response: "ERROR",
+          error: "Missing or invalid role.",
+          category: "SIGNIN",
+        } as ErrorResponse;
+        break;
+    }
+  } catch (e) {
+    resp = {
+      response: "ERROR",
+      error: `Error verifying signin: ${(e as Error).message}.`,
+      category: "SIGNIN",
+    } as ErrorResponse;
+  }
+  return resp;
+}; 
 
 // Finishes the account for the user by adding the phone number and student number to the database
 // returns a success message if the account creation is successful and a boolean value of true if the account already exists
@@ -450,12 +522,18 @@ export const viewRide = async (
       // take the ride out of the "pool"
       // by changing its status to VIEWING
       setRideRequestStatus(t, "VIEWING", bestRequest.netid);
+      // when a driver is viewing a ride, no other driver can view it
+      // so we can just add the driver id to the ride request now
+      // for future use (if cancel, can set state back to viewing)
+      setRideRequestDriver(t, bestRequest.netid, driverid);
       return {
         response: "VIEW_RIDE",
         rideExists: true,
-        rideRequest: bestRequest,
-        driverToPickUpDuration,
-        pickUpToDropOffDuration,
+        rideInfo: {
+          rideRequest: bestRequest,
+          driverToPickUpDuration,
+          pickUpToDropOffDuration,
+        },
         notifyDrivers: notify,
       };
     });
@@ -637,7 +715,7 @@ And if there driver needs to be notified, the json object returned TO THE DRIVER
 export const cancelRide = async (
   netid: string,
   role: "STUDENT" | "DRIVER"
-): Promise<CancelResponse | ErrorResponse> => {
+): Promise<WrapperCancelResponse | ErrorResponse> => {
   try {
     return await runTransaction(db, async (transaction) => {
       const response = await cancelRideRequest(transaction, netid, role);
@@ -645,7 +723,11 @@ export const cancelRide = async (
         // if we have an accepted ride, we have annetid of the opposite user
         return {
           response: "CANCEL",
-          info: { response: "CANCEL", success: true },
+          info: {
+            response: "CANCEL",
+            success: true,
+            newRideStatus: response.newRideStatus,
+          },
           otherNetid: response.otherId,
           notifyDrivers: response.notifyDrivers,
         };
@@ -653,7 +735,11 @@ export const cancelRide = async (
       // no driver specified in this pending request case!
       return {
         response: "CANCEL",
-        info: { response: "CANCEL", success: true },
+        info: {
+          response: "CANCEL",
+          success: true,
+          newRideStatus: response.newRideStatus,
+        },
         notifyDrivers: response.notifyDrivers,
       };
     });
@@ -1139,7 +1225,8 @@ export const profile = async (
     return await runTransaction(db, async (transaction) => {
       // get the user's profile information
       const user: User = await getProfile(transaction, netid);
-      return { response: "PROFILE", user };
+      const locations = await getRecentLocations(transaction, netid);
+      return { response: "PROFILE", user, locations };
     });
   } catch (e) {
     return {
@@ -1149,41 +1236,6 @@ export const profile = async (
     };
   }
 };
-
-/*testing get recent locations*/
-export const fetchRecentLocations = async (
-  netid: string
-): Promise<RecentLocationResponse | ErrorResponse> => {
-  if (!netid) {
-    return {
-      response: "ERROR",
-      error: "Missing netid.",
-      category: "RECENT_LOCATIONS",
-    };
-  }
-
-  try {
-    return await runTransaction(db, async (transaction) => {
-      // Fetch recent locations using the function in firebaseActions
-      const locations = await getRecentLocations(transaction, netid);
-
-      return {
-        response: "RECENT_LOCATIONS",
-        locations,
-      };
-    });
-  } catch (e) {
-    return {
-      response: "ERROR",
-      error: `Error fetching recent locations: ${(e as Error).message}`,
-      category: "RECENT_LOCATIONS",
-    };
-  }
-};
-
-// This is used to cache the results of the Google Place API
-let previousQuery = "";
-let previousResults: PlaceSearchResult[] = [];
 
 // Call the Google Place Search to get place suggestions based on user input
 export const getPlaceSearchResults = async (
@@ -1214,18 +1266,7 @@ export const getPlaceSearchResults = async (
 export const fetchGooglePlaceSuggestions = async (
   query: string
 ): Promise<PlaceSearchResult[]> => {
-  // If the query is basically the same as the previous one, return the cached results
-  if (levensteinDistance(query, previousQuery) < 3) {
-    console.log(
-      "google place search cached results for query:",
-      query,
-      "previous query:",
-      previousQuery
-    );
-    return previousResults;
-  }
   try {
-    previousQuery = query;
     const url =
       `https://maps.googleapis.com/maps/api/place/textsearch/json?` +
       `query=${encodeURIComponent(query)}` +
@@ -1262,40 +1303,11 @@ export const fetchGooglePlaceSuggestions = async (
           address: place.formatted_address,
         }));
       // remove duplicates from places
-      previousResults = Array.from(new Set(places));
-      return previousResults;
+      const toReturn = Array.from(new Set(places));
+      return toReturn;
     }
   } catch (e: unknown) {
     console.log("GOOGLE PLACE SEARCH ERROR", e);
   }
-  previousResults = [];
   return [];
-};
-
-// Get the distance between two strings
-// (number of insertions and deletions of characters to get from one to another)
-const levensteinDistance = (a: string, b: string): number => {
-  const matrix: number[][] = new Array(b.length + 1)
-    .fill(null)
-    .map(() => new Array(a.length + 1).fill(0));
-
-  for (let i = 0; i < a.length + 1; i++) {
-    matrix[0][i] = i;
-  }
-
-  for (let i = 0; i < b.length + 1; i++) {
-    matrix[i][0] = i;
-  }
-
-  for (let i = 1; i < a.length + 1; i++) {
-    for (let j = 1; j < b.length + 1; j++) {
-      const min = Math.min(matrix[j - 1][i], matrix[j][i - 1]);
-      if (a[i - 1] === b[j - 1]) {
-        matrix[j][i] = matrix[j - 1][i - 1];
-      } else {
-        matrix[j][i] = min + 1;
-      }
-    }
-  }
-  return matrix[b.length][a.length];
 };
