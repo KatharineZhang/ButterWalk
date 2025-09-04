@@ -858,10 +858,7 @@ export default function HomePage() {
         </View>
       ) : whichComponent === "endShift" ? (
         <View style={styles.homePageComponentContainer}>
-          <ShiftIsOver
-            updateSideBarHeight={setCurrentComponentHeight}
-            changeNotifState={setNotifState}
-          />
+          <ShiftIsOver updateSideBarHeight={setCurrentComponentHeight} />
         </View>
       ) : null}
     </GestureHandlerRootView>
