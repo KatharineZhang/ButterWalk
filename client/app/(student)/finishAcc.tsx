@@ -57,12 +57,6 @@ const finishAcc = () => {
     setStudentNum(studentNumTemp);
     setPreferredName(preferredNameTemp);
 
-    const msg = await WebSocketService.connect();
-    if (msg == "Failed to Connect") {
-      // failed to connect!!
-      console.log("FAILED TO CONNECT TO WS IN FINISHACC");
-    }
-
     // 1. send this to the DB via websocket
     WebSocketService.send({
       directive: "FINISH_ACC",
