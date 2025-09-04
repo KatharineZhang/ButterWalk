@@ -450,25 +450,12 @@ export default function HandleRide({
                 />
                 {/* move purple circle to middle (hardcoded like student side) */}
                 <View style={[styles.circleStart, { left: 130 }]} />
-                {/* using flex styling for this progress bar throws an error for some reason? */}
-                <View
-                  style={{
-                    width: 320,
-                    height: 15,
-                    backgroundColor: "#E3E3E3",
-                    borderRadius: 6,
-                    overflow: "hidden",
-                    flexDirection: "row",
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 160,
-                      height: 15,
-                      backgroundColor: "#C5B4E3",
-                    }}
-                  />
-                </View>
+                {/* Progress Bar */}
+                <ProgressBar
+                  progress={progress}
+                  color="#C5B4E3"
+                  style={styles.progressBar}
+                />
                 <View style={styles.circleEnd} />
               </View>
             </View>
@@ -656,9 +643,9 @@ export default function HandleRide({
                 />
                 <View style={[styles.circleStart, { left: 130 }]} />
                 <ProgressBar
-                  progress={1}
+                  progress={progress}
                   color="#C5B4E3"
-                  style={{ width: 320, height: 15, backgroundColor: "#E3E3E3" }}
+                  style={styles.progressBar}
                 />
                 <View style={styles.circleEnd} />
               </View>

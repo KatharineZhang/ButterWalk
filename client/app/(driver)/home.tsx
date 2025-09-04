@@ -275,8 +275,9 @@ export default function HomePage() {
   // from the pickup location to the dropoff location
   const [dropoffProgress, setDropoffProgress] = useState(0);
 
-  // Total distance of the route (from startLocation to dropOffLocation)
-  const [totalDistance, setTotalDistance] = useState(0);
+  // Total distances for progress calculation
+  const [totalPickupDistance, setTotalPickupDistance] = useState(0);
+  const [totalDropoffDistance, setTotalDropoffDistance] = useState(0);
 
   // Track if driver is close to pickup location
   const [isNearPickup, setIsNearPickup] = useState(false);
@@ -348,7 +349,8 @@ export default function HomePage() {
     // Reset progress tracking states
     setPickupProgress(0);
     setDropoffProgress(0);
-    setTotalDistance(0);
+    setTotalPickupDistance(0);
+    setTotalDropoffDistance(0);
     setStartLocation({ latitude: 0, longitude: 0 });
     setIsNearPickup(false);
     setIsNearDropoff(false);
@@ -642,27 +644,52 @@ export default function HomePage() {
   }, [driverLocation, phase, whichComponent, requestInfo.requestId]);
 
   // Calculate progress based on total distance and remaining distance for non-linear tracking
-  const calculateProgress = () => {
-    const remainingDistance = mapRef.current?.distance || 0;
+  const calculateProgress = (): number => {
+    if (phase === "headingToPickup") {
+      const remainingDistance = mapRef.current?.pickupDistance || 0;
+      // if map renders for first time, set totalDistance
+      if (totalPickupDistance === 0 && remainingDistance > 0) {
+        setTotalPickupDistance(remainingDistance);
+        // return 0 progress since ride should not have started yet
+        return 0;
+      }
 
-    // if map renders for first time, set totalDistance
-    if (totalDistance === 0 && remainingDistance > 0) {
-      setTotalDistance(remainingDistance);
-      // return 0 progress since ride should not have started yet
+      // Only calculate progress if we have both total and remaining distance
+      if (totalPickupDistance > 0 && remainingDistance > 0) {
+        // Progress = (Total Distance - Remaining Distance) / Total Distance
+        const progress = Math.max(
+          0,
+          Math.min(
+            1,
+            (totalPickupDistance - remainingDistance) / totalPickupDistance
+          )
+        );
+        return progress;
+      }
+
+      // set to 0 if no valid distances
       return 0;
+    } else if (phase === "headingToDropoff") {
+      const remainingDistance = mapRef.current?.dropoffDistance || 0;
+      // if map renders for first time, set totalDistance
+      if (totalDropoffDistance === 0 && remainingDistance > 0) {
+        setTotalDropoffDistance(remainingDistance);
+        // return 0 progress since ride should not have started yet
+        return 0;
+      }
+      // Only calculate progress if we have both total and remaining distance
+      if (totalDropoffDistance > 0 && remainingDistance > 0) {
+        // Progress = (Total Distance - Remaining Distance) / Total Distance
+        const progress = Math.max(
+          0,
+          Math.min(
+            1,
+            (totalDropoffDistance - remainingDistance) / totalDropoffDistance
+          )
+        );
+        return progress;
+      }
     }
-
-    // Only calculate progress if we have both total and remaining distance
-    if (totalDistance > 0 && remainingDistance > 0) {
-      // Progress = (Total Distance - Remaining Distance) / Total Distance
-      const progress = Math.max(
-        0,
-        Math.min(1, (totalDistance - remainingDistance) / totalDistance)
-      );
-      return progress;
-    }
-
-    // set to 0 if no valid distances
     return 0;
   };
 
