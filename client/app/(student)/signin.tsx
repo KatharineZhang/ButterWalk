@@ -77,7 +77,13 @@ const Login = () => {
       setErrMsg(errorResp.error);
     }
   };
-  WebSocketService.addListener(handleSigninMessage, "SIGNIN");
+  
+  useEffect(() => {
+    WebSocketService.addListener(handleSigninMessage, "SIGNIN");
+    return () => {
+      WebSocketService.removeListener(handleSigninMessage, "SIGNIN");
+    };
+  }, []);
 
   useEffect(() => {
     const connectWebSocket = async () => {
