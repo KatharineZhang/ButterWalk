@@ -31,6 +31,7 @@ interface MapProps {
 // using the ref
 export interface MapRef {
   recenterMap: () => void; // recenter the map on the user's location
+  distance: number; // distance of the current route
 }
 
 // Simple renders the points passing in through the props
@@ -74,6 +75,9 @@ const Map = forwardRef<MapRef, MapProps>(
 
     // used for map zooming
     const mapRef = useRef<MapView>(null);
+
+    // for calculating the distance of route, to be used in progress bar calculations
+    const [distance, setDistance] = useState<number>(0);
 
     const [seconds, setSeconds] = useState(10);
 
@@ -260,6 +264,7 @@ const Map = forwardRef<MapRef, MapProps>(
       // this is used to allow the parent component to call the recenterMap function
       () => ({
         recenterMap,
+        distance,
       })
     );
 
@@ -403,6 +408,12 @@ const Map = forwardRef<MapRef, MapProps>(
                 apikey={GOOGLE_MAPS_APIKEY}
                 strokeWidth={3}
                 strokeColor="#000000"
+                onReady={(result) => {
+                  setDistance(result.distance);
+                }}
+                onError={(errorMessage) => {
+                  console.log("MapViewDirections error:", errorMessage);
+                }}
               />
             )}
         </MapView>

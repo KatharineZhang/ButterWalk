@@ -13,7 +13,7 @@ import {
   View,
   Text,
 } from "react-native";
-import Map, { MapRef, calculateDistance } from "./map";
+import Map, { MapRef, isSameLocation } from "./map";
 import { useLocalSearchParams } from "expo-router";
 import RequestAvailable from "@/components/Driver_RequestAvailable";
 import Legend from "@/components/Student_Legend";
@@ -238,6 +238,9 @@ export default function HomePage() {
   // from the pickup location to the dropoff location
   const [dropoffProgress, setDropoffProgress] = useState(0);
 
+  // Total distance of the route (from startLocation to dropOffLocation)
+  const [totalDistance, setTotalDistance] = useState(0);
+
   // The driver's location when they started the ride
   const [startLocation, setStartLocation] = useState<{
     latitude: number;
@@ -331,6 +334,7 @@ export default function HomePage() {
     // Reset progress tracking states
     setPickupProgress(0);
     setDropoffProgress(0);
+    setTotalDistance(0);
     setStartLocation({ latitude: 0, longitude: 0 });
     setIsNearPickup(false);
     setIsNearDropoff(false);
@@ -542,47 +546,75 @@ export default function HomePage() {
       let pickupProgress = 0;
       let dropoffProgress = 0;
 
-      // If phase is waitingForPickup, force pickupProgress to 1
-      if (phase === "waitingForPickup") {
-        pickupProgress = 1;
-
-        // if phase is headingtopickup or Headingtodropoff
-      } else if (
-        startLocation.latitude !== 0 &&
-        startLocation.longitude !== 0 &&
-        pickUpLocation.latitude !== 0 &&
-        pickUpLocation.longitude !== 0
-      ) {
-        pickupProgress = calculateProgress(
-          startLocation,
-          driverLocation,
-          pickUpLocation
-        );
-        if (phase === "headingToPickup") {
-          setIsNearPickup(pickupProgress >= 0.9); // 50 meters
+      if (startLocation.latitude !== 0 && startLocation.longitude !== 0) {
+        switch (phase) {
+          case "headingToPickup":
+            // Calculate progress from start location to pickup location using route distance
+            pickupProgress = calculateProgress();
+            // if isNearPickup is already true, don't change it back to false
+            // but set it to true if driver is within 500 feet of pickup location
+            if (isSameLocation(driverLocation, pickUpLocation)) {
+              setIsNearPickup(true);
+            }
+            setIsNearDropoff(false); // Not near dropoff yet
+            break;
+          case "waitingForPickup":
+            pickupProgress = 1; // At pickup location
+            setIsNearPickup(true);
+            setIsNearDropoff(false);
+            break;
+          case "headingToDropoff":
+            // Calculate progress from pickup to dropoff using route distance
+            pickupProgress = 1; // Already at pickup
+            dropoffProgress = calculateProgress();
+            // if isNearDropoff is already true, don't change it back to false
+            // but set it to true if driver is within 500 feet of dropoff location
+            if (isSameLocation(driverLocation, dropOffLocation)) {
+              setIsNearDropoff(true);
+            }
+            setIsNearPickup(false); // Not near pickup anymore
+            break;
+          case "arrivedAtDropoff":
+            pickupProgress = 1; // Already at pickup
+            dropoffProgress = 1; // Already at dropoff
+            setIsNearPickup(false); // Not near pickup anymore
+            setIsNearDropoff(true); // At dropoff location
+            break;
+          default:
+            setIsNearPickup(false);
+            setIsNearDropoff(false);
+            break;
         }
+        setPickupProgress(pickupProgress);
+        setDropoffProgress(dropoffProgress);
       }
-
-      if (
-        pickUpLocation.latitude !== 0 &&
-        pickUpLocation.longitude !== 0 &&
-        dropOffLocation.latitude !== 0 &&
-        dropOffLocation.longitude !== 0
-      ) {
-        dropoffProgress = calculateProgress(
-          pickUpLocation,
-          driverLocation,
-          dropOffLocation
-        );
-        if (phase === "headingToDropoff") {
-          setIsNearDropoff(dropoffProgress >= 0.9); // 50 meters
-        }
-      }
-
-      setPickupProgress(pickupProgress);
-      setDropoffProgress(dropoffProgress);
     }
   }, [driverLocation, phase, whichComponent, requestInfo.requestId]);
+
+  // Calculate progress based on total distance and remaining distance for non-linear tracking
+  const calculateProgress = () => {
+    const remainingDistance = mapRef.current?.distance || 0;
+
+    // if map renders for first time, set totalDistance
+    if (totalDistance === 0 && remainingDistance > 0) {
+      setTotalDistance(remainingDistance);
+      // return 0 progress since ride should not have started yet
+      return 0;
+    }
+
+    // Only calculate progress if we have both total and remaining distance
+    if (totalDistance > 0 && remainingDistance > 0) {
+      // Progress = (Total Distance - Remaining Distance) / Total Distance
+      const progress = Math.max(
+        0,
+        Math.min(1, (totalDistance - remainingDistance) / totalDistance)
+      );
+      return progress;
+    }
+
+    // set to 0 if no valid distances
+    return 0;
+  };
 
   // Set start location when ride is accepted
   useEffect(() => {
@@ -815,25 +847,25 @@ export default function HomePage() {
   );
 }
 
-/**
- * Helper function to calculate the progress of the driver from start to destination
- * @param start - starting coordinates
- * @param current - current coordinates
- * @param dest - destination coordinates
- * @returns progress as a number between 0 and 1
- */
-const calculateProgress = (
-  start: { latitude: number; longitude: number },
-  current: { latitude: number; longitude: number },
-  dest: { latitude: number; longitude: number }
-): number => {
-  // calculate the distance between the two coordinates
-  const distance = calculateDistance(start, dest);
-  // the distance between the current location and the destination
-  // is the remaining distance to the destination
-  // use this to calc progress because the driver may not be
-  // driving in a straight line from the start location
-  const remaining = calculateDistance(current, dest);
-  const currentDistance = distance - remaining;
-  return currentDistance / distance; // remaining distance
-};
+// /**
+//  * Helper function to calculate the progress of the driver from start to destination
+//  * @param start - starting coordinates
+//  * @param current - current coordinates
+//  * @param dest - destination coordinates
+//  * @returns progress as a number between 0 and 1
+//  */
+// const calculateProgress = (
+//   start: { latitude: number; longitude: number },
+//   current: { latitude: number; longitude: number },
+//   dest: { latitude: number; longitude: number }
+// ): number => {
+//   // calculate the distance between the two coordinates
+//   const distance = calculateDistance(start, dest);
+//   // the distance between the current location and the destination
+//   // is the remaining distance to the destination
+//   // use this to calc progress because the driver may not be
+//   // driving in a straight line from the start location
+//   const remaining = calculateDistance(current, dest);
+//   const currentDistance = distance - remaining;
+//   return currentDistance / distance; // remaining distance
+// };
