@@ -37,7 +37,7 @@ export default function HomePage() {
   /* HOME PAGE STATE */
   const [whichComponent, setWhichComponent] = useState<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
-  >("endShift");
+  >(TimeService.inServicableTime() ? "noRequests" : "endShift");
 
   /* USE EFFECTS */
   useEffect(() => {
@@ -328,7 +328,6 @@ export default function HomePage() {
 
   const resetAllFields = () => {
     // reset all fields to their initial state
-    setDriverLocation({ latitude: 0, longitude: 0 });
     setPickUpLocation({ latitude: 0, longitude: 0 });
     setDropOffLocation({ latitude: 0, longitude: 0 });
     setDriverToPickupDuration(0);

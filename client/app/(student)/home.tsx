@@ -427,11 +427,12 @@ export default function HomePage() {
       // if we are waiting for the ride, we don't need to know that a driver viewed and canceled on us
       // only notify the student if they previously were told a driver was coming and now they are not
       if (cancelResp.newRideStatus == "REQUESTED") {
+        // our ride is back in the queue!
+        // set the ride status back to waiting for ride
+        // but stay on handle ride component
+        // make sure that we set back to WaitingForRide even if rideStatus hasn't updated yet
+        setRideStatus("WaitingForRide");
         if (rideStatus != "WaitingForRide") {
-          // our ride is back in the queue!
-          // set the ride status back to waiting for ride
-          // but stay on handle ride component
-          setRideStatus("WaitingForRide");
           setNotifState({
             text: "Your driver canceled the ride. Please wait for another driver",
             color: "#FFCBCB",
