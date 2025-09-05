@@ -452,7 +452,7 @@ export default function HandleRide({
                 <View style={[styles.circleStart, { left: 130 }]} />
                 {/* Progress Bar */}
                 <ProgressBar
-                  progress={progress}
+                  progress={1}
                   color="#C5B4E3"
                   style={styles.progressBar}
                 />
@@ -643,7 +643,7 @@ export default function HandleRide({
                 />
                 <View style={[styles.circleStart, { left: 130 }]} />
                 <ProgressBar
-                  progress={progress}
+                  progress={1}
                   color="#C5B4E3"
                   style={styles.progressBar}
                 />
