@@ -23,7 +23,7 @@ import {
 } from "../../../server/src/api";
 import RideRequestForm from "@/components/Student_RideRequestForm";
 import ConfirmRide from "@/components/Student_ConfirmRide";
-import Notification from "@/components/Both_Notification";
+import Notification, { NotificationType } from "@/components/Both_Notification";
 import FAQ from "./faq";
 import { Ionicons } from "@expo/vector-icons";
 import { styles } from "@/assets/styles";
@@ -44,14 +44,11 @@ export default function HomePage() {
   >("rideReq");
 
   // what notification to show
-  const [notifState, setNotifState] = useState<{
-    text: string;
-    color: string;
-    boldText?: string;
-  }>({
+  const [notifState, setNotifState] = useState<NotificationType>({
     text: "",
     color: "",
     boldText: "",
+    trigger: 0,
   });
 
   /* MAP STATE AND METHODS */
@@ -432,12 +429,11 @@ export default function HomePage() {
         // but stay on handle ride component
         // make sure that we set back to WaitingForRide even if rideStatus hasn't updated yet
         setRideStatus("WaitingForRide");
-        if (rideStatus != "WaitingForRide") {
-          setNotifState({
-            text: "Your driver canceled the ride. Please wait for another driver",
-            color: "#FFCBCB",
-          });
-        } // otherwise do nothing (we were already waiting for a ride)
+        setNotifState({
+          text: "Your driver canceled the ride. Please wait for another driver",
+          color: "#FFCBCB",
+          trigger: Date.now(),
+        });
       } else {
         resetAllFields();
         // go back to ride request component
@@ -450,6 +446,7 @@ export default function HomePage() {
             setNotifState({
               text: "Your driver has canceled this ride.",
               color: "#FFCBCB",
+              trigger: Date.now(),
               boldText: "canceled",
             });
             break;
@@ -459,6 +456,7 @@ export default function HomePage() {
               text: "Ride successfully canceled",
               color: "#FFCBCB",
               boldText: "canceled",
+              trigger: Date.now(),
             });
             break;
           case "timer":
@@ -467,6 +465,7 @@ export default function HomePage() {
               text: "Your ride was canceled— timer ran out",
               color: "#FFCBCB",
               boldText: "canceled",
+              trigger: Date.now(),
             });
             break;
         }
@@ -492,6 +491,7 @@ export default function HomePage() {
         text: "Ride successfully completed!",
         color: "#C9FED0",
         boldText: "completed",
+        trigger: Date.now(),
       });
     }
   };
@@ -522,6 +522,7 @@ export default function HomePage() {
       setNotifState({
         text: "You have been picked up and are on your way to your destination!",
         color: "#C9FED0",
+        trigger: Date.now(),
       });
     } else {
       console.log("Driver arrived at pickup response error: ", message);
@@ -583,6 +584,7 @@ export default function HomePage() {
         text: "Ride successfully requested",
         color: "#C9FED0",
         boldText: "requested",
+        trigger: Date.now(),
       });
     } else {
       const errorMessage = message as ErrorResponse;
@@ -590,6 +592,7 @@ export default function HomePage() {
       setNotifState({
         text: errorMessage.error,
         color: "#FFCBCB",
+        trigger: Date.now(),
       });
       // go back to request ride
       setWhichComponent("rideReq");
@@ -704,6 +707,7 @@ export default function HomePage() {
               text={notifState.text}
               color={notifState.color}
               boldText={notifState.boldText}
+              trigger={notifState.trigger}
             />
           )}
         </View>

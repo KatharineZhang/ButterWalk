@@ -190,6 +190,7 @@ export default function HomePage() {
     text: "",
     color: "",
     boldText: "",
+    trigger: 0,
   });
 
   /* SIDE BAR STATE */
@@ -339,6 +340,7 @@ export default function HomePage() {
       text: "",
       color: "",
       boldText: "",
+      trigger: 0,
     });
     setWhichComponent("noRequests");
     // Reset progress tracking states
@@ -363,6 +365,7 @@ export default function HomePage() {
         text: "Your ride was canceled",
         color: "#FFCBCB",
         boldText: "canceled",
+        trigger: Date.now(),
       });
       setStudentIsLate(false);
     } else {
@@ -401,6 +404,7 @@ export default function HomePage() {
             text: "New ride request available",
             color: "#C9FED0",
             boldText: "New ride",
+            trigger: Date.now(),
           });
         } else {
           // if false, set the component to "noRequests"
@@ -453,6 +457,7 @@ export default function HomePage() {
         setNotifState({
           text: "The ride you were trying to view does not exist anymore.",
           color: "#FFCBCB",
+          trigger: Date.now(),
         });
         resetAllFields(); // reset all fields
         setWhichComponent("noRequests"); // go to no requests page
@@ -462,6 +467,7 @@ export default function HomePage() {
       setNotifState({
         text: "Failed to view ride request: " + errMessage.error,
         color: "#FFCBCB",
+        trigger: Date.now(),
       });
       setWhichComponent("noRequests"); // go to no requests page
     }
@@ -476,6 +482,7 @@ export default function HomePage() {
         text: "Ride accepted successfully",
         color: "#C9FED0",
         boldText: "accepted",
+        trigger: Date.now(),
       });
       setStartLocation(driverLocation);
       setWhichComponent("handleRide");
@@ -488,6 +495,7 @@ export default function HomePage() {
       setNotifState({
         text: "Failed to accept ride request",
         color: "#FFCBCB",
+        trigger: Date.now(),
       });
       resetAllFields(); // reset all fields
       setWhichComponent("noRequests"); // go to no requests page
@@ -513,6 +521,7 @@ export default function HomePage() {
       setNotifState({
         text: "Failed to note that driver arrived at pickup location",
         color: "#FFCBCB",
+        trigger: Date.now(),
       });
       setFlagPopupVisible(false); // close the flagging popup
     }
@@ -529,6 +538,7 @@ export default function HomePage() {
           text: "Student has been flagged",
           color: "#C9FED0",
           boldText: "flagged",
+          trigger: Date.now(),
         });
         setStudentIsLate(false); // get rid of the student is late message
       } else {
@@ -536,6 +546,7 @@ export default function HomePage() {
         setNotifState({
           text: "Failed to flag student",
           color: "#FFCBCB",
+          trigger: Date.now(),
         });
         setFlagPopupVisible(false); // close the flagging popup
       }
@@ -775,6 +786,7 @@ export default function HomePage() {
             text={notifState.text}
             color={notifState.color}
             boldText={notifState.boldText}
+            trigger={notifState.trigger}
           />
         )}
       </View>

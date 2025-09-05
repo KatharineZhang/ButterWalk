@@ -39,6 +39,7 @@ import { CampusZone, PurpleZone } from "@/services/ZoneService";
 import TimeService from "@/services/TimeService";
 import moment from "moment";
 import momentTimezone from "moment-timezone";
+import { NotificationType } from "./Both_Notification";
 
 type RideRequestFormProps = {
   userLocation: { latitude: number; longitude: number };
@@ -57,11 +58,7 @@ type RideRequestFormProps = {
   rideRequested: (numPassengers: number) => void;
   setFAQVisible: (visible: boolean) => void;
   updateSideBarHeight: (bottom: number) => void;
-  setNotificationState: (state: {
-    text: string;
-    color: string;
-    boldText?: string;
-  }) => void;
+  setNotificationState: (state: NotificationType) => void;
   darkenScreen: (darken: boolean) => void; // darken the screen behind the confirmation modal
 };
 
@@ -313,9 +310,10 @@ export default function RideRequestForm({
       setNotificationState({
         text: "You are too far from the servicable area.",
         color: "#FFCBCB",
+        trigger: Date.now(),
       });
       setTimeout(() => {
-        setNotificationState({ text: "", color: "" });
+        setNotificationState({ text: "", color: "", trigger: Date.now() });
       }, 6000);
 
       setPickUpQuery("");
@@ -330,6 +328,7 @@ export default function RideRequestForm({
     setNotificationState({
       text: "You are not within service area.\nPlease select a nearby location that is.",
       color: "#FFEFB4",
+      trigger: Date.now(),
     });
   };
 
@@ -673,9 +672,9 @@ export default function RideRequestForm({
           })),
       ];
 
-    const filteredResults = formattedResults.filter(
-  (item) => item.name !== chosenPickup && item.name !== chosenDropoff
-);
+  const filteredResults = formattedResults.filter(
+    (item) => item.name !== chosenPickup && item.name !== chosenDropoff
+  );
   // use the filtered results for rendering
   console.log("number of formatted results: ", filteredResults.length);
 

@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { ProgressBar } from "react-native-paper";
 import moment from "moment";
 import momentTimezone from "moment-timezone";
+import { NotificationType } from "./Both_Notification";
 
 export type RideStatus =
   | "WaitingForRide" // the ride has been requested
@@ -35,11 +36,7 @@ interface HandleRideProps {
   onCancel: (reason: "button" | "timer") => void; // tell homepage to cancel the ride
   setFAQVisible: (visible: boolean) => void; // callback function to set the visibility of the FAQ modal
   openNavigation: () => void; // open the native maps app with the pickup location
-  setNotificationState: (state: {
-    text: string;
-    color: string;
-    boldText?: string;
-  }) => void; // show a notification to the user by calling this function
+  setNotificationState: (state: NotificationType) => void; // show a notification to the user by calling this function
   goHome: () => void; // callback function to go back to the ride request form
   updateSideBarHeight: (height: number) => void; // callback function to update the height of the sidebar
 }
@@ -73,11 +70,13 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
         setNotificationState({
           text: "Your driver is on their way!",
           color: "#C9FED0",
+          trigger: Date.now(),
         });
       } else if (status == "RideCompleted") {
         setNotificationState({
           text: "You have arrived!",
           color: "#C9FED0",
+          trigger: Date.now(),
         });
       }
       return () => clearInterval(interval);
@@ -89,6 +88,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
       text: "Your driver has arrived. You have 5 min to find your driver.",
       color: "#FFEFB4",
       boldText: "5 min",
+      trigger: Date.now(),
     });
 
     // Update seconds every second
@@ -105,6 +105,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
         text: "Your ride will be canceled in one minute.",
         color: "#FFCBCB",
         boldText: "one minute",
+        trigger: Date.now(),
       });
     } else if (seconds <= 0) {
       // the timer ran out! cancel the ride
