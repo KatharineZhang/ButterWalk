@@ -18,7 +18,6 @@ import { styles } from "../assets/styles";
 import BottomDrawer from "./Student_RideReqBottomDrawer";
 import PopUpModal from "./Student_PopUpModal";
 import BottomSheet from "@gorhom/bottom-sheet";
-import { ScrollView } from "react-native-gesture-handler";
 import SegmentedProgressBar from "./Both_SegmentedProgressBar";
 import {
   BuildingService,
@@ -356,17 +355,17 @@ export default function RideRequestForm({
         "Service Unavailable",
         `Service is not available on ${holiday?.name}`
       );
-      return;
+      // return;
     }
 
     // check if within service hours
-    // if (!TimeService.inServicableTime()) {
-    //   Alert.alert(
-    //     "Service Unavailable",
-    //     "Service is only available between 6:30 PM and 2:00 AM"s
-    //   );
-    //   return;
-    // }
+    if (!TimeService.inServicableTime()) {
+      Alert.alert(
+        "Service Unavailable",
+        "Service is only available between 6:30 PM and 2:00 AM"
+      );
+      // return;
+    }
 
     // Both location should be in the purple zone
     // check that at least one location is on campus
