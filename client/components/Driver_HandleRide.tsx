@@ -162,7 +162,7 @@ export default function HandleRide({
   const cancelRide = () => {
     changeNotifState({
       text: "Ride canceled",
-      color: "#FF0000",
+      color: "#FFCBCB",
     });
     onCancel();
   };

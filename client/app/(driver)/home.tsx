@@ -37,7 +37,7 @@ export default function HomePage() {
   /* HOME PAGE STATE */
   const [whichComponent, setWhichComponent] = useState<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
-  >("noRequests");
+  >("endShift");
 
   /* USE EFFECTS */
   useEffect(() => {
@@ -906,10 +906,7 @@ export default function HomePage() {
         </View>
       ) : whichComponent === "endShift" ? (
         <View style={styles.homePageComponentContainer}>
-          <ShiftIsOver
-            updateSideBarHeight={setCurrentComponentHeight}
-            changeNotifState={setNotifState}
-          />
+          <ShiftIsOver updateSideBarHeight={setCurrentComponentHeight} />
         </View>
       ) : null}
     </GestureHandlerRootView>
