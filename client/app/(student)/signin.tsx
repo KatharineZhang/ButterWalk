@@ -1,21 +1,11 @@
-import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
-import { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, Image } from "react-native";
 import { styles } from "../../assets/styles";
-import { Redirect, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-
 // need to 'npx expo install expo-web-browser expo-auth-session expo-crypto' ON MAC
 // or 'npm i expo-auth-session@~6.0.3' on windows
 import * as Google from "expo-auth-session/providers/google";
-
-import {
-  WebSocketResponse,
-  ErrorResponse,
-  StudentSignInResponse,
-} from "../../../server/src/api";
-import WebSocketService, {
-  WebsocketConnectMessage,
-} from "../../services/WebSocketService";
+import { useEffect } from "react";
+import { router } from "expo-router";
 
 // Images
 // @ts-expect-error the image does exists so get rid of the error
@@ -24,19 +14,14 @@ import logo from "@/assets/images/GoogleG.png";
 // import butterWalkLogo from "@/assets/images/butterWalkLogo.png";
 import huskyCarImage from "@/assets/images/husky-car.png";
 import { SafeAreaView } from "react-native-safe-area-context";
-//import Loading from "../oauthredirect";
 
-const webClientId = process.env.EXPO_PUBLIC_WEB_CLIENT_ID;
-const iosClientId = process.env.EXPO_PUBLIC_IOS_CLIENT_ID;
+const webClientId = process.env.EXPO_PUBLIC_WEB_CLIENT_ID;;
+const iosClientId = process.env.EXPO_PUBLIC_IOS_CLIENT_ID;;
 const androidClientId = process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID;
 
 WebBrowser.maybeCompleteAuthSession();
 
 const Login = () => {
-  const [accExists, setAccExists] = useState<boolean | null>(null);
-  const [errMsg, setErrMsg] = useState("");
-  const [netid, setNetid] = useState("");
-
   const config = {
     webClientId,
     iosClientId,
@@ -48,69 +33,21 @@ const Login = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [request, response, promptAsync] = Google.useAuthRequest(config);
 
-  const handleSigninMessage = (message: WebSocketResponse) => {
-    if ("response" in message && message.response == "SIGNIN") {
-      const signinResp = message as StudentSignInResponse;
-      const router = useRouter();
-      if (signinResp.alreadyExists) {
-        setAccExists(true);
-      } else {
-        setAccExists(false); // redundant but I just want to make sure
-      }
-      setNetid(signinResp.netid);
-      if (accExists === false) {
-        // needs to create their account for the first time!
-        router.push("/(student)/finishAcc");
-      } else {
-        router.push("/(student)/home");
-      }
-    } else {
-      // there was a signin related error
-      const errorResp = message as ErrorResponse;
-
-      setErrMsg(errorResp.error);
-    }
-  };
-  WebSocketService.addListener(handleSigninMessage, "SIGNIN");
-
+  // This is where oauthredirect comes back to, to catch the Google response
+  // and forward it (like a package) to finishSignIn
+  // Stringifying the response so that we can pass the whole response object
+  // to finishSignIn (when it passes it to websockets)
   useEffect(() => {
-    const connectWebSocket = async () => {
-      // call our new route
-      const msg: WebsocketConnectMessage = await WebSocketService.connect();
-      if (msg == "Connected Successfully") {
-        if (response) {
-          WebSocketService.send({
-            directive: "SIGNIN",
-            response,
-            role: "STUDENT",
-          });
-        }
-      } else {
-        console.log("failed to connect!!!");
-      }
-    };
-    connectWebSocket();
+    if (response?.type === 'success') {
+      const serializedResponse = JSON.stringify(response);
+      console.log(serializedResponse); // leaving this in for now, feel free to remove once tested
+      console.log('OAuth code received. Navigating to redirect page.');
+      // Pass the code to the finishSignIn page, which will handle the Websocket exchange.
+      router.replace({ pathname: '/(student)/finishSignIn', params: { serializedResponse } });
+    }
   }, [response]);
 
-  return accExists == true && netid ? (
-    <Redirect
-      href={{
-        pathname: "/(student)/home",
-        params: {
-          netid: netid,
-        },
-      }}
-    />
-  ) : accExists == false && netid ? (
-    <Redirect
-      href={{
-        pathname: "/(student)/finishAcc",
-        params: {
-          netid: netid,
-        },
-      }}
-    />
-  ) : (
+  return (
     <SafeAreaView style={[styles.container, { padding: 20 }]}>
       <View style={{ flex: 1, width: "100%", justifyContent: "space-between" }}>
         {/* Main Content */}
@@ -159,20 +96,6 @@ const Login = () => {
               Sign in with UW Email
             </Text>
           </TouchableOpacity>
-          <Text style={{ color: "red", marginTop: 10 }}>{errMsg}</Text>
-        </View>
-
-        {/* TEMPORARY Bypass Button */}
-        <View style={{ paddingBottom: 20 }}>
-          <Pressable
-            style={styles.signInButton}
-            onPress={() => {
-              setAccExists(false);
-              setNetid("snigsm");
-            }}
-          >
-            <Text style={styles.signInText}>Bypass Signin</Text>
-          </Pressable>
         </View>
       </View>
     </SafeAreaView>
