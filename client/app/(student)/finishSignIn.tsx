@@ -1,3 +1,4 @@
+//import { AuthSessionResult } from "expo-auth-session";
 import {
   WebSocketResponse,
   ErrorResponse,
@@ -9,22 +10,39 @@ import WebSocketService, {
 
 import { useLocalSearchParams, router } from "expo-router";
 import { useState, useEffect } from "react";
-import { View, Text } from "react-native";
+//import { View, Text } from "react-native";
+//import LoadingPage from "app/loadingPage";
 
-const finishSignIn = () => {
+const FinishSignIn = () => {
   const [accExists, setAccExists] = useState<boolean | null>(null);
   const [netid, setNetid] = useState("");
-  const {serializedResponse} = useLocalSearchParams();
-  
+  const { serializedResponse } = useLocalSearchParams();
+  const [response, setResponse] = useState(null);
+
   useEffect(() => {
-    const finalSerializedResponse = Array.isArray(serializedResponse)
-      ? serializedResponse[0]
-      : serializedResponse;
-    const decodedResponse = decodeURIComponent(finalSerializedResponse);
-    const response = JSON.parse(decodedResponse);
-    
+    if (serializedResponse) {
+      const finalSerializedResponse = Array.isArray(serializedResponse)
+        ? serializedResponse[0]
+        : serializedResponse;
+      try {
+        const decodedResponse = decodeURIComponent(finalSerializedResponse);
+        const parsedResponse = JSON.parse(decodedResponse);
+        //setResponse({response, parsedResponse});
+        setResponse(parsedResponse);
+      } catch (e) {
+        console.error("Failed to parse serialized response:", e);
+        Alert.alert("I am here");
+      }
+    }
+  }, [serializedResponse]);
+
+  useEffect(() => {
+    if (!response) {
+      return;
+    }
+
     const handleSigninMessage = (message: WebSocketResponse) => {
-      if ("response" in message && message.response == "SIGNIN") {
+      if ("response" in message && message.response === "SIGNIN") {
         const signinResp = message as StudentSignInResponse;
         if (signinResp.alreadyExists) {
           setAccExists(true);
@@ -33,47 +51,160 @@ const finishSignIn = () => {
         }
         setNetid(signinResp.netid);
       } else {
-        // there was a signin related error
         const errorResp = message as ErrorResponse;
-        console.log(errorResp.error);
+        console.error("Signin related error:", errorResp.error);
+        //Alert.alert('Error', errorResp.error);
+        router.replace({pathname: "/(student)/signin", params: {error: errorResp.error} });
       }
     };
-    
-    WebSocketService.addListener(handleSigninMessage, "SIGNIN");
-    
-    const connectWebSocket = async () => {
-      // call our new route
-      const msg: WebsocketConnectMessage = await WebSocketService.connect();
-      if (msg == "Connected Successfully") {
-        if (serializedResponse) {
-          WebSocketService.send({
-            directive: "SIGNIN",
-            response,
-            role: "STUDENT",
-          });
-        }
-      } else {
-        console.log("failed to connect!!!");
-      }
-    };
-    connectWebSocket();
-  }, [serializedResponse]);
 
+    WebSocketService.addListener(handleSigninMessage, "SIGNIN");
+
+    const connectWebSocket = async () => {
+      const msg: WebsocketConnectMessage = await WebSocketService.connect();
+      if (msg === "Connected Successfully") {
+        WebSocketService.send({
+          directive: "SIGNIN",
+          response,
+          role: "STUDENT",
+        });
+      } else {
+        console.error("Failed to connect to WebSocket.");
+      }
+    };
+    
+    connectWebSocket();
+
+    return () => {
+      WebSocketService.removeListener(handleSigninMessage, "SIGNIN");
+    };
+  }, [response]);
+
+  // Use a dedicated useEffect to handle navigation
   useEffect(() => {
-    if(accExists == true && netid !== "") {
-      router.replace({ pathname: '/(student)/home', params: { netid } });
-    } else if(accExists == false && netid !== "") {
-      router.replace({ pathname: '/(student)/finishAcc', params: { netid } });
+    if (accExists === true && netid) {
+      router.replace({
+        pathname: "/(student)/home",
+        params: { netid: netid },
+      });
+    } else if (accExists === false && netid) {
+      router.replace({
+        pathname: "/(student)/finishAcc",
+        params: { netid: netid },
+      });
     }
-  }, [accExists, netid]);
+  }, [accExists, netid]); // This effect depends on the state updates
 
   return (
-    <View>
-      {/* Conditionally renders the correct UI based on state */}
-      {accExists === null && <Text>Loading...</Text>}
-      {accExists === true && <Text>Redirecting to home screen...</Text>}
-      {accExists === false && <Text>Redirecting to account creation...</Text>}
+    LoadingPage()
+  );
+};
+export default FinishSignIn;
+
+
+import { View, Text, Animated, Easing, Alert } from "react-native";
+import { Stack } from "expo-router";
+import { useRef } from "react";
+
+const LoadingPage = () => {
+  // Persist animated values across renders
+  const dot1 = useRef(new Animated.Value(0)).current;
+  const dot2 = useRef(new Animated.Value(0)).current;
+  const dot3 = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const createAnimation = (animatedValue: Animated.Value, delay: number) => {
+      return Animated.loop(
+        Animated.sequence([
+          Animated.timing(animatedValue, {
+            toValue: -10, // jump height
+            duration: 300,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.timing(animatedValue, {
+            toValue: 0,
+            duration: 300,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.delay(delay),
+        ])
+      );
+    };
+
+    const anim1 = createAnimation(dot1, 0);
+    const anim2 = createAnimation(dot2, 100);
+    const anim3 = createAnimation(dot3, 200);
+
+    anim1.start();
+    anim2.start();
+    anim3.start();
+
+    // cleanup
+    return () => {
+      anim1.stop();
+      anim2.stop();
+      anim3.stop();
+    };
+  }, [dot1, dot2, dot3]);
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: "#fff",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <Stack.Screen options={{ headerShown: false }} />
+
+      <Text
+        style={{
+          fontSize: 30,
+          color: "#4B2E83",
+          marginBottom: 20,
+        }}
+      >
+        Loading!
+      </Text>
+
+      {/* Animated Dots */}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "center",
+          marginVertical: 20,
+        }}
+      >
+        {[dot1, dot2, dot3].map((dot, index) => (
+          <Animated.View
+            key={index}
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: 5,
+              backgroundColor: "#4B2E83",
+              marginHorizontal: 5,
+              transform: [{ translateY: dot }],
+            }}
+          />
+        ))}
+      </View>
+
+      <Text
+        style={{
+          fontSize: 20,
+          textAlign: "center",
+          lineHeight: 30,
+          marginVertical: 20,
+          marginHorizontal: 30,
+        }}
+      >
+        Please wait as we redirect you to the next page...
+      </Text>
     </View>
   );
-}   
-export default finishSignIn;
+};
+
