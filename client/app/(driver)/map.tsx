@@ -32,6 +32,8 @@ interface MapProps {
 // using the ref
 export interface MapRef {
   recenterMap: () => void; // recenter the map on the user's location
+  pickupDistance: number; // distance for pickup leg
+  dropoffDistance: number; // distance for dropoff leg
 }
 
 // Simple renders the points passing in through the props
@@ -76,6 +78,10 @@ const Map = forwardRef<MapRef, MapProps>(
 
     // used for map zooming
     const mapRef = useRef<MapView>(null);
+
+    // for calculating the distance of route, to be used in progress bar calculations
+    const [pickupDistance, setPickupDistance] = useState<number>(0);
+    const [dropoffDistance, setDropoffDistance] = useState<number>(0);
 
     // STATE HOOKS
     useEffect(() => {
@@ -156,6 +162,8 @@ const Map = forwardRef<MapRef, MapProps>(
       // this is used to allow the parent component to call the recenterMap function
       () => ({
         recenterMap,
+        pickupDistance,
+        dropoffDistance,
       })
     );
 
@@ -335,6 +343,32 @@ const Map = forwardRef<MapRef, MapProps>(
                 apikey={GOOGLE_MAPS_APIKEY}
                 strokeWidth={3}
                 strokeColor="#000000"
+                onReady={(result: {
+                  legs?: { distance: { value: number } }[];
+                  distance?: number;
+                }) => {
+                  if (result.legs && result.legs.length > 1) {
+                    // we have a waypoint
+                    // set the pickup distance
+                    setPickupDistance(result.legs[0].distance.value);
+                    // set the dropoff distance
+                    if (
+                      result.legs[1] !== undefined &&
+                      result.legs[1].distance
+                    ) {
+                      setDropoffDistance(result.legs[1].distance.value);
+                    }
+                  } else if (result.legs && result.legs.length === 1) {
+                    // no waypoint
+                    setDropoffDistance(result.legs[0].distance.value);
+                  } else if (typeof result.distance === "number") {
+                    // if may be the case that we only have distance if there are no waypoints
+                    setDropoffDistance(result.distance);
+                  }
+                }}
+                onError={(errorMessage) => {
+                  console.log("MapViewDirections error:", errorMessage);
+                }}
               />
             )}
         </MapView>
