@@ -72,7 +72,7 @@ export default function HomePage() {
   }) => {
     setUserLocation(location);
     // if the ride has been accepted, send the new location to the driver
-    if (rideStatus === "DriverEnRoute") {
+    if (rideStatusRef.current === "DriverEnRoute") {
       WebSocketService.send({
         directive: "LOCATION",
         id: netid,
@@ -198,7 +198,7 @@ export default function HomePage() {
 
   // show different state in the DriverOneWay component
   // based on the status of the ride
-  const [rideStatus, setRideStatus] = useState<
+  const rideStatusRef = useRef<
     | "WaitingForRide"
     | "DriverEnRoute"
     | "DriverArrived"
@@ -299,7 +299,7 @@ export default function HomePage() {
   // to update the progress bar
   useEffect(() => {
     if (whichComponent == "handleRide") {
-      switch (rideStatus) {
+      switch (rideStatusRef.current) {
         case "WaitingForRide":
           // update the walking progress if the pickup Location was not the user's starting location
           if (startLocation.latitude != 0 && startLocation.longitude != 0) {
@@ -427,13 +427,16 @@ export default function HomePage() {
         // our ride is back in the queue!
         // set the ride status back to waiting for ride
         // but stay on handle ride component
-        // make sure that we set back to WaitingForRide even if rideStatus hasn't updated yet
-        setRideStatus("WaitingForRide");
-        setNotifState({
-          text: "Your driver canceled the ride. Please wait for another driver",
-          color: "#FFCBCB",
-          trigger: Date.now(),
-        });
+        if (rideStatusRef.current != "WaitingForRide") {
+          rideStatusRef.current = "WaitingForRide";
+          setNotifState({
+            text: "Your driver canceled the ride. Please wait for another driver",
+            color: "#FFCBCB",
+            trigger: Date.now(),
+          });
+        } else {
+          console.log("WE ARE WAITING FOR RIDE ALR");
+        }
       } else {
         resetAllFields();
         // go back to ride request component
@@ -485,7 +488,7 @@ export default function HomePage() {
 
       // wait until we recieve message with the ride completed
       // for us to set the student's ride status to completed
-      setRideStatus("RideCompleted");
+      rideStatusRef.current = "RideCompleted";
       setRideProgress(1); // set the ride progress to 1 to show the user they have arrived
       setNotifState({
         text: "Ride successfully completed!",
@@ -505,7 +508,7 @@ export default function HomePage() {
       message.response === "DRIVER_ARRIVED_AT_PICKUP"
     ) {
       // the driver has arrived at the pickup location
-      setRideStatus("DriverArrived");
+      rideStatusRef.current = "DriverArrived";
     } else {
       console.log("Driver arrived response error: ", message);
     }
@@ -518,7 +521,7 @@ export default function HomePage() {
       message.response === "DRIVER_DRIVING_TO_DROPOFF"
     ) {
       // the driver has arrived at the pickup location
-      setRideStatus("RideInProgress");
+      rideStatusRef.current = "RideInProgress";
       setNotifState({
         text: "You have been picked up and are on your way to your destination!",
         color: "#C9FED0",
@@ -577,7 +580,7 @@ export default function HomePage() {
 
       // set the component to show to WaitingForRide version of handleRide
       setWhichComponent("handleRide");
-      setRideStatus("WaitingForRide");
+      rideStatusRef.current = "WaitingForRide";
 
       // show notification
       setNotifState({
@@ -605,7 +608,7 @@ export default function HomePage() {
     if ("response" in message && message.response === "ACCEPT_RIDE") {
       // we should already be showing the handleRide component
       // set the ride status to DriverEnRoute
-      setRideStatus("DriverEnRoute");
+      rideStatusRef.current = "DriverEnRoute";
     } else {
       console.log("Accept ride error: ", message);
     }
@@ -652,7 +655,7 @@ export default function HomePage() {
           dropOffLocation={dropOffLocation}
           driverLocation={driverLocation}
           userLocationChanged={userLocationChanged}
-          status={rideStatus}
+          status={rideStatusRef.current}
           startLocation={startLocation}
           whichComponent={"rideReq"}
         />
@@ -795,7 +798,7 @@ export default function HomePage() {
             <View style={styles.homePageComponentContainer}>
               {/* driver on way component */}
               <HandleRideComponent
-                status={rideStatus}
+                status={rideStatusRef.current}
                 walkProgress={walkProgress}
                 rideProgress={rideProgress}
                 pickUpLocation={pickUpLocationName}
