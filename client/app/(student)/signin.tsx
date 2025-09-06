@@ -5,7 +5,7 @@ import * as WebBrowser from "expo-web-browser";
 // or 'npm i expo-auth-session@~6.0.3' on windows
 import * as Google from "expo-auth-session/providers/google";
 import { useEffect } from "react";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 
 // Images
 // @ts-expect-error the image does exists so get rid of the error
@@ -15,13 +15,15 @@ import logo from "@/assets/images/GoogleG.png";
 import huskyCarImage from "@/assets/images/husky-car.png";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const webClientId = process.env.EXPO_PUBLIC_WEB_CLIENT_ID;;
-const iosClientId = process.env.EXPO_PUBLIC_IOS_CLIENT_ID;;
-const androidClientId = process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID;
+const webClientId = '31898801148-fs0ddrh0mbbcv7atnc7v5q2r31u6i1bq.apps.googleusercontent.com';
+const iosClientId = '31898801148-64e2hnf3f905e7bgfrrs2cf7ftsu8dnk.apps.googleusercontent.com';
+const androidClientId = '31898801148-fu8ji5l2k42coc833csqqg8hovei99ua.apps.googleusercontent.com';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const Login = () => {
+  //const [errMsg, setErrMsg] = useState("");
+  const {error} = useLocalSearchParams();
   const config = {
     webClientId,
     iosClientId,
@@ -33,16 +35,12 @@ const Login = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [request, response, promptAsync] = Google.useAuthRequest(config);
 
-  // This is where oauthredirect comes back to, to catch the Google response
-  // and forward it (like a package) to finishSignIn
-  // Stringifying the response so that we can pass the whole response object
-  // to finishSignIn (when it passes it to websockets)
   useEffect(() => {
     if (response?.type === 'success') {
       const serializedResponse = JSON.stringify(response);
-      console.log(serializedResponse); // leaving this in for now, feel free to remove once tested
+      console.log(serializedResponse);
       console.log('OAuth code received. Navigating to redirect page.');
-      // Pass the code to the finishSignIn page, which will handle the Websocket exchange.
+      // Pass the code to your redirect page, which will handle the backend exchange.
       router.replace({ pathname: '/(student)/finishSignIn', params: { serializedResponse } });
     }
   }, [response]);
@@ -96,6 +94,7 @@ const Login = () => {
               Sign in with UW Email
             </Text>
           </TouchableOpacity>
+          <Text style={{ color: "red", marginTop: 10 }}>{error}</Text>
         </View>
       </View>
     </SafeAreaView>
@@ -103,3 +102,5 @@ const Login = () => {
 };
 
 export default Login;
+
+// <Text style={{ color: "red", marginTop: 10 }}>{errMsg}</Text>
