@@ -14,6 +14,7 @@ import { Platform, View, Image, Alert, Linking } from "react-native";
 import MapViewDirections from "react-native-maps-directions";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { PurpleZone } from "@/services/ZoneService";
+import { HandleRidePhase } from "./home";
 
 interface MapProps {
   startLocation: { latitude: number; longitude: number };
@@ -24,6 +25,7 @@ interface MapProps {
     latitude: number;
     longitude: number;
   }) => void;
+  currPhase: HandleRidePhase;
 }
 
 // functions that can be called from the parent component
@@ -42,7 +44,8 @@ const Map = forwardRef<MapRef, MapProps>(
       dropOffLocation = { latitude: 0, longitude: 0 },
       studentLocation = { latitude: 0, longitude: 0 },
       userLocationChanged,
-    },
+      currPhase = "headingToPickup",
+    }: MapProps,
     ref
   ) => {
     // STATE VARIABLES
@@ -295,30 +298,34 @@ const Map = forwardRef<MapRef, MapProps>(
               <Ionicons name="car-sharp" size={30} color="black" />
             </View>
           </Marker>
-          <Marker
-            coordinate={{
-              latitude: studentLocation.latitude,
-              longitude: studentLocation.longitude,
-            }}
-            title={"Student's Location"}
-          >
-            <View
-              style={{
-                backgroundColor: "white",
-                borderRadius: 50,
-                borderWidth: 2,
-                width: 35,
-                height: 35,
-                alignItems: "center",
-                justifyContent: "center",
+          {/* Only show student loc if we are waiting for pickup */}
+          {currPhase == "waitingForPickup" && (
+            <Marker
+              coordinate={{
+                latitude: studentLocation.latitude,
+                longitude: studentLocation.longitude,
               }}
+              title={"Student's Location"}
             >
-              <FontAwesome6 name="person-walking" size={24} color="black" />
-            </View>
-          </Marker>
+              <View
+                style={{
+                  backgroundColor: "white",
+                  borderRadius: 50,
+                  borderWidth: 2,
+                  width: 35,
+                  height: 35,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <FontAwesome6 name="person-walking" size={24} color="black" />
+              </View>
+            </Marker>
+          )}
           {/* show the directions between the pickup and dropoff locations if they are valid
         if the ride is not currently happening / happened  */}
           {userLocation.latitude !== 0 &&
+            startLocation.latitude !== 0 &&
             pickUpLocation.latitude !== 0 &&
             dropOffLocation.latitude !== 0 && (
               <MapViewDirections
