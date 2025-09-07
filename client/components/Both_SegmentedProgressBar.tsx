@@ -11,7 +11,7 @@ export default function SegmentedProgressBar({
   return (
     <View>
       {type == 1 ? (
-        <View style={styles.segmentedProgressContainer}>
+        <View style={[styles.segmentedProgressContainer]}>
           <View
             style={[
               styles.segmentedProgressBar,

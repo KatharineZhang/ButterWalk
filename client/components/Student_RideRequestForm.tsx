@@ -534,7 +534,6 @@ export default function RideRequestForm({
   /* USE EFFECTS */
   // upon first render, set up the state
   useEffect(() => {
-    console.log("RideRequestForm rendered");
     // add the listener for the distance response
     WebSocketService.addListener(handleDistanceTopThree, "DISTANCE");
     // listen for the snap location response
@@ -569,8 +568,6 @@ export default function RideRequestForm({
       (currentQuery == "pickup" && pickUpQuery == "") ||
       (currentQuery == "dropoff" && dropOffQuery == "")
     ) {
-      console.log("pickupquery: ", pickUpQuery);
-      console.log("dropoffquery: ", dropOffQuery);
       setCampusAPIResults([]);
       setPlaceSearchResults([]);
       return;
@@ -685,14 +682,14 @@ export default function RideRequestForm({
       <BottomDrawer bottomSheetRef={bottomSheetRef}>
         {/* The search box with shadow under it*/}
         <View
-          style={styles.requestFormContainer}
+          style={[styles.requestFormContainer]}
           onLayout={() => {
             // on render, update the sidebar height to 40% the height of the screen
             // (which is the default height of the bottom sheet)
             updateSideBarHeight(height * 0.4);
           }}
         >
-          <View style={{ flex: 1, width: "99%" }}>
+          <View style={{ flex: 1, width: "99%"}}>
             {/* Header */}
             <View
               style={{
@@ -701,28 +698,32 @@ export default function RideRequestForm({
                 alignItems: "center",
                 width: "90%",
                 marginHorizontal: 20,
-                marginBottom: 20,
+                marginBottom: 20
               }}
             >
-              <View style={{ width: "10%" }} />
-              {/* Title */}
-              <Text style={{ fontSize: 20, fontWeight: "bold" }}>
-                Choose Your Locations
-              </Text>
+              
+                {/* Title */}
+                <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+                  Choose Your Locations
+                </Text>
 
-              {/* faq button */}
-              <TouchableOpacity onPress={() => setFAQVisible(true)}>
-                <Ionicons
-                  name="information-circle-outline"
-                  size={25}
-                  color="black"
-                />
-              </TouchableOpacity>
+                {/* faq button */}
+                <TouchableOpacity onPress={() => setFAQVisible(true)}>
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={35}
+                    color="black"
+                  />
+                </TouchableOpacity>
             </View>
-            <View style={{ height: 20 }} />
-            <SegmentedProgressBar type={1} />
-            <View style={{ height: 20 }} />
+
+            {/* Progress Bar */}
+            <View style={{ marginBottom: "5%" }}>
+              <SegmentedProgressBar type={1} />
+            </View>
           </View>
+
+
           {/* Location and Destination Icons */}
           <View
             style={{
@@ -779,19 +780,13 @@ export default function RideRequestForm({
             enterPressed={enterPressed}
             placeholder="Drop Off Location"
           />
-          {/* Next Button */}
-          <View
-            style={{
-              flex: 0.1,
-              justifyContent: "flex-end",
-            }}
-          >
+          {/* "Choose # of passengers" Button */}
             <TouchableOpacity
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                marginVertical: 10,
-                justifyContent: "flex-end",
+                marginBottom: "3%",
+                marginLeft: "30%",
               }}
               onPress={goToNumberRiders}
             >
@@ -800,7 +795,6 @@ export default function RideRequestForm({
               </Text>
               <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
             </TouchableOpacity>
-          </View>
         </View>
 
 
