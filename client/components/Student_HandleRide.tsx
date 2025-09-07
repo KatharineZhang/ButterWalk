@@ -398,6 +398,51 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
           </View>
         ))}
 
+      {/* I Found My Driver Button */}
+      {status === "RideInProgress" &&
+        (showWaitingForConfirmation === false ? (
+          <View
+            style={[
+              styles.bottomModalButtonContainer,
+              { paddingHorizontal: 10 },
+            ]}
+          >
+            <Pressable
+              style={[
+                styles.bottomModalButton,
+                { borderWidth: 2, backgroundColor: "#4B2E83" },
+              ]}
+              onPress={() => {
+                setShowWaitingForConfirmation(true);
+              }}
+            >
+              <Text style={styles.buttonText}>I have arrived</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View
+            style={[
+              styles.bottomModalButtonContainer,
+              {
+                paddingHorizontal: 10,
+                alignItems: "center",
+                paddingVertical: "7%",
+                flexDirection: "row",
+                justifyContent: "center",
+              },
+            ]}
+          >
+            <ActivityIndicator
+              size="small"
+              color="#4B2E83"
+              style={{ margin: "2%" }}
+            />
+            <Text style={{ fontStyle: "italic", fontSize: 18 }}>
+              Waiting For Driver Confirmation...
+            </Text>
+          </View>
+        ))}
+
       {/* Go Home Button */}
       {status == "RideCompleted" && (
         <View
