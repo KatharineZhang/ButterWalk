@@ -447,7 +447,6 @@ export default function HomePage() {
         resetAllFields();
         // go back to ride request component
         setWhichComponent("rideReq");
-        console.log("the component is now: " + whichComponent);
         // set the notif state based on the reason for cancelation
         switch (cancelReason.current) {
           case "none":
@@ -619,7 +618,6 @@ export default function HomePage() {
       // we should already be showing the handleRide component
       // set the ride status to DriverEnRoute
       rideStatusRef.current = "DriverEnRoute";
-      console.log(rideStatusRef.current);
       setRideStatus("DriverEnRoute");
     } else {
       console.log("Accept ride error: ", message);
