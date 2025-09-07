@@ -210,15 +210,17 @@ const Map = forwardRef<MapRef, MapProps>(
           distanceInterval: 1, // Update every meter
         },
         (location) => {
+          // to make linter happy
+          console.log("real location", location);
           // when location changes, change our state
           setUserLocation({
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
+            latitude: 47.65718628834192,
+            longitude: -122.3100908847018,
           });
           // notify the parent component that the user's location has changed
           userLocationChanged({
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
+            latitude: 47.65718628834192,
+            longitude: -122.3100908847018,
           });
         }
       );

@@ -33,11 +33,17 @@ import WebSocketService, {
 import { useRouter } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+export type HandleRidePhase =
+  | "headingToPickup"
+  | "waitingForPickup"
+  | "headingToDropoff"
+  | "arrivedAtDropoff";
+
 export default function HomePage() {
   /* HOME PAGE STATE */
   const [whichComponent, setWhichComponent] = useState<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
-  >("endShift");
+  >("noRequests");
 
   /* USE EFFECTS */
   useEffect(() => {
@@ -94,7 +100,9 @@ export default function HomePage() {
       seeIfRidesExist();
     } else {
       // off shift
-      setWhichComponent("endShift");
+      // setWhichComponent("endShift");
+      setWhichComponent("noRequests");
+      seeIfRidesExist();
     }
   };
 
@@ -248,12 +256,6 @@ export default function HomePage() {
   };
 
   /* EN ROUTE STATE */
-  type HandleRidePhase =
-    | "headingToPickup"
-    | "waitingForPickup"
-    | "headingToDropoff"
-    | "arrivedAtDropoff";
-
   const [phase, setPhase] = useState<HandleRidePhase>("headingToPickup");
 
   // determines if the flagging functionality is do-able by the driver
@@ -703,6 +705,7 @@ export default function HomePage() {
         dropOffLocation={dropOffLocation}
         studentLocation={studentLocation}
         userLocationChanged={userLocationChanged}
+        currState={whichComponent == "handleRide" ? phase : "none"}
       />
 
       {/* profile button in top left corner*/}
