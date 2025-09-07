@@ -1,4 +1,3 @@
-//import { AuthSessionResult } from "expo-auth-session";
 import {
   WebSocketResponse,
   ErrorResponse,
@@ -10,12 +9,11 @@ import WebSocketService, {
 
 import { useLocalSearchParams, router } from "expo-router";
 import { useState, useEffect } from "react";
-//import { View, Text } from "react-native";
-//import LoadingPage from "app/loadingPage";
 
 const FinishSignIn = () => {
   const [accExists, setAccExists] = useState<boolean | null>(null);
   const [netid, setNetid] = useState("");
+  // JSONified response object from signin.tsx (from Google)
   const { serializedResponse } = useLocalSearchParams();
   const [response, setResponse] = useState(null);
 
@@ -27,11 +25,9 @@ const FinishSignIn = () => {
       try {
         const decodedResponse = decodeURIComponent(finalSerializedResponse);
         const parsedResponse = JSON.parse(decodedResponse);
-        //setResponse({response, parsedResponse});
         setResponse(parsedResponse);
-      } catch (e) {
-        console.log("Failed to parse serialized response:", e);
-        Alert.alert("I am here");
+      } catch (error) {
+        console.log("Failed to parse serialized response:", error);
       }
     }
   }, [serializedResponse]);
@@ -40,7 +36,7 @@ const FinishSignIn = () => {
     if (!response) {
       return;
     }
-
+    
     const handleSigninMessage = (message: WebSocketResponse) => {
       if ("response" in message && message.response === "SIGNIN") {
         const signinResp = message as StudentSignInResponse;
@@ -53,7 +49,6 @@ const FinishSignIn = () => {
       } else {
         const errorResp = message as ErrorResponse;
         console.log("Signin related error:", errorResp.error);
-        //Alert.alert('Error', errorResp.error);
         router.replace({pathname: "/(student)/signin", params: {error: errorResp.error} });
       }
     };
@@ -74,13 +69,13 @@ const FinishSignIn = () => {
     };
     
     connectWebSocket();
-
+    
     return () => {
       WebSocketService.removeListener(handleSigninMessage, "SIGNIN");
     };
   }, [response]);
 
-  // Use a dedicated useEffect to handle navigation
+  // Using dedicated useEffect to handle navigation (finishAcc.tsx or home.tsx)
   useEffect(() => {
     if (accExists === true && netid) {
       router.replace({
@@ -93,16 +88,17 @@ const FinishSignIn = () => {
         params: { netid: netid },
       });
     }
-  }, [accExists, netid]); // This effect depends on the state updates
+  }, [accExists, netid]);
 
+  // Loading page for a couple of seconds while the app logs the user in,
+  // (UI for loading page is below)
   return (
     LoadingPage()
   );
 };
 export default FinishSignIn;
 
-
-import { View, Text, Animated, Easing, Alert } from "react-native";
+import { View, Text, Animated, Easing } from "react-native";
 import { Stack } from "expo-router";
 import { useRef } from "react";
 
@@ -207,4 +203,3 @@ const LoadingPage = () => {
     </View>
   );
 };
-
