@@ -230,6 +230,7 @@ export async function getRideRequests(): Promise<RideRequest[]> {
   const rideRequests: RideRequest[] = [];
   inDatabase.forEach((el) => {
     const rideRequest = el.data();
+    rideRequest.requestId = el.id;
     rideRequests.push(rideRequest as RideRequest);
   });
   return rideRequests;
