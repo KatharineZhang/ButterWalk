@@ -638,9 +638,6 @@ export default function RideRequestForm({
     bottomSheetRef.current?.expand();
   };
 
-  const shouldShowRecent =
-    campusAPIResults.length === 0 && placeSearchResults.length === 0;
-
   type FormattedResult = {
     key: string;
     name: string;
@@ -648,36 +645,29 @@ export default function RideRequestForm({
     type: "recent" | "campus" | "place";
   };
 
-  const formattedResults: FormattedResult[] = shouldShowRecent
-    ? recentLocations.map((item) => ({
-        key: item.name, // unique key
+  const formattedResults: FormattedResult[] = [
+    ...recentLocations.map((item) => ({
+      key: `recent-${item.name}`,
+      name: item.name,
+      address: item.address,
+      type: "recent" as const,
+    })),
+    ...campusAPIResults.map((item, index) => ({
+      key: `campus-${index}`,
+      name: item,
+      address: null,
+      type: "campus" as const,
+    })),
+    ...placeSearchResults
+      .filter((item) => item?.name && !campusAPIResults.includes(item.name))
+      .map((item, index) => ({
+        key: `place-${index}`,
         name: item.name,
         address: item.address,
-        type: "recent" as const,
-      }))
-    : [
-        ...campusAPIResults.map((item, index) => ({
-          key: `campus-${index}`,
-          name: item,
-          address: null,
-          type: "campus" as const,
-        })),
-        ...placeSearchResults
-          .filter((item) => item?.name && !campusAPIResults.includes(item.name))
-          .map((item, index) => ({
-            key: `place-${index}`,
-            name: item.name,
-            address: item.address,
-            type: "place" as const,
-          })),
-      ];
-
-  const filteredResults = formattedResults.filter(
-    (item) => item.name !== chosenPickup && item.name !== chosenDropoff
-  );
-  // use the filtered results for rendering
-  console.log("number of formatted results: ", filteredResults.length);
-
+        type: "place" as const,
+      })),
+  ];
+    
   /* PANEL UI */
   // the ride request panel
   const RideRequest: JSX.Element = (
@@ -768,7 +758,6 @@ export default function RideRequestForm({
             setQuery={setPickUpQuery}
             enterPressed={enterPressed}
             placeholder="Pick Up Location"
-            data={campusAPIResults}
           />
           <AutocompleteInput
             onPress={() => {
@@ -779,7 +768,6 @@ export default function RideRequestForm({
             setQuery={setDropOffQuery}
             enterPressed={enterPressed}
             placeholder="Drop Off Location"
-            data={campusAPIResults}
           />
           {/* Next Button */}
           <View
@@ -808,7 +796,7 @@ export default function RideRequestForm({
 
         <View style={{ flex: 1, height: suggestionListHeight }}>
           <FlatList
-            data={filteredResults}
+            data={formattedResults}
             keyExtractor={(item) => item.key}
             ListHeaderComponent={
               currentQuery === "pickup" ? (

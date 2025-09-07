@@ -8,7 +8,6 @@ interface AutoCompleteInputProps {
   setQuery: (text: string) => void;
   enterPressed: () => void;
   placeholder: string;
-  data: string[];
 }
 
 const AutoCompleteInput: React.FC<AutoCompleteInputProps> = ({
