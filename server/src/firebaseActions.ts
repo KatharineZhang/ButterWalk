@@ -443,10 +443,10 @@ export async function completeRideRequest(
   // if the current pickup and dropoff locations are already in the array,
   // remove them to prevent duplicates
   oldLocations = oldLocations.filter(
-    (location) => location !== data.locationTo
+    (location) => location.name !== data.locationTo.name
   );
   oldLocations = oldLocations.filter(
-    (location) => location !== data.locationFrom
+    (location) => location.name !== data.locationFrom.name
   );
 
   // add the new pickup and dropoff locations to the front of the array
