@@ -31,15 +31,15 @@ export class BuildingService {
     {
       name: "Aerospace and Engineering Research Building",
       location: {
-        latitude: 47.65395746314114,
-        longitude: -122.30582926261015,
+        latitude: 47.653996,
+        longitude: -122.306079, 
       },
     },
     {
       name: "Alder Hall",
       location: {
-        latitude: 47.655683563894115,
-        longitude: -122.31386677645654,
+        latitude: 47.655896,
+        longitude: -122.314116,
       },
     },
     {
@@ -52,8 +52,8 @@ export class BuildingService {
     {
       name: "Anderson Hall",
       location: {
-        latitude: 47.65174913643619,
-        longitude: -122.30757852063314,
+        latitude: 47.651856037467894,
+        longitude: -122.30760534579424,
       },
     },
     {
@@ -66,8 +66,8 @@ export class BuildingService {
     {
       name: "Art Building",
       location: {
-        latitude: 47.658486837887594,
-        longitude: -122.30649398539336,
+        latitude: 47.658581,
+        longitude: -122.306717,
       },
     },
     {
@@ -80,8 +80,9 @@ export class BuildingService {
     {
       name: "Bagley Hall",
       location: {
-        latitude: 47.653047361283384,
-        longitude: -122.30866568205029,
+        latitude: 47.65287038631524,
+        longitude: -122.30875655474162,
+
       },
     },
     {
@@ -136,15 +137,15 @@ export class BuildingService {
     {
       name: "Cedar  Apartments",
       location: {
-        latitude: 47.65705471052797,
-        longitude: -122.31593770949199,
+        latitude: 47.65699243504848,
+        longitude: -122.31574245566567,
       },
     },
     {
       name: "Chemistry Building (CHB)",
       location: {
-        latitude: 47.652936339993985,
-        longitude: -122.30841590487731,
+        latitude: 47.65299925378551,
+        longitude: -122.30884929507398,
       },
     },
     {
@@ -164,8 +165,8 @@ export class BuildingService {
     {
       name: "Communications Building (CMU)",
       location: {
-        latitude: 47.65714736449569,
-        longitude: -122.30511840041403,
+        latitude: 47.65707039505502,
+        longitude: -122.30494526608224,
       },
     },
     {
@@ -199,8 +200,8 @@ export class BuildingService {
     {
       name: "Denny Hall (DEN)",
       location: {
-        latitude: 47.65834823904908,
-        longitude: -122.30884570302425,
+        latitude: 47.658707318076885,
+        longitude: -122.30911123861098,
       },
     },
     {
@@ -297,15 +298,15 @@ export class BuildingService {
     {
       name: "Founders Hall (FNDR)",
       location: {
-        latitude: 47.65877152377445,
-        longitude: -122.3072035704827,
+        latitude: 47.658626,
+        longitude: -122.307049,
       },
     },
     {
       name: "Gerberding Hall (GRB)",
       location: {
-        latitude: 47.655215124758634,
-        longitude: -122.30946177233567,
+        latitude: 47.655310863180524,
+        longitude: -122.30969191774132,
       },
     },
     {
@@ -318,8 +319,8 @@ export class BuildingService {
     {
       name: "Gowen Hall (GWN)",
       location: {
-        latitude: 47.6563719110055,
-        longitude: -122.30778825884383,
+        latitude: 47.656247,
+        longitude: -122.307443,
       },
     },
     {
@@ -422,6 +423,7 @@ export class BuildingService {
     },
     {
       name: "Hitchcock Hall (HCK)",
+      // no parking lot or street nearby??
       location: {
         latitude: 47.651888461875366,
         longitude: -122.31152823186072,
@@ -465,8 +467,8 @@ export class BuildingService {
     {
       name: "Johnson Hall (JHN)",
       location: {
-        latitude: 47.654589582604046,
-        longitude: -122.30883170117175,
+        latitude: 47.654899,
+        longitude: -122.309003,
       },
     },
     {
@@ -633,6 +635,7 @@ export class BuildingService {
     },
     {
       name: "Mercer Court (MRC)",
+      // multiple enterances for this
       location: {
         latitude: 47.65481930770117,
         longitude: -122.31760013031219,
@@ -655,12 +658,13 @@ export class BuildingService {
     {
       name: "Miller Hall (MLR)",
       location: {
-        latitude: 47.6572374976361,
-        longitude: -122.30635900487712,
+        latitude: 47.657039,
+        longitude: -122.306337,
       },
     },
     {
       name: "Molecular Engineering & Sciences Building (MOL/NAN)",
+      // multiple enterances for this
       location: {
         latitude: 47.65441559802646,
         longitude: -122.30991977048294,
@@ -669,8 +673,8 @@ export class BuildingService {
     {
       name: "More Hall (MOR)",
       location: {
-        latitude: 47.65248621663809,
-        longitude: -122.3047983876802,
+        latitude: 47.65242342009211,
+        longitude: -122.30447581941021,
       },
     },
     {
@@ -697,6 +701,7 @@ export class BuildingService {
     {
       name: "Oak Hall (OAK)",
       location: {
+        // not sure about this one
         latitude: 47.65945356458997,
         longitude: -122.30532243786992,
       },
@@ -724,6 +729,7 @@ export class BuildingService {
     },
     {
       name: "PACCAR Hall (PCAR)",
+      // is this location sus, would it be hard for students to find?
       location: {
         latitude: 47.65936371854245,
         longitude: -122.30887362815483,
@@ -753,8 +759,8 @@ export class BuildingService {
     {
       name: "Hec Edumundson Pavilion Pool (PVP)",
       location: {
-        latitude: 47.651869345502405,
-        longitude: -122.30129706872613,
+        latitude: 47.651918452751005,
+        longitude: -122.30099637030055,
       },
     },
     {
@@ -794,6 +800,7 @@ export class BuildingService {
     },
     {
       name: "Poplar Hall (POP)",
+      // multiple enterances for this?
       location: {
         latitude: 47.65640351120548,
         longitude: -122.31400697233558,
@@ -802,8 +809,8 @@ export class BuildingService {
     {
       name: "Portage Bay Building (PBB)",
       location: {
-        latitude: 47.64874830218737,
-        longitude: -122.3094786652339,
+        latitude: 47.64886376128413,
+        longitude: -122.31014023975351,
       },
     },
     {
@@ -816,8 +823,8 @@ export class BuildingService {
     {
       name: "Publications Services Building (PSV)",
       location: {
-        latitude: 47.65523952381646,
-        longitude: -122.32041916104683,
+        latitude: 47.65517217934046,
+        longitude: -122.32038702603559,
       },
     },
     {
@@ -906,6 +913,8 @@ export class BuildingService {
     },
     {
       name: "Husky Union Building (HUB)",
+      // these coordinates are in the middle of the HUB, but 
+      //google maps really doesn't let me get closer to the actual entrance
       location: {
         latitude: 47.65542540527123,
         longitude: -122.30542782562033,
@@ -934,6 +943,7 @@ export class BuildingService {
     },
     {
       name: "Thomson Hall (THO)",
+      // multiple enterances, skagit lane, or nearby parking lot
       location: {
         latitude: 47.65648102453225,
         longitude: -122.30575637589331,
@@ -977,8 +987,8 @@ export class BuildingService {
     {
       name: "Wilcox Hall (WIL)",
       location: {
-        latitude: 47.651715839048876,
-        longitude: -122.304505092782,
+        latitude: 47.65194037461812,
+        longitude: -122.30436998284932,
       },
     },
     {
@@ -1012,8 +1022,8 @@ export class BuildingService {
     {
       name: "Wilson Ceramic Laboratory (WCL)",
       location: {
-        latitude: 47.651672296876576,
-        longitude: -122.3048862925976,
+        latitude: 47.651825747765756,
+        longitude: -122.30491230445966,
       },
     },
     {
