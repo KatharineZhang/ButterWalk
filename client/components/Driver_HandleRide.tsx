@@ -8,8 +8,8 @@ import BothProgressBar from "../components/Both_ProgressBar";
 
 interface HandleRideProps {
   requestInfo: RideRequest;
-  driverToPickupDuration: number; // minutes (may be undefined initially in practice)
-  pickupToDropoffDuration: number; // minutes (may be undefined initially in practice)
+  driverToPickupDuration: number; // in minutes, may be undefined initially
+  pickupToDropoffDuration: number; // in minutes, may be undefined initially
   phase:
     | "headingToPickup"
     | "waitingForPickup"
@@ -57,7 +57,7 @@ export default function HandleRide({
   isNearDropoff,
   updateSideBarHeight,
 }: HandleRideProps) {
-  // When timer is done in "waitingForPickup" state
+  // Timer state
   const [timerDone, setTimerDone] = useState(false);
   const [seconds, setSeconds] = useState(5 * 60); // 5 minutes
 
@@ -65,15 +65,10 @@ export default function HandleRide({
     if (phase === "headingToPickup") {
       changeFlaggingAllowed(false);
     } else if (phase === "waitingForPickup") {
-      // Reset timer when entering waitingForPickup phase, 5 min
       setSeconds(5 * 60);
       setTimerDone(false);
-      // Update seconds every second
       const interval = setInterval(() => {
-        setSeconds((prevSeconds) => {
-          if (prevSeconds <= 0) return 0;
-          return prevSeconds - 1;
-        });
+        setSeconds((prev) => (prev <= 0 ? 0 : prev - 1));
       }, 1000);
       return () => clearInterval(interval);
     } else if (phase === "headingToDropoff" || phase === "arrivedAtDropoff") {
@@ -81,7 +76,7 @@ export default function HandleRide({
     }
   }, [phase]);
 
-  // Auto-change to arrivedAtDropoff when near dropoff
+  // Auto-change to arrivedAtDropoff
   useEffect(() => {
     if (phase === "headingToDropoff" && isNearDropoff) {
       setPhase("arrivedAtDropoff");
@@ -89,7 +84,7 @@ export default function HandleRide({
   }, [phase, isNearDropoff, setPhase]);
 
   useEffect(() => {
-    if (seconds == 60) {
+    if (seconds === 60) {
       changeNotifState({
         text: "Your ride will be canceled in one minute.",
         color: "#FFCBCB",
@@ -110,7 +105,7 @@ export default function HandleRide({
     onCancel();
   };
 
-  // Open Google Maps directions
+  // Open Google Maps
   const openGoogleMapsDirections = async (destination: {
     lat: number;
     lng: number;
@@ -126,14 +121,14 @@ export default function HandleRide({
     }
   };
 
-  // mm:ss
+  // Format mm:ss
   const formatTime = (s: number): string => {
     const m = Math.floor(s / 60);
     const r = s % 60;
     return `${m}:${r < 10 ? "0" : ""}${r}`;
   };
 
-  // Combined progress for the bar
+  // Combined progress
   let progress = 0;
   const validatedPickupProgress = Math.min(Math.max(pickupProgress, 0), 1);
   const validatedDropoffProgress = Math.min(Math.max(dropoffProgress, 0), 1);
@@ -185,9 +180,22 @@ export default function HandleRide({
               <Text style={{ fontSize: 20, fontWeight: "600", color: "#222" }}>
                 {requestInfo?.netid || "Passenger"}
               </Text>
-              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginTop: 2,
+                }}
+              >
                 <Ionicons name="person" size={20} color="#888888" />
-                <Text style={{ fontSize: 16, marginLeft: 6, color: "#888888", fontWeight: "500" }}>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    marginLeft: 6,
+                    color: "#888888",
+                    fontWeight: "500",
+                  }}
+                >
                   ({requestInfo?.numRiders})
                 </Text>
               </View>
@@ -209,8 +217,11 @@ export default function HandleRide({
               }}
               onPress={() => {
                 const destination = {
-                  lat: requestInfo.locationFrom?.coordinates?.latitude || 47.6062,
-                  lng: requestInfo.locationFrom?.coordinates?.longitude || -122.3321,
+                  lat:
+                    requestInfo.locationFrom?.coordinates?.latitude || 47.6062,
+                  lng:
+                    requestInfo.locationFrom?.coordinates?.longitude ||
+                    -122.3321,
                   title: "Pickup Location",
                 };
                 openGoogleMapsDirections(destination);
@@ -222,7 +233,6 @@ export default function HandleRide({
             </Pressable>
           </View>
 
-          {/* Grey line */}
           <View style={styles.driverGreyLine} />
 
           {/* Unified Progress Bar */}
@@ -250,7 +260,9 @@ export default function HandleRide({
                   driverArrivedAtPickup();
                 }}
               >
-                <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>
+                <Text
+                  style={{ color: "white", fontSize: 16, fontWeight: "600" }}
+                >
                   I'm at pickup location
                 </Text>
               </Pressable>
@@ -265,8 +277,13 @@ export default function HandleRide({
               <Text style={{ fontSize: 26, fontWeight: "bold", color: "#222" }}>
                 Waiting to Pickup
               </Text>
-              {/* Timer */}
-              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginTop: 4,
+                }}
+              >
                 <Ionicons
                   name="time-outline"
                   size={26}
@@ -288,17 +305,31 @@ export default function HandleRide({
               <Text style={{ fontSize: 20, fontWeight: "600", color: "#222" }}>
                 {requestInfo?.netid || "Passenger"}
               </Text>
-              <View style={{ flexDirection: "row", alignItems: "center", marginTop: "15%" }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginTop: "15%",
+                }}
+              >
                 <Ionicons name="person" size={20} color="#888888" />
-                <Text style={{ fontSize: 16, marginLeft: 6, color: "#888888", fontWeight: "500" }}>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    marginLeft: 6,
+                    color: "#888888",
+                    fontWeight: "500",
+                  }}
+                >
                   ({requestInfo?.numRiders})
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* Grey line */}
-          <View style={{ height: 1, backgroundColor: "#E0E0E0", marginVertical: 16 }} />
+          <View
+            style={{ height: 1, backgroundColor: "#E0E0E0", marginVertical: 16 }}
+          />
 
           {/* Unified Progress Bar */}
           <BothProgressBar
@@ -310,7 +341,14 @@ export default function HandleRide({
           />
 
           {/* Buttons */}
-          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: "5%", paddingBottom: 20 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginTop: "5%",
+              paddingBottom: 20,
+            }}
+          >
             <View style={{ flex: 1, marginRight: 8 }}>
               <Pressable
                 style={{
@@ -353,7 +391,6 @@ export default function HandleRide({
         </>
       ) : phase === "headingToDropoff" ? (
         <>
-          {/* title and passenger name */}
           <View style={styles.titlePassengerName}>
             <Text style={{ fontSize: 26, fontWeight: "bold", color: "#222" }}>
               Driving to Dropoff
@@ -364,14 +401,20 @@ export default function HandleRide({
               </Text>
               <View style={styles.driverPersonIcon}>
                 <Ionicons name="person" size={20} color="#888888" />
-                <Text style={{ fontSize: 16, marginLeft: 6, color: "#888888", fontWeight: "500" }}>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    marginLeft: 6,
+                    color: "#888888",
+                    fontWeight: "500",
+                  }}
+                >
                   ({requestInfo?.numRiders})
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* Directions Button */}
           <View style={{ marginTop: 4, marginBottom: 12 }}>
             <Pressable
               style={{
@@ -387,7 +430,8 @@ export default function HandleRide({
               onPress={() => {
                 const destination = {
                   lat: requestInfo.locationTo?.coordinates?.latitude || 47.6062,
-                  lng: requestInfo.locationTo?.coordinates?.longitude || -122.3321,
+                  lng:
+                    requestInfo.locationTo?.coordinates?.longitude || -122.3321,
                   title: "Dropoff Location",
                 };
                 openGoogleMapsDirections(destination);
@@ -399,7 +443,6 @@ export default function HandleRide({
             </Pressable>
           </View>
 
-          {/* Grey line */}
           <View style={styles.driverGreyLine} />
 
           {/* Unified Progress Bar */}
@@ -413,7 +456,6 @@ export default function HandleRide({
         </>
       ) : phase === "arrivedAtDropoff" ? (
         <>
-          {/* title and passenger name */}
           <View style={styles.titlePassengerName}>
             <Text style={{ fontSize: 26, fontWeight: "bold", color: "#222" }}>
               You've Arrived
@@ -424,7 +466,14 @@ export default function HandleRide({
               </Text>
               <View style={styles.driverPersonIcon}>
                 <Ionicons name="person" size={20} color="#888888" />
-                <Text style={{ fontSize: 16, marginLeft: 6, color: "#888888", fontWeight: "500" }}>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    marginLeft: 6,
+                    color: "#888888",
+                    fontWeight: "500",
+                  }}
+                >
                   ({requestInfo?.numRiders})
                 </Text>
               </View>
@@ -440,7 +489,6 @@ export default function HandleRide({
             dropoffAddress={requestInfo.locationTo?.name || ""}
           />
 
-          {/* Complete button */}
           <Pressable
             style={[styles.driverCompleteButton, { marginTop: "2%" }]}
             onPress={completeRide}

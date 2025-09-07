@@ -12,13 +12,14 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { styles } from "@/assets/styles";
 import { Platform, View, Image, Alert, Linking } from "react-native";
 import MapViewDirections from "react-native-maps-directions";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { PurpleZone } from "@/services/ZoneService";
 
 interface MapProps {
   startLocation: { latitude: number; longitude: number };
   pickUpLocation: { latitude: number; longitude: number };
   dropOffLocation: { latitude: number; longitude: number };
+  studentLocation: { latitude: number; longitude: number };
   userLocationChanged: (location: {
     latitude: number;
     longitude: number;
@@ -29,6 +30,8 @@ interface MapProps {
 // using the ref
 export interface MapRef {
   recenterMap: () => void; // recenter the map on the user's location
+  pickupDistance: number; // distance for pickup leg
+  dropoffDistance: number; // distance for dropoff leg
 }
 
 // Simple renders the points passing in through the props
@@ -39,6 +42,7 @@ const Map = forwardRef<MapRef, MapProps>(
       startLocation = { latitude: 0, longitude: 0 },
       pickUpLocation = { latitude: 0, longitude: 0 },
       dropOffLocation = { latitude: 0, longitude: 0 },
+      studentLocation = { latitude: 0, longitude: 0 },
       userLocationChanged,
     },
     ref
@@ -49,9 +53,13 @@ const Map = forwardRef<MapRef, MapProps>(
       latitude: number;
       longitude: number;
     }>({ latitude: 0, longitude: 0 });
+    // waypoints (add stops along the route) for directions
+    const [waypoints, setWaypoints] = useState<
+      { latitude: number; longitude: number }[]
+    >([pickUpLocation]);
 
     // what locations to focus on when zooming in on the map
-    // in the format: [userLocation, pickUpLocation, dropOffLocation]
+    // in the format: [userLocation/startLocation, pickUpLocation, dropOffLocation]
     const [zoomOn, setZoomOn] = useState<
       { latitude: number; longitude: number }[]
     >([
@@ -68,6 +76,10 @@ const Map = forwardRef<MapRef, MapProps>(
     // used for map zooming
     const mapRef = useRef<MapView>(null);
 
+    // for calculating the distance of route, to be used in progress bar calculations
+    const [pickupDistance, setPickupDistance] = useState<number>(0);
+    const [dropoffDistance, setDropoffDistance] = useState<number>(0);
+
     // STATE HOOKS
     useEffect(() => {
       // on the first render, get the user's location
@@ -76,21 +88,54 @@ const Map = forwardRef<MapRef, MapProps>(
     }, []);
 
     useEffect(() => {
+      // when the pickup location changes, update the waypoints
+      setWaypoints([pickUpLocation]);
+    }, [pickUpLocation]);
+
+    useEffect(() => {
+      // check if we have reached the waypoint
+      // when the user reaches the waypoint, remove it from the directions
+      // so we only route to the dropoff location at that point
+      if (waypoints.length > 0) {
+        if (isSameLocation(userLocation, pickUpLocation)) {
+          console.log("Reached waypoint, clearing waypoints");
+          setWaypoints([]);
+        }
+      }
+    }, [userLocation]);
+
+    useEffect(() => {
       // when any of our locations change, check if we need to zoom on them
       // this is mainly because our user, pickup and dropoff locations set all the time (to the same values)
       // but we don't necessarily want to zoom in on those location unless they are actually different
-      if (!isSameLocation(userLocation, zoomOn[0])) {
-        setZoomOn((prevZoomOn) => {
-          const newZoomOn = [...prevZoomOn];
-          newZoomOn[0] = userLocation;
-          return newZoomOn;
-        });
+
+      // If there is a start location, then there is a ride and we don't want to zoom on each user's location change
+      // this allows the user to move the map around, and only re-center when they click the recenter button
+      // if there is no start location, then we want to zoom on the user's location changes
+      if (startLocation.latitude !== 0) {
+        // check zoomOn index 0 aka startLocation
+        if (!isSameLocation(startLocation, zoomOn[0])) {
+          setZoomOn((prevZoomOn) => {
+            const newZoomOn = [...prevZoomOn];
+            newZoomOn[0] = startLocation;
+            return newZoomOn;
+          });
+        }
+      } else {
+        // otherwise, use the user's location
+        if (!isSameLocation(userLocation, zoomOn[0])) {
+          setZoomOn((prevZoomOn) => {
+            const newZoomOn = [...prevZoomOn];
+            newZoomOn[0] = userLocation;
+            return newZoomOn;
+          });
+        }
       }
       // check zoomOn index 1 aka pickUpLocation
       if (!isSameLocation(pickUpLocation, zoomOn[1])) {
         setZoomOn((prevZoomOn) => {
           const newZoomOn = [...prevZoomOn];
-          newZoomOn[2] = pickUpLocation;
+          newZoomOn[1] = pickUpLocation;
           return newZoomOn;
         });
       }
@@ -98,7 +143,7 @@ const Map = forwardRef<MapRef, MapProps>(
       if (!isSameLocation(dropOffLocation, zoomOn[2])) {
         setZoomOn((prevZoomOn) => {
           const newZoomOn = [...prevZoomOn];
-          newZoomOn[3] = dropOffLocation;
+          newZoomOn[2] = dropOffLocation;
           return newZoomOn;
         });
       }
@@ -114,6 +159,8 @@ const Map = forwardRef<MapRef, MapProps>(
       // this is used to allow the parent component to call the recenterMap function
       () => ({
         recenterMap,
+        pickupDistance,
+        dropoffDistance,
       })
     );
 
@@ -256,6 +303,27 @@ const Map = forwardRef<MapRef, MapProps>(
               <Ionicons name="car-sharp" size={30} color="black" />
             </View>
           </Marker>
+          <Marker
+            coordinate={{
+              latitude: studentLocation.latitude,
+              longitude: studentLocation.longitude,
+            }}
+            title={"Student's Location"}
+          >
+            <View
+              style={{
+                backgroundColor: "white",
+                borderRadius: 50,
+                borderWidth: 2,
+                width: 35,
+                height: 35,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <FontAwesome6 name="person-walking" size={24} color="black" />
+            </View>
+          </Marker>
           {/* show the directions between the pickup and dropoff locations if they are valid
         if the ride is not currently happening / happened  */}
           {userLocation.latitude !== 0 &&
@@ -263,11 +331,37 @@ const Map = forwardRef<MapRef, MapProps>(
             dropOffLocation.latitude !== 0 && (
               <MapViewDirections
                 origin={userLocation}
-                waypoints={[pickUpLocation]}
+                waypoints={waypoints}
                 destination={dropOffLocation}
                 apikey={GOOGLE_MAPS_APIKEY}
                 strokeWidth={3}
                 strokeColor="#000000"
+                onReady={(result: {
+                  legs?: { distance: { value: number } }[];
+                  distance?: number;
+                }) => {
+                  if (result.legs && result.legs.length > 1) {
+                    // we have a waypoint
+                    // set the pickup distance
+                    setPickupDistance(result.legs[0].distance.value);
+                    // set the dropoff distance
+                    if (
+                      result.legs[1] !== undefined &&
+                      result.legs[1].distance
+                    ) {
+                      setDropoffDistance(result.legs[1].distance.value);
+                    }
+                  } else if (result.legs && result.legs.length === 1) {
+                    // no waypoint
+                    setDropoffDistance(result.legs[0].distance.value);
+                  } else if (typeof result.distance === "number") {
+                    // if may be the case that we only have distance if there are no waypoints
+                    setDropoffDistance(result.distance);
+                  }
+                }}
+                onError={(errorMessage) => {
+                  console.log("MapViewDirections error:", errorMessage);
+                }}
               />
             )}
         </MapView>
@@ -303,7 +397,7 @@ export const isSameLocation = (
   point2: { latitude: number; longitude: number }
 ) => {
   // check if the distance between two points is less than the threshold
-  const SAME_LOCATION_THRESHOLD = 0.02; // 0.02 miles
+  const SAME_LOCATION_THRESHOLD = 0.05; // 0.05 miles
   return calculateDistance(point1, point2) < SAME_LOCATION_THRESHOLD;
 };
 

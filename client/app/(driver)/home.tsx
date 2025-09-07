@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   ErrorResponse,
+  LocationResponse,
   RideRequest,
   RidesExistResponse,
   ViewRideRequestResponse,
@@ -13,7 +14,7 @@ import {
   View,
   Text,
 } from "react-native";
-import Map, { MapRef, calculateDistance } from "./map";
+import Map, { MapRef, isSameLocation } from "./map";
 import { useLocalSearchParams } from "expo-router";
 import RequestAvailable from "@/components/Driver_RequestAvailable";
 import Legend from "@/components/Student_Legend";
@@ -36,7 +37,7 @@ export default function HomePage() {
   /* HOME PAGE STATE */
   const [whichComponent, setWhichComponent] = useState<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
-  >("noRequests");
+  >("endShift");
 
   /* USE EFFECTS */
   useEffect(() => {
@@ -46,6 +47,7 @@ export default function HomePage() {
     WebSocketService.addListener(viewRideListener, "VIEW_RIDE");
     WebSocketService.addListener(viewDecisionListener, "VIEW_DECISION");
     WebSocketService.addListener(reportStudentListener, "REPORT");
+    WebSocketService.addListener(locationListener, "LOCATION");
     WebSocketService.addListener(
       driverDrivingToDropOffListener,
       "DRIVER_DRIVING_TO_DROPOFF"
@@ -135,8 +137,37 @@ export default function HomePage() {
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
 
+  // The driver's location when they started the ride
+  const [startLocation, setStartLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  }>({ latitude: 0, longitude: 0 });
+
+  // The student's location
+  const [studentLocation, setStudentLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  }>({ latitude: 0, longitude: 0 });
+
   // retain a reference to the map to call functions on it later
   const mapRef = useRef<MapRef>(null);
+
+  // function to be called when the user's location changes
+  const userLocationChanged = (location: {
+    latitude: number;
+    longitude: number;
+  }) => {
+    setDriverLocation(location);
+    // send the location to the student once the ride is accepted
+    if (whichComponent === "handleRide" && requestInfo.netid) {
+      WebSocketService.send({
+        directive: "LOCATION",
+        id: netid,
+        latitude: location.latitude,
+        longitude: location.longitude,
+      });
+    }
+  };
 
   /* PROFILE STATE */
   const { netid } = useLocalSearchParams<{ netid: string }>();
@@ -244,11 +275,9 @@ export default function HomePage() {
   // from the pickup location to the dropoff location
   const [dropoffProgress, setDropoffProgress] = useState(0);
 
-  // The driver's location when they started the ride
-  const [startLocation, setStartLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  }>({ latitude: 0, longitude: 0 });
+  // Total distances for progress calculation
+  const [totalPickupDistance, setTotalPickupDistance] = useState(0);
+  const [totalDropoffDistance, setTotalDropoffDistance] = useState(0);
 
   // Track if driver is close to pickup location
   const [isNearPickup, setIsNearPickup] = useState(false);
@@ -320,6 +349,8 @@ export default function HomePage() {
     // Reset progress tracking states
     setPickupProgress(0);
     setDropoffProgress(0);
+    setTotalPickupDistance(0);
+    setTotalDropoffDistance(0);
     setStartLocation({ latitude: 0, longitude: 0 });
     setIsNearPickup(false);
     setIsNearDropoff(false);
@@ -435,7 +466,11 @@ export default function HomePage() {
       }
     } else {
       const errMessage = message as ErrorResponse;
-      console.log("Failed to view ride request: ", errMessage.error);
+      setNotifState({
+        text: "Failed to view ride request: " + errMessage.error,
+        color: "#FFCBCB",
+      });
+      setWhichComponent("noRequests"); // go to no requests page
     }
   };
 
@@ -534,6 +569,28 @@ export default function HomePage() {
     }
   };
 
+  // WEBSOCKET - LOCATION
+  const locationListener = (message: WebSocketResponse) => {
+    // logic for when a location update is received
+    if ("response" in message && message.response === "LOCATION") {
+      // store the student's location if the driver is waiting for the pickup
+      // otherwise, hide the student's location
+      const locationMessage = message as LocationResponse;
+      if (whichComponent == "handleRide" && phase == "waitingForPickup") {
+        setStudentLocation({
+          latitude: locationMessage.latitude,
+          longitude: locationMessage.longitude,
+        });
+      } else {
+        // if the driver is not waiting of the pickup, hide the student location
+        setStartLocation({ latitude: 0, longitude: 0 });
+      }
+    } else {
+      const errMessage = message as ErrorResponse;
+      console.log("Failed to send location: ", errMessage.error);
+    }
+  };
+
   /* PROGRESS TRACKING EFFECTS */
   // Track progress when driver location changes and is handling a ride
   useEffect(() => {
@@ -544,13 +601,13 @@ export default function HomePage() {
       if (startLocation.latitude !== 0 && startLocation.longitude !== 0) {
         switch (phase) {
           case "headingToPickup":
-            // Calculate progress from start location to pickup location
-            pickupProgress = calculateProgress(
-              startLocation,
-              driverLocation,
-              pickUpLocation
-            );
-            setIsNearPickup(pickupProgress >= 0.9); // Near pickup if progress is 90% or more
+            // Calculate progress from start location to pickup location using route distance
+            pickupProgress = calculateProgress();
+            // if isNearPickup is already true, don't change it back to false
+            // but set it to true if driver is within 500 feet of pickup location
+            if (isSameLocation(driverLocation, pickUpLocation)) {
+              setIsNearPickup(true);
+            }
             setIsNearDropoff(false); // Not near dropoff yet
             break;
           case "waitingForPickup":
@@ -559,14 +616,14 @@ export default function HomePage() {
             setIsNearDropoff(false);
             break;
           case "headingToDropoff":
-            // Calculate progress from pickup to dropoff
+            // Calculate progress from pickup to dropoff using route distance
             pickupProgress = 1; // Already at pickup
-            dropoffProgress = calculateProgress(
-              pickUpLocation,
-              driverLocation,
-              dropOffLocation
-            );
-            setIsNearDropoff(dropoffProgress >= 0.9); // Near dropoff if progress is 90% or more
+            dropoffProgress = calculateProgress();
+            // if isNearDropoff is already true, don't change it back to false
+            // but set it to true if driver is within 500 feet of dropoff location
+            if (isSameLocation(driverLocation, dropOffLocation)) {
+              setIsNearDropoff(true);
+            }
             setIsNearPickup(false); // Not near pickup anymore
             break;
           case "arrivedAtDropoff":
@@ -586,6 +643,56 @@ export default function HomePage() {
     }
   }, [driverLocation, phase, whichComponent, requestInfo.requestId]);
 
+  // Calculate progress based on total distance and remaining distance for non-linear tracking
+  const calculateProgress = (): number => {
+    if (phase === "headingToPickup") {
+      const remainingDistance = mapRef.current?.pickupDistance || 0;
+      // if map renders for first time, set totalDistance
+      if (totalPickupDistance === 0 && remainingDistance > 0) {
+        setTotalPickupDistance(remainingDistance);
+        // return 0 progress since ride should not have started yet
+        return 0;
+      }
+
+      // Only calculate progress if we have both total and remaining distance
+      if (totalPickupDistance > 0 && remainingDistance > 0) {
+        // Progress = (Total Distance - Remaining Distance) / Total Distance
+        const progress = Math.max(
+          0,
+          Math.min(
+            1,
+            (totalPickupDistance - remainingDistance) / totalPickupDistance
+          )
+        );
+        return progress;
+      }
+
+      // set to 0 if no valid distances
+      return 0;
+    } else if (phase === "headingToDropoff") {
+      const remainingDistance = mapRef.current?.dropoffDistance || 0;
+      // if map renders for first time, set totalDistance
+      if (totalDropoffDistance === 0 && remainingDistance > 0) {
+        setTotalDropoffDistance(remainingDistance);
+        // return 0 progress since ride should not have started yet
+        return 0;
+      }
+      // Only calculate progress if we have both total and remaining distance
+      if (totalDropoffDistance > 0 && remainingDistance > 0) {
+        // Progress = (Total Distance - Remaining Distance) / Total Distance
+        const progress = Math.max(
+          0,
+          Math.min(
+            1,
+            (totalDropoffDistance - remainingDistance) / totalDropoffDistance
+          )
+        );
+        return progress;
+      }
+    }
+    return 0;
+  };
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       {/* map component */}
@@ -594,7 +701,8 @@ export default function HomePage() {
         startLocation={startLocation}
         pickUpLocation={pickUpLocation}
         dropOffLocation={dropOffLocation}
-        userLocationChanged={(location) => setDriverLocation(location)}
+        studentLocation={studentLocation}
+        userLocationChanged={userLocationChanged}
       />
 
       {/* profile button in top left corner*/}
@@ -751,7 +859,7 @@ export default function HomePage() {
         </Pressable>
 
         {/* Side map legend */}
-        <Legend />
+        <Legend role={"DRIVER"}></Legend>
       </View>
 
       {/* Decide which component to render */}
@@ -798,35 +906,9 @@ export default function HomePage() {
         </View>
       ) : whichComponent === "endShift" ? (
         <View style={styles.homePageComponentContainer}>
-          <ShiftIsOver
-            updateSideBarHeight={setCurrentComponentHeight}
-            changeNotifState={setNotifState}
-          />
+          <ShiftIsOver updateSideBarHeight={setCurrentComponentHeight} />
         </View>
       ) : null}
     </GestureHandlerRootView>
   );
 }
-
-/**
- * Helper function to calculate the progress of the driver from start to destination
- * @param start - starting coordinates
- * @param current - current coordinates
- * @param dest - destination coordinates
- * @returns progress as a number between 0 and 1
- */
-const calculateProgress = (
-  start: { latitude: number; longitude: number },
-  current: { latitude: number; longitude: number },
-  dest: { latitude: number; longitude: number }
-): number => {
-  // calculate the distance between the two coordinates
-  const distance = calculateDistance(start, dest);
-  // the distance between the current location and the destination
-  // is the remaining distance to the destination
-  // use this to calc progress because the driver may not be
-  // driving in a straight line from the start location
-  const remaining = calculateDistance(current, dest);
-  const currentDistance = distance - remaining;
-  return currentDistance / distance; // remaining distance
-};

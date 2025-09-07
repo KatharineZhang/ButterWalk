@@ -22,6 +22,7 @@ import {
   driverArrived,
   getPlaceSearchResults,
   driverDrivingToDropoff,
+  checkIfDriverSignin,
 } from "./routes";
 import {
   CompleteResponse,
@@ -87,13 +88,17 @@ export const handleWebSocketMessage = async (
 
     case "SIGNIN": {
       if (input.response == null) {
-        // early fail if the token is null
-        resp = {
-          response: "ERROR",
-          error: "The passed in response token is null",
-          category: "SIGNIN",
-        } as ErrorResponse;
+        // we do not have an auth token to process
+        // check if this was sent from a driver
+        resp = await checkIfDriverSignin(input.role, input.netid);
+        if (input.netid && resp.response == "SIGNIN" && resp.success) {
+          // if there was a driverid passed in (to make typescript happy)
+          // and verification was successful
+          // connect the websocket to this driver
+          connectWebsocketToNetid(ws, input.netid, "DRIVER");
+        }
       } else {
+        // the student is signing in with google auth
         // call google auth method
         const authResp: GoogleResponse = await googleAuth(input.response);
         if ("userInfo" in authResp) {
