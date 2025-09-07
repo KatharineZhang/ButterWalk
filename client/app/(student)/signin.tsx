@@ -15,14 +15,14 @@ import logo from "@/assets/images/GoogleG.png";
 import huskyCarImage from "@/assets/images/husky-car.png";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const webClientId = '31898801148-fs0ddrh0mbbcv7atnc7v5q2r31u6i1bq.apps.googleusercontent.com';
-const iosClientId = '31898801148-64e2hnf3f905e7bgfrrs2cf7ftsu8dnk.apps.googleusercontent.com';
-const androidClientId = '31898801148-fu8ji5l2k42coc833csqqg8hovei99ua.apps.googleusercontent.com';
+const webClientId = process.env.EXPO_PUBLIC_WEB_CLIENT_ID;
+const iosClientId = process.env.EXPO_PUBLIC_IOS_CLIENT_ID;
+const androidClientId = process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID;
 
 WebBrowser.maybeCompleteAuthSession();
 
 const Login = () => {
-  //const [errMsg, setErrMsg] = useState("");
+  // comes from finishSignIn if any errors occur
   const {error} = useLocalSearchParams();
   const config = {
     webClientId,
@@ -40,7 +40,7 @@ const Login = () => {
       const serializedResponse = JSON.stringify(response);
       console.log(serializedResponse);
       console.log('OAuth code received. Navigating to redirect page.');
-      // Pass the code to your redirect page, which will handle the backend exchange.
+      // Passes the code to finishSignIn, which handles the Websocket exchange.
       router.replace({ pathname: '/(student)/finishSignIn', params: { serializedResponse } });
     }
   }, [response]);
@@ -102,5 +102,3 @@ const Login = () => {
 };
 
 export default Login;
-
-// <Text style={{ color: "red", marginTop: 10 }}>{errMsg}</Text>
