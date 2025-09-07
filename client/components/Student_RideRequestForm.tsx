@@ -637,7 +637,9 @@ export default function RideRequestForm({
     }
     bottomSheetRef.current?.expand();
   };
-
+  // Type definition for a formatted result item in the autocomplete suggestions list.
+  // Each item represents a possible pickup or dropoff location, and can be a recent location,
+  // a campus building, or a place search result.
   type FormattedResult = {
     key: string;
     name: string;
@@ -645,19 +647,25 @@ export default function RideRequestForm({
     type: "recent" | "campus" | "place";
   };
 
+  // This array combines and formats all possible location suggestions for the user to select from.
+  // It merges recent locations, campus API results, and external place search results into a single list,
+  // each with a unique key and type for rendering in the FlatList.
   const formattedResults: FormattedResult[] = [
+    // Recent locations the user has selected before.
     ...recentLocations.map((item) => ({
       key: `recent-${item.name}`,
       name: item.name,
       address: item.address,
       type: "recent" as const,
     })),
+    // Campus buildings matching the user's query.
     ...campusAPIResults.map((item, index) => ({
       key: `campus-${index}`,
       name: item,
       address: null,
       type: "campus" as const,
     })),
+    // External place search results, excluding any already present in campusAPIResults.
     ...placeSearchResults
       .filter((item) => item?.name && !campusAPIResults.includes(item.name))
       .map((item, index) => ({
@@ -667,7 +675,9 @@ export default function RideRequestForm({
         type: "place" as const,
       })),
   ];
-    
+
+
+
   /* PANEL UI */
   // the ride request panel
   const RideRequest: JSX.Element = (
@@ -792,9 +802,11 @@ export default function RideRequestForm({
             </TouchableOpacity>
           </View>
         </View>
-        {/* Autocomplete Suggestions */}
 
+
+        {/* Autocomplete Suggestions */}
         <View style={{ flex: 1, height: suggestionListHeight }}>
+          {/* list all the possible buildings */}
           <FlatList
             data={formattedResults}
             keyExtractor={(item) => item.key}
