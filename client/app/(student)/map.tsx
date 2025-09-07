@@ -209,9 +209,8 @@ const Map = forwardRef<MapRef, MapProps>(
           timeInterval: 1000, // Update every second
           distanceInterval: 1, // Update every meter
         },
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         (location) => {
-          // to make linter happy
-          console.log("real location", location);
           // when location changes, change our state
           setUserLocation({
             latitude: 47.65718628834192,
