@@ -198,6 +198,13 @@ export default function HomePage() {
 
   // show different state in the DriverOneWay component
   // based on the status of the ride
+  const [, setRideStatus] = useState<
+    | "WaitingForRide"
+    | "DriverEnRoute"
+    | "DriverArrived"
+    | "RideInProgress"
+    | "RideCompleted"
+  >("WaitingForRide");
   const rideStatusRef = useRef<
     | "WaitingForRide"
     | "DriverEnRoute"
@@ -429,6 +436,7 @@ export default function HomePage() {
           // set the ride status back to waiting for ride
           // but stay on handle ride component
           rideStatusRef.current = "WaitingForRide";
+          setRideStatus("WaitingForRide");
           setNotifState({
             text: "Your driver canceled the ride. Please wait for another driver",
             color: "#FFCBCB",
@@ -487,6 +495,7 @@ export default function HomePage() {
       // wait until we recieve message with the ride completed
       // for us to set the student's ride status to completed
       rideStatusRef.current = "RideCompleted";
+      setRideStatus("RideCompleted");
       setRideProgress(1); // set the ride progress to 1 to show the user they have arrived
       setNotifState({
         text: "Ride successfully completed!",
@@ -507,6 +516,7 @@ export default function HomePage() {
     ) {
       // the driver has arrived at the pickup location
       rideStatusRef.current = "DriverArrived";
+      setRideStatus("DriverArrived");
     } else {
       console.log("Driver arrived response error: ", message);
     }
@@ -520,6 +530,7 @@ export default function HomePage() {
     ) {
       // the driver has arrived at the pickup location
       rideStatusRef.current = "RideInProgress";
+      setRideStatus("RideInProgress");
       setNotifState({
         text: "You have been picked up and are on your way to your destination!",
         color: "#C9FED0",
@@ -579,6 +590,7 @@ export default function HomePage() {
       // set the component to show to WaitingForRide version of handleRide
       setWhichComponent("handleRide");
       rideStatusRef.current = "WaitingForRide";
+      setRideStatus("WaitingForRide");
 
       // show notification
       setNotifState({
@@ -607,6 +619,8 @@ export default function HomePage() {
       // we should already be showing the handleRide component
       // set the ride status to DriverEnRoute
       rideStatusRef.current = "DriverEnRoute";
+      console.log(rideStatusRef.current);
+      setRideStatus("DriverEnRoute");
     } else {
       console.log("Accept ride error: ", message);
     }
