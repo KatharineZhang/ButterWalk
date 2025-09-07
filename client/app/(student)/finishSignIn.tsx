@@ -30,7 +30,7 @@ const FinishSignIn = () => {
         //setResponse({response, parsedResponse});
         setResponse(parsedResponse);
       } catch (e) {
-        console.error("Failed to parse serialized response:", e);
+        console.log("Failed to parse serialized response:", e);
         Alert.alert("I am here");
       }
     }
@@ -52,7 +52,7 @@ const FinishSignIn = () => {
         setNetid(signinResp.netid);
       } else {
         const errorResp = message as ErrorResponse;
-        console.error("Signin related error:", errorResp.error);
+        console.log("Signin related error:", errorResp.error);
         //Alert.alert('Error', errorResp.error);
         router.replace({pathname: "/(student)/signin", params: {error: errorResp.error} });
       }
@@ -69,7 +69,7 @@ const FinishSignIn = () => {
           role: "STUDENT",
         });
       } else {
-        console.error("Failed to connect to WebSocket.");
+        console.log("Failed to connect to WebSocket.");
       }
     };
     
