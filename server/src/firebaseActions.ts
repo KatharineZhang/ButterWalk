@@ -453,7 +453,7 @@ export async function completeRideRequest(
   oldLocations.unshift(data.locationTo); // dropoff location
   // only add the pickup location if it doesn't have an asterisk
   // (the location will have an asterisk if the loaction is a snapped street)
-  if (!data.locationFrom.includes("*")) {
+  if (!data.locationFrom.name.includes("*")) {
     oldLocations.unshift(data.locationFrom); // pickup location
   }
 
