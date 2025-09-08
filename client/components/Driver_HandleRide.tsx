@@ -4,12 +4,12 @@ import { RideRequest } from "../../server/src/api";
 import { NotificationType } from "./Both_Notification";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { styles } from "@/assets/styles";
-import { ProgressBar } from "react-native-paper";
+import BothProgressBar from "../components/Both_ProgressBar";
 
 interface HandleRideProps {
   requestInfo: RideRequest;
-  driverToPickupDuration: number; // in minutes, might be undefined initially
-  pickupToDropoffDuration: number; // in minutes, might be undefined initially
+  driverToPickupDuration: number; // in minutes, may be undefined initially
+  pickupToDropoffDuration: number; // in minutes, may be undefined initially
   phase:
     | "headingToPickup"
     | "waitingForPickup"
@@ -28,7 +28,7 @@ interface HandleRideProps {
   ) => void;
   driverArrivedAtPickup: () => void;
   driverDrivingToDropOff: () => void;
-  setStudentIsLate: (isLate: boolean) => void; // callback to set student late state
+  setStudentIsLate: (isLate: boolean) => void;
 
   // Progress tracking props
   pickupProgress: number;
@@ -36,60 +36,6 @@ interface HandleRideProps {
   isNearPickup: boolean;
   isNearDropoff: boolean;
   updateSideBarHeight: (height: number) => void;
-}
-
-// a helper function that adds location labels below the progress bar
-function ProgressBarLabels() {
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        justifyContent: "space-between",
-        width: 320,
-        alignSelf: "center",
-        marginTop: 15,
-      }}
-    >
-      <Text style={styles.locationTitle}>Start</Text>
-      <Text style={styles.locationTitle}>Pickup</Text>
-      <Text style={styles.locationTitle}>Dropoff</Text>
-    </View>
-  );
-}
-
-// a helper function that adds top labels above the progress bar to show ETA
-// to the pickup and dropoff locations
-function ProgressBarTopLabels({
-  driverToPickupDuration,
-  pickupToDropoffDuration,
-}: {
-  driverToPickupDuration: number;
-  pickupToDropoffDuration: number;
-}) {
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        justifyContent: "space-between",
-        width: 320, // match your progressBarWrapper width
-        alignSelf: "center",
-        marginBottom: 4,
-      }}
-    >
-      {/* Left label: driver to pickup */}
-      <View style={{ width: 130, alignItems: "center" }}>
-        <Text style={{ fontSize: 12, fontWeight: "bold" }}>
-          {driverToPickupDuration} min
-        </Text>
-      </View>
-      {/* Right label: pickup to dropoff */}
-      <View style={{ width: 130, alignItems: "center" }}>
-        <Text style={{ fontSize: 12, fontWeight: "bold" }}>
-          {pickupToDropoffDuration} min
-        </Text>
-      </View>
-    </View>
-  );
 }
 
 export default function HandleRide({
@@ -111,7 +57,7 @@ export default function HandleRide({
   isNearDropoff,
   updateSideBarHeight,
 }: HandleRideProps) {
-  // When timer is done in "waitingForPickup" state
+  // Timer state
   const [timerDone, setTimerDone] = useState(false);
   const [seconds, setSeconds] = useState(5 * 60); // 5 minutes
 
@@ -119,17 +65,10 @@ export default function HandleRide({
     if (phase === "headingToPickup") {
       changeFlaggingAllowed(false);
     } else if (phase === "waitingForPickup") {
-      // Reset timer when entering waitingForPickup phase, 5 min
       setSeconds(5 * 60);
       setTimerDone(false);
-      // Update seconds every second
       const interval = setInterval(() => {
-        setSeconds((prevSeconds) => {
-          if (prevSeconds <= 0) {
-            return 0; // Stop at 0
-          }
-          return prevSeconds - 1;
-        });
+        setSeconds((prev) => (prev <= 0 ? 0 : prev - 1));
       }, 1000);
       return () => clearInterval(interval);
     } else if (phase === "headingToDropoff" || phase === "arrivedAtDropoff") {
@@ -137,7 +76,7 @@ export default function HandleRide({
     }
   }, [phase]);
 
-  // Automatically change to arrivedAtDropoff phase when near dropoff
+  // Auto-change to arrivedAtDropoff
   useEffect(() => {
     if (phase === "headingToDropoff" && isNearDropoff) {
       setPhase("arrivedAtDropoff");
@@ -145,14 +84,13 @@ export default function HandleRide({
   }, [phase, isNearDropoff, setPhase]);
 
   useEffect(() => {
-    if (seconds == 60) {
+    if (seconds === 60) {
       changeNotifState({
         text: "Your ride will be canceled in one minute.",
         color: "#FFCBCB",
         boldText: "one minute",
       });
     } else if (seconds <= 0) {
-      // the timer ran out! cancel the ride
       setTimerDone(true);
       changeFlaggingAllowed(true);
       setStudentIsLate(true);
@@ -162,12 +100,12 @@ export default function HandleRide({
   const cancelRide = () => {
     changeNotifState({
       text: "Ride canceled",
-      color: "#FFCBCB",
+      color: "#FF0000",
     });
     onCancel();
   };
 
-  // Function to open Google Maps with directions while app still runs in background
+  // Open Google Maps
   const openGoogleMapsDirections = async (destination: {
     lat: number;
     lng: number;
@@ -175,39 +113,31 @@ export default function HandleRide({
   }) => {
     try {
       const url = `https://www.google.com/maps/dir/?api=1&destination=${destination.lat},${destination.lng}&travelmode=driving`;
-
       const canOpen = await Linking.canOpenURL(url);
-      if (canOpen) {
-        await Linking.openURL(url);
-      } else {
-        console.error("Cannot open maps URL");
-      }
+      if (canOpen) await Linking.openURL(url);
+      else console.error("Cannot open maps URL");
     } catch (error) {
       console.error(error);
     }
   };
 
-  // Function to format time (mm:ss)
-  const formatTime = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
+  // Format mm:ss
+  const formatTime = (s: number): string => {
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return `${m}:${r < 10 ? "0" : ""}${r}`;
   };
 
-  // Calculate combined progress for the bar
+  // Combined progress
   let progress = 0;
-  // Ensure progress values are within the range [0, 1]
   const validatedPickupProgress = Math.min(Math.max(pickupProgress, 0), 1);
   const validatedDropoffProgress = Math.min(Math.max(dropoffProgress, 0), 1);
 
   if (phase === "headingToPickup" || phase === "waitingForPickup") {
-    // Progress ranges from 0 to 0.45 during pickup phase
     progress = validatedPickupProgress * 0.45;
   } else if (phase === "headingToDropoff") {
-    // Progress ranges from 0.45 to 1 during dropoff phase
     progress = 0.45 + validatedDropoffProgress * 0.45;
   } else if (phase === "arrivedAtDropoff") {
-    // Full progress when arrived at dropoff
     progress = 1;
   }
 
@@ -215,8 +145,6 @@ export default function HandleRide({
     <View
       style={[
         {
-          // position absolute here for now, otherwise styling of other
-          //components in home get messed up
           position: "absolute",
           bottom: 0,
           width: "100%",
@@ -252,7 +180,6 @@ export default function HandleRide({
               <Text style={{ fontSize: 20, fontWeight: "600", color: "#222" }}>
                 {requestInfo?.netid || "Passenger"}
               </Text>
-              {/* Person icon and number of passengers */}
               <View
                 style={{
                   flexDirection: "row",
@@ -276,12 +203,7 @@ export default function HandleRide({
           </View>
 
           {/* Directions Button */}
-          <View
-            style={{
-              marginTop: 4,
-              marginBottom: 12,
-            }}
-          >
+          <View style={{ marginTop: 4, marginBottom: 12 }}>
             <Pressable
               style={{
                 backgroundColor: "#4B2E83",
@@ -311,40 +233,20 @@ export default function HandleRide({
             </Pressable>
           </View>
 
-          {/* Grey line */}
           <View style={styles.driverGreyLine} />
-          {/* Progress Bar */}
-          <ProgressBarTopLabels
-            driverToPickupDuration={driverToPickupDuration}
-            pickupToDropoffDuration={pickupToDropoffDuration}
+
+          {/* Unified Progress Bar */}
+          <BothProgressBar
+            progress={progress}
+            toPickupDuration={driverToPickupDuration}
+            toDropoffDuration={pickupToDropoffDuration}
+            pickupAddress={requestInfo.locationFrom?.name || ""}
+            dropoffAddress={requestInfo.locationTo?.name || ""}
           />
-          <View style={{ width: "100%", alignItems: "center" }}>
-            <View style={styles.progressBarWrapper}>
-              {/* show white circle */}
-              <View
-                style={[styles.circleStart, { backgroundColor: "white" }]}
-              />
-              {/* move purple circle to middle */}
-              <View style={[styles.circleStart, { left: 130 }]} />
-              {/* Progress Bar */}
-              <ProgressBar
-                progress={progress}
-                color="#C5B4E3"
-                style={styles.progressBar}
-              />
-              <View style={styles.circleEnd} />
-            </View>
-          </View>
-          <ProgressBarLabels />
-          {/* If proximity to pickup location is near, 
-          panel grows and button to confirm pickup shows */}
+
+          {/* Near pickup button */}
           {isNearPickup && (
-            <View
-              style={{
-                paddingTop: "10%",
-                alignContent: "center",
-              }}
-            >
+            <View style={{ paddingTop: "10%", alignContent: "center" }}>
               <Pressable
                 style={{
                   backgroundColor: "#4B2E83",
@@ -354,7 +256,6 @@ export default function HandleRide({
                   justifyContent: "center",
                 }}
                 onPress={() => {
-                  // call the callback to move onto next phase
                   setPhase("waitingForPickup");
                   driverArrivedAtPickup();
                 }}
@@ -376,7 +277,6 @@ export default function HandleRide({
               <Text style={{ fontSize: 26, fontWeight: "bold", color: "#222" }}>
                 Waiting to Pickup
               </Text>
-              {/* Timer */}
               <View
                 style={{
                   flexDirection: "row",
@@ -384,7 +284,6 @@ export default function HandleRide({
                   marginTop: 4,
                 }}
               >
-                {/* changes to red after countdown reaches 0 */}
                 <Ionicons
                   name="time-outline"
                   size={26}
@@ -406,7 +305,6 @@ export default function HandleRide({
               <Text style={{ fontSize: 20, fontWeight: "600", color: "#222" }}>
                 {requestInfo?.netid || "Passenger"}
               </Text>
-              {/* Person icon and number of passengers */}
               <View
                 style={{
                   flexDirection: "row",
@@ -428,40 +326,21 @@ export default function HandleRide({
               </View>
             </View>
           </View>
-          {/* Grey line */}
+
           <View
-            style={{
-              height: 1,
-              backgroundColor: "#E0E0E0",
-              marginVertical: 16,
-            }}
+            style={{ height: 1, backgroundColor: "#E0E0E0", marginVertical: 16 }}
           />
-          {/* Actual Progress Bar */}
-          <View style={styles.progressBarTop}>
-            <ProgressBarTopLabels
-              driverToPickupDuration={driverToPickupDuration}
-              pickupToDropoffDuration={pickupToDropoffDuration}
-            />
-            <View style={{ width: "100%", alignItems: "center" }}>
-              <View style={styles.progressBarWrapper}>
-                {/* show white circle */}
-                <View
-                  style={[styles.circleStart, { backgroundColor: "white" }]}
-                />
-                {/* move purple circle to middle (hardcoded like student side) */}
-                <View style={[styles.circleStart, { left: 130 }]} />
-                {/* Progress Bar */}
-                <ProgressBar
-                  progress={1}
-                  color="#C5B4E3"
-                  style={styles.progressBar}
-                />
-                <View style={styles.circleEnd} />
-              </View>
-            </View>
-            <ProgressBarLabels />
-          </View>
-          {/* Two buttons side by side */}
+
+          {/* Unified Progress Bar */}
+          <BothProgressBar
+            progress={progress}
+            toPickupDuration={driverToPickupDuration}
+            toDropoffDuration={pickupToDropoffDuration}
+            pickupAddress={requestInfo.locationFrom?.name || ""}
+            dropoffAddress={requestInfo.locationTo?.name || ""}
+          />
+
+          {/* Buttons */}
           <View
             style={{
               flexDirection: "row",
@@ -471,7 +350,6 @@ export default function HandleRide({
             }}
           >
             <View style={{ flex: 1, marginRight: 8 }}>
-              {/* Button to confirm student was picked up */}
               <Pressable
                 style={{
                   backgroundColor: "#4B2E83",
@@ -481,20 +359,16 @@ export default function HandleRide({
                   justifyContent: "center",
                 }}
                 onPress={() => {
-                  // call the callback to update the state
                   setPhase("headingToDropoff");
                   driverDrivingToDropOff();
                 }}
               >
-                <Text
-                  style={{ color: "white", fontSize: 16, fontWeight: "400" }}
-                >
+                <Text style={{ color: "white", fontSize: 16, fontWeight: "400" }}>
                   I've found student
                 </Text>
               </Pressable>
             </View>
             <View style={{ flex: 1, marginLeft: 8 }}>
-              {/* Button to cancel ride, turns red and clickable after 5 min counter */}
               <Pressable
                 style={{
                   backgroundColor: seconds <= 0 ? "#FF0000" : "#E0E0E0",
@@ -517,7 +391,6 @@ export default function HandleRide({
         </>
       ) : phase === "headingToDropoff" ? (
         <>
-          {/* title and passenger name */}
           <View style={styles.titlePassengerName}>
             <Text style={{ fontSize: 26, fontWeight: "bold", color: "#222" }}>
               Driving to Dropoff
@@ -526,7 +399,6 @@ export default function HandleRide({
               <Text style={{ fontSize: 20, fontWeight: "600", color: "#222" }}>
                 {requestInfo?.netid || "Passenger"}
               </Text>
-              {/* Person icon and number of passengers */}
               <View style={styles.driverPersonIcon}>
                 <Ionicons name="person" size={20} color="#888888" />
                 <Text
@@ -543,13 +415,7 @@ export default function HandleRide({
             </View>
           </View>
 
-          {/*Directions Button */}
-          <View
-            style={{
-              marginTop: 4,
-              marginBottom: 12,
-            }}
-          >
+          <View style={{ marginTop: 4, marginBottom: 12 }}>
             <Pressable
               style={{
                 backgroundColor: "#4B2E83",
@@ -577,35 +443,19 @@ export default function HandleRide({
             </Pressable>
           </View>
 
-          {/* Grey line */}
           <View style={styles.driverGreyLine} />
-          {/* Progress Bar */}
-          <ProgressBarTopLabels
-            driverToPickupDuration={driverToPickupDuration}
-            pickupToDropoffDuration={pickupToDropoffDuration}
+
+          {/* Unified Progress Bar */}
+          <BothProgressBar
+            progress={progress}
+            toPickupDuration={driverToPickupDuration}
+            toDropoffDuration={pickupToDropoffDuration}
+            pickupAddress={requestInfo.locationFrom?.name || ""}
+            dropoffAddress={requestInfo.locationTo?.name || ""}
           />
-          <View style={{ width: "100%", alignItems: "center" }}>
-            <View style={styles.progressBarWrapper}>
-              {/* show white circle */}
-              <View
-                style={[styles.circleStart, { backgroundColor: "white" }]}
-              />
-              {/* move purple circle to middle */}
-              <View style={[styles.circleStart, { left: 130 }]} />
-              {/* Progress Bar */}
-              <ProgressBar
-                progress={progress}
-                color="#C5B4E3"
-                style={styles.progressBar}
-              />
-              <View style={styles.circleEnd} />
-            </View>
-          </View>
-          <ProgressBarLabels />
         </>
       ) : phase === "arrivedAtDropoff" ? (
         <>
-          {/* title and passenger name */}
           <View style={styles.titlePassengerName}>
             <Text style={{ fontSize: 26, fontWeight: "bold", color: "#222" }}>
               You've Arrived
@@ -614,7 +464,6 @@ export default function HandleRide({
               <Text style={{ fontSize: 20, fontWeight: "600", color: "#222" }}>
                 {requestInfo?.netid || "Passenger"}
               </Text>
-              {/* Person icon and number of passengers */}
               <View style={styles.driverPersonIcon}>
                 <Ionicons name="person" size={20} color="#888888" />
                 <Text
@@ -630,29 +479,16 @@ export default function HandleRide({
               </View>
             </View>
           </View>
-          {/* Progress Bar Section */}
-          <View style={styles.progressBarTop}>
-            <ProgressBarTopLabels
-              driverToPickupDuration={driverToPickupDuration}
-              pickupToDropoffDuration={pickupToDropoffDuration}
-            />
-            <View style={{ width: "100%", alignItems: "center" }}>
-              <View style={styles.progressBarWrapper}>
-                <View
-                  style={[styles.circleStart, { backgroundColor: "white" }]}
-                />
-                <View style={[styles.circleStart, { left: 130 }]} />
-                <ProgressBar
-                  progress={1}
-                  color="#C5B4E3"
-                  style={styles.progressBar}
-                />
-                <View style={styles.circleEnd} />
-              </View>
-            </View>
-            <ProgressBarLabels />
-          </View>
-          {/* Grey line */}
+
+          {/* Unified Progress Bar (full) */}
+          <BothProgressBar
+            progress={1}
+            toPickupDuration={driverToPickupDuration}
+            toDropoffDuration={pickupToDropoffDuration}
+            pickupAddress={requestInfo.locationFrom?.name || ""}
+            dropoffAddress={requestInfo.locationTo?.name || ""}
+          />
+
           <Pressable
             style={[styles.driverCompleteButton, { marginTop: "2%" }]}
             onPress={completeRide}

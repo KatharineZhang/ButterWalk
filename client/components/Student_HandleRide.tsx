@@ -8,9 +8,10 @@ import {
 import { styles } from "../assets/styles";
 import React, { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { ProgressBar } from "react-native-paper";
 import moment from "moment";
 import momentTimezone from "moment-timezone";
+import BothProgressBar from "../components/Both_ProgressBar"; 
+
 
 export type RideStatus =
   | "WaitingForRide" // the ride has been requested
@@ -46,8 +47,6 @@ interface HandleRideProps {
 
 const HandleRideComponent: React.FC<HandleRideProps> = ({
   status,
-  pickUpLocation,
-  dropOffLocation,
   pickUpAddress,
   dropOffAddress,
   walkProgress,
@@ -57,7 +56,6 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   driverETA,
   onCancel,
   setFAQVisible,
-  openNavigation,
   setNotificationState,
   goHome,
   updateSideBarHeight,
@@ -147,7 +145,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   }
 
   // height expansion
-  const [expanded, setExpanded] = useState(false); // if the progress bar is expanded or not
+  // const [expanded, setExpanded] = useState(false); // if the progress bar is expanded or not
 
   // show the waiting for driver confirmation during pickup
   const [showWaitingForConfirmation, setShowWaitingForConfirmation] =
@@ -203,134 +201,15 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
         )}
       </View>
       {/* Progress Bar Top Labels */}
-      <View
-        style={[
-          styles.progressBarBottom,
-          status == "WaitingForRide" || status == "DriverArrived"
-            ? { borderBottomWidth: 2, borderBottomColor: "#EEEEEE" }
-            : {},
-        ]}
-      >
-        {/* If walking is needed show Walk and Ride Duration*/}
-        <View style={{ flexDirection: "row", paddingBottom: 10 }}>
-          {/* Open walking directions in native maps */}
-          <TouchableOpacity
-            onPress={
-              walkProgress < 1
-                ? openNavigation
-                : () =>
-                    alert(
-                      "You are already at the pickup location! Walking directions are not needed :)"
-                    )
-            }
-          >
-            <View style={{ height: 12 }} />
-            <Text
-              style={{
-                alignSelf: "baseline",
-                fontSize: 12,
-                fontWeight: "bold",
-                textDecorationLine: "underline",
-              }}
-            >
-              {walkDuration} min Walk
-            </Text>
-          </TouchableOpacity>
-          <View style={{ width: 100 }} />
-          {/* Descriptor above the progress bar ( __ min Ride) */}
-          <View
-            style={{
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-              left: -20,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "bold",
-              }}
-            >
-              {rideDuration} min Ride
-            </Text>
-            {/* Show more or less details about the ride */}
-            <Pressable onPress={() => setExpanded(!expanded)}>
-              <Text
-                style={[
-                  styles.locationText,
-                  { textDecorationLine: "underline" },
-                ]}
-              >
-                {expanded ? "(Less Details)" : "(More Details)"}
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-        {/* Actual Progress Bar */}
-        <View style={styles.progressBarWrapper}>
-          {/* show white circle */}
-          <View style={[styles.circleStart, { backgroundColor: "white" }]} />
-          {/* move purple circle to middle */}
-          <View style={[styles.circleStart, { left: 130 }]} />
-          {/* Progress Bar */}
-          <ProgressBar
-            progress={progress}
-            color="#C5B4E3"
-            style={styles.progressBar}
-          />
-          <View style={styles.circleEnd} />
-        </View>
+      <BothProgressBar
+  progress={progress}
+  toPickupDuration={walkDuration}
+  toDropoffDuration={rideDuration}
+  pickupAddress={pickUpAddress}
+  dropoffAddress={dropOffAddress}
+/>
 
-        {/* Locations Text */}
-        <View style={styles.locationsContainer}>
-          {/* show Start and Pickup Location */}
-          <View style={{ flexDirection: "row", maxWidth: "50%" }}>
-            <View style={{ alignSelf: "flex-start" }}>
-              <Text style={styles.locationTitle}>Start</Text>
-            </View>
-            <View
-              style={{
-                left: 60,
-                width: 100,
-                alignItems: "center",
-              }}
-            >
-              <Text style={styles.locationTitle}>Pickup</Text>
-              {/* If expanded, show location name and address */}
-              {expanded && (
-                <View style={{ alignItems: "center" }}>
-                  <Text
-                    style={[styles.locationSubtitle, { textAlign: "center" }]}
-                  >
-                    {pickUpLocation}
-                  </Text>
-                  <Text style={{ fontSize: 10, textAlign: "center" }}>
-                    {pickUpAddress}21qz
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-          {/* Dropoff Location */}
-          <View style={[styles.dropOffContainer, { maxWidth: "30%" }]}>
-            <Text style={styles.locationTitle}>Dropoff</Text>
-            {expanded && (
-              <View style={{ alignItems: "flex-end" }}>
-                {/* If expanded, show location name and address */}
-                <Text style={[styles.locationSubtitle, { textAlign: "right" }]}>
-                  {dropOffLocation}
-                </Text>
-                <Text
-                  style={{ fontSize: 10, marginBottom: 5, textAlign: "right" }}
-                >
-                  {dropOffAddress}
-                </Text>
-              </View>
-            )}
-          </View>
-        </View>
-      </View>
+         
       {/* Cancel Button */}
       {(status == "WaitingForRide" || status == "DriverEnRoute") && (
         <View
