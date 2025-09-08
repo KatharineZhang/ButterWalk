@@ -601,8 +601,8 @@ export class BuildingService {
     {
       name: "McCarty Hall (MCC)",
       location: {
-        latitude: 47.660606397225976,
-        longitude: -122.30501618953237,
+        latitude: 47.660447301948984,
+        longitude: -122.30489067545548,
       },
     },
     {
@@ -644,8 +644,8 @@ export class BuildingService {
     {
       name: "Odegaard Library",
       location: {
-        latitude: 47.657212074889294,
-        longitude: -122.30487145010869,
+        latitude: 47.65648228817194,
+        longitude: -122.31042119368445,
       },
     },
     {
