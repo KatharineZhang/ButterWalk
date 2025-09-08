@@ -479,10 +479,6 @@ export default function HomePage() {
   // handle the case when the ride is completed or canceled
   const handleComplete = (message: WebSocketResponse) => {
     if ("response" in message && message.response === "COMPLETE") {
-      resetAllFields();
-      // go back to ride request component
-      setWhichComponent("rideReq");
-
       // wait until we recieve message with the ride completed
       // for us to set the student's ride status to completed
       setRideStatus("RideCompleted");
