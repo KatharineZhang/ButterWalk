@@ -55,8 +55,12 @@ export default function HomePage() {
   });
 
   /* MAP STATE AND METHODS */
-  // the student's location
-  const [userLocation, setUserLocation] = useState<{
+  // the student's location (don't need userLocation variable)
+  const [, setUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  }>({ latitude: 0, longitude: 0 });
+  const userLocationRef = useRef<{
     latitude: number;
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
@@ -73,7 +77,8 @@ export default function HomePage() {
     latitude: number;
     longitude: number;
   }) => {
-    setUserLocation(location);
+    setUserLocation(location); // trigger rerender when the user's location changes
+    userLocationRef.current = location; // actually store the state for use
     // if the ride has been accepted, send the new location to the driver
     if (rideStatus === "DriverEnRoute") {
       WebSocketService.send({
@@ -282,16 +287,16 @@ export default function HomePage() {
       // find out how long it will take to walk
       WebSocketService.send({
         directive: "DISTANCE",
-        origin: [userLocation],
+        origin: [userLocationRef.current],
         destination: [pickUpLocation],
         mode: "walking",
         tag: "walkToPickup",
       });
     } else if (whichComponent == "handleRide") {
       // if we are handling the ride, check if walking is needed by setting start location
-      setStartLocation(userLocation);
+      setStartLocation(userLocationRef.current);
 
-      if (isSameLocation(userLocation, pickUpLocation)) {
+      if (isSameLocation(userLocationRef.current, pickUpLocation)) {
         setWalkProgress(1);
       }
     }
@@ -308,12 +313,12 @@ export default function HomePage() {
           if (startLocation.latitude != 0 && startLocation.longitude != 0) {
             // there is a large enough distance that the user needs to walk
             // calculate the progress of the user walking to the pickup location
-            if (isSameLocation(userLocation, pickUpLocation)) {
+            if (isSameLocation(userLocationRef.current, pickUpLocation)) {
               setWalkProgress(1);
             } else {
               const wp = calculateProgress(
                 startLocation,
-                userLocation,
+                userLocationRef.current,
                 pickUpLocation
               );
               setWalkProgress(wp);
@@ -339,12 +344,12 @@ export default function HomePage() {
           if (startLocation.latitude != 0 && startLocation.longitude != 0) {
             // there is a large enough distance that the user needs to walk
             // calculate the progress of the user walking to the pickup location
-            if (isSameLocation(userLocation, pickUpLocation)) {
+            if (isSameLocation(userLocationRef.current, pickUpLocation)) {
               setWalkProgress(1);
             } else {
               const wp = calculateProgress(
                 startLocation,
-                userLocation,
+                userLocationRef.current,
                 pickUpLocation
               );
               setWalkProgress(wp);
@@ -383,7 +388,7 @@ export default function HomePage() {
           break;
       }
     }
-  }, [userLocation, driverLocation, driverETA]);
+  }, [userLocationRef.current, driverLocation, driverETA]);
 
   /* WEBSOCKET HANDLERS */
   // WEBSOCKET -- PROFILE
@@ -501,6 +506,13 @@ export default function HomePage() {
     ) {
       // the driver has arrived at the pickup location
       setRideStatus("DriverArrived");
+      // send the user's location in case we haven't move since ride was accepted
+      WebSocketService.send({
+        directive: "LOCATION",
+        id: netid,
+        latitude: userLocationRef.current.latitude,
+        longitude: userLocationRef.current.longitude,
+      });
     } else {
       console.log("Driver arrived response error: ", message);
     }
@@ -567,7 +579,7 @@ export default function HomePage() {
       setRequestID(reqMessage.requestid);
 
       // set the startLocation to figure out if the user needs to walk
-      setStartLocation(userLocation);
+      setStartLocation(userLocationRef.current);
 
       // set the component to show to WaitingForRide version of handleRide
       setWhichComponent("handleRide");
@@ -747,7 +759,7 @@ export default function HomePage() {
                 dropOffLocationNameChanged={setDropOffLocationName}
                 pickUpLocationCoordChanged={setPickUpLocation}
                 dropOffLocationCoordChanged={setDropOffLocation}
-                userLocation={userLocation}
+                userLocation={userLocationRef.current}
                 rideRequested={rideRequested}
                 startingState={startingState}
                 setFAQVisible={setFAQVisible}
