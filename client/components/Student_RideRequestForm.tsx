@@ -595,6 +595,8 @@ export default function RideRequestForm({
             ) ||
           (currentQuery == "pickup" && item == "Current Location") // if the current query is pickup, we want to include current location
       );
+
+    console.log(`Filtered buildings count: ${filteredBuildings.length}`);
     setCampusAPIResults(filteredBuildings);
   }, [dropOffQuery, pickUpQuery]);
 
@@ -644,34 +646,46 @@ export default function RideRequestForm({
     type: "recent" | "campus" | "place";
   };
 
-  // This array combines and formats all possible location suggestions for the user to select from.
-  // It merges recent locations, campus API results, and external place search results into a single list,
-  // each with a unique key and type for rendering in the FlatList.
-  const formattedResults: FormattedResult[] = [
-    // Recent locations the user has selected before.
-    ...recentLocations.map((item) => ({
-      key: `recent-${item.name}`,
-      name: item.name,
-      address: item.address,
-      type: "recent" as const,
-    })),
-    // Campus buildings matching the user's query.
-    ...campusAPIResults.map((item, index) => ({
-      key: `campus-${index}`,
-      name: item,
-      address: null,
-      type: "campus" as const,
-    })),
-    // External place search results, excluding any already present in campusAPIResults.
-    ...placeSearchResults
-      .filter((item) => item?.name && !campusAPIResults.includes(item.name))
-      .map((item, index) => ({
-        key: `place-${index}`,
-        name: item.name,
-        address: item.address,
-        type: "place" as const,
-      })),
-  ];
+  // This array builds the list of autocomplete suggestions for the user.
+  // If the user has typed a query, only show matching campus locations.
+  // If the query is empty, show recent locations first, then all campus locations,
+  // and finally external place search results (excluding duplicates).
+  const formattedResults: FormattedResult[] =
+    (currentQuery === "pickup" ? pickUpQuery : dropOffQuery) !== ""
+      ? [
+          // Only show campusAPIResults if the query is not empty
+          ...campusAPIResults.map((item, index) => ({
+            key: `campus-${index}`,
+            name: item,
+            address: null,
+            type: "campus" as const,
+          })),
+        ]
+      : [
+          // Show recentLocations first
+          ...recentLocations.map((item) => ({
+            key: `recent-${item.name}`,
+            name: item.name,
+            address: item.address,
+            type: "recent" as const,
+          })),
+          // Then campusAPIResults
+          ...campusAPIResults.map((item, index) => ({
+            key: `campus-${index}`,
+            name: item,
+            address: null,
+            type: "campus" as const,
+          })),
+          // Then placeSearchResults, excluding any already present in campusAPIResults
+          ...placeSearchResults
+            .filter((item) => item?.name && !campusAPIResults.includes(item.name))
+            .map((item, index) => ({
+              key: `place-${index}`,
+              name: item.name,
+              address: item.address,
+              type: "place" as const,
+            })),
+        ];
 
 
 
