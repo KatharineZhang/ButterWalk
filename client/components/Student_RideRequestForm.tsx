@@ -71,7 +71,7 @@ export default function RideRequestForm({
   rideRequested,
   startingState,
   setFAQVisible,
-  recentLocations,
+  recentLocations = [], // default to an empty array if not provided
   setNotificationState,
   updateSideBarHeight,
   darkenScreen,
@@ -352,7 +352,7 @@ export default function RideRequestForm({
       );
       Alert.alert(
         "Service Unavailable",
-        `Service is not available on ${holiday?.name}`
+        `Service is not available on ${holiday?.name} (but i'll allow it this time...)`
       );
       // return;
     }
@@ -361,7 +361,7 @@ export default function RideRequestForm({
     if (!TimeService.inServicableTime()) {
       Alert.alert(
         "Service Unavailable",
-        "Service is only available between 6:30 PM and 2:00 AM"
+        "Service is only available between 6:30 PM and 2:00 AM (but i'll allow it this time...)"
       );
       // return;
     }
