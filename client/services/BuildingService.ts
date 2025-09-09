@@ -89,7 +89,6 @@ export class BuildingService {
       location: {
         latitude: 47.65966170733686,
         longitude: -122.30777796897307,
-        , 
       },
     },
     {
@@ -118,7 +117,6 @@ export class BuildingService {
       location: {
         latitude: 47.665072351997985,
         longitude: -122.29712971982856,
-        47.665111533660806, -122.2970274598238
       },
     },
     {
@@ -358,9 +356,11 @@ export class BuildingService {
         latitude: 47.65322385230462,
         longitude: -122.31351835075509,
       },
+      
     },
+    /*
     {
-      /*
+      
       name: "Haggett Hall (HGT)",
       location: {
         latitude: 47.65925859883902,
