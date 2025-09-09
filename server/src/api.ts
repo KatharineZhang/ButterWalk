@@ -219,7 +219,7 @@ export type ViewRideRequestResponse = {
   rideExists: boolean;
   rideInfo?: {
     // if the ride exists, this will be defined
-    rideRequest: RideRequest;
+    rideRequest: RideRequest & { requestId: string };
     driverToPickUpDuration: number; // in minutes
     pickUpToDropOffDuration: number; // in minutes
   };

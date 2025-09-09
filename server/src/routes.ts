@@ -479,6 +479,11 @@ export const viewRide = async (
         driverLocation
       );
 
+      // Ensure requestId is present and is a string
+      if (!bestRequest.requestId || typeof bestRequest.requestId !== "string") {
+        throw new Error("RideRequest is missing a valid requestId.");
+      }
+
       // get some stats on the ride
       const driverToPickUpDuration = await getDuration(
         driverLocation,
@@ -530,7 +535,10 @@ export const viewRide = async (
         response: "VIEW_RIDE",
         rideExists: true,
         rideInfo: {
-          rideRequest: bestRequest,
+          rideRequest: {
+            ...bestRequest,
+            requestId: bestRequest.requestId as string,
+          },
           driverToPickUpDuration,
           pickUpToDropOffDuration,
         },

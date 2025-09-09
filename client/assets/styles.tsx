@@ -930,6 +930,18 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 4,
   },
+
+  logoutWarningContainer: {
+    position: "absolute",
+    width: "91%",
+    height: "25%",
+    paddingHorizontal: 16,
+    paddingVertical: "10%",
+    margin: 16,
+    backgroundColor: "#FFD055",
+    borderRadius: 8,
+    justifyContent: "space-between",
+  },
 });
 
 export const loadingPageCompStyles = StyleSheet.create({
