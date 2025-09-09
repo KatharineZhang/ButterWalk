@@ -14,6 +14,7 @@ import { Platform, View, Image, Alert, Linking } from "react-native";
 import MapViewDirections from "react-native-maps-directions";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { PurpleZone } from "@/services/ZoneService";
+import { HandleRidePhase } from "./home";
 
 interface MapProps {
   startLocation: { latitude: number; longitude: number };
@@ -24,12 +25,15 @@ interface MapProps {
     latitude: number;
     longitude: number;
   }) => void;
+  currPhase: HandleRidePhase;
 }
 
 // functions that can be called from the parent component
 // using the ref
 export interface MapRef {
   recenterMap: () => void; // recenter the map on the user's location
+  pickupDistance: number; // distance for pickup leg
+  dropoffDistance: number; // distance for dropoff leg
 }
 
 // Simple renders the points passing in through the props
@@ -42,7 +46,8 @@ const Map = forwardRef<MapRef, MapProps>(
       dropOffLocation = { latitude: 0, longitude: 0 },
       studentLocation = { latitude: 0, longitude: 0 },
       userLocationChanged,
-    },
+      currPhase = "headingToPickup",
+    }: MapProps,
     ref
   ) => {
     // STATE VARIABLES
@@ -73,6 +78,10 @@ const Map = forwardRef<MapRef, MapProps>(
 
     // used for map zooming
     const mapRef = useRef<MapView>(null);
+
+    // for calculating the distance of route, to be used in progress bar calculations
+    const [pickupDistance, setPickupDistance] = useState<number>(0);
+    const [dropoffDistance, setDropoffDistance] = useState<number>(0);
 
     // STATE HOOKS
     useEffect(() => {
@@ -153,6 +162,8 @@ const Map = forwardRef<MapRef, MapProps>(
       // this is used to allow the parent component to call the recenterMap function
       () => ({
         recenterMap,
+        pickupDistance,
+        dropoffDistance,
       })
     );
 
@@ -295,30 +306,34 @@ const Map = forwardRef<MapRef, MapProps>(
               <Ionicons name="car-sharp" size={30} color="black" />
             </View>
           </Marker>
-          <Marker
-            coordinate={{
-              latitude: studentLocation.latitude,
-              longitude: studentLocation.longitude,
-            }}
-            title={"Student's Location"}
-          >
-            <View
-              style={{
-                backgroundColor: "white",
-                borderRadius: 50,
-                borderWidth: 2,
-                width: 35,
-                height: 35,
-                alignItems: "center",
-                justifyContent: "center",
+          {/* Only show student loc if we are waiting for pickup */}
+          {currPhase == "waitingForPickup" && (
+            <Marker
+              coordinate={{
+                latitude: studentLocation.latitude,
+                longitude: studentLocation.longitude,
               }}
+              title={"Student's Location"}
             >
-              <FontAwesome6 name="person-walking" size={24} color="black" />
-            </View>
-          </Marker>
+              <View
+                style={{
+                  backgroundColor: "white",
+                  borderRadius: 50,
+                  borderWidth: 2,
+                  width: 35,
+                  height: 35,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <FontAwesome6 name="person-walking" size={24} color="black" />
+              </View>
+            </Marker>
+          )}
           {/* show the directions between the pickup and dropoff locations if they are valid
         if the ride is not currently happening / happened  */}
           {userLocation.latitude !== 0 &&
+            startLocation.latitude !== 0 &&
             pickUpLocation.latitude !== 0 &&
             dropOffLocation.latitude !== 0 && (
               <MapViewDirections
@@ -328,6 +343,32 @@ const Map = forwardRef<MapRef, MapProps>(
                 apikey={GOOGLE_MAPS_APIKEY}
                 strokeWidth={3}
                 strokeColor="#000000"
+                onReady={(result: {
+                  legs?: { distance: { value: number } }[];
+                  distance?: number;
+                }) => {
+                  if (result.legs && result.legs.length > 1) {
+                    // we have a waypoint
+                    // set the pickup distance
+                    setPickupDistance(result.legs[0].distance.value);
+                    // set the dropoff distance
+                    if (
+                      result.legs[1] !== undefined &&
+                      result.legs[1].distance
+                    ) {
+                      setDropoffDistance(result.legs[1].distance.value);
+                    }
+                  } else if (result.legs && result.legs.length === 1) {
+                    // no waypoint
+                    setDropoffDistance(result.legs[0].distance.value);
+                  } else if (typeof result.distance === "number") {
+                    // if may be the case that we only have distance if there are no waypoints
+                    setDropoffDistance(result.distance);
+                  }
+                }}
+                onError={(errorMessage) => {
+                  console.log("MapViewDirections error:", errorMessage);
+                }}
               />
             )}
         </MapView>

@@ -62,8 +62,20 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   // TIMER STUFF
   // keep track of the seconds left
   const [seconds, setSeconds] = useState(5 * 60); // 5 minutes
+
+  // height expansion
+  const [expanded, setExpanded] = useState(false); // if the progress bar is expanded or not
+
+  // show the waiting for driver confirmation during pickup
+  const [showWaitingForConfirmation, setShowWaitingForConfirmation] =
+    useState(false);
+
+  let progress = 0;
+
   // the actual countdown
   useEffect(() => {
+    // when the status changes, reset the waiting for confirmation thing
+    setShowWaitingForConfirmation(false);
     // if the status is not DriverArrived, clear the timer
     if (status !== "DriverArrived") {
       if (status == "DriverEnRoute") {
@@ -120,8 +132,6 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
     return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
   };
 
-  let progress = 0;
-
   if (status == "RideInProgress") {
     // when ride is in progress
     // progress = 0.45 + (dist from driver+student to dropoff) / (dist from pickup to dropoff)
@@ -146,13 +156,6 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
     // The max progress is 0.45
     progress = Math.min(newProgress, 0.45); // Make sure the progress is not greater than 0.45
   }
-
-  // height expansion
-  const [expanded, setExpanded] = useState(false); // if the progress bar is expanded or not
-
-  // show the waiting for driver confirmation during pickup
-  const [showWaitingForConfirmation, setShowWaitingForConfirmation] =
-    useState(false);
 
   return (
     <View
@@ -373,6 +376,51 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
               }}
             >
               <Text style={styles.buttonText}>I Found My Driver</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View
+            style={[
+              styles.bottomModalButtonContainer,
+              {
+                paddingHorizontal: 10,
+                alignItems: "center",
+                paddingVertical: "7%",
+                flexDirection: "row",
+                justifyContent: "center",
+              },
+            ]}
+          >
+            <ActivityIndicator
+              size="small"
+              color="#4B2E83"
+              style={{ margin: "2%" }}
+            />
+            <Text style={{ fontStyle: "italic", fontSize: 18 }}>
+              Waiting For Driver Confirmation...
+            </Text>
+          </View>
+        ))}
+
+      {/* I Found My Driver Button */}
+      {status === "RideInProgress" &&
+        (showWaitingForConfirmation === false ? (
+          <View
+            style={[
+              styles.bottomModalButtonContainer,
+              { paddingHorizontal: 10 },
+            ]}
+          >
+            <Pressable
+              style={[
+                styles.bottomModalButton,
+                { borderWidth: 2, backgroundColor: "#4B2E83" },
+              ]}
+              onPress={() => {
+                setShowWaitingForConfirmation(true);
+              }}
+            >
+              <Text style={styles.buttonText}>I have arrived</Text>
             </Pressable>
           </View>
         ) : (
