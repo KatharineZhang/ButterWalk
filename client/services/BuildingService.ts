@@ -80,23 +80,23 @@ export class BuildingService {
     {
       name: "Bagley Hall",
       location: {
-        latitude: 47.65287038631524,
-        longitude: -122.30875655474162,
-
+        latitude: 47.6529574242432,
+        longitude: -122.30889381676606,
       },
     },
     {
       name: "Bank of America Executive Education Center",
       location: {
-        latitude: 47.659526047741394,
-        longitude: -122.30777736130813,
+        latitude: 47.65966170733686,
+        longitude: -122.30777796897307,
+        , 
       },
     },
     {
       name: "Benjamin Hall Interdisciplinary Research Building",
       location: {
-        latitude: 47.65531073602157,
-        longitude: -122.32138168272783,
+        latitude: 47.65548547484714,
+        longitude: -122.32102136893216,
       },
     },
     {
@@ -109,8 +109,8 @@ export class BuildingService {
     {
       name: "Bloedel Hall",
       location: {
-        latitude: 47.65139405318845,
-        longitude: -122.3079397858276,
+        latitude: 47.65146984203419,
+        longitude: -122.30817694242195,
       },
     },
     {
@@ -118,20 +118,21 @@ export class BuildingService {
       location: {
         latitude: 47.665072351997985,
         longitude: -122.29712971982856,
+        47.665111533660806, -122.2970274598238
       },
     },
     {
       name: "Brooklyn Trail Building",
       location: {
-        latitude: 47.65471288073426,
-        longitude: -122.31477795471831,
+        latitude: 47.65470863485668,
+        longitude: -122.31461718339109,
       },
     },
     {
       name: "Burke Memorial-Washington State Museum",
       location: {
-        latitude: 47.66036060983427,
-        longitude: -122.31151504535191,
+        latitude: 47.66041816827474,
+        longitude: -122.3112187955797,
       },
     },
     {
@@ -151,15 +152,15 @@ export class BuildingService {
     {
       name: "Chemistry Library Building (CHL)",
       location: {
-        latitude: 47.6537311304745,
-        longitude: -122.31007096643471,
+        latitude: 47.65368308933987,
+        longitude: -122.3096854254018,
       },
     },
     {
       name: "Clark Hall (CLK)",
       location: {
-        latitude: 47.65764814879635,
-        longitude: -122.30490761099739,
+        latitude: 47.65771740755596,
+        longitude: -122.30500476853422,
       },
     },
     {
@@ -172,29 +173,29 @@ export class BuildingService {
     {
       name: "Condon Hall (CDH)",
       location: {
-        latitude: 47.65661485766775,
-        longitude: -122.31613610113087,
+        latitude: 47.656396052735104,
+        longitude: -122.31577899695029,
       },
     },
     {
       name: "Conibear Shellhouse (CSH)",
       location: {
-        latitude: 47.652835945927166,
-        longitude: -122.29982469941218,
+        latitude: 47.65307776703236,
+        longitude: -122.29979157657776,
       },
     },
     {
       name: "Dempsey Hall (DEM)",
       location: {
-        latitude: 47.65909232919698,
-        longitude: -122.30774789289713,
+        latitude: 47.65937139553685,
+        longitude: -122.30736045649674,
       },
     },
     {
-      name: "Dempsey Indoor Center (IPF)",
+      name: "Dempsey Indoor Center",
       location: {
         latitude: 47.651378074574836,
-        longitude: -122.2992680699251,
+        longitude: -122.29898023678969,
       },
     },
     {
@@ -207,8 +208,8 @@ export class BuildingService {
     {
       name: "Douglas Research Conservatory (DRC)",
       location: {
-        latitude: 47.657747996090855,
-        longitude: -122.2889389771151,
+        latitude: 47.65786712411186,
+        longitude: -122.28884803921505,
       },
     },
     {
@@ -221,22 +222,22 @@ export class BuildingService {
     {
       name: "Electrical and Computer Engineering Building (ECE)",
       location: {
-        latitude: 47.65361107404234,
-        longitude: -122.30643948634754,
+        latitude: 47.65377972206346,
+        longitude: -122.30636014236474,
       },
     },
     {
       name: "Elm Hall (ELM)",
       location: {
-        latitude: 47.65638585336721,
-        longitude: -122.31527914307291,
+        latitude: 47.65651821244692,
+        longitude: -122.31503308731979,
       },
     },
     {
       name: "Engineering Annex (EGA)",
       location: {
-        latitude: 47.65374144402935,
-        longitude: -122.30432571836891,
+        latitude: 47.65373982627239,
+        longitude: -122.3044758978453,
       },
     },
     {
@@ -247,10 +248,10 @@ export class BuildingService {
       },
     },
     {
-      name: "Ethnic Cultural Center Theatre (ICT)",
+      name: "Ethnic Cultural Center Theatre (ECT)",
       location: {
-        latitude: 47.65513840219722,
-        longitude: -122.3141840596632,
+        latitude: 47.65511531631396,
+        longitude: -122.31434290692155,
       },
     },
     {
@@ -263,15 +264,15 @@ export class BuildingService {
     {
       name: "Fialkow Biomedical Sciences Research Pavilion (K wing) (HSK)",
       location: {
-        latitude: 47.65115348886827,
-        longitude: -122.31163028582748,
+        latitude: 47.651217928552065,
+        longitude: -122.31217213574062,
       },
     },
     {
       name: "Fisheries Teaching and Research Building (FTR)",
       location: {
-        latitude: 47.65247331783616,
-        longitude: -122.31562159433554,
+        latitude: 47.65240941188302,
+        longitude: -122.31565060165332,
       },
     },
     {
@@ -284,22 +285,22 @@ export class BuildingService {
     {
       name: "Floyd and Delores Jones Playhouse (PHT)",
       location: {
-        latitude: 47.6566295987603,
-        longitude: -122.31357267998125,
+        latitude: 47.65677398064284,
+        longitude: -122.31336110059962,
       },
     },
     {
       name: "Fluke Hall (FLK)",
       location: {
-        latitude: 47.65578675700944,
-        longitude: -122.30331521836878,
+        latitude: 47.65606697944179,
+        longitude: -122.30287824915509,
       },
     },
     {
       name: "Founders Hall (FNDR)",
       location: {
-        latitude: 47.658626,
-        longitude: -122.307049,
+        latitude: 47.6591337904406,
+        longitude: -122.30717802152388,
       },
     },
     {
@@ -312,8 +313,8 @@ export class BuildingService {
     {
       name: "Gould Hall (GLD)",
       location: {
-        latitude: 47.654911817309845,
-        longitude: -122.31275364720493,
+        latitude: 47.655254362845795,
+        longitude: -122.31274309969263,
       },
     },
     {
@@ -326,15 +327,15 @@ export class BuildingService {
     {
       name: "Graves Annex Building (GAB)",
       location: {
-        latitude: 47.652281471814476,
-        longitude: -122.3009229909369,
+        latitude: 47.652342799958696,
+        longitude: -122.30069871785277,
       },
     },
     {
       name: "Graves Hall (TGB)",
       location: {
-        latitude: 47.65304215424515,
-        longitude: -122.30225942385168,
+        latitude: 47.65286392858252,
+        longitude: -122.30254796077995,
       },
     },
     {
@@ -347,43 +348,45 @@ export class BuildingService {
     {
       name: "Guggenheim Hall (GUG)",
       location: {
-        latitude: 47.6542409931515,
-        longitude: -122.30638038538035,
+        latitude: 47.65411634644492,
+        longitude: -122.30637718121088,
       },
     },
     {
       name: "Guthrie Hall (GTH)",
       location: {
-        latitude: 47.653969078745526,
-        longitude: -122.3108290162179,
+        latitude: 47.65322385230462,
+        longitude: -122.31351835075509,
       },
     },
     {
+      /*
       name: "Haggett Hall (HGT)",
       location: {
         latitude: 47.65925859883902,
         longitude: -122.30375259352043,
       },
     },
+    */
     {
       name: "Hall Health Center (HHC)",
       location: {
-        latitude: 47.65615182496788,
-        longitude: -122.304285913818,
+        latitude: 47.65619126112445,
+        longitude: -122.30430676244933,
       },
     },
     {
       name: "Hans Rosling Center for Population Health (HRC)",
       location: {
-        latitude: 47.654451228592144,
-        longitude: -122.31182062022164,
+        latitude: 47.654788570813494,
+        longitude: -122.31189903381835, 
       },
     },
     {
       name: "Hansee Hall (HNS)",
       location: {
-        latitude: 47.660839223202295,
-        longitude: -122.30650124535194,
+        latitude: 47.660849376568244,
+        longitude: -122.30652383310903,
       },
     },
     {
@@ -403,15 +406,15 @@ export class BuildingService {
     {
       name: "Alaska Airlines Arena",
       location: {
-        latitude: 47.652188234640576,
-        longitude: -122.30242415276336,
+        latitude: 47.65219091187172,
+        longitude: -122.30298917176218,
       },
     },
     {
       name: "Henderson Hall (HND)",
       location: {
-        latitude: 47.655199017389194,
-        longitude: -122.3169908472049,
+        latitude: 47.655214666731375,
+        longitude: -122.31731739262281,
       },
     },
     {
@@ -423,7 +426,6 @@ export class BuildingService {
     },
     {
       name: "Hitchcock Hall (HCK)",
-      // no parking lot or street nearby??
       location: {
         latitude: 47.651888461875366,
         longitude: -122.31152823186072,
@@ -439,29 +441,29 @@ export class BuildingService {
     {
       name: "Intellectual House (INT)",
       location: {
-        latitude: 47.658275944657454,
-        longitude: -122.30489274905756,
+        latitude: 47.658440551281906,
+        longitude: -122.3047065933891,
       },
     },
     {
       name: "Intramural Activities Building (IMA)",
       location: {
-        latitude: 47.65360652520379,
-        longitude: -122.30134386863031,
+        latitude: 47.65364154337595,
+        longitude: -122.30158796924562,
       },
     },
     {
       name: "Isaacson Hall (ISA)",
       location: {
-        latitude: 47.65789332686393,
-        longitude: -122.29000306708642,
+        latitude: 47.657976549574144,
+        longitude: -122.2899435864212,
       },
     },
     {
       name: "John M. Wallace Hall (ACC)",
       location: {
-        latitude: 47.65306395249528,
-        longitude: -122.3148897318607,
+        latitude: 47.653044278320834,
+        longitude: -122.31469682590821,
       },
     },
     {
@@ -474,15 +476,15 @@ export class BuildingService {
     {
       name: "Kane Hall (KNE)",
       location: {
-        latitude: 47.65662004442798,
-        longitude: -122.30906447233552,
+        latitude: 47.65691551950023,
+        longitude: -122.30903347347314,
       },
     },
     {
       name: "Kincaid Hall (KIN)",
       location: {
-        latitude: 47.652593826278505,
-        longitude: -122.31059607418844,
+        latitude: 47.65254150860671,
+        longitude: -122.31090811972389,
       },
     },
     {
@@ -495,8 +497,8 @@ export class BuildingService {
     {
       name: "Laurel Village (LAV)",
       location: {
-        latitude: 47.660128297236355,
-        longitude: -122.2914821797462,
+        latitude: 47.66015074613112,
+        longitude: -122.2912697237839,
       },
     },
     {
@@ -509,8 +511,8 @@ export class BuildingService {
     {
       name: "Life Sciences Building (LSB)",
       location: {
-        latitude: 47.65229268934145,
-        longitude: -122.30983577789407,
+        latitude: 47.6523717101398,
+        longitude: -122.30973172529738,
       },
     },
     {
@@ -523,22 +525,22 @@ export class BuildingService {
     {
       name: "Madrona Hall (MDR)",
       location: {
-        latitude: 47.66008489257747,
-        longitude: -122.30521483186024,
+        latitude: 47.660240320482835,
+        longitude: -122.30532402669247,
       },
     },
     {
       name: "Magnuson Health Sciences Center A (HSA)",
       location: {
-        latitude: 47.6502737362422,
-        longitude: -122.30829369138576,
+        latitude: 47.6502648298363,
+        longitude: -122.3081718600694,
       },
     },
     {
       name: "Magnuson Health Sciences Center B (HSB)",
       location: {
-        latitude: 47.64971038472927,
-        longitude: -122.30911559323854,
+        latitude: 47.64973556725395,
+        longitude: -122.30925193383219,
       },
     },
     {
@@ -580,22 +582,22 @@ export class BuildingService {
     {
       name: "Marine Sciences Building (MSB)",
       location: {
-        latitude: 47.64976782626585,
-        longitude: -122.3124911067302,
+        latitude: 47.64980432598877,
+        longitude: -122.31236410636598,
       },
     },
     {
       name: "Marine Studies Building (MAR)",
       location: {
-        latitude: 47.65246404385248,
-        longitude: -122.31490681651631,
+        latitude: 47.652371518592716,
+        longitude: -122.31474129113369,
       },
     },
     {
       name: "Mary Gates Hall (MGH)",
       location: {
-        latitude: 47.65494216544692,
-        longitude: -122.3079267829135,
+        latitude: 47.655154727533876,
+        longitude: -122.30756349195849,
       },
     },
     {
@@ -608,15 +610,15 @@ export class BuildingService {
     {
       name: "Maple Hall (MAH)",
       location: {
-        latitude: 47.65584432458446,
-        longitude: -122.31610235884385,
+        latitude: 47.65595673980453,
+        longitude: -122.3163337344104, 
       },
     },
     {
       name: "McMahon Hall (MCM)",
       location: {
-        latitude: 47.65813688032979,
-        longitude: -122.30383106440199,
+        latitude: 47.65822077542516,
+        longitude: -122.3040276699889,
       },
     },
     {
@@ -629,13 +631,12 @@ export class BuildingService {
     {
       name: "Department of Mechanical Engineering",
       location: {
-        latitude: 47.653497830133276,
-        longitude: -122.30481300101852,
+        latitude: 47.65341721119134,
+        longitude: -122.3049910247328,
       },
     },
     {
       name: "Mercer Court (MRC)",
-      // multiple enterances for this
       location: {
         latitude: 47.65481930770117,
         longitude: -122.31760013031219,
@@ -644,15 +645,15 @@ export class BuildingService {
     {
       name: "Odegaard Library",
       location: {
-        latitude: 47.65648228817194,
-        longitude: -122.31042119368445,
+        latitude: 47.65675486360317,
+        longitude: -122.30994734434229,
       },
     },
     {
       name: "Merrill Hall (NMH)",
       location: {
-        latitude: 47.65778833866146,
-        longitude: -122.29046506069648,
+        latitude: 47.657901622943754,
+        longitude: -122.29068717491369,
       },
     },
     {
@@ -664,10 +665,9 @@ export class BuildingService {
     },
     {
       name: "Molecular Engineering & Sciences Building (MOL/NAN)",
-      // multiple enterances for this
       location: {
-        latitude: 47.65441559802646,
-        longitude: -122.30991977048294,
+        latitude: 47.65444121894472,
+        longitude: -122.3101735533603,
       },
     },
     {
@@ -687,23 +687,22 @@ export class BuildingService {
     {
       name: "Music Building (MUS)",
       location: {
-        latitude: 47.657680906124895,
-        longitude: -122.30584244349934,
+        latitude: 47.65740254119366,
+        longitude: -122.3054602049049,
       },
     },
     {
       name: "North Physics Laboratory Cyclotron Shop (NPS)",
       location: {
-        latitude: 47.65909296067042,
-        longitude: -122.30296184720471,
+        latitude: 47.65913204335531,
+        longitude: -122.30309518803602,
       },
     },
     {
       name: "Oak Hall (OAK)",
       location: {
-        // not sure about this one
-        latitude: 47.65945356458997,
-        longitude: -122.30532243786992,
+        latitude: 47.65911326385438,
+        longitude: -122.30591783948768,
       },
     },
     {
@@ -716,8 +715,8 @@ export class BuildingService {
     {
       name: "Ocean Sciences Building (OCN)",
       location: {
-        latitude: 47.651218834114886,
-        longitude: -122.3127056472052,
+        latitude: 47.65104957854451,
+        longitude: -122.31249261298812,
       },
     },
     {
@@ -729,7 +728,6 @@ export class BuildingService {
     },
     {
       name: "PACCAR Hall (PCAR)",
-      // is this location sus, would it be hard for students to find?
       location: {
         latitude: 47.65936371854245,
         longitude: -122.30887362815483,
@@ -738,8 +736,8 @@ export class BuildingService {
     {
       name: "Padelford Hall (PDL)",
       location: {
-        latitude: 47.656765092938016,
-        longitude: -122.30451585276315,
+        latitude: 47.65658543847523,
+        longitude: -122.30418194500425,
       },
     },
     {
@@ -752,8 +750,8 @@ export class BuildingService {
     {
       name: "Paul G. Allen Center for Computer Science & Engineering (CSE)",
       location: {
-        latitude: 47.6532784439652,
-        longitude: -122.30601114720497,
+        latitude: 47.65346513429678,
+        longitude: -122.30552389128307,
       },
     },
     {
@@ -766,8 +764,8 @@ export class BuildingService {
     {
       name: "Physics-Astronomy Auditorium (PAA)",
       location: {
-        latitude: 47.653054862521266,
-        longitude: -122.31098385884411,
+        latitude: 47.652977041656236,
+        longitude: -122.31074331308147,
       },
     },
     {
@@ -778,17 +776,10 @@ export class BuildingService {
       },
     },
     {
-      name: "Physcics/Astromony Auditorium (PAA)",
-      location: {
-        latitude: 47.653054862521266,
-        longitude: -122.31098385884411,
-      },
-    },
-    {
       name: "Plant Operations Annexes (POA)",
       location: {
-        latitude: 47.6544001231045,
-        longitude: -122.30334939133652,
+        latitude: 47.65442886793665,
+        longitude: -122.30329058719053,
       },
     },
     {
@@ -800,7 +791,6 @@ export class BuildingService {
     },
     {
       name: "Poplar Hall (POP)",
-      // multiple enterances for this?
       location: {
         latitude: 47.65640351120548,
         longitude: -122.31400697233558,
@@ -830,8 +820,8 @@ export class BuildingService {
     {
       name: "Purchasing and Accounting Building (PCH)",
       location: {
-        latitude: 47.65437266325087,
-        longitude: -122.31365034535222,
+        latitude: 47.65463439116483,
+        longitude: -122.31372418467929,
       },
     },
     {
@@ -851,8 +841,8 @@ export class BuildingService {
     {
       name: "Samuel E. Kelly Ethnic Cultural Center (ECC)",
       location: {
-        latitude: 47.65508894241014,
-        longitude: -122.31479882844505,
+        latitude: 47.655083728427584,
+        longitude: -122.31454685080847,
       },
     },
     {
@@ -893,12 +883,12 @@ export class BuildingService {
     {
       name: "South Campus Center (SOCC)",
       location: {
-        latitude: 47.64941256717046,
-        longitude: -122.31101753286696,
+        latitude: 47.64944537094184,
+        longitude: -122.31156182633748,
       },
     },
     {
-      name: "Stadium (STD)",
+      name: "Husky Stadium (STD)",
       location: {
         latitude: 47.650676328253795,
         longitude: -122.30322392179896,
@@ -913,11 +903,9 @@ export class BuildingService {
     },
     {
       name: "Husky Union Building (HUB)",
-      // these coordinates are in the middle of the HUB, but 
-      //google maps really doesn't let me get closer to the actual entrance
       location: {
-        latitude: 47.65542540527123,
-        longitude: -122.30542782562033,
+        latitude: 47.65491709706143,
+        longitude: -122.3056741257775,
       },
     },
     {
@@ -930,20 +918,19 @@ export class BuildingService {
     {
       name: "Terry Hall (TEH)",
       location: {
-        latitude: 47.655823144441726,
-        longitude: -122.31698781822202,
+        latitude: 47.65564055939026,
+        longitude: -122.31726623339738,
       },
     },
     {
       name: "Theodor Jacobsen Observatory (OBS)",
       location: {
-        latitude: 47.660328941933344,
-        longitude: -122.30929798649053,
+        latitude: 47.66041756450559,
+        longitude: -122.30923047397464,
       },
     },
     {
       name: "Thomson Hall (THO)",
-      // multiple enterances, skagit lane, or nearby parking lot
       location: {
         latitude: 47.65648102453225,
         longitude: -122.30575637589331,
@@ -959,22 +946,22 @@ export class BuildingService {
     {
       name: "UW Police Department (UWPD)",
       location: {
-        latitude: 47.65438418252918,
-        longitude: -122.31270865075687,
+        latitude: 47.65425359063252,
+        longitude: -122.31279817829237,
       },
     },
     {
       name: "UW Tower Buildings (UWT)",
       location: {
-        latitude: 47.66072509296734,
-        longitude: -122.31467676055061,
+        latitude: 47.66053407070847,
+        longitude: -122.31463472047123,
       },
     },
     {
       name: "Waterfront Activities Center (WAC)",
       location: {
-        latitude: 47.648553805169854,
-        longitude: -122.29994440019453,
+        latitude: 47.64867830865268,
+        longitude: -122.30010687993698,
       },
     },
     {
@@ -1008,15 +995,15 @@ export class BuildingService {
     {
       name: "Willow Hall (WLW)",
       location: {
-        latitude: 47.65976050323816,
-        longitude: -122.30463500891858,
+        latitude: 47.65946849274097,
+        longitude: -122.30431356541132,
       },
     },
     {
       name: "Wilson Annex (WLA)",
       location: {
-        latitude: 47.65135481540129,
-        longitude: -122.30521236240068,
+        latitude: 47.65131959100035,
+        longitude: -122.30498259203064,
       },
     },
     {
@@ -1029,8 +1016,8 @@ export class BuildingService {
     {
       name: "Winkenwerder Forest Sciences Laboratory (WFS)",
       location: {
-        latitude: 47.65143140031929,
-        longitude: -122.30682588763861,
+        latitude: 47.65125849356901,
+        longitude: -122.30702974653657,  
       },
     },
   ];
