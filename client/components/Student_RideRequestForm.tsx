@@ -730,9 +730,9 @@ export default function RideRequestForm({
               borderRadius: 13,
               backgroundColor: "#4B2E83",
               position: "absolute",
-              zIndex: 3,
-              top: 110,
-              left: 13,
+              zIndex: 4,
+              top: 105,
+              left: 20,
               height: 15,
               width: 15,
             }}
@@ -740,10 +740,10 @@ export default function RideRequestForm({
           <Image
             source={require("@/assets/images/dashed-line.png")}
             style={{
-              zIndex: 3,
+              zIndex: 4,
               position: "absolute",
-              top: 132,
-              left: 19,
+              top: 126,
+              left: 26,
               width: 2,
               height: 40,
             }}
@@ -752,13 +752,15 @@ export default function RideRequestForm({
             source={require("@/assets/images/dropoff-location.png")}
             style={{
               position: "absolute",
-              zIndex: 3,
-              top: 177,
-              left: 10,
+              zIndex: 4,
+              top: 173,
+              left: 18,
               height: 20,
               width: 20,
             }}
           />
+
+          
           {/* Location and Destination Inputs */}
           <AutocompleteInput
             onPress={() => {
@@ -780,21 +782,23 @@ export default function RideRequestForm({
             enterPressed={enterPressed}
             placeholder="Drop Off Location"
           />
+
+
           {/* "Choose # of passengers" Button */}
-            <TouchableOpacity
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: "3%",
-                marginLeft: "30%",
-              }}
-              onPress={goToNumberRiders}
-            >
-              <Text style={{ fontStyle: "italic" }}>
-                Choose # of passengers
-              </Text>
-              <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
-            </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: "3%",
+              marginLeft: "30%",
+            }}
+            onPress={goToNumberRiders}
+          >
+            <Text style={{ fontStyle: "italic" }}>
+              Choose # of passengers
+            </Text>
+            <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
+          </TouchableOpacity>
         </View>
 
 

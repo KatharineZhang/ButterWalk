@@ -38,15 +38,14 @@ const AutoCompleteInput: React.FC<AutoCompleteInputProps> = ({
 
 const styles = StyleSheet.create({
   autocompleteContainer: {
-    zIndex: 100,
-    marginLeft: "5%",
+    zIndex: 3,
     marginBottom: 10,
-    width: "85%",
+    width: "100%",
   },
   inputContainer: {
     borderRadius: 8,
     paddingVertical: 16,
-    paddingLeft: 20,
+    paddingLeft: 35,
     paddingRight: 20,
     borderColor: "#4B2E83",
     borderWidth: 2,
