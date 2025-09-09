@@ -595,8 +595,6 @@ export default function RideRequestForm({
             ) ||
           (currentQuery == "pickup" && item == "Current Location") // if the current query is pickup, we want to include current location
       );
-
-    console.log(`Filtered buildings count: ${filteredBuildings.length}`);
     setCampusAPIResults(filteredBuildings);
   }, [dropOffQuery, pickUpQuery]);
 
@@ -678,7 +676,9 @@ export default function RideRequestForm({
           })),
           // Then placeSearchResults, excluding any already present in campusAPIResults
           ...placeSearchResults
-            .filter((item) => item?.name && !campusAPIResults.includes(item.name))
+            .filter(
+              (item) => item?.name && !campusAPIResults.includes(item.name)
+            )
             .map((item, index) => ({
               key: `place-${index}`,
               name: item.name,
@@ -687,8 +687,6 @@ export default function RideRequestForm({
             })),
         ];
 
-
-
   /* PANEL UI */
   // the ride request panel
   const RideRequest: JSX.Element = (
@@ -696,14 +694,14 @@ export default function RideRequestForm({
       <BottomDrawer bottomSheetRef={bottomSheetRef}>
         {/* The search box with shadow under it*/}
         <View
-          style={[styles.requestFormContainer]}
+          style={styles.requestFormContainer}
           onLayout={() => {
             // on render, update the sidebar height to 40% the height of the screen
             // (which is the default height of the bottom sheet)
             updateSideBarHeight(height * 0.4);
           }}
         >
-          <View style={{ flex: 1, width: "99%"}}>
+          <View style={{ flex: 1, width: "99%" }}>
             {/* Header */}
             <View
               style={{
@@ -712,111 +710,119 @@ export default function RideRequestForm({
                 alignItems: "center",
                 width: "90%",
                 marginHorizontal: 20,
-                marginBottom: 20
+                marginBottom: 20,
               }}
             >
-              
-                {/* Title */}
-                <Text style={{ fontSize: 20, fontWeight: "bold" }}>
-                  Choose Your Locations
-                </Text>
+              <View style={{ width: "10%" }} />
+              {/* Title */}
+              <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+                Choose Your Locations
+              </Text>
 
-                {/* faq button */}
-                <TouchableOpacity onPress={() => setFAQVisible(true)}>
-                  <Ionicons
-                    name="information-circle-outline"
-                    size={35}
-                    color="black"
-                  />
-                </TouchableOpacity>
+              {/* faq button */}
+              <TouchableOpacity onPress={() => setFAQVisible(true)}>
+                <Ionicons
+                  name="information-circle-outline"
+                  size={25}
+                  color="black"
+                />
+              </TouchableOpacity>
             </View>
+            <View style={{ height: 20 }} />
+            <SegmentedProgressBar type={1} />
+            <View style={{ height: 20 }} />
 
-            {/* Progress Bar */}
-            <View style={{ marginBottom: "5%" }}>
-              <SegmentedProgressBar type={1} />
+            {/* Location and Destination Icons */}
+            <View
+              style={{
+                borderRadius: 13,
+                backgroundColor: "#4B2E83",
+                position: "absolute",
+                zIndex: 3,
+                top: 110,
+                left: 13,
+                height: 15,
+                width: 15,
+              }}
+            />
+            <Image
+              source={require("@/assets/images/dashed-line.png")}
+              style={{
+                zIndex: 3,
+                position: "absolute",
+                top: 132,
+                left: 19,
+                width: 2,
+                height: 40,
+              }}
+            />
+            <Image
+              source={require("@/assets/images/dropoff-location.png")}
+              style={{
+                position: "absolute",
+                zIndex: 3,
+                top: 177,
+                left: 10,
+                height: 20,
+                width: 20,
+              }}
+            />
+            <View
+              style={{
+                zIndex: 2,
+              }}
+            >
+              {/* Location and Destination Inputs */}
+              <AutocompleteInput
+                onPress={() => {
+                  setCurrentQuery("pickup");
+                  expand();
+                }}
+                query={pickUpQuery}
+                setQuery={setPickUpQuery}
+                enterPressed={enterPressed}
+                placeholder="Pick Up Location"
+                // data={campusAPIResults}
+              />
+              <AutocompleteInput
+                onPress={() => {
+                  setCurrentQuery("dropoff");
+                  expand();
+                }}
+                query={dropOffQuery}
+                setQuery={setDropOffQuery}
+                enterPressed={enterPressed}
+                placeholder="Drop Off Location"
+                // data={campusAPIResults}
+              />
+            </View>
+            {/* Next Button */}
+            <View
+              style={{
+                flex: 0.1,
+                justifyContent: "flex-end",
+                zIndex: 100,
+              }}
+            >
+              <TouchableOpacity
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginVertical: 10,
+                  justifyContent: "flex-end",
+                }}
+                onPress={goToNumberRiders}
+              >
+                <Text style={{ fontStyle: "italic" }}>
+                  Choose # of passengers
+                </Text>
+                <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
+              </TouchableOpacity>
             </View>
           </View>
-
-
-          {/* Location and Destination Icons */}
-          <View
-            style={{
-              borderRadius: 13,
-              backgroundColor: "#4B2E83",
-              position: "absolute",
-              zIndex: 4,
-              top: 105,
-              left: 20,
-              height: 15,
-              width: 15,
-            }}
-          />
-          <Image
-            source={require("@/assets/images/dashed-line.png")}
-            style={{
-              zIndex: 4,
-              position: "absolute",
-              top: 126,
-              left: 26,
-              width: 2,
-              height: 40,
-            }}
-          />
-          <Image
-            source={require("@/assets/images/dropoff-location.png")}
-            style={{
-              position: "absolute",
-              zIndex: 4,
-              top: 173,
-              left: 18,
-              height: 20,
-              width: 20,
-            }}
-          />
-
-          
-          {/* Location and Destination Inputs */}
-          <AutocompleteInput
-            onPress={() => {
-              setCurrentQuery("pickup");
-              expand();
-            }}
-            query={pickUpQuery}
-            setQuery={setPickUpQuery}
-            enterPressed={enterPressed}
-            placeholder="Pick Up Location"
-          />
-          <AutocompleteInput
-            onPress={() => {
-              setCurrentQuery("dropoff");
-              expand();
-            }}
-            query={dropOffQuery}
-            setQuery={setDropOffQuery}
-            enterPressed={enterPressed}
-            placeholder="Drop Off Location"
-          />
-
-
-          {/* "Choose # of passengers" Button */}
-          <TouchableOpacity
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: "3%",
-              marginLeft: "30%",
-            }}
-            onPress={goToNumberRiders}
-          >
-            <Text style={{ fontStyle: "italic" }}>
-              Choose # of passengers
-            </Text>
-            <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
-          </TouchableOpacity>
         </View>
-
-
         {/* Autocomplete Suggestions */}
+
         <View style={{ flex: 1, height: suggestionListHeight }}>
           {/* list all the possible buildings */}
           <FlatList
