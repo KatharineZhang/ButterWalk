@@ -7,21 +7,23 @@ interface NotificationProps {
   text: string;
   color: string;
   boldText?: string;
+  trigger: number;
 }
 
 export type NotificationType = {
   text: string;
   color: string;
   boldText?: string;
+  trigger: number;
 };
 
 const Notification: React.FC<NotificationProps> = ({
   text,
   color,
   boldText,
+  trigger,
 }) => {
   const top = useRef(new Animated.Value(-1000)).current;
-
   useEffect(() => {
     Animated.timing(top, {
       toValue: 50,
@@ -29,12 +31,12 @@ const Notification: React.FC<NotificationProps> = ({
       useNativeDriver: false,
     }).start();
 
-    // Close notification after 20 seconds
+    // Close notification after 5 seconds
     const timer = setTimeout(() => {
       closeNotification();
     }, 5000);
     return () => clearTimeout(timer);
-  }, [text]);
+  }, [trigger]);
 
   const closeNotification = () => {
     Animated.timing(top, {
