@@ -24,7 +24,7 @@ interface MapProps {
     latitude: number;
     longitude: number;
   }) => void;
-  currState: HandleRidePhase | "none"; // the current state of the ride
+  currPhase: HandleRidePhase | "none"; // the current state of the ride
 }
 
 // functions that can be called from the parent component
@@ -45,7 +45,7 @@ const Map = forwardRef<MapRef, MapProps>(
       dropOffLocation = { latitude: 0, longitude: 0 },
       studentLocation = { latitude: 0, longitude: 0 },
       userLocationChanged,
-      currState = "headingToPickup",
+      currPhase = "none",
     }: MapProps,
     ref
   ) => {
@@ -117,11 +117,11 @@ const Map = forwardRef<MapRef, MapProps>(
     // Track the current index for each route
     let pickupIndexRef = 0;
     let dropoffIndexRef = 0;
-    let currStateInterval: number;
+    let currPhaseInterval: number;
 
     // update the driver's location based on the current state
     useEffect(() => {
-      if (currState == "none") {
+      if (currPhase == "none") {
         // when waiting for request, be at the default location
         console.log("Waiting, setting user location to default");
         setUserLocation({
@@ -134,15 +134,15 @@ const Map = forwardRef<MapRef, MapProps>(
         });
         pickupIndexRef = 0; // reset index
         dropoffIndexRef = 0; // reset index
-      } else if (currState === "headingToPickup") {
+      } else if (currPhase === "headingToPickup") {
         console.log("Heading to pickup, starting interval");
-        currStateInterval = setInterval(() => {
+        currPhaseInterval = setInterval(() => {
           if (
             pickupIndexRef >= driverToPickupLocations.length &&
-            currStateInterval !== null
+            currPhaseInterval !== null
           ) {
             console.log("clearing user location interval at end");
-            clearInterval(currStateInterval);
+            clearInterval(currPhaseInterval);
             pickupIndexRef = 0;
             return;
           }
@@ -159,7 +159,7 @@ const Map = forwardRef<MapRef, MapProps>(
           });
           pickupIndexRef++;
         }, 1000); // update every second
-      } else if (currState == "waitingForPickup") {
+      } else if (currPhase == "waitingForPickup") {
         // when waiting for request, be at the default location
         console.log("Waiting for pickup, setting user location to default");
         setUserLocation({
@@ -174,18 +174,18 @@ const Map = forwardRef<MapRef, MapProps>(
           latitude: 47.65718628834192,
           longitude: -122.3100908847018,
         };
-        clearInterval(currStateInterval);
+        clearInterval(currPhaseInterval);
         pickupIndexRef = 0; // reset index
         dropoffIndexRef = 0; // reset index
-      } else if (currState === "headingToDropoff") {
+      } else if (currPhase === "headingToDropoff") {
         console.log("Heading to dropoff, starting interval");
-        currStateInterval = setInterval(() => {
+        currPhaseInterval = setInterval(() => {
           if (
             dropoffIndexRef >= driverToDropOffLocations.length &&
-            currStateInterval !== null
+            currPhaseInterval !== null
           ) {
             console.log("clearing user location interval at end");
-            clearInterval(currStateInterval);
+            clearInterval(currPhaseInterval);
             dropoffIndexRef = 0;
             return;
           }
@@ -213,11 +213,11 @@ const Map = forwardRef<MapRef, MapProps>(
           latitude: 47.651505074534704,
           longitude: -122.30686063977667,
         });
-        clearInterval(currStateInterval);
+        clearInterval(currPhaseInterval);
         pickupIndexRef = 0; // reset index
         dropoffIndexRef = 0; // reset index
       }
-    }, [currState]);
+    }, [currPhase]);
 
     useEffect(() => {
       // when any of our locations change, check if we need to zoom on them
@@ -418,27 +418,30 @@ const Map = forwardRef<MapRef, MapProps>(
               <Ionicons name="car-sharp" size={30} color="black" />
             </View>
           </Marker>
-          <Marker
-            coordinate={{
-              latitude: studentLocation.latitude,
-              longitude: studentLocation.longitude,
-            }}
-            title={"Student's Location"}
-          >
-            <View
-              style={{
-                backgroundColor: "white",
-                borderRadius: 50,
-                borderWidth: 2,
-                width: 35,
-                height: 35,
-                alignItems: "center",
-                justifyContent: "center",
+          {/* Only show student loc if we are waiting for pickup */}
+          {currPhase == "waitingForPickup" && (
+            <Marker
+              coordinate={{
+                latitude: studentLocation.latitude,
+                longitude: studentLocation.longitude,
               }}
+              title={"Student's Location"}
             >
-              <FontAwesome6 name="person-walking" size={24} color="black" />
-            </View>
-          </Marker>
+              <View
+                style={{
+                  backgroundColor: "white",
+                  borderRadius: 50,
+                  borderWidth: 2,
+                  width: 35,
+                  height: 35,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <FontAwesome6 name="person-walking" size={24} color="black" />
+              </View>
+            </Marker>
+          )}
           {/* show the directions between the pickup and dropoff locations if they are valid
         if the ride is not currently happening / happened  */}
           {userLocation.latitude !== 0 &&

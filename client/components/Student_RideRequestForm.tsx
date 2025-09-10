@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   Alert,
+  FlatList,
+  Dimensions,
 } from "react-native";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
@@ -16,7 +18,6 @@ import { styles } from "../assets/styles";
 import BottomDrawer from "./Student_RideReqBottomDrawer";
 import PopUpModal from "./Student_PopUpModal";
 import BottomSheet from "@gorhom/bottom-sheet";
-import { ScrollView } from "react-native-gesture-handler";
 import SegmentedProgressBar from "./Both_SegmentedProgressBar";
 import {
   BuildingService,
@@ -38,6 +39,7 @@ import { CampusZone, PurpleZone } from "@/services/ZoneService";
 import TimeService from "@/services/TimeService";
 import moment from "moment";
 import momentTimezone from "moment-timezone";
+import { NotificationType } from "./Both_Notification";
 
 type RideRequestFormProps = {
   userLocation: { latitude: number; longitude: number };
@@ -56,11 +58,7 @@ type RideRequestFormProps = {
   rideRequested: (numPassengers: number) => void;
   setFAQVisible: (visible: boolean) => void;
   updateSideBarHeight: (bottom: number) => void;
-  setNotificationState: (state: {
-    text: string;
-    color: string;
-    boldText?: string;
-  }) => void;
+  setNotificationState: (state: NotificationType) => void;
   darkenScreen: (darken: boolean) => void; // darken the screen behind the confirmation modal
 };
 
@@ -99,6 +97,10 @@ export default function RideRequestForm({
   const [whichPanel, setWhichPanel] = useState<
     "RideReq" | "NumberRiders" | "LocationSuggestions"
   >("RideReq");
+
+  // height of the campus location list in the Ride Request form (25% of screen height)
+  const screenHeight = Dimensions.get("window").height;
+  const suggestionListHeight = screenHeight * 0.25;
 
   // Bottom Sheet Reference needed to expand the bottom sheet
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -308,9 +310,10 @@ export default function RideRequestForm({
       setNotificationState({
         text: "You are too far from the servicable area.",
         color: "#FFCBCB",
+        trigger: Date.now(),
       });
       setTimeout(() => {
-        setNotificationState({ text: "", color: "" });
+        setNotificationState({ text: "", color: "", trigger: Date.now() });
       }, 6000);
 
       setPickUpQuery("");
@@ -325,6 +328,7 @@ export default function RideRequestForm({
     setNotificationState({
       text: "You are not within service area.\nPlease select a nearby location that is.",
       color: "#FFEFB4",
+      trigger: Date.now(),
     });
   };
 
@@ -630,6 +634,58 @@ export default function RideRequestForm({
     }
     bottomSheetRef.current?.expand();
   };
+  // Type definition for a formatted result item in the autocomplete suggestions list.
+  // Each item represents a possible pickup or dropoff location, and can be a recent location,
+  // a campus building, or a place search result.
+  type FormattedResult = {
+    key: string;
+    name: string;
+    address: string | null;
+    type: "recent" | "campus" | "place";
+  };
+
+  // This array builds the list of autocomplete suggestions for the user.
+  // If the user has typed a query, only show matching campus locations.
+  // If the query is empty, show recent locations first, then all campus locations,
+  // and finally external place search results (excluding duplicates).
+  const formattedResults: FormattedResult[] =
+    (currentQuery === "pickup" ? pickUpQuery : dropOffQuery) !== ""
+      ? [
+          // Only show campusAPIResults if the query is not empty
+          ...campusAPIResults.map((item, index) => ({
+            key: `campus-${index}`,
+            name: item,
+            address: null,
+            type: "campus" as const,
+          })),
+        ]
+      : [
+          // Show recentLocations first
+          ...recentLocations.map((item) => ({
+            key: `recent-${item.name}`,
+            name: item.name,
+            address: item.address,
+            type: "recent" as const,
+          })),
+          // Then campusAPIResults
+          ...campusAPIResults.map((item, index) => ({
+            key: `campus-${index}`,
+            name: item,
+            address: null,
+            type: "campus" as const,
+          })),
+          // Then placeSearchResults, excluding any already present in campusAPIResults
+          ...placeSearchResults
+            .filter(
+              (item) => item?.name && !campusAPIResults.includes(item.name)
+            )
+            .map((item, index) => ({
+              key: `place-${index}`,
+              name: item.name,
+              address: item.address,
+              type: "place" as const,
+            })),
+        ];
 
   /* PANEL UI */
   // the ride request panel
@@ -726,7 +782,7 @@ export default function RideRequestForm({
                 setQuery={setPickUpQuery}
                 enterPressed={enterPressed}
                 placeholder="Pick Up Location"
-                data={campusAPIResults}
+                // data={campusAPIResults}
               />
               <AutocompleteInput
                 onPress={() => {
@@ -737,7 +793,7 @@ export default function RideRequestForm({
                 setQuery={setDropOffQuery}
                 enterPressed={enterPressed}
                 placeholder="Drop Off Location"
-                data={campusAPIResults}
+                // data={campusAPIResults}
               />
             </View>
             {/* Next Button */}
@@ -745,6 +801,7 @@ export default function RideRequestForm({
               style={{
                 flex: 0.1,
                 justifyContent: "flex-end",
+                zIndex: 100,
               }}
             >
               <TouchableOpacity
@@ -766,19 +823,64 @@ export default function RideRequestForm({
         </View>
         {/* Autocomplete Suggestions */}
 
-        <View style={{ flex: 1 }}>
-          <ScrollView style={{ flex: 1 }}>
-            {/* Add the Current Location to the Top of the results*/}
-            {currentQuery == "pickup" && (
+        <View style={{ flex: 1, height: suggestionListHeight }}>
+          {/* list all the possible buildings */}
+          <FlatList
+            data={formattedResults}
+            keyExtractor={(item) => item.key}
+            ListHeaderComponent={
+              currentQuery === "pickup" ? (
+                <TouchableOpacity
+                  onPress={() => handleSelection("Current Location")}
+                  key="current-location"
+                  style={{
+                    padding: 16,
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#ccc",
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <View
+                    style={{
+                      borderRadius: 50,
+                      backgroundColor: "#EEEEEE",
+                      width: 35,
+                      height: 35,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <FontAwesome6
+                      name="location-crosshairs"
+                      size={18}
+                      color="black"
+                    />
+                  </View>
+                  <View style={{ width: 10 }} />
+                  <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+                    Current Location
+                  </Text>
+                </TouchableOpacity>
+              ) : null
+            }
+            renderItem={({
+              item,
+            }: {
+              item: {
+                key: string;
+                name: string;
+                address: string | null;
+                type: "recent" | "campus" | "place";
+              };
+            }) => (
               <TouchableOpacity
-                onPress={() => handleSelection("Current Location")}
-                key={"Current Location"}
+                onPress={() => handleSelection(item.name)}
                 style={{
                   padding: 16,
                   borderBottomWidth: 1,
                   borderBottomColor: "#ccc",
                   flexDirection: "row",
-                  justifyContent: "flex-start",
                   alignItems: "center",
                 }}
               >
@@ -792,169 +894,68 @@ export default function RideRequestForm({
                     justifyContent: "center",
                   }}
                 >
-                  <FontAwesome6
-                    name="location-crosshairs"
-                    size={18}
-                    color="black"
-                  />
-                </View>
-                <View style={{ width: 10 }} />
-                <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                  Current Location
-                </Text>
-              </TouchableOpacity>
-            )}
-            {/* Then render any campus API results*/}
-            {campusAPIResults.map((item) => (
-              <TouchableOpacity
-                onPress={() => handleSelection(item)}
-                key={item}
-                style={{
-                  padding: 16,
-                  borderBottomWidth: 1,
-                  borderBottomColor: "#ccc",
-                  flexDirection: "row",
-                  justifyContent: "flex-start",
-                  alignItems: "center",
-                }}
-              >
-                <View
-                  style={{
-                    borderRadius: 50,
-                    backgroundColor: "#EEEEEE",
-                    width: 35,
-                    height: 35,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <FontAwesome6
-                    name="building-columns"
-                    size={18}
-                    color="black"
-                  />
+                  {item.type === "campus" && (
+                    <FontAwesome6
+                      name="building-columns"
+                      size={18}
+                      color="black"
+                    />
+                  )}
+                  {item.type === "place" && (
+                    <FontAwesome6 name="location-dot" size={18} color="black" />
+                  )}
+                  {item.type === "recent" && (
+                    <Ionicons name="receipt" size={18} color="black" />
+                  )}
                 </View>
                 <View style={{ width: 10 }} />
                 <View style={{ maxWidth: "80%" }}>
-                  <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                    {item}
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: "bold",
+                      marginBottom: item.address ? 5 : 0,
+                    }}
+                  >
+                    {item.name}
                   </Text>
+                  {item.address && (
+                    <Text style={{ fontSize: 14 }}>{item.address}</Text>
+                  )}
                 </View>
               </TouchableOpacity>
-            ))}
-            {/* Then show the place search results */}
-            {placeSearchResults
-              .filter((item) => !campusAPIResults.includes(item.name))
-              .map((item) => (
-                <TouchableOpacity
-                  onPress={() => handleSelection(item.name)}
-                  key={item.name}
-                  style={{
-                    padding: 16,
-                    borderBottomWidth: 1,
-                    borderBottomColor: "#ccc",
-                    flexDirection: "row",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                  }}
-                >
-                  <View
-                    style={{
-                      borderRadius: 50,
-                      backgroundColor: "#EEEEEE",
-                      width: 35,
-                      height: 35,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <FontAwesome6 name="location-dot" size={18} color="black" />
-                  </View>
-                  <View style={{ width: 10 }} />
-                  <View style={{ maxWidth: "80%" }}>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontWeight: "bold",
-                        marginBottom: 5,
-                      }}
-                    >
-                      {item.name}
-                    </Text>
-                    <Text style={{ fontSize: 14 }}>{item.address}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            {/* If there are no campuse or place search results or the user hasn't typed anything yet,
-            show the recent locations results*/}
-            {placeSearchResults.length == 0 &&
-              campusAPIResults.length == 0 &&
-              recentLocations.map((item) => (
-                <TouchableOpacity
-                  onPress={() => handleSelection(item.name)}
-                  key={item.name}
-                  style={{
-                    padding: 16,
-                    borderBottomWidth: 1,
-                    borderBottomColor: "#ccc",
-                    flexDirection: "row",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                  }}
-                >
-                  <View
-                    style={{
-                      borderRadius: 50,
-                      backgroundColor: "#EEEEEE",
-                      width: 35,
-                      height: 35,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Ionicons name="receipt" size={18} color="black" />
-                  </View>
-                  <View style={{ width: 10 }} />
-                  <View style={{ maxWidth: "80%" }}>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontWeight: "bold",
-                        marginBottom: 5,
-                      }}
-                    >
-                      {item.name}
-                    </Text>
-                    <Text style={{ fontSize: 14 }}>{item.address}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-          </ScrollView>
+            )}
+            ListEmptyComponent={
+              <Text style={{ padding: 20, textAlign: "center", color: "#666" }}>
+                No suggestions found.
+              </Text>
+            }
+          />
         </View>
+        {/* Confirmation Modal */}
+        <PopUpModal
+          type="half"
+          isVisible={confirmationModalVisible}
+          onClose={() => {
+            setConfirmationModalVisible(false);
+            darkenScreen(false);
+          }}
+          content={
+            <View style={{ padding: 20 }}>
+              <Text style={styles.formHeader}>Confirm Pickup Location</Text>
+              <Text style={styles.description}>
+                Setting your pickup location to: {closestBuilding}
+              </Text>
+              <Pressable
+                onPress={confirmPickUpLocation}
+                style={styles.sendButton}
+              >
+                <Text style={styles.buttonLabel}>Confirm</Text>
+              </Pressable>
+            </View>
+          }
+        />
       </BottomDrawer>
-      {/* Confirmation Modal */}
-      <PopUpModal
-        type="half"
-        isVisible={confirmationModalVisible}
-        onClose={() => {
-          setConfirmationModalVisible(false);
-          darkenScreen(false);
-        }}
-        content={
-          <View style={{ padding: 20 }}>
-            <Text style={styles.formHeader}>Confirm Pickup Location</Text>
-            <Text style={styles.description}>
-              Setting your pickup location to: {closestBuilding}
-            </Text>
-            <Pressable
-              onPress={confirmPickUpLocation}
-              style={styles.sendButton}
-            >
-              <Text style={styles.buttonLabel}>Confirm</Text>
-            </Pressable>
-          </View>
-        }
-      />
     </View>
   );
 

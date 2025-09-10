@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { styles } from "@/assets/styles";
-import { View, Text, Pressable, Image } from "react-native";
+import { View, Text, Pressable, Image, ActivityIndicator } from "react-native";
 import { RideRequest } from "../../server/src/api";
 import { useRef, useEffect, useState } from "react";
 import { Animated, Easing } from "react-native";
@@ -311,16 +311,27 @@ export default function RequestAvailable({
           {/* Accept Request Button */}
           <View style={[styles.bottomModalButtonContainer]}>
             {showLoading ? (
-              <Text
-                style={{
-                  fontSize: 16,
-                  fontStyle: "italic",
-                  marginBottom: 8,
-                  alignSelf: "center",
-                }}
+              <View
+                style={[
+                  styles.bottomModalButtonContainer,
+                  {
+                    paddingHorizontal: 10,
+                    alignItems: "center",
+                    paddingVertical: "7%",
+                    flexDirection: "row",
+                    justifyContent: "center",
+                  },
+                ]}
               >
-                Retrieving Your Ride...
-              </Text>
+                <ActivityIndicator
+                  size="small"
+                  color="#4B2E83"
+                  style={{ margin: "2%" }}
+                />
+                <Text style={{ fontStyle: "italic", fontSize: 18 }}>
+                  Retrieving your ride...
+                </Text>
+              </View>
             ) : (
               <Pressable
                 style={[styles.bottomModalButton, styles.button]}

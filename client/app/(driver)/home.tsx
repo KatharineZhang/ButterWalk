@@ -43,7 +43,7 @@ export default function HomePage() {
   /* HOME PAGE STATE */
   const [whichComponent, setWhichComponent] = useState<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
-  >("noRequests");
+  >(TimeService.inServicableTime() ? "noRequests" : "endShift");
 
   /* USE EFFECTS */
   useEffect(() => {
@@ -123,12 +123,16 @@ export default function HomePage() {
   // Set start location when ride is accepted
   useEffect(() => {
     if (whichComponent == "handleRide") {
-      setStartLocation(driverLocation);
+      setStartLocation(driverLocationRef.current);
     }
   }, [whichComponent]);
 
   /* MAP STATE */
-  const [driverLocation, setDriverLocation] = useState<{
+  const [, setDriverLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  }>({ latitude: 0, longitude: 0 });
+  const driverLocationRef = useRef<{
     latitude: number;
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
@@ -166,6 +170,7 @@ export default function HomePage() {
     longitude: number;
   }) => {
     setDriverLocation(location);
+    driverLocationRef.current = location;
     // send the location to the student once the ride is accepted
     if (whichComponent === "handleRide" && requestInfo.netid) {
       WebSocketService.send({
@@ -198,6 +203,7 @@ export default function HomePage() {
     text: "",
     color: "",
     boldText: "",
+    trigger: 0,
   });
 
   /* SIDE BAR STATE */
@@ -239,7 +245,7 @@ export default function HomePage() {
     WebSocketService.send({
       directive: "VIEW_RIDE",
       driverid: netid,
-      driverLocation: driverLocation,
+      driverLocation: driverLocationRef.current,
     });
   };
 
@@ -334,7 +340,6 @@ export default function HomePage() {
 
   const resetAllFields = () => {
     // reset all fields to their initial state
-    setDriverLocation({ latitude: 0, longitude: 0 });
     setPickUpLocation({ latitude: 0, longitude: 0 });
     setDropOffLocation({ latitude: 0, longitude: 0 });
     setDriverToPickupDuration(0);
@@ -346,6 +351,7 @@ export default function HomePage() {
       text: "",
       color: "",
       boldText: "",
+      trigger: 0,
     });
     setWhichComponent("noRequests");
     // Reset progress tracking states
@@ -372,6 +378,7 @@ export default function HomePage() {
         text: "Your ride was canceled",
         color: "#FFCBCB",
         boldText: "canceled",
+        trigger: Date.now(),
       });
       setStudentIsLate(false);
     } else {
@@ -410,6 +417,7 @@ export default function HomePage() {
             text: "New ride request available",
             color: "#C9FED0",
             boldText: "New ride",
+            trigger: Date.now(),
           });
         } else {
           // if false, set the component to "noRequests"
@@ -462,6 +470,7 @@ export default function HomePage() {
         setNotifState({
           text: "The ride you were trying to view does not exist anymore.",
           color: "#FFCBCB",
+          trigger: Date.now(),
         });
         resetAllFields(); // reset all fields
         setWhichComponent("noRequests"); // go to no requests page
@@ -471,6 +480,7 @@ export default function HomePage() {
       setNotifState({
         text: "Failed to view ride request: " + errMessage.error,
         color: "#FFCBCB",
+        trigger: Date.now(),
       });
       setWhichComponent("noRequests"); // go to no requests page
     }
@@ -485,9 +495,16 @@ export default function HomePage() {
         text: "Ride accepted successfully",
         color: "#C9FED0",
         boldText: "accepted",
+        trigger: Date.now(),
       });
-      setStartLocation(driverLocation);
+      setStartLocation(driverLocationRef.current);
       setWhichComponent("handleRide");
+      WebSocketService.send({
+        directive: "LOCATION",
+        id: netid,
+        latitude: driverLocationRef.current.latitude,
+        longitude: driverLocationRef.current.longitude,
+      });
     } else {
       const errMessage = message as ErrorResponse;
       console.log("Failed to accept ride request: ", errMessage.error);
@@ -497,6 +514,7 @@ export default function HomePage() {
       setNotifState({
         text: "Failed to accept ride request",
         color: "#FFCBCB",
+        trigger: Date.now(),
       });
       resetAllFields(); // reset all fields
       setWhichComponent("noRequests"); // go to no requests page
@@ -522,6 +540,7 @@ export default function HomePage() {
       setNotifState({
         text: "Failed to note that driver arrived at pickup location",
         color: "#FFCBCB",
+        trigger: Date.now(),
       });
       setFlagPopupVisible(false); // close the flagging popup
     }
@@ -538,6 +557,7 @@ export default function HomePage() {
           text: "Student has been flagged",
           color: "#C9FED0",
           boldText: "flagged",
+          trigger: Date.now(),
         });
         setStudentIsLate(false); // get rid of the student is late message
       } else {
@@ -545,6 +565,7 @@ export default function HomePage() {
         setNotifState({
           text: "Failed to flag student",
           color: "#FFCBCB",
+          trigger: Date.now(),
         });
         setFlagPopupVisible(false); // close the flagging popup
       }
@@ -575,18 +596,12 @@ export default function HomePage() {
   const locationListener = (message: WebSocketResponse) => {
     // logic for when a location update is received
     if ("response" in message && message.response === "LOCATION") {
-      // store the student's location if the driver is waiting for the pickup
-      // otherwise, hide the student's location
+      // store the student's location for when the driver is waiting for the pickup
       const locationMessage = message as LocationResponse;
-      if (whichComponent == "handleRide" && phase == "waitingForPickup") {
-        setStudentLocation({
-          latitude: locationMessage.latitude,
-          longitude: locationMessage.longitude,
-        });
-      } else {
-        // if the driver is not waiting of the pickup, hide the student location
-        setStartLocation({ latitude: 0, longitude: 0 });
-      }
+      setStudentLocation({
+        latitude: locationMessage.latitude,
+        longitude: locationMessage.longitude,
+      });
     } else {
       const errMessage = message as ErrorResponse;
       console.log("Failed to send location: ", errMessage.error);
@@ -607,7 +622,7 @@ export default function HomePage() {
             pickupProgress = calculateProgress();
             // if isNearPickup is already true, don't change it back to false
             // but set it to true if driver is within 500 feet of pickup location
-            if (isSameLocation(driverLocation, pickUpLocation)) {
+            if (isSameLocation(driverLocationRef.current, pickUpLocation)) {
               setIsNearPickup(true);
             }
             setIsNearDropoff(false); // Not near dropoff yet
@@ -623,7 +638,7 @@ export default function HomePage() {
             dropoffProgress = calculateProgress();
             // if isNearDropoff is already true, don't change it back to false
             // but set it to true if driver is within 500 feet of dropoff location
-            if (isSameLocation(driverLocation, dropOffLocation)) {
+            if (isSameLocation(driverLocationRef.current, dropOffLocation)) {
               setIsNearDropoff(true);
             }
             setIsNearPickup(false); // Not near pickup anymore
@@ -643,7 +658,7 @@ export default function HomePage() {
         setDropoffProgress(dropoffProgress);
       }
     }
-  }, [driverLocation, phase, whichComponent, requestInfo.requestId]);
+  }, [driverLocationRef.current, phase, whichComponent, requestInfo.requestId]);
 
   // Calculate progress based on total distance and remaining distance for non-linear tracking
   const calculateProgress = (): number => {
@@ -705,7 +720,7 @@ export default function HomePage() {
         dropOffLocation={dropOffLocation}
         studentLocation={studentLocation}
         userLocationChanged={userLocationChanged}
-        currState={whichComponent == "handleRide" ? phase : "none"}
+        currPhase={whichComponent == "handleRide" ? phase : "none"}
       />
 
       {/* profile button in top left corner*/}
@@ -827,6 +842,7 @@ export default function HomePage() {
             text={notifState.text}
             color={notifState.color}
             boldText={notifState.boldText}
+            trigger={notifState.trigger}
           />
         )}
       </View>
