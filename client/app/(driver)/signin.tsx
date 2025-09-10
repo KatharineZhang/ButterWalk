@@ -47,7 +47,7 @@ const Login = () => {
   // check that the driver ID input is correct
   // param: input - the driver id input in the sign in
   const checkDriverIdInput = () => {
-    if (/^[a-z0-9]$/.test(driverId.toLowerCase())) {
+    if (/^[a-z0-9]+$/.test(driverId.toLowerCase())) {
       setNetid(driverId.toLowerCase());
       setErrMsg("");
       // send the signin request to the backend

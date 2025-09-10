@@ -933,7 +933,7 @@ export const styles = StyleSheet.create({
 
   logoutWarningContainer: {
     position: "absolute",
-    width: "91%",
+    width: "90%",
     height: "25%",
     paddingHorizontal: 16,
     paddingVertical: "10%",
