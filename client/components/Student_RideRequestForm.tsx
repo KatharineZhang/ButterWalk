@@ -492,6 +492,24 @@ export default function RideRequestForm({
     }
   };
 
+  // TEST: call place search every time the text changes,
+  // especially if there are no campus options
+  const callPlaceSearch = async (text: string) => {
+    if (campusAPIResults.length == 0 && text.length >= 3) {
+      // We are going to call the place search API
+      // update the previous query as the one we are currently using
+      if (currentQuery == "pickup") {
+        setPreviousPickUpQuery(text);
+      } else {
+        setPreviousDropOffQuery(text);
+      }
+      WebSocketService.send({
+        directive: "PLACE_SEARCH",
+        query: text,
+      });
+    }
+  };
+
   // Get the distance between two strings
   // (number of insertions and deletions of characters to get from one to another)
   const levensteinDistance = (a: string, b: string): number => {
@@ -772,10 +790,12 @@ export default function RideRequestForm({
                   expand();
                 }}
                 query={pickUpQuery}
-                setQuery={setPickUpQuery}
+                setQuery={(query) => {
+                  setPickUpQuery(query);
+                  callPlaceSearch(query);
+                }}
                 enterPressed={enterPressed}
                 placeholder="Pick Up Location"
-                // data={campusAPIResults}
               />
               <AutocompleteInput
                 onPress={() => {
@@ -783,10 +803,12 @@ export default function RideRequestForm({
                   expand();
                 }}
                 query={dropOffQuery}
-                setQuery={setDropOffQuery}
+                setQuery={(query) => {
+                  setDropOffQuery(query);
+                  callPlaceSearch(query);
+                }}
                 enterPressed={enterPressed}
                 placeholder="Drop Off Location"
-                // data={campusAPIResults}
               />
             </View>
             {/* Next Button */}
