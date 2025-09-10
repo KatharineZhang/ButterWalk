@@ -409,6 +409,11 @@ export default function HomePage() {
     } else {
       // something went wrong
       console.log("Profile response error: ", message);
+      setNotifState({
+        text: "DEV NOTIF: ProfileError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -426,6 +431,11 @@ export default function HomePage() {
     } else {
       // something went wrong
       console.log("Location response error: ", message);
+      setNotifState({
+        text: "DEV NOTIF: LocationError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -485,6 +495,11 @@ export default function HomePage() {
       }
     } else {
       console.log("Cancel Ride error: " + (message as ErrorResponse).error);
+      setNotifState({
+        text: "DEV NOTIF: CancelRideError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -526,6 +541,12 @@ export default function HomePage() {
       });
     } else {
       console.log("Driver arrived response error: ", message);
+      setNotifState({
+        text:
+          "DEV NOTIF: DriverArrivedError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -545,6 +566,13 @@ export default function HomePage() {
       });
     } else {
       console.log("Driver arrived at pickup response error: ", message);
+      setNotifState({
+        text:
+          "DEV NOTIF: DriverPickedUpStudentError: " +
+          (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -629,6 +657,11 @@ export default function HomePage() {
       setRideStatus("DriverEnRoute");
     } else {
       console.log("Accept ride error: ", message);
+      setNotifState({
+        text: "DEV NOTIF: AcceptRideError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -645,6 +678,11 @@ export default function HomePage() {
       setDropOffAddress(waitTimeresp.dropOffAddress as string);
     } else {
       console.log("Wait time response error: ", message);
+      setNotifState({
+        text: "DEV NOTIF: WaitTimeError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -660,6 +698,11 @@ export default function HomePage() {
       }
     } else {
       console.log("Distance response error: ", message);
+      setNotifState({
+        text: "DEV NOTIF: DistanceError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
