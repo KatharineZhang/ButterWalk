@@ -649,25 +649,18 @@ export default function RideRequestForm({
   // If the query is empty, show recent locations first, then all campus locations,
   // and finally external place search results (excluding duplicates).
   const formattedResults: FormattedResult[] =
-    (currentQuery === "pickup" ? pickUpQuery : dropOffQuery) !== ""
+    (currentQuery === "pickup" ? pickUpQuery : dropOffQuery) == ""
       ? [
           // Only show campusAPIResults if the query is not empty
-          ...campusAPIResults.map((item, index) => ({
+          ...recentLocations.map((item, index) => ({
             key: `campus-${index}`,
-            name: item,
-            address: null,
-            type: "campus" as const,
-          })),
-        ]
-      : [
-          // Show recentLocations first
-          ...recentLocations.map((item) => ({
-            key: `recent-${item.name}`,
             name: item.name,
             address: item.address,
             type: "recent" as const,
           })),
-          // Then campusAPIResults
+        ]
+      : [
+          // show campusAPIResults
           ...campusAPIResults.map((item, index) => ({
             key: `campus-${index}`,
             name: item,
