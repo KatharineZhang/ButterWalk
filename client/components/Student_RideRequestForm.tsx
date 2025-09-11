@@ -10,6 +10,7 @@ import {
   Alert,
   FlatList,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
@@ -45,6 +46,7 @@ type RideRequestFormProps = {
   userLocation: { latitude: number; longitude: number };
   recentLocations: LocationType[];
   startingState?: { pickup: string; dropoff: string; numRiders: number };
+  showRequestLoading: boolean;
   pickUpLocationNameChanged: (location: string) => void;
   dropOffLocationNameChanged: (location: string) => void;
   pickUpLocationCoordChanged: (location: {
@@ -75,6 +77,7 @@ export default function RideRequestForm({
   setNotificationState,
   updateSideBarHeight,
   darkenScreen,
+  showRequestLoading,
 }: RideRequestFormProps) {
   /* STATE */
   // user input states for form
@@ -1065,17 +1068,38 @@ export default function RideRequestForm({
           alignItems: "center",
         }}
       >
-        <TouchableOpacity
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            alignSelf: "flex-end",
-          }}
-          onPress={() => rideRequested(numRiders)}
-        >
-          <Text style={{ fontStyle: "italic" }}>See ride details</Text>
-          <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
-        </TouchableOpacity>
+        {showRequestLoading ? (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              alignSelf: "flex-end",
+            }}
+          >
+            <Text style={{ fontStyle: "italic", fontSize: 18 }}>
+              Requesting your ride...
+            </Text>
+            <ActivityIndicator
+              size="small"
+              color="#4B2E83"
+              style={{ margin: "2%" }}
+            />
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              alignSelf: "flex-end",
+            }}
+            onPress={() => {
+              rideRequested(numRiders);
+            }}
+          >
+            <Text style={{ fontStyle: "italic" }}>See ride details</Text>
+            <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );

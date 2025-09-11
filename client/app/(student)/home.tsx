@@ -108,6 +108,7 @@ export default function HomePage() {
     latitude: number;
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
+  const [showRequestLoading, setShowRequestLoading] = useState<boolean>(false);
 
   // many components use the location name, so we store it here
   const [pickUpLocationName, setPickUpLocationName] = useState<string>("");
@@ -118,7 +119,23 @@ export default function HomePage() {
   // we want to show the confirm ride component
   const rideRequested = (numPassengers: number) => {
     setNumPassengers(numPassengers);
-    setWhichComponent("confirmRide");
+    setShowRequestLoading(true);
+    // get the ride duration and driver ETA
+    WebSocketService.send({
+      directive: "WAIT_TIME",
+      requestedRide: {
+        pickUpLocation,
+        dropOffLocation,
+      },
+    });
+    // find out how long it will take to walk
+    WebSocketService.send({
+      directive: "DISTANCE",
+      origin: [userLocationRef.current],
+      destination: [pickUpLocation],
+      mode: "walking",
+      tag: "walkToPickup",
+    });
   };
 
   // the user's recent locations that will be displayed in the dropdown
@@ -693,7 +710,21 @@ export default function HomePage() {
       if (distanceResp.tag === "walkToPickup") {
         const walkSeconds =
           distanceResp.apiResponse.rows[0].elements[0].duration.value;
-        setWalkDuration(Math.floor(walkSeconds / 60)); // convert seconds to minutes
+        const walkMin = Math.floor(walkSeconds / 60);
+        if (walkMin > 20) {
+          // send a notification
+          setNotifState({
+            text: "You are too far away from the pickup location",
+            color: "#FFCBCB",
+            trigger: Date.now(),
+          });
+          // exit
+          setShowRequestLoading(false);
+          return;
+        }
+        // everything is good, set state and go to the confirm ride page
+        setShowRequestLoading(false);
+        setWalkDuration(walkMin); // convert seconds to minutes
         setWalkAddress(distanceResp.apiResponse.origin_addresses[0]);
       }
     } else {
@@ -828,6 +859,7 @@ export default function HomePage() {
                 setNotificationState={setNotifState}
                 updateSideBarHeight={setCurrentComponentHeight}
                 darkenScreen={setDarkenScreen}
+                showRequestLoading={showRequestLoading}
               />
             </View>
           ) : whichComponent === "confirmRide" ? (
