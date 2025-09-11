@@ -383,6 +383,11 @@ export default function HomePage() {
       // if not successful, log the error
       const errMessage = message as ErrorResponse;
       console.log("Failed to cancel ride: ", errMessage.error);
+      setNotifState({
+        text: "DEV NOTIF: CancelRideError: " + errMessage.error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -396,6 +401,11 @@ export default function HomePage() {
       // if not successful, log the error
       const errMessage = message as ErrorResponse;
       console.log("Failed to complete ride: ", errMessage.error);
+      setNotifState({
+        text: "DEV NOTIF: CompleteRideError: " + errMessage.error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -424,11 +434,24 @@ export default function HomePage() {
       } else {
         // if the driver is not waiting for a request, do nothing
         console.log("We got a RIDES_EXIST message, but we don't care.");
+        setNotifState({
+          text:
+            "DEV NOTIF: RidesExist: " +
+            ridesExistMessage.ridesExist +
+            " ignored",
+          color: "#FFD580",
+          trigger: Date.now(),
+        });
       }
     } else {
       // there was an error in the message!
       const errMessage = message as ErrorResponse;
       console.log("Failed to see if rides exist: ", errMessage.error);
+      setNotifState({
+        text: "DEV NOTIF: RidesExistError: " + errMessage.error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -436,8 +459,6 @@ export default function HomePage() {
   const viewRideListener = (message: WebSocketResponse) => {
     if ("response" in message && message.response == "VIEW_RIDE") {
       const viewReqResponse = message as ViewRideRequestResponse;
-      console.log("Successfully viewed ride request: ", viewReqResponse);
-      console.log("is ride request info: ", viewReqResponse.rideInfo);
 
       if (viewReqResponse.rideInfo) {
         // if the ride request info exists, then the view was successful
@@ -570,6 +591,11 @@ export default function HomePage() {
     } else {
       const errMessage = message as ErrorResponse;
       console.log("Failed to flag student: ", errMessage.error);
+      setNotifState({
+        text: "DEV NOTIF: FlagStudentError: " + errMessage.error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -587,6 +613,11 @@ export default function HomePage() {
         "Failed to note that driver is driving to dropoff: ",
         errMessage.error
       );
+      setNotifState({
+        text: "Failed to note that driver arrived at pickup location",
+        color: "#FFCBCB",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -603,6 +634,11 @@ export default function HomePage() {
     } else {
       const errMessage = message as ErrorResponse;
       console.log("Failed to send location: ", errMessage.error);
+      setNotifState({
+        text: "DEV NOTIF: LocationError: " + errMessage.error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
