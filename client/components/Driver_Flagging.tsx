@@ -3,36 +3,45 @@ import {
   View,
   Pressable,
   Text,
-  Modal,
   TextInput,
   Keyboard,
   Alert,
+  Dimensions,
+  StyleSheet,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import { TouchableWithoutFeedback } from "@gorhom/bottom-sheet";
+import {
+  PanGestureHandler,
+  GestureHandlerRootView,
+  PanGestureHandlerGestureEvent,
+} from "react-native-gesture-handler";
+import Animated, {
+  useAnimatedGestureHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  runOnJS,
+} from "react-native-reanimated";
 import { driverFlagPopupStyles } from "assets/styles";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+
 type FlaggingProps = {
   onFlag: (reason: string) => void;
-  closePopUp: () => void; // Optional prop to close the popup after flagging
+  closePopUp: () => void;
 };
 
-// const FLAG_REASONS = ["Add potential reasons here! "] as const;
-// commented out for later use^^
-
 export default function Flagging({ onFlag, closePopUp }: FlaggingProps) {
-  const [modalVisible, setModalVisible] = useState(true);
   const [description, setDescription] = useState("");
-  // helper method to help close the flag popup; this combines the
-  // passed in closePopUp() method, as well as dismissing the
-  // keyboard (done for better UI design)
+  const translateY = useSharedValue(SCREEN_HEIGHT / 2); // start in the middle
+  const MAX_TRANSLATE = 50; // top limit
+  const MIN_TRANSLATE = SCREEN_HEIGHT; // bottom limit (dismiss)
+
   const onCloseFlag = () => {
     Keyboard.dismiss();
     closePopUp();
-    setModalVisible(false);
   };
 
-  // specific helper method for when the submit button is clicked,
-  // calls onCloseFlag as long as an empty description isn't submitted
   const onSubmit = () => {
     if (description.trim() === "") {
       Alert.alert("Error", "Please provide a description.");
@@ -42,57 +51,96 @@ export default function Flagging({ onFlag, closePopUp }: FlaggingProps) {
     onCloseFlag();
   };
 
+  const gestureHandler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    { startY: number }
+  >({
+    onStart: (_, ctx) => {
+      ctx.startY = translateY.value;
+    },
+    onActive: (event, ctx) => {
+      translateY.value = Math.max(MAX_TRANSLATE, ctx.startY + event.translationY);
+    },
+    onEnd: () => {
+      if (translateY.value > SCREEN_HEIGHT / 1.5) {
+        // dismissed
+        runOnJS(onCloseFlag)();
+      } else {
+        // snap back to middle
+        translateY.value = withSpring(SCREEN_HEIGHT / 2, { damping: 20 });
+      }
+    },
+  });
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
   return (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={modalVisible}
-      onRequestClose={onCloseFlag}
-    >
-      {/* below helps for the keyboard to disappear once the driver is done with the flag*/}
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={driverFlagPopupStyles.centeredView}>
-          <View style={driverFlagPopupStyles.modalView}>
-            <View style={driverFlagPopupStyles.modalHeader}>
-              <View style={driverFlagPopupStyles.headerTitleContainer}>
-                {/* using FontAwesome for the flag and X icon */}
-                <FontAwesome
-                  name="flag"
-                  size={20}
-                  color="#E53935"
-                  style={driverFlagPopupStyles.flagIcon}
-                />
-                <Text style={driverFlagPopupStyles.modalTitle}>
-                  Flag Student
-                </Text>
-              </View>
-              <Pressable
-                onPress={onCloseFlag}
-                style={driverFlagPopupStyles.closeButton}
-              >
-                <FontAwesome name="times" size={22} color="#666" />
-              </Pressable>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <PanGestureHandler onGestureEvent={gestureHandler}>
+        <Animated.View style={[styles.sheet, animatedStyle]}>
+          <View style={styles.dragHandle} />
+          <View style={driverFlagPopupStyles.modalHeader}>
+            <View style={driverFlagPopupStyles.headerTitleContainer}>
+              <FontAwesome
+                name="flag"
+                size={20}
+                color="#E53935"
+                style={driverFlagPopupStyles.flagIcon}
+              />
+              <Text style={driverFlagPopupStyles.modalTitle}>Flag Student</Text>
             </View>
-            <Text style={driverFlagPopupStyles.descriptionLabel}>
-              Provide a brief description:
-            </Text>
-            <TextInput
-              style={driverFlagPopupStyles.textInput}
-              multiline={true} // allows multiple lines of text
-              numberOfLines={4}
-              value={description}
-              onChangeText={setDescription}
-              textAlignVertical="top" // aligns text to the top for multiline
-            />
             <Pressable
-              onPress={onSubmit}
-              style={driverFlagPopupStyles.submitButton}
+              onPress={onCloseFlag}
+              style={driverFlagPopupStyles.closeButton}
             >
-              <Text style={driverFlagPopupStyles.submitButtonText}>Submit</Text>
+              <FontAwesome name="times" size={22} color="#666" />
             </Pressable>
           </View>
-        </View>
-      </TouchableWithoutFeedback>
-    </Modal>
+          <Text style={driverFlagPopupStyles.descriptionLabel}>
+            Provide a brief description:
+          </Text>
+          <TextInput
+            style={driverFlagPopupStyles.textInput}
+            multiline
+            numberOfLines={4}
+            value={description}
+            onChangeText={setDescription}
+            textAlignVertical="top"
+          />
+          <Pressable onPress={onSubmit} style={driverFlagPopupStyles.submitButton}>
+            <Text style={driverFlagPopupStyles.submitButtonText}>Submit</Text>
+          </Pressable>
+        </Animated.View>
+      </PanGestureHandler>
+    </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  sheet: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: SCREEN_HEIGHT,
+    backgroundColor: "white",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  dragHandle: {
+    width: 50,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "#ccc",
+    alignSelf: "center",
+    marginBottom: 10,
+  },
+});

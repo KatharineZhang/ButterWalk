@@ -15,9 +15,9 @@ import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
 import AutocompleteInput from "./Student_AutocompleteTextInput";
 import { styles } from "../assets/styles";
-import BottomDrawer from "./Student_RideReqBottomDrawer";
+import BottomDrawer, { BottomDrawerRef } from "./Student_RideReqBottomDrawer";
 import PopUpModal from "./Student_PopUpModal";
-import BottomSheet from "@gorhom/bottom-sheet";
+// import BottomSheet from "@gorhom/bottom-sheet";
 import SegmentedProgressBar from "./Both_SegmentedProgressBar";
 import {
   BuildingService,
@@ -103,7 +103,7 @@ export default function RideRequestForm({
   const suggestionListHeight = screenHeight * 0.25;
 
   // Bottom Sheet Reference needed to expand the bottom sheet
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomDrawerRef = useRef<BottomDrawerRef>(null);
 
   // Confirmation Modal
   const [confirmationModalVisible, setConfirmationModalVisible] =
@@ -628,11 +628,11 @@ export default function RideRequestForm({
 
   // expand the bottom sheet
   const expand = () => {
-    if (bottomSheetRef == null) {
-      console.log("bottomSheetRef is null");
+    if (!bottomDrawerRef.current) {
+      console.log("bottomDrawerRef is null");
       return;
     }
-    bottomSheetRef.current?.expand();
+    bottomDrawerRef.current.open(); // open the BottomDrawer modal
   };
   // Type definition for a formatted result item in the autocomplete suggestions list.
   // Each item represents a possible pickup or dropoff location, and can be a recent location,
@@ -691,7 +691,7 @@ export default function RideRequestForm({
   // the ride request panel
   const RideRequest: JSX.Element = (
     <View style={{ flex: 1, pointerEvents: "box-none", width: "100%" }}>
-      <BottomDrawer bottomSheetRef={bottomSheetRef}>
+      <BottomDrawer ref={bottomDrawerRef}>
         {/* The search box with shadow under it*/}
         <View
           style={styles.requestFormContainer}
