@@ -1,8 +1,10 @@
 import { styles } from "@/assets/styles";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { View, Text, Pressable } from "react-native";
 
 export default function driverOrstudent() {
+  const router = useRouter();
+
   return (
     <View
       style={{
@@ -56,13 +58,30 @@ export default function driverOrstudent() {
             }}
           >
             <Text style={{ color: "#4B2E83", fontSize: 20, fontWeight: "400" }}>
-              I'm a UW Student{" "}
+              I'm a UW Student or Staff{" "}
             </Text>
           </Pressable>
         </Link>
+      </View>
+
+      {/* Back button (added after role options) */}
+      <View style={{ marginTop: 30 }}>
+        <Pressable
+          onPress={() => router.back()}
+          style={{
+            borderColor: "#4B2E83",
+              borderWidth: 2,
+              width: "100%",
+              height: 50,
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: 10,
+          }}
+        >
+          <Text style={{ fontSize: 16, color: "#333" }}>Back</Text>
+        </Pressable>
       </View>
     </View>
   );
 }
 
-//

@@ -1,11 +1,11 @@
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import { View, Text, TouchableOpacity, Image, Pressable } from "react-native";
 import { styles } from "../../assets/styles";
 import * as WebBrowser from "expo-web-browser";
 // need to 'npx expo install expo-web-browser expo-auth-session expo-crypto' ON MAC
 // or 'npm i expo-auth-session@~6.0.3' on windows
 import * as Google from "expo-auth-session/providers/google";
 import { useEffect } from "react";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, Link } from "expo-router";
 
 // Images
 // @ts-expect-error the image does exists so get rid of the error
@@ -48,6 +48,25 @@ const Login = () => {
   return (
     <SafeAreaView style={[styles.container, { padding: 20 }]}>
       <View style={{ flex: 1, width: "100%", justifyContent: "space-between" }}>
+        <View style={styles.buttonContainer}>
+                <Link href="/driverOrstudent" asChild>
+                  <Pressable
+                    style={{
+                      borderColor: "#4B2E83",
+                      borderWidth: 2,
+                      width: "100%",
+                      height: 50,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      borderRadius: 10,
+                    }}
+                  >
+                    <Text style={{ color: "#4B2E83", fontSize: 20, fontWeight: "400" }}>
+                      Back
+                    </Text>
+                  </Pressable>
+                </Link>
+              </View>
         {/* Main Content */}
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
