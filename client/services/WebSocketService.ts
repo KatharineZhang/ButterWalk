@@ -1,3 +1,4 @@
+import { AppState } from "react-native";
 import {
   Command,
   ErrorResponse,
@@ -16,6 +17,7 @@ export type WebsocketConnectMessage =
 class WebSocketService {
   private websocket: WebSocket | null = null;
   private messageHandlers: Map<Command, WebSocketResponseHandler[]> = new Map();
+  private appState = "";
 
   /**
    * Create a new websocket connection to the server,
@@ -46,6 +48,12 @@ class WebSocketService {
       console.error("WEBSOCKET: Failed to create WebSocket");
       return Promise.resolve("Failed to Connect");
     }
+
+    // make a listener to update appState on change
+    AppState.addEventListener("change", (nextState) => {
+      console.log("App state:", nextState);
+      this.appState = nextState;
+    });
 
     this.startWebsocketListeners();
 
@@ -80,7 +88,18 @@ class WebSocketService {
     };
 
     this.websocket.onclose = () => {
-      console.log("WEBSOCKET: Disconnected from Websocket");
+      console.log(
+        "WEBSOCKET: Disconnected from Websocket" +
+          (this.appState === "active"
+            ? " unexpectedly"
+            : " because app went background")
+      );
+      if (this.appState === "active") {
+        console.log("WS disconnected unexpectedly — try reconnect");
+      } else {
+        console.log("WS closed because app went background");
+        // don’t reconnect until app is foreground again
+      }
     };
 
     this.websocket.onerror = (error: Event) => {

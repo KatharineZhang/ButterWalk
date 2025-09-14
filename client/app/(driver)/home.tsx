@@ -43,7 +43,7 @@ export default function HomePage() {
   /* HOME PAGE STATE */
   const [whichComponent, setWhichComponent] = useState<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
-  >(TimeService.inServicableTime() ? "noRequests" : "endShift");
+  >(TimeService.inServicableTime() ? "noRequests" : "endShift");  
 
   /* USE EFFECTS */
   useEffect(() => {
