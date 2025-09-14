@@ -51,12 +51,6 @@ Since Preview builds are like standalone apps, you must be on the deployment bra
   - Type the login details used to sign in to expo.dev (ask Dev Leads for this info).
   - NOTE: MAKE SURE TO ALLOW ANY PERMISSION THE APP ASKS FOR (LOCATION, ETC.) !
 
-Here is our most recent iOS preview build: https://expo.dev/accounts/katzhang/projects/butterwalk/builds/d21faaa5-e2e8-4223-8ebd-3419ea80819b
-(updated as of September 13, 2025)
-
-Here is our most recent Android preview build: https://expo.dev/accounts/katzhang/projects/butterwalk/builds/49941ef6-b871-4c32-aa69-aa4c73b82782
-(updated as of September 13, 2025)
-
 # To Use Simulator (Mac)
 
 - Download simulator (macOS only) and open any device
