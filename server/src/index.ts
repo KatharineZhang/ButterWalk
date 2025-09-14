@@ -43,14 +43,14 @@ wss.on("connection", (ws: WebSocketServer) => {
     if (client && client.netid != "unknown") {
       // a valid user is disconnecting
       // cancel any ride requests they may have
-      handleWebSocketMessage(
-        ws,
-        JSON.stringify({
-          directive: "CANCEL",
-          netid: client.netid,
-          role: client.role,
-        })
-      );
+      // handleWebSocketMessage(
+      //   ws,
+      //   JSON.stringify({
+      //     directive: "CANCEL",
+      //     netid: client.netid,
+      //     role: client.role,
+      //   })
+      // );
     }
     // else, the websocket instance was alive, but not connected to a specific user
     // remove the instance from the list

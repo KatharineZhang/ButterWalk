@@ -18,6 +18,24 @@ class WebSocketService {
   private websocket: WebSocket | null = null;
   private messageHandlers: Map<Command, WebSocketResponseHandler[]> = new Map();
   private appState = "";
+  private pingInterval: number | null = null;
+
+  constructor() {
+    // make a listener to update appState on change
+    AppState.addEventListener("change", (nextState) => {
+      console.log("App state:", nextState);
+
+      if (
+        this.appState.match(/inactive|background/) &&
+        nextState === "active"
+      ) {
+        console.log("App has come to the foreground, reconnect WS");
+        this.connect();
+      }
+
+      this.appState = nextState;
+    });
+  }
 
   /**
    * Create a new websocket connection to the server,
@@ -48,12 +66,6 @@ class WebSocketService {
       console.error("WEBSOCKET: Failed to create WebSocket");
       return Promise.resolve("Failed to Connect");
     }
-
-    // make a listener to update appState on change
-    AppState.addEventListener("change", (nextState) => {
-      console.log("App state:", nextState);
-      this.appState = nextState;
-    });
 
     this.startWebsocketListeners();
 
@@ -94,11 +106,11 @@ class WebSocketService {
             ? " unexpectedly"
             : " because app went background")
       );
+      // try reconnecting if the app is still active
       if (this.appState === "active") {
-        console.log("WS disconnected unexpectedly — try reconnect");
-      } else {
-        console.log("WS closed because app went background");
-        // don’t reconnect until app is foreground again
+        setTimeout(() => {
+          this.connect();
+        }, 1000);
       }
     };
 
