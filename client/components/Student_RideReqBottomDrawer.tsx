@@ -11,6 +11,7 @@ interface BottomDrawerProps {
 export interface BottomDrawerRef {
   open: () => void;
   close: () => void;
+  expand: () => void;
 }
 
 const BottomDrawer = forwardRef<BottomDrawerRef, BottomDrawerProps>(
@@ -21,6 +22,13 @@ const BottomDrawer = forwardRef<BottomDrawerRef, BottomDrawerProps>(
     const snap70 = 0.85 * SCREEN_HEIGHT;
 
     const translateY = useRef(new Animated.Value(SCREEN_HEIGHT - snap40)).current;
+
+    const modalExpand = () => {
+      Animated.spring(translateY, {
+        toValue: SCREEN_HEIGHT - snap70,
+        useNativeDriver: true,
+      }).start();
+    };
 
     useImperativeHandle(ref, () => ({
       open: () => {
@@ -36,6 +44,7 @@ const BottomDrawer = forwardRef<BottomDrawerRef, BottomDrawerProps>(
           useNativeDriver: true,
         }).start(() => setVisible(false));
       },
+       expand: modalExpand,
     }));
 
     const panResponder = useRef(
