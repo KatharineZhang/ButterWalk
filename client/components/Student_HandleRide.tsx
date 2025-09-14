@@ -8,7 +8,6 @@ import {
 import { styles } from "../assets/styles";
 import React, { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { ProgressBar } from "react-native-paper";
 import moment from "moment";
 import momentTimezone from "moment-timezone";
 
@@ -274,11 +273,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
           {/* move purple circle to middle */}
           <View style={[styles.circleStart, { left: 130 }]} />
           {/* Progress Bar */}
-          <ProgressBar
-            progress={progress}
-            color="#C5B4E3"
-            style={styles.progressBar}
-          />
+
           <View style={styles.circleEnd} />
         </View>
 
