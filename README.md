@@ -41,7 +41,7 @@
 
 Since Preview builds are like standalone apps, you must be on the deployment branch to build (otherwise the app sends messages/info to a nonexistent server!), ask Dev Leads for more details if required. 
 
-- switch to deployment branch, merging any changes (locally) that you would like to test
+- switch to deployment branch, merging any changes (locally, not ACTUALLY PUSHING TO THE DEPLOYMENT BRANCH!!) that you would like to test
 - In a new terminal, run eas build --platform android --profile preview OR eas build --platform ios --profile preview for an Android/iOS build
 - (you will need to ask Dev Leads for more information if you don't have an Apple Dev account; if you do have an Apple Dev account, enter your credentials as follows) 
 - This generates a new build, taking approximately 10-12 minutes.
