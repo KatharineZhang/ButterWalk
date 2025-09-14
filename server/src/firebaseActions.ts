@@ -38,6 +38,7 @@ export const db = getFirestore(app);
 
 // Our tables / collections in the database
 export const usersCollection = collection(db, "Users");
+const driversCollection = collection(db, "Drivers");
 const rideRequestsCollection = collection(db, "RideRequests");
 const problematicUsersCollection = collection(db, "ProblematicUsers");
 const feedbackCollection = collection(db, "Feedback");
@@ -146,6 +147,26 @@ export async function finishCreatingUser(
   }
 }
 
+// SIGN IN - check if the driverid exists in the database
+export async function verifyDriverId(
+  t: Transaction,
+  driverid: string
+): Promise<boolean> {
+  // check if the driverid exists in the Drivers collection
+  const queryDriver = query(
+    driversCollection,
+    where("driverid", "==", driverid)
+  );
+  const docs = await getDocs(queryDriver);
+  // if there is exactly one document with that driverid, return true
+  if (docs.size == 1) {
+    return true;
+  }
+  // otherwise, return false
+  return false;
+}
+
+
 /**
  * Adds a new ride request to the database/pool, always with the status 'REQUESTED'
  * @param t The transaction running
@@ -209,6 +230,7 @@ export async function getRideRequests(): Promise<RideRequest[]> {
   const rideRequests: RideRequest[] = [];
   inDatabase.forEach((el) => {
     const rideRequest = el.data();
+    rideRequest.requestId = el.id;
     rideRequests.push(rideRequest as RideRequest);
   });
   return rideRequests;
@@ -421,17 +443,17 @@ export async function completeRideRequest(
   // if the current pickup and dropoff locations are already in the array,
   // remove them to prevent duplicates
   oldLocations = oldLocations.filter(
-    (location) => location !== data.locationTo
+    (location) => location.name !== data.locationTo.name
   );
   oldLocations = oldLocations.filter(
-    (location) => location !== data.locationFrom
+    (location) => location.name !== data.locationFrom.name
   );
 
   // add the new pickup and dropoff locations to the front of the array
   oldLocations.unshift(data.locationTo); // dropoff location
   // only add the pickup location if it doesn't have an asterisk
   // (the location will have an asterisk if the loaction is a snapped street)
-  if (!data.locationFrom.includes("*")) {
+  if (!data.locationFrom.name.includes("*")) {
     oldLocations.unshift(data.locationFrom); // pickup location
   }
 

@@ -12,7 +12,7 @@ import {
   Feedback,
   ProblematicUser,
   CompleteResponse,
-  SignInResponse,
+  StudentSignInResponse,
   GoogleResponse,
   ProfileResponse,
   User,
@@ -45,6 +45,9 @@ import {
   setRideRequestDriver,
   getRecentLocations,
   isNotAccepted,
+  // we want this import for when we have a drivers collection
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  verifyDriverId,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { highestRank, rankOf } from "./rankingAlgorithm";
@@ -131,7 +134,7 @@ export const signIn = async (
   firstName: string,
   lastName: string,
   studentOrDriver: "STUDENT" | "DRIVER"
-): Promise<SignInResponse | ErrorResponse> => {
+): Promise<StudentSignInResponse | ErrorResponse> => {
   if (!netid || !firstName || !lastName) {
     return {
       response: "ERROR",
@@ -159,6 +162,76 @@ export const signIn = async (
     };
   }
 };
+
+export const checkIfDriverSignin = async (
+  role: "STUDENT" | "DRIVER",
+  netid?: string
+): Promise<GeneralResponse | ErrorResponse> => {
+  let resp;
+  let driverValid = false;
+  try {
+    // we do not have an auth token to process
+    // check if this was sent from a driver
+    switch (role) {
+      case "DRIVER":
+        // make sure the netid is not null
+        if (!netid) {
+          return {
+            response: "ERROR",
+            error: "The passed in driver netid is null",
+            category: "SIGNIN",
+          } as ErrorResponse;
+        }
+
+        driverValid = true; // TODO: remove this line when we have a drivers collection
+        // check if the driverid exists in the database
+        // ** TODO: Uncomment the following when we have a drivers collection **
+        // driverValid = await runTransaction(db, async (transaction) => {
+        //   return await verifyDriverId(transaction, netid);
+        // });
+
+        // if the driver id is valid, return a successful signin response
+        if (driverValid) {
+          // send a general response that signin was successful
+          resp = {
+            response: "SIGNIN",
+            success: true,
+          } as GeneralResponse;
+        } else {
+          // the driver id was not valid
+          resp = {
+            response: "ERROR",
+            error: "Driver ID is not valid.",
+            category: "SIGNIN",
+          } as ErrorResponse;
+        }
+        break;
+      case "STUDENT":
+        // else, something is wrong in student's signin
+        // early fail if the token is null
+        resp = {
+          response: "ERROR",
+          error: "The passed in response token is null",
+          category: "SIGNIN",
+        } as ErrorResponse;
+        break;
+      default:
+        resp = {
+          response: "ERROR",
+          error: "Missing or invalid role.",
+          category: "SIGNIN",
+        } as ErrorResponse;
+        break;
+    }
+  } catch (e) {
+    resp = {
+      response: "ERROR",
+      error: `Error verifying signin: ${(e as Error).message}.`,
+      category: "SIGNIN",
+    } as ErrorResponse;
+  }
+  return resp;
+}; 
 
 // Finishes the account for the user by adding the phone number and student number to the database
 // returns a success message if the account creation is successful and a boolean value of true if the account already exists
@@ -406,6 +479,11 @@ export const viewRide = async (
         driverLocation
       );
 
+      // Ensure requestId is present and is a string
+      if (!bestRequest.requestId || typeof bestRequest.requestId !== "string") {
+        throw new Error("RideRequest is missing a valid requestId.");
+      }
+
       // get some stats on the ride
       const driverToPickUpDuration = await getDuration(
         driverLocation,
@@ -457,7 +535,10 @@ export const viewRide = async (
         response: "VIEW_RIDE",
         rideExists: true,
         rideInfo: {
-          rideRequest: bestRequest,
+          rideRequest: {
+            ...bestRequest,
+            requestId: bestRequest.requestId as string,
+          },
           driverToPickUpDuration,
           pickUpToDropOffDuration,
         },

@@ -13,11 +13,11 @@ dotenv.config();
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "SafeTrip",
-  slug: "husky-betterWalk",
+  slug: "butterwalk",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/butterWalkLogo.png",
-  scheme: "myapp",
+  scheme: "com.butterwalk.butterwalk",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   splash: {
@@ -67,7 +67,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   extra: {
     eas: {
-      projectId: "24a5e20c-9f0d-4a09-9f2d-49ae53b470e5",
+      projectId: "4091719b-1abc-4b53-ae61-14c967caffac",
     },
   },
 });
