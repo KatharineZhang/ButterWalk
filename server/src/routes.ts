@@ -1275,45 +1275,94 @@ export const fetchGooglePlaceSuggestions = async (
   query: string
 ): Promise<PlaceSearchResult[]> => {
   try {
-    const url =
-      `https://maps.googleapis.com/maps/api/place/textsearch/json?` +
-      `query=${encodeURIComponent(query)}` +
-      `&location=47.65979,-122.30564` + // Source: trust me bro - Snigdha (https://www.calcmaps.com/map-radius/)
-      `&radius=1859` + // but basically its just a radius around the purple zone area
-      `&key=${process.env.GOOGLE_MAPS_APIKEY}`;
+      const autocompleteUrl =
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json?` +
+        `input=${encodeURIComponent(query)}` +
+        `&location=47.65979,-122.30564` +
+        `&radius=1859` +
+        `&key=${process.env.GOOGLE_MAPS_APIKEY}`;
 
-    const res = await fetch(url);
-    const json = await res.json();
+      const res = await fetch(autocompleteUrl);
+      const json = await res.json();
 
-    if (Array.isArray(json.results)) {
-      // Post-filter results to ensure they are inside the polygon
-      const places = (json.results as GooglePlaceSearchResponse[])
-        .map((r) => ({
-          name: r.name,
+      console.log("Google Place Autocomplete response:", json);
+
+      if (!Array.isArray(json.predictions)) return [];
+
+      interface AutocompletePrediction {
+        place_id: string;
+      }
+
+      interface PlaceDetailsResult {
+        name: string;
+        geometry: {
           location: {
-            latitude: r.geometry.location.lat,
-            longitude: r.geometry.location.lng,
-          },
-          types: r.types,
-          formatted_address: r.formatted_address,
-        }))
-        // filter to places inside the purple zone
-        .filter((place) => PurpleZone.isPointInside(place.location))
-        // filter out places that could potentially serve alcohol
-        .filter((place) => {
-          return !place.types.some((type) =>
-            GooglePlaceSearchBadLocationTypes.includes(type)
-          );
-        })
-        .map((place) => ({
-          name: place.name,
-          coordinates: place.location,
-          address: place.formatted_address,
-        }));
-      // remove duplicates from places
-      const toReturn = Array.from(new Set(places));
-      return toReturn;
-    }
+        lat: number;
+        lng: number;
+          };
+        };
+        types: string[];
+        formatted_address: string;
+      }
+
+      interface PlaceDetailsResponse {
+        result: PlaceDetailsResult;
+      }
+
+      interface PlaceCoordinates {
+        latitude: number;
+        longitude: number;
+      }
+
+      interface PlaceDetails {
+        name: string;
+        coordinates: PlaceCoordinates;
+        types: string[];
+        address: string;
+      }
+
+      const placeDetailsPromises: Promise<PlaceSearchResult | null>[] = (json.predictions as AutocompletePrediction[]).map(
+        async (prediction: AutocompletePrediction): Promise<PlaceSearchResult | null> => {
+          const placeDetailsUrl =
+            `https://maps.googleapis.com/maps/api/place/details/json?` +
+            `place_id=${prediction.place_id}` +
+            `&fields=name,geometry,types,formatted_address` +
+            `&key=${process.env.GOOGLE_MAPS_APIKEY}`;
+
+          const detailsRes = await fetch(placeDetailsUrl);
+          const detailsJson: PlaceDetailsResponse = await detailsRes.json();
+          const result = detailsJson.result;
+
+          console.log("Google Place Details response:", detailsJson);
+
+          const place: PlaceDetails = {
+            name: result.name,
+            coordinates: {
+              latitude: result.geometry.location.lat,
+              longitude: result.geometry.location.lng,
+            },
+            types: result.types,
+            address: result.formatted_address,
+          };
+
+          if (
+            PurpleZone.isPointInside(place.coordinates) &&
+            !place.types.some((type: string) => GooglePlaceSearchBadLocationTypes.includes(type))
+          ) {
+            return place as PlaceSearchResult;
+          }
+          return null;
+        }
+      );
+
+    const allResults = await Promise.all(placeDetailsPromises);
+    const filtered = allResults.filter((place) => place !== null);
+
+    // Deduplicate (e.g. by name)
+    const uniquePlaces = Array.from(new Map(filtered.map(p => [p.name, p])).values());
+
+    return uniquePlaces;
+    
   } catch (e: unknown) {
     console.log("GOOGLE PLACE SEARCH ERROR", e);
   }
