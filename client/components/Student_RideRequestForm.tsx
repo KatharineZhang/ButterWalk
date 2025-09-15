@@ -689,391 +689,193 @@ export default function RideRequestForm({
 
   /* PANEL UI */
   // the ride request panel
-  // const RideRequest: JSX.Element = (
-  //   <View style={{ flex: 1, pointerEvents: "box-none", width: "100%" }}>
-  //     <BottomDrawer bottomSheetRef={bottomSheetRef}>
-  //       {/* The search box with shadow under it*/}
-  //       <View
-  //         style={styles.requestFormContainer}
-  //         onLayout={() => {
-  //           // on render, update the sidebar height to 40% the height of the screen
-  //           // (which is the default height of the bottom sheet)
-  //           updateSideBarHeight(height * 0.4);
-  //         }}
-  //       >
-  //         <View style={{ flex: 1, width: "99%" }}>
-  //           {/* Header */}
-  //           <View
-  //             style={{
-  //               flexDirection: "row",
-  //               justifyContent: "space-between",
-  //               alignItems: "center",
-  //               width: "90%",
-  //               marginHorizontal: 20,
-  //               marginBottom: 20,
-  //             }}
-  //           >
-  //             <View style={{ width: "10%" }} />
-  //             {/* Title */}
-  //             <Text style={{ fontSize: 20, fontWeight: "bold" }}>
-  //               Choose Your Locations
-  //             </Text>
-
-  //             {/* faq button */}
-  //             <TouchableOpacity onPress={() => setFAQVisible(true)}>
-  //               <Ionicons
-  //                 name="information-circle-outline"
-  //                 size={25}
-  //                 color="black"
-  //               />
-  //             </TouchableOpacity>
-  //           </View>
-  //           <View style={{ height: 20 }} />
-  //           <SegmentedProgressBar type={1} />
-  //           <View style={{ height: 20 }} />
-
-  //           {/* Location and Destination Icons */}
-  //           <View
-  //             style={{
-  //               borderRadius: 13,
-  //               backgroundColor: "#4B2E83",
-  //               position: "absolute",
-  //               zIndex: 3,
-  //               top: 110,
-  //               left: 13,
-  //               height: 15,
-  //               width: 15,
-  //             }}
-  //           />
-  //           <Image
-  //             source={require("@/assets/images/dashed-line.png")}
-  //             style={{
-  //               zIndex: 3,
-  //               position: "absolute",
-  //               top: 132,
-  //               left: 19,
-  //               width: 2,
-  //               height: 40,
-  //             }}
-  //           />
-  //           <Image
-  //             source={require("@/assets/images/dropoff-location.png")}
-  //             style={{
-  //               position: "absolute",
-  //               zIndex: 3,
-  //               top: 177,
-  //               left: 10,
-  //               height: 20,
-  //               width: 20,
-  //             }}
-  //           />
-  //           <View
-  //             style={{
-  //               zIndex: 2,
-  //             }}
-  //           >
-  //             {/* Location and Destination Inputs */}
-  //             <AutocompleteInput
-  //               onPress={() => {
-  //                 setCurrentQuery("pickup");
-  //                 expand();
-  //               }}
-  //               query={pickUpQuery}
-  //               setQuery={setPickUpQuery}
-  //               enterPressed={enterPressed}
-  //               placeholder="Pick Up Location"
-  //               // data={campusAPIResults}
-  //             />
-  //             <AutocompleteInput
-  //               onPress={() => {
-  //                 setCurrentQuery("dropoff");
-  //                 expand();
-  //               }}
-  //               query={dropOffQuery}
-  //               setQuery={setDropOffQuery}
-  //               enterPressed={enterPressed}
-  //               placeholder="Drop Off Location"
-  //               // data={campusAPIResults}
-  //             />
-  //           </View>
-  //           {/* Next Button */}
-  //           <View
-  //             style={{
-  //               flex: 0.1,
-  //               justifyContent: "flex-end",
-  //               zIndex: 100,
-  //             }}
-  //           >
-  //             <TouchableOpacity
-  //               style={{
-  //                 flexDirection: "row",
-  //                 alignItems: "center",
-  //                 marginVertical: 10,
-  //                 justifyContent: "flex-end",
-  //               }}
-  //               onPress={goToNumberRiders}
-  //             >
-  //               <Text style={{ fontStyle: "italic" }}>
-  //                 Choose # of passengers
-  //               </Text>
-  //               <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
-  //             </TouchableOpacity>
-  //           </View>
-  //         </View>
-  //       </View>
-  //       {/* Autocomplete Suggestions */}
-
-  //       <View style={{ flex: 1, height: suggestionListHeight }}>
-  //         {/* list all the possible buildings */}
-  //         <FlatList
-  //           data={formattedResults}
-  //           keyExtractor={(item) => item.key}
-  //           ListHeaderComponent={
-  //             currentQuery === "pickup" ? (
-  //               <TouchableOpacity
-  //                 onPress={() => handleSelection("Current Location")}
-  //                 key="current-location"
-  //                 style={{
-  //                   padding: 16,
-  //                   borderBottomWidth: 1,
-  //                   borderBottomColor: "#ccc",
-  //                   flexDirection: "row",
-  //                   alignItems: "center",
-  //                 }}
-  //               >
-  //                 <View
-  //                   style={{
-  //                     borderRadius: 50,
-  //                     backgroundColor: "#EEEEEE",
-  //                     width: 35,
-  //                     height: 35,
-  //                     alignItems: "center",
-  //                     justifyContent: "center",
-  //                   }}
-  //                 >
-  //                   <FontAwesome6
-  //                     name="location-crosshairs"
-  //                     size={18}
-  //                     color="black"
-  //                   />
-  //                 </View>
-  //                 <View style={{ width: 10 }} />
-  //                 <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-  //                   Current Location
-  //                 </Text>
-  //               </TouchableOpacity>
-  //             ) : null
-  //           }
-  //           renderItem={({
-  //             item,
-  //           }: {
-  //             item: {
-  //               key: string;
-  //               name: string;
-  //               address: string | null;
-  //               type: "recent" | "campus" | "place";
-  //             };
-  //           }) => (
-  //             <TouchableOpacity
-  //               onPress={() => handleSelection(item.name)}
-  //               style={{
-  //                 padding: 16,
-  //                 borderBottomWidth: 1,
-  //                 borderBottomColor: "#ccc",
-  //                 flexDirection: "row",
-  //                 alignItems: "center",
-  //               }}
-  //             >
-  //               <View
-  //                 style={{
-  //                   borderRadius: 50,
-  //                   backgroundColor: "#EEEEEE",
-  //                   width: 35,
-  //                   height: 35,
-  //                   alignItems: "center",
-  //                   justifyContent: "center",
-  //                 }}
-  //               >
-  //                 {item.type === "campus" && (
-  //                   <FontAwesome6
-  //                     name="building-columns"
-  //                     size={18}
-  //                     color="black"
-  //                   />
-  //                 )}
-  //                 {item.type === "place" && (
-  //                   <FontAwesome6 name="location-dot" size={18} color="black" />
-  //                 )}
-  //                 {item.type === "recent" && (
-  //                   <Ionicons name="receipt" size={18} color="black" />
-  //                 )}
-  //               </View>
-  //               <View style={{ width: 10 }} />
-  //               <View style={{ maxWidth: "80%" }}>
-  //                 <Text
-  //                   style={{
-  //                     fontSize: 16,
-  //                     fontWeight: "bold",
-  //                     marginBottom: item.address ? 5 : 0,
-  //                   }}
-  //                 >
-  //                   {item.name}
-  //                 </Text>
-  //                 {item.address && (
-  //                   <Text style={{ fontSize: 14 }}>{item.address}</Text>
-  //                 )}
-  //               </View>
-  //             </TouchableOpacity>
-  //           )}
-  //           ListEmptyComponent={
-  //             <Text style={{ padding: 20, textAlign: "center", color: "#666" }}>
-  //               No suggestions found.
-  //             </Text>
-  //           }
-  //         />
-  //       </View>
-  //       {/* Confirmation Modal */}
-  //       <PopUpModal
-  //         type="half"
-  //         isVisible={confirmationModalVisible}
-  //         onClose={() => {
-  //           setConfirmationModalVisible(false);
-  //           darkenScreen(false);
-  //         }}
-  //         content={
-  //           <View style={{ padding: 20 }}>
-  //             <Text style={styles.formHeader}>Confirm Pickup Location</Text>
-  //             <Text style={styles.description}>
-  //               Setting your pickup location to: {closestBuilding}
-  //             </Text>
-  //             <Pressable
-  //               onPress={confirmPickUpLocation}
-  //               style={styles.sendButton}
-  //             >
-  //               <Text style={styles.buttonLabel}>Confirm</Text>
-  //             </Pressable>
-  //           </View>
-  //         }
-  //       />
-  //     </BottomDrawer>
-  //   </View>
-  // );
-
-const RideRequest: JSX.Element = (
-  <View style={{ flex: 1, pointerEvents: "box-none", width: "100%" }}>
-    <BottomDrawer bottomSheetRef={bottomSheetRef}>
-      {/* Request Form */}
-      <View
-        style={styles.requestFormContainer}
-        onLayout={() => {
-          // update sidebar height to 40% screen height
-          updateSideBarHeight(height * 0.4);
-        }}
-      >
-        {/* Header */}
+  const RideRequest: JSX.Element = (
+    <View style={{ flex: 1, pointerEvents: "box-none", width: "100%" }}>
+      <BottomDrawer bottomSheetRef={bottomSheetRef}>
+        {/* The search box with shadow under it*/}
         <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginHorizontal: 20,
-            marginBottom: 20,
+          style={styles.requestFormContainer}
+          onLayout={() => {
+            // on render, update the sidebar height to 40% the height of the screen
+            // (which is the default height of the bottom sheet)
+            updateSideBarHeight(height * 0.4);
           }}
         >
-          <Text style={{ fontSize: 20, fontWeight: "bold" }}>
-            Choose Your Locations
-          </Text>
-          <TouchableOpacity onPress={() => setFAQVisible(true)}>
-            <Ionicons
-              name="information-circle-outline"
-              size={25}
-              color="black"
-            />
-          </TouchableOpacity>
-        </View>
+          <View style={{ flex: 1, width: "99%" }}>
+            {/* Header */}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "90%",
+                marginHorizontal: 20,
+                marginBottom: 20,
+              }}
+            >
+              <View style={{ width: "10%" }} />
+              {/* Title */}
+              <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+                Choose Your Locations
+              </Text>
 
-        {/* Progress Bar */}
-        <SegmentedProgressBar type={1} />
-        <View style={{ height: 20 }} />
+              {/* faq button */}
+              <TouchableOpacity onPress={() => setFAQVisible(true)}>
+                <Ionicons
+                  name="information-circle-outline"
+                  size={25}
+                  color="black"
+                />
+              </TouchableOpacity>
+            </View>
+            <View style={{ height: 20 }} />
+            <SegmentedProgressBar type={1} />
+            <View style={{ height: 20 }} />
 
-        {/* Inputs with vertical icons */}
-        <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-          {/* Icon column */}
-          <View style={{ alignItems: "center", marginRight: 8 }}>
-            {/* Pickup dot */}
+            {/* Location and Destination Icons */}
             <View
               style={{
                 borderRadius: 13,
                 backgroundColor: "#4B2E83",
+                position: "absolute",
+                zIndex: 3,
+                top: 110,
+                left: 13,
                 height: 15,
                 width: 15,
               }}
             />
-            {/* Dotted line */}
             <Image
               source={require("@/assets/images/dashed-line.png")}
-              style={{ width: 2, flex: 1, marginVertical: 4 }}
-              resizeMode="repeat"
+              style={{
+                zIndex: 3,
+                position: "absolute",
+                top: 132,
+                left: 19,
+                width: 2,
+                height: 40,
+              }}
             />
-            {/* Dropoff pin */}
             <Image
               source={require("@/assets/images/dropoff-location.png")}
-              style={{ height: 20, width: 20 }}
-            />
-          </View>
-
-          {/* Input column */}
-          <View style={{ flex: 1 }}>
-            <AutocompleteInput
-              onPress={() => {
-                setCurrentQuery("pickup");
-                expand();
+              style={{
+                position: "absolute",
+                zIndex: 3,
+                top: 177,
+                left: 10,
+                height: 20,
+                width: 20,
               }}
-              query={pickUpQuery}
-              setQuery={setPickUpQuery}
-              enterPressed={enterPressed}
-              placeholder="Pick Up Location"
             />
-            <AutocompleteInput
-              onPress={() => {
-                setCurrentQuery("dropoff");
-                expand();
+            <View
+              style={{
+                zIndex: 2,
               }}
-              query={dropOffQuery}
-              setQuery={setDropOffQuery}
-              enterPressed={enterPressed}
-              placeholder="Drop Off Location"
-            />
-          </View>
-        </View>
-
-        {/* Next Button */}
-        <View style={{ alignItems: "flex-end", marginTop: 16 }}>
-          <TouchableOpacity
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-            }}
-            onPress={goToNumberRiders}
-          >
-            <Text style={{ fontStyle: "italic", marginRight: 8 }}>
-              Choose # of passengers
-            </Text>
-            <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Suggestions */}
-      <View style={{ flex: 1, height: suggestionListHeight }}>
-        <FlatList
-          data={formattedResults}
-          keyExtractor={(item) => item.key}
-          ListHeaderComponent={
-            currentQuery === "pickup" ? (
+            >
+              {/* Location and Destination Inputs */}
+              <AutocompleteInput
+                onPress={() => {
+                  setCurrentQuery("pickup");
+                  expand();
+                }}
+                query={pickUpQuery}
+                setQuery={setPickUpQuery}
+                enterPressed={enterPressed}
+                placeholder="Pick Up Location"
+                // data={campusAPIResults}
+              />
+              <AutocompleteInput
+                onPress={() => {
+                  setCurrentQuery("dropoff");
+                  expand();
+                }}
+                query={dropOffQuery}
+                setQuery={setDropOffQuery}
+                enterPressed={enterPressed}
+                placeholder="Drop Off Location"
+                // data={campusAPIResults}
+              />
+            </View>
+            {/* Next Button */}
+            <View
+              style={{
+                flex: 0.1,
+                justifyContent: "flex-end",
+                zIndex: 100,
+              }}
+            >
               <TouchableOpacity
-                onPress={() => handleSelection("Current Location")}
-                key="current-location"
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginVertical: 10,
+                  justifyContent: "flex-end",
+                }}
+                onPress={goToNumberRiders}
+              >
+                <Text style={{ fontStyle: "italic" }}>
+                  Choose # of passengers
+                </Text>
+                <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+        {/* Autocomplete Suggestions */}
+
+        <View style={{ flex: 1, height: suggestionListHeight }}>
+          {/* list all the possible buildings */}
+          <FlatList
+            data={formattedResults}
+            keyExtractor={(item) => item.key}
+            ListHeaderComponent={
+              currentQuery === "pickup" ? (
+                <TouchableOpacity
+                  onPress={() => handleSelection("Current Location")}
+                  key="current-location"
+                  style={{
+                    padding: 16,
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#ccc",
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <View
+                    style={{
+                      borderRadius: 50,
+                      backgroundColor: "#EEEEEE",
+                      width: 35,
+                      height: 35,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <FontAwesome6
+                      name="location-crosshairs"
+                      size={18}
+                      color="black"
+                    />
+                  </View>
+                  <View style={{ width: 10 }} />
+                  <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+                    Current Location
+                  </Text>
+                </TouchableOpacity>
+              ) : null
+            }
+            renderItem={({
+              item,
+            }: {
+              item: {
+                key: string;
+                name: string;
+                address: string | null;
+                type: "recent" | "campus" | "place";
+              };
+            }) => (
+              <TouchableOpacity
+                onPress={() => handleSelection(item.name)}
                 style={{
                   padding: 16,
                   borderBottomWidth: 1,
@@ -1092,112 +894,70 @@ const RideRequest: JSX.Element = (
                     justifyContent: "center",
                   }}
                 >
-                  <FontAwesome6
-                    name="location-crosshairs"
-                    size={18}
-                    color="black"
-                  />
+                  {item.type === "campus" && (
+                    <FontAwesome6
+                      name="building-columns"
+                      size={18}
+                      color="black"
+                    />
+                  )}
+                  {item.type === "place" && (
+                    <FontAwesome6 name="location-dot" size={18} color="black" />
+                  )}
+                  {item.type === "recent" && (
+                    <Ionicons name="receipt" size={18} color="black" />
+                  )}
                 </View>
                 <View style={{ width: 10 }} />
-                <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                  Current Location
-                </Text>
+                <View style={{ maxWidth: "80%" }}>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: "bold",
+                      marginBottom: item.address ? 5 : 0,
+                    }}
+                  >
+                    {item.name}
+                  </Text>
+                  {item.address && (
+                    <Text style={{ fontSize: 14 }}>{item.address}</Text>
+                  )}
+                </View>
               </TouchableOpacity>
-            ) : null
-          }
-          renderItem={({
-            item,
-          }: {
-            item: {
-              key: string;
-              name: string;
-              address: string | null;
-              type: "recent" | "campus" | "place";
-            };
-          }) => (
-            <TouchableOpacity
-              onPress={() => handleSelection(item.name)}
-              style={{
-                padding: 16,
-                borderBottomWidth: 1,
-                borderBottomColor: "#ccc",
-                flexDirection: "row",
-                alignItems: "center",
-              }}
-            >
-              <View
-                style={{
-                  borderRadius: 50,
-                  backgroundColor: "#EEEEEE",
-                  width: 35,
-                  height: 35,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+            )}
+            ListEmptyComponent={
+              <Text style={{ padding: 20, textAlign: "center", color: "#666" }}>
+                No suggestions found.
+              </Text>
+            }
+          />
+        </View>
+        {/* Confirmation Modal */}
+        <PopUpModal
+          type="half"
+          isVisible={confirmationModalVisible}
+          onClose={() => {
+            setConfirmationModalVisible(false);
+            darkenScreen(false);
+          }}
+          content={
+            <View style={{ padding: 20 }}>
+              <Text style={styles.formHeader}>Confirm Pickup Location</Text>
+              <Text style={styles.description}>
+                Setting your pickup location to: {closestBuilding}
+              </Text>
+              <Pressable
+                onPress={confirmPickUpLocation}
+                style={styles.sendButton}
               >
-                {item.type === "campus" && (
-                  <FontAwesome6
-                    name="building-columns"
-                    size={18}
-                    color="black"
-                  />
-                )}
-                {item.type === "place" && (
-                  <FontAwesome6 name="location-dot" size={18} color="black" />
-                )}
-                {item.type === "recent" && (
-                  <Ionicons name="receipt" size={18} color="black" />
-                )}
-              </View>
-              <View style={{ width: 10 }} />
-              <View style={{ maxWidth: "80%" }}>
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: "bold",
-                    marginBottom: item.address ? 5 : 0,
-                  }}
-                >
-                  {item.name}
-                </Text>
-                {item.address && (
-                  <Text style={{ fontSize: 14 }}>{item.address}</Text>
-                )}
-              </View>
-            </TouchableOpacity>
-          )}
-          ListEmptyComponent={
-            <Text style={{ padding: 20, textAlign: "center", color: "#666" }}>
-              No suggestions found.
-            </Text>
+                <Text style={styles.buttonLabel}>Confirm</Text>
+              </Pressable>
+            </View>
           }
         />
-      </View>
-
-      {/* Confirmation Modal */}
-      <PopUpModal
-        type="half"
-        isVisible={confirmationModalVisible}
-        onClose={() => {
-          setConfirmationModalVisible(false);
-          darkenScreen(false);
-        }}
-        content={
-          <View style={{ padding: 20 }}>
-            <Text style={styles.formHeader}>Confirm Pickup Location</Text>
-            <Text style={styles.description}>
-              Setting your pickup location to: {closestBuilding}
-            </Text>
-            <Pressable onPress={confirmPickUpLocation} style={styles.sendButton}>
-              <Text style={styles.buttonLabel}>Confirm</Text>
-            </Pressable>
-          </View>
-        }
-      />
-    </BottomDrawer>
-  </View>
-);
-
+      </BottomDrawer>
+    </View>
+  );
 
   // number of riders panel
   const NumberRiders: JSX.Element = (
