@@ -12,6 +12,7 @@ import { ProgressBar } from "react-native-paper";
 import moment from "moment";
 import momentTimezone from "moment-timezone";
 import { NotificationType } from "./Both_Notification";
+import { makeCall } from "./Both_CallUser";
 
 export type RideStatus =
   | "WaitingForRide" // the ride has been requested
@@ -340,6 +341,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
         <View
           style={[styles.bottomModalButtonContainer, { paddingHorizontal: 10 }]}
         >
+          {/* Cancel Ride Button */}
           <Pressable
             style={[
               styles.bottomModalButton,
@@ -351,8 +353,28 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             ]}
             onPress={() => onCancel("button")}
           >
-            <Text style={[styles.buttonText, { color: "red" }]}>
+            <Text style={[styles.buttonText, { color: "red", textAlign: "center" }]}>
               Cancel Ride
+            </Text>
+          </Pressable>
+
+          {/* Call Driver Button */}
+          <Pressable
+            style={[
+              styles.bottomModalButton,
+              {
+                borderWidth: 2,
+                borderColor: "#4B2E83",
+                backgroundColor: "#4B2E83",
+                marginTop: 10, // space between buttons
+              },
+            ]}
+            onPress={() => {
+              makeCall(); // trigger the call
+            }}
+          >
+            <Text style={[styles.buttonText, { color: "white", textAlign: "center" }]}>
+              Call Driver
             </Text>
           </Pressable>
         </View>
@@ -405,24 +427,45 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
       {/* I Found My Driver Button */}
       {status === "RideInProgress" &&
         (showWaitingForConfirmation === false ? (
-          <View
+        <View
+          style={[
+            styles.bottomModalButtonContainer,
+            { paddingHorizontal: 10 },
+          ]}
+        >
+          {/* I Have Arrived Button */}
+          <Pressable
             style={[
-              styles.bottomModalButtonContainer,
-              { paddingHorizontal: 10 },
+              styles.bottomModalButton,
+              { borderWidth: 2, backgroundColor: "#4B2E83" },
             ]}
+            onPress={() => {
+              setShowWaitingForConfirmation(true);
+            }}
           >
-            <Pressable
-              style={[
-                styles.bottomModalButton,
-                { borderWidth: 2, backgroundColor: "#4B2E83" },
-              ]}
-              onPress={() => {
-                setShowWaitingForConfirmation(true);
-              }}
-            >
-              <Text style={styles.buttonText}>I have arrived</Text>
-            </Pressable>
-          </View>
+            <Text style={[styles.buttonText, { textAlign: "center" }]}>I have arrived</Text>
+          </Pressable>
+
+          {/* Call Driver Button */}
+          <Pressable
+            style={[
+              styles.bottomModalButton,
+              {
+                borderWidth: 2,
+                borderColor: "#4B2E83",
+                backgroundColor: "#4B2E83",
+                marginTop: 10, // space between the buttons
+              },
+            ]}
+            onPress={() => {
+              makeCall(); // trigger the call
+            }}
+          >
+            <Text style={[styles.buttonText, { color: "white", textAlign: "center" }]}>
+              Call Driver
+            </Text>
+          </Pressable>
+        </View>
         ) : (
           <View
             style={[
