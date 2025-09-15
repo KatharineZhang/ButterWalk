@@ -309,6 +309,7 @@ export default function HandleRide({
                 Directions
               </Text>
             </Pressable>
+            {/* add call student button here */}
           </View>
 
           {/* Grey line */}
@@ -513,6 +514,7 @@ export default function HandleRide({
                 </Text>
               </Pressable>
             </View>
+            {/* add call student button here */}
           </View>
         </>
       ) : phase === "headingToDropoff" ? (
