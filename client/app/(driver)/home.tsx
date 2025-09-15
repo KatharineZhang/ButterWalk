@@ -174,6 +174,7 @@ export default function HomePage() {
       WebSocketService.send({
         directive: "LOCATION",
         id: netid,
+        role: "DRIVER",
         latitude: location.latitude,
         longitude: location.longitude,
       });
@@ -500,6 +501,7 @@ export default function HomePage() {
       WebSocketService.send({
         directive: "LOCATION",
         id: netid,
+        role: "DRIVER",
         latitude: driverLocationRef.current.latitude,
         longitude: driverLocationRef.current.longitude,
       });

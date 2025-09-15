@@ -150,6 +150,14 @@ export const handleWebSocketMessage = async (
         locationTo: input.destination,
         numRiders: input.numRiders,
         status: "REQUESTED",
+        studentLocation: {
+          coords: input.studentLocation,
+          lastUpdated: Timestamp.now(),
+        },
+        driverLocation: {
+          coords: { latitude: 0, longitude: 0 },
+          lastUpdated: null,
+        },
       };
       resp = await requestRide(rideRequest);
       if (resp.response == "REQUEST_RIDE") {
@@ -342,7 +350,12 @@ export const handleWebSocketMessage = async (
       break;
 
     case "LOCATION":
-      resp = await location(input.id, input.latitude, input.longitude);
+      resp = await location(
+        input.id,
+        input.role,
+        input.latitude,
+        input.longitude
+      );
       if ("netid" in resp) {
         // send response to opposite client
         sendMessageToNetid(resp.netid as string, resp);

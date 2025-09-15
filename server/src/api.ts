@@ -59,6 +59,7 @@ export type WebSocketMessage =
       location: LocationType;
       destination: LocationType;
       numRiders: number;
+      studentLocation: { latitude: number; longitude: number };
     }
   | { directive: "CANCEL"; netid: string; role: "STUDENT" | "DRIVER" }
   | { directive: "COMPLETE"; requestid: string }
@@ -82,6 +83,7 @@ export type WebSocketMessage =
   | {
       directive: "LOCATION";
       id: string; // the netid of the student or driver
+      role: "STUDENT" | "DRIVER";
       latitude: number;
       longitude: number;
     }
@@ -507,12 +509,22 @@ export type RideRequest = {
    */
   locationTo: LocationType;
   /**
-   * Most recent location at the time of the ride request.
-   * - Potentially used to calculate the earliest pick up time of the student
-   * based on their distance from the pick up location, may need to be updated
-   * accordingly or ignored after a certain amount of time.
+   * Most recent location of the student while the ride is active.
+   * - Should be updated periodically while the ride is active.
    */
-  studentLocation?: LocationType;
+  studentLocation: {
+    coords: { latitude: number; longitude: number };
+    lastUpdated: Timestamp;
+  };
+  /**
+   * Most recent location of the driver while the ride is active.
+   * - Should be updated periodically while the ride is active.
+   * - Used to provide the student with the driver's location while ride is in p
+   */
+  driverLocation: {
+    coords: { latitude: number; longitude: number };
+    lastUpdated: Timestamp | null;
+  };
   /**
    * The number of students in the ride
    */

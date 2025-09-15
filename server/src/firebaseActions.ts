@@ -166,7 +166,6 @@ export async function verifyDriverId(
   return false;
 }
 
-
 /**
  * Adds a new ride request to the database/pool, always with the status 'REQUESTED'
  * @param t The transaction running
@@ -313,6 +312,112 @@ export async function setRideRequestDriver(
   }
   const docRef = res.docs[0].ref;
   await updateDoc(docRef, { driverid: driverid });
+}
+
+/**
+ * Updates the driver location of the active ride request for the given student netid
+ * @param t The associated transaction
+ * @param netid the STUDENT's netid
+ * @param driverLocation
+ */
+export async function setRideRequestDriverLocation(
+  t: Transaction,
+  netid: string,
+  driverLocation: { latitude: number; longitude: number }
+) {
+  // find any ride by student 'netid' that
+  // is not accepted, not processed and not CANCELED_STATUS/COMPLETED_STATUS
+  // aka not processed currently
+  const queryNetid = query(
+    rideRequestsCollection,
+    where("netid", "==", netid),
+    where("status", "in", [REQUESTED_STATUS, VIEWING_STATUS])
+  );
+  // run the query
+  const res = await getDocs(queryNetid);
+
+  if (res.size !== 1) {
+    throw new Error(
+      `Expected exactly one active ride request for netid: ${netid}, found ${res.size}`
+    );
+  }
+
+  // for each result (should only be one), check if the last update was less than 5 seconds ago
+  res.forEach((el) => {
+    const rideRequest = el.data() as RideRequest;
+    // the driverLocation.lastUpdated can be null if this is the first update
+    // if it is not null, check the time difference
+    if (
+      rideRequest.driverLocation.lastUpdated &&
+      Timestamp.now().seconds - rideRequest.driverLocation.lastUpdated.seconds <
+        5000
+    ) {
+      // it has been less than 5 seconds since last update
+      console.log("Skipping driver location update, throttled");
+      return; // skip this update
+    }
+  });
+
+  const docRef = res.docs[0].ref;
+  // update the driver location and lastUpdated
+  await updateDoc(docRef, {
+    driverLocation: {
+      coords: driverLocation,
+      lastUpdated: Date.now(),
+    },
+  });
+}
+
+/**
+ * Updates the student location of the active ride request for the given student netid
+ * @param t
+ * @param netid the student's netid
+ * @param studentLocation
+ */
+export async function setRideRequestStudentLocation(
+  t: Transaction,
+  netid: string,
+  studentLocation: { latitude: number; longitude: number }
+) {
+  // find any ride by student 'netid' that
+  // is not accepted, not processed and not CANCELED_STATUS/COMPLETED_STATUS
+  // aka not processed currently
+  const queryNetid = query(
+    rideRequestsCollection,
+    where("netid", "==", netid),
+    where("status", "in", [REQUESTED_STATUS, VIEWING_STATUS])
+  );
+  // run the query
+  const res = await getDocs(queryNetid);
+
+  if (res.size !== 1) {
+    throw new Error(
+      `Expected exactly one active ride request for netid: ${netid}, found ${res.size}`
+    );
+  }
+
+  // for each result (should only be one), check if the last update was less than 5 seconds ago
+  res.forEach((el) => {
+    const rideRequest = el.data() as RideRequest;
+    if (
+      Timestamp.now().seconds -
+        rideRequest.studentLocation.lastUpdated.seconds <
+      5000
+    ) {
+      // it has been less than 5 seconds since last update
+      console.log("Skipping student location update, throttled");
+      return; // skip this update
+    }
+  });
+
+  const docRef = res.docs[0].ref;
+  // update the student location and lastUpdated
+  await updateDoc(docRef, {
+    studentLocation: {
+      coords: studentLocation,
+      lastUpdated: Date.now(),
+    },
+  });
 }
 
 // CANCEL RIDE - Update a student ride request to CANCELED_STATUS

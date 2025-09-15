@@ -81,6 +81,7 @@ export default function HomePage() {
       WebSocketService.send({
         directive: "LOCATION",
         id: netid,
+        role: "STUDENT",
         latitude: location.latitude,
         longitude: location.longitude,
       });
@@ -174,6 +175,7 @@ export default function HomePage() {
         coordinates: dropOffLocation,
       },
       numRiders: numPassengers,
+      studentLocation: userLocationRef.current,
     });
     // set the component to show to loading
     setWhichComponent("Loading");
@@ -521,6 +523,7 @@ export default function HomePage() {
       WebSocketService.send({
         directive: "LOCATION",
         id: netid,
+        role: "STUDENT",
         latitude: userLocationRef.current.latitude,
         longitude: userLocationRef.current.longitude,
       });

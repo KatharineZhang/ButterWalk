@@ -48,6 +48,8 @@ import {
   // we want this import for when we have a drivers collection
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   verifyDriverId,
+  setRideRequestDriverLocation,
+  setRideRequestStudentLocation,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { highestRank, rankOf } from "./rankingAlgorithm";
@@ -231,7 +233,7 @@ export const checkIfDriverSignin = async (
     } as ErrorResponse;
   }
   return resp;
-}; 
+};
 
 // Finishes the account for the user by adding the phone number and student number to the database
 // returns a success message if the account creation is successful and a boolean value of true if the account already exists
@@ -1161,6 +1163,7 @@ information to the opposite user (student → driver, driver → student).
 { response: “LOCATION”, netid: string, latitude: number, longitude: number } where netid is the id of the opposite user. */
 export const location = async (
   id: string,
+  role: "STUDENT" | "DRIVER",
   latitude: number,
   longitude: number
 ): Promise<LocationResponse | ErrorResponse> => {
@@ -1174,9 +1177,22 @@ export const location = async (
   // Look for an accepted request with the netid passed in and extract the opposite user netid
   let otherNetId;
   try {
-    return await runTransaction(db, async () => {
+    return await runTransaction(db, async (transaction) => {
       // we can't use transactions to query so hopefully this is fine
       otherNetId = await getOtherNetId(id); // get the location of the user
+
+      // update the location of the user in the RideReques if needed
+      if (role === "STUDENT") {
+        // id in this case is the student netid
+        setRideRequestStudentLocation(transaction, id, { latitude, longitude });
+      } else if (role === "DRIVER") {
+        // id in this case is the driverid and otherNetId is the student netid
+        setRideRequestDriverLocation(transaction, otherNetId, {
+          latitude,
+          longitude,
+        });
+      }
+
       // pass the location information to the opposite user
       return { response: "LOCATION", netid: otherNetId, latitude, longitude };
     });
