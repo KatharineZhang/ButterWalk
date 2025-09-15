@@ -469,6 +469,7 @@ export default function HomePage() {
           // but stay on handle ride component
           rideStatusRef.current = "WaitingForRide";
           setRideStatus("WaitingForRide");
+          setDriverLocation({ latitude: 0, longitude: 0 }); // reset driver location
           setNotifState({
             text: "Your driver canceled the ride. Please wait for another driver",
             color: "#FFCBCB",
