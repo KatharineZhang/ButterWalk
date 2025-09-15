@@ -23,6 +23,7 @@ import {
   getPlaceSearchResults,
   driverDrivingToDropoff,
   checkIfDriverSignin,
+  loadRide,
 } from "./routes";
 import {
   CompleteResponse,
@@ -393,6 +394,13 @@ export const handleWebSocketMessage = async (
       // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
       break;
+
+    case "LOAD_RIDE": {
+      resp = await loadRide(input.id, input.role);
+      // send response back to client (the student)
+      sendWebSocketMessage(ws, resp);
+      break;
+    }
 
     default:
       console.log(`WEBSOCKET: Unknown directive: ${JSON.stringify(input)}`);

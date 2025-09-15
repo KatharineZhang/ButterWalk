@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   ErrorResponse,
+  LoadRideResponse,
   LocationResponse,
   RideRequest,
   RidesExistResponse,
@@ -43,7 +44,7 @@ export default function HomePage() {
   /* HOME PAGE STATE */
   const [whichComponent, setWhichComponent] = useState<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
-  >(TimeService.inServicableTime() ? "noRequests" : "endShift");  
+  >(TimeService.inServicableTime() ? "noRequests" : "endShift");
 
   /* USE EFFECTS */
   useEffect(() => {
@@ -62,6 +63,7 @@ export default function HomePage() {
       driverArrivedAtPickupListener,
       "DRIVER_ARRIVED_AT_PICKUP"
     );
+    WebSocketService.addListener(handleLoadRideResponse, "LOAD_RIDE");
 
     // Connect to the websocket server
     // needs to be its own function to avoid async issues
@@ -98,6 +100,8 @@ export default function HomePage() {
       // in shift
       setWhichComponent("noRequests");
       seeIfRidesExist();
+      // see if there is an active ride request
+      sendLoadRide();
     } else {
       // off shift
       setWhichComponent("endShift");
@@ -543,6 +547,26 @@ export default function HomePage() {
         trigger: Date.now(),
       });
       setFlagPopupVisible(false); // close the flagging popup
+    }
+  };
+
+  // WEBSOCKET - LOAD RIDE
+  const sendLoadRide = () => {
+    WebSocketService.send({
+      directive: "LOAD_RIDE",
+      id: netid,
+      role: "DRIVER",
+    });
+  };
+  const handleLoadRideResponse = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "LOAD_RIDE") {
+      const loadRideMessage = message as LoadRideResponse;
+      if (loadRideMessage.rideRequest) {
+        console.log("Found active ride request", loadRideMessage.rideRequest);
+      }
+    } else {
+      // something went wrong
+      console.log("Load Ride response error: ", message);
     }
   };
 

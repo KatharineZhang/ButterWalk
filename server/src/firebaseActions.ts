@@ -190,20 +190,13 @@ export async function addRideRequestToPool(
   }
 
   // make sure there are no pending rides in the database by this user
-  const queryExistingRide = query(
-    rideRequestsCollection,
-    where("netid", "==", rideRequest.netid),
-    where("status", "in", [
-      REQUESTED_STATUS,
-      VIEWING_STATUS,
-      DRIVING_TO_PICK_UP_STATUS,
-      DRIVER_AT_PICK_UP_STATUS,
-      DRIVING_TO_DESTINATION_STATUS,
-    ])
+  const activeRide = await getActiveRideRequest(
+    t,
+    rideRequest.netid,
+    "STUDENT"
   );
-  const inDatabase = await getDocs(queryExistingRide); // get the document by netid
   //  check if user is in problematicUsers table
-  if (inDatabase.size > 0) {
+  if (activeRide) {
     throw new Error(`${rideRequest.netid} already has a pending ride`);
   }
   rideRequest.completedAt = null;
@@ -263,6 +256,52 @@ export async function setRideRequestStatus(
   const docRef = res.docs[0].ref;
   await updateDoc(docRef, { status: status });
 }
+
+/**
+ * Returns the currently in progress ride request for the given driver or student
+ * @param t
+ * @param id driver or student netid
+ * @param role
+ * @returns
+ */
+export const getActiveRideRequest = async (
+  t: Transaction,
+  id: string,
+  role: "STUDENT" | "DRIVER"
+): Promise<(RideRequest & { requestId: string }) | undefined> => {
+  let queryRide;
+  // find any ride by student 'netid' or driver 'driverid' that
+  // is not CANCELED_STATUS or COMPLETED_STATUS
+  if (role === "STUDENT") {
+    queryRide = query(
+      rideRequestsCollection,
+      where("netid", "==", id),
+      where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS])
+    );
+  } else {
+    queryRide = query(
+      rideRequestsCollection,
+      where("driverid", "==", id),
+      where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS])
+    );
+  }
+  const docs = await getDocs(queryRide);
+  if (docs.size === 0) {
+    // no active ride request
+    return undefined;
+  } else if (docs.size > 1) {
+    // there are too many active ride requests?
+    throw new Error(
+      `Expected at most one active ride request for ${role} with id: ${id}, found ${docs.size}`
+    );
+  } else {
+    // return the request with the id included (bc the driver needs it eventually)
+    return {
+      ...docs.docs[0].data(),
+      requestId: docs.docs[0].id,
+    } as RideRequest & { requestId: string };
+  }
+};
 
 /**
  * Returns if the student's ride request has been accepted or not

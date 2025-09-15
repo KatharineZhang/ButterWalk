@@ -26,6 +26,7 @@ import {
   PlaceSearchResponse,
   PurpleZone,
   WrapperCancelResponse,
+  LoadRideResponse,
 } from "./api";
 import {
   addFeedbackToDb,
@@ -50,6 +51,7 @@ import {
   verifyDriverId,
   setRideRequestDriverLocation,
   setRideRequestStudentLocation,
+  getActiveRideRequest,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { highestRank, rankOf } from "./rankingAlgorithm";
@@ -276,6 +278,31 @@ export const finishAccCreation = async (
       response: "ERROR",
       error: `Error adding phone number or student number to database: ${(e as Error).message}.`,
       category: "FINISH_ACC",
+    };
+  }
+};
+
+export const loadRide = async (
+  id: string,
+  role: "STUDENT" | "DRIVER"
+): Promise<LoadRideResponse | ErrorResponse> => {
+  if (!id) {
+    return {
+      response: "ERROR",
+      error: "Missing or invalid netid.",
+      category: "LOAD_RIDE",
+    };
+  }
+  try {
+    return await runTransaction(db, async (transaction) => {
+      const rideRequest = await getActiveRideRequest(transaction, id, role);
+      return { response: "LOAD_RIDE", rideRequest };
+    });
+  } catch (e: unknown) {
+    return {
+      response: "ERROR",
+      error: `Error loading ride from database: ${(e as Error).message}.`,
+      category: "LOAD_RIDE",
     };
   }
 };

@@ -13,6 +13,7 @@ import {
   CancelResponse,
   DistanceResponse,
   ErrorResponse,
+  LoadRideResponse,
   LocationResponse,
   LocationType,
   ProfileResponse,
@@ -272,9 +273,12 @@ export default function HomePage() {
       handleDriverPickedUp,
       "DRIVER_DRIVING_TO_DROPOFF"
     );
+    WebSocketService.addListener(handleLoadRideResponse, "LOAD_RIDE");
 
     // get the user's profile on first render
     sendProfile();
+    // see if there is an active ride request
+    sendLoadRide();
   }, []);
 
   // logic that should happen when the component FIRST changes
@@ -411,6 +415,25 @@ export default function HomePage() {
     } else {
       // something went wrong
       console.log("Profile response error: ", message);
+    }
+  };
+
+  const sendLoadRide = () => {
+    WebSocketService.send({
+      directive: "LOAD_RIDE",
+      id: netid,
+      role: "STUDENT",
+    });
+  };
+  const handleLoadRideResponse = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "LOAD_RIDE") {
+      const loadRideMessage = message as LoadRideResponse;
+      if (loadRideMessage.rideRequest) {
+        console.log("Found active ride request", loadRideMessage.rideRequest);
+      }
+    } else {
+      // something went wrong
+      console.log("Load Ride response error: ", message);
     }
   };
 

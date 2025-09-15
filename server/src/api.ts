@@ -28,7 +28,8 @@ export type Command =
   | "DRIVER_ARRIVED_AT_PICKUP"
   | "DRIVER_DRIVING_TO_DROPOFF"
   | "DISCONNECT"
-  | "PLACE_SEARCH";
+  | "PLACE_SEARCH"
+  | "LOAD_RIDE";
 
 // Input types
 export type WebSocketMessage =
@@ -140,6 +141,11 @@ export type WebSocketMessage =
   | {
       directive: "PLACE_SEARCH";
       query: string;
+    }
+  | {
+      directive: "LOAD_RIDE";
+      id: string;
+      role: "STUDENT" | "DRIVER";
     };
 
 // TEMP FIX
@@ -167,7 +173,8 @@ export type WebSocketResponse =
   | RidesExistResponse
   | ViewRideRequestResponse
   | ViewDecisionResponse
-  | PlaceSearchResponse;
+  | PlaceSearchResponse
+  | LoadRideResponse;
 
 export type LocationType = {
   name: string;
@@ -297,6 +304,11 @@ export type ProfileResponse = {
   locations: LocationType[];
 };
 
+export type LoadRideResponse = {
+  response: "LOAD_RIDE";
+  rideRequest?: RideRequest & { requestId: string };
+};
+
 export type ErrorResponse = {
   response: "ERROR";
   error: string;
@@ -400,12 +412,6 @@ export const GooglePlaceSearchBadLocationTypes = [
   "night_club",
 ];
 
-// Server Types and Data Structures
-
-export type localRideRequest = {
-  requestid: string;
-  netid: string;
-};
 
 /* DATABASE TYPES */
 
