@@ -692,69 +692,88 @@ export default function RideRequestForm({
   // the ride request panel
   const RideRequest: JSX.Element = (
     <View style={{ flex: 1, pointerEvents: "box-none", width: "100%" }}>
-      <BottomDrawer ref={bottomSheetRef}>
-        {/* Request Form */}
+      <BottomDrawer bottomSheetRef={bottomSheetRef}>
+        {/* The search box with shadow under it*/}
         <View
           style={styles.requestFormContainer}
           onLayout={() => {
-            // update sidebar height to 40% screen height
+            // on render, update the sidebar height to 40% the height of the screen
+            // (which is the default height of the bottom sheet)
             updateSideBarHeight(height * 0.4);
           }}
         >
-          {/* Header */}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginHorizontal: 20,
-              marginBottom: 20,
-            }}
-          >
-            <Text style={{ fontSize: 20, fontWeight: "bold" }}>
-              Choose Your Locations
-            </Text>
-            <TouchableOpacity onPress={() => setFAQVisible(true)}>
-              <Ionicons
-                name="information-circle-outline"
-                size={25}
-                color="black"
-              />
-            </TouchableOpacity>
-          </View>
+          <View style={{ flex: 1, width: "99%" }}>
+            {/* Header */}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "90%",
+                marginHorizontal: 20,
+                marginBottom: 20,
+              }}
+            >
+              <View style={{ width: "10%" }} />
+              {/* Title */}
+              <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+                Choose Your Locations
+              </Text>
 
-          {/* Progress Bar */}
-          <SegmentedProgressBar type={1} />
-          <View style={{ height: 20 }} />
-
-          {/* Inputs with vertical icons */}
-          <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-            {/* Icon column */}
-            <View style={{ alignItems: "center", marginRight: 8 }}>
-              {/* Pickup dot */}
-              <View
-                style={{
-                  borderRadius: 13,
-                  backgroundColor: "#4B2E83",
-                  height: 15,
-                  width: 15,
-                }}
-              />
-              {/* Dotted line */}
-              <Image
-                source={require("@/assets/images/dashed-line.png")}
-                style={{ width: 2, flex: 1, marginVertical: 4 }}
-                resizeMode="repeat"
-              />
-              {/* Dropoff pin */}
-              <Image
-                source={require("@/assets/images/dropoff-location.png")}
-                style={{ height: 20, width: 20 }}
-              />
+              {/* faq button */}
+              <TouchableOpacity onPress={() => setFAQVisible(true)}>
+                <Ionicons
+                  name="information-circle-outline"
+                  size={25}
+                  color="black"
+                />
+              </TouchableOpacity>
             </View>
+            <View style={{ height: 20 }} />
+            <SegmentedProgressBar type={1} />
+            <View style={{ height: 20 }} />
 
-            {/* Input column */}
-            <View style={{ flex: 1 }}>
+            {/* Location and Destination Icons */}
+            <View
+              style={{
+                borderRadius: 13,
+                backgroundColor: "#4B2E83",
+                position: "absolute",
+                zIndex: 3,
+                top: 110,
+                left: 13,
+                height: 15,
+                width: 15,
+              }}
+            />
+            <Image
+              source={require("@/assets/images/dashed-line.png")}
+              style={{
+                zIndex: 3,
+                position: "absolute",
+                top: 132,
+                left: 19,
+                width: 2,
+                height: 40,
+              }}
+            />
+            <Image
+              source={require("@/assets/images/dropoff-location.png")}
+              style={{
+                position: "absolute",
+                zIndex: 3,
+                top: 177,
+                left: 10,
+                height: 20,
+                width: 20,
+              }}
+            />
+            <View
+              style={{
+                zIndex: 2,
+              }}
+            >
+              {/* Location and Destination Inputs */}
               <AutocompleteInput
                 onPress={() => {
                   setCurrentQuery("pickup");
@@ -764,6 +783,7 @@ export default function RideRequestForm({
                 setQuery={setPickUpQuery}
                 enterPressed={enterPressed}
                 placeholder="Pick Up Location"
+                // data={campusAPIResults}
               />
               <AutocompleteInput
                 onPress={() => {
@@ -774,29 +794,38 @@ export default function RideRequestForm({
                 setQuery={setDropOffQuery}
                 enterPressed={enterPressed}
                 placeholder="Drop Off Location"
+                // data={campusAPIResults}
               />
             </View>
-          </View>
-
-          {/* Next Button */}
-          <View style={{ alignItems: "flex-end", marginTop: 16 }}>
-            <TouchableOpacity
+            {/* Next Button */}
+            <View
               style={{
-                flexDirection: "row",
-                alignItems: "center",
+                flex: 0.1,
+                justifyContent: "flex-end",
+                zIndex: 100,
               }}
-              onPress={goToNumberRiders}
             >
-              <Text style={{ fontStyle: "italic", marginRight: 8 }}>
-                Choose # of passengers
-              </Text>
-              <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginVertical: 10,
+                  justifyContent: "flex-end",
+                }}
+                onPress={goToNumberRiders}
+              >
+                <Text style={{ fontStyle: "italic" }}>
+                  Choose # of passengers
+                </Text>
+                <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
+        {/* Autocomplete Suggestions */}
 
-        {/* Suggestions */}
         <View style={{ flex: 1, height: suggestionListHeight }}>
+          {/* list all the possible buildings */}
           <FlatList
             data={formattedResults}
             keyExtractor={(item) => item.key}
@@ -904,7 +933,6 @@ export default function RideRequestForm({
             }
           />
         </View>
-
         {/* Confirmation Modal */}
         <PopUpModal
           type="half"
@@ -919,7 +947,10 @@ export default function RideRequestForm({
               <Text style={styles.description}>
                 Setting your pickup location to: {closestBuilding}
               </Text>
-              <Pressable onPress={confirmPickUpLocation} style={styles.sendButton}>
+              <Pressable
+                onPress={confirmPickUpLocation}
+                style={styles.sendButton}
+              >
                 <Text style={styles.buttonLabel}>Confirm</Text>
               </Pressable>
             </View>

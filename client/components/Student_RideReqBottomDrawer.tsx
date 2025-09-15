@@ -8,6 +8,7 @@ interface BottomDrawerProps {
   initialVisible?: boolean;
 }
 
+// Methods available to parent via ref
 export interface BottomDrawerRef {
   open: () => void;
   close: () => void;
@@ -23,6 +24,7 @@ const BottomDrawer = forwardRef<BottomDrawerRef, BottomDrawerProps>(
 
     const translateY = useRef(new Animated.Value(SCREEN_HEIGHT - snap40)).current;
 
+    // Expand drawer
     const modalExpand = () => {
       Animated.spring(translateY, {
         toValue: SCREEN_HEIGHT - snap70,
@@ -30,6 +32,7 @@ const BottomDrawer = forwardRef<BottomDrawerRef, BottomDrawerProps>(
       }).start();
     };
 
+    // Expose open/close/expand functions
     useImperativeHandle(ref, () => ({
       open: () => {
         setVisible(true);
@@ -44,9 +47,10 @@ const BottomDrawer = forwardRef<BottomDrawerRef, BottomDrawerProps>(
           useNativeDriver: true,
         }).start(() => setVisible(false));
       },
-       expand: modalExpand,
+      expand: modalExpand,
     }));
 
+    // Gesture handler for dragging drawer
     const panResponder = useRef(
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
@@ -55,7 +59,7 @@ const BottomDrawer = forwardRef<BottomDrawerRef, BottomDrawerProps>(
           newY = Math.min(Math.max(newY, SCREEN_HEIGHT - snap70), SCREEN_HEIGHT);
           translateY.setValue(newY);
         },
-        onPanResponderRelease: (_, gestureState) => {
+        onPanResponderRelease: () => {
           const middle = SCREEN_HEIGHT - (snap40 + snap70) / 2;
           const toValue =
             translateY._value > middle ? SCREEN_HEIGHT - snap40 : SCREEN_HEIGHT - snap70;

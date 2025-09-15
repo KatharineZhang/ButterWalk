@@ -9,13 +9,17 @@ import {
   Keyboard,
   Dimensions,
 } from "react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { styles } from "../../assets/styles";
 import { Redirect } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 
 // @ts-expect-error the image does exists so get rid of the error
 import butterWalkLogo from "@/assets/images/butterWalkLogo.png";
+import WebSocketService, {
+  WebsocketConnectMessage,
+} from "@/services/WebSocketService";
+import { WebSocketResponse, ErrorResponse } from "../../../server/src/api";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -25,17 +29,48 @@ const Login = () => {
   const [errMsg, setErrMsg] = useState("");
   const [netid, setNetid] = useState("");
 
+  // on render,
+  // connect to websocket and send the response to backend when we get it
+  useEffect(() => {
+    const connectWebSocket = async () => {
+      // call our new route
+      const msg: WebsocketConnectMessage = await WebSocketService.connect();
+      if (msg !== "Connected Successfully") {
+        console.log("failed to connect!!!");
+      }
+      // if nothing is logged, assumed connected successfully
+    };
+    connectWebSocket();
+    WebSocketService.addListener(handleSigninMessage, "SIGNIN");
+  }, []);
+
   // check that the driver ID input is correct
   // param: input - the driver id input in the sign in
   const checkDriverIdInput = () => {
     if (/^[a-z]{5,7}$/.test(driverId.toLowerCase())) {
-      setSignedIn(true);
       setNetid(driverId.toLowerCase());
       setErrMsg("");
+      // send the signin request to the backend
+      WebSocketService.send({
+        directive: "SIGNIN",
+        response: null,
+        role: "DRIVER",
+        netid: driverId.toLowerCase(),
+      });
     } else {
       setDriverId("");
-      setSignedIn(false);
       setErrMsg("Driver ID must be 5 to 7 lowercase letters.");
+    }
+  };
+
+  const handleSigninMessage = (message: WebSocketResponse) => {
+    if ("response" in message && message.response == "SIGNIN") {
+      setSignedIn(true);
+    } else {
+      // there was a signin related error
+      const errorResp = message as ErrorResponse;
+      setErrMsg(errorResp.error);
+      setSignedIn(false);
     }
   };
 

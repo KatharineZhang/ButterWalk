@@ -1,21 +1,11 @@
-import { View, Text, Pressable, TouchableOpacity, Image } from "react-native";
-import { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, Image } from "react-native";
 import { styles } from "../../assets/styles";
-import { Redirect } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-
 // need to 'npx expo install expo-web-browser expo-auth-session expo-crypto' ON MAC
 // or 'npm i expo-auth-session@~6.0.3' on windows
 import * as Google from "expo-auth-session/providers/google";
-
-import {
-  WebSocketResponse,
-  SignInResponse,
-  ErrorResponse,
-} from "../../../server/src/api";
-import WebSocketService, {
-  WebsocketConnectMessage,
-} from "../../services/WebSocketService";
+import { useEffect } from "react";
+import { router, useLocalSearchParams } from "expo-router";
 
 // Images
 // @ts-expect-error the image does exists so get rid of the error
@@ -32,10 +22,8 @@ const androidClientId = process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID;
 WebBrowser.maybeCompleteAuthSession();
 
 const Login = () => {
-  const [accExists, setAccExists] = useState<boolean | null>(null);
-  const [errMsg, setErrMsg] = useState("");
-  const [netid, setNetid] = useState("");
-
+  // comes from finishSignIn if any errors occur
+  const {error} = useLocalSearchParams();
   const config = {
     webClientId,
     iosClientId,
@@ -47,84 +35,30 @@ const Login = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [request, response, promptAsync] = Google.useAuthRequest(config);
 
-  const handleSigninMessage = (message: WebSocketResponse) => {
-    if ("response" in message && message.response == "SIGNIN") {
-      const signinResp = message as SignInResponse;
-
-      if (signinResp.alreadyExists) {
-        setAccExists(true);
-      } else {
-        setAccExists(false); // redundant but I just want to make sure
-      }
-
-      setNetid(signinResp.netid);
-    } else {
-      // there was a signin related error
-      const errorResp = message as ErrorResponse;
-
-      setErrMsg(errorResp.error);
-    }
-  };
-  WebSocketService.addListener(handleSigninMessage, "SIGNIN");
-
   useEffect(() => {
-    const connectWebSocket = async () => {
-      // call our new route
-      const msg: WebsocketConnectMessage = await WebSocketService.connect();
-      if (msg == "Connected Successfully") {
-        if (response) {
-          WebSocketService.send({
-            directive: "SIGNIN",
-            response,
-            role: "STUDENT",
-          });
-        }
-      } else {
-        console.log("failed to connect!!!");
-      }
-    };
-    connectWebSocket();
+    if (response?.type === 'success') {
+      const serializedResponse = JSON.stringify(response);
+      console.log(serializedResponse);
+      console.log('OAuth code received. Navigating to redirect page.');
+      // Passes the code to finishSignIn, which handles the Websocket exchange.
+      router.replace({ pathname: '/(student)/finishSignIn', params: { serializedResponse } });
+    }
   }, [response]);
 
-  return accExists == true && netid ? (
-    <Redirect
-      href={{
-        pathname: "/(student)/home",
-        params: {
-          netid: netid,
-        },
-      }}
-    />
-  ) : accExists == false && netid ? (
-    <Redirect
-      href={{
-        pathname: "/(student)/finishAcc",
-        params: {
-          netid: netid,
-        },
-      }}
-    />
-  ) : (
+  return (
     <SafeAreaView style={[styles.container, { padding: 20 }]}>
       <View style={{ flex: 1, width: "100%", justifyContent: "space-between" }}>
         {/* Main Content */}
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
-          <Text
-            style={{
-              fontSize: 35,
-              fontWeight: "500",
-              color: "#4B2E83",
-              marginBottom: 20,
-            }}
-          >
+          <Text style={[styles.heading, { marginBottom: "5%" }]}>
             Welcome Student!
           </Text>
           <Image
             style={[
               styles.signInbottomImageContainer,
-              { flex: 0.5, marginBottom: "10%" },
+              { flex: 0.5, marginBottom: "5%" },
             ]}
             source={huskyCarImage}
             resizeMode="contain"
@@ -160,20 +94,7 @@ const Login = () => {
               Sign in with UW Email
             </Text>
           </TouchableOpacity>
-          <Text style={{ color: "red", marginTop: 10 }}>{errMsg}</Text>
-        </View>
-
-        {/* TEMPORARY Bypass Button */}
-        <View style={{ paddingBottom: 20 }}>
-          <Pressable
-            style={styles.signInButton}
-            onPress={() => {
-              setAccExists(false);
-              setNetid("student-netID");
-            }}
-          >
-            <Text style={styles.signInText}>Bypass Signin</Text>
-          </Pressable>
+          <Text style={{ color: "red", marginTop: 10 }}>{error}</Text>
         </View>
       </View>
     </SafeAreaView>
