@@ -5,6 +5,7 @@ import { NotificationType } from "./Both_Notification";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { styles } from "@/assets/styles";
 import { ProgressBar } from "react-native-paper";
+import { makeCall } from "./Both_CallUser";
 
 interface HandleRideProps {
   requestInfo: RideRequest;
@@ -275,13 +276,16 @@ export default function HandleRide({
             </View>
           </View>
 
-          {/* Directions Button */}
+          {/* Directions + Call Student Buttons */}
           <View
             style={{
               marginTop: 4,
               marginBottom: 12,
+              flexDirection: "row", // row layout
+              alignItems: "center", // vertically align buttons
             }}
           >
+            {/* Directions Button */}
             <Pressable
               style={{
                 backgroundColor: "#4B2E83",
@@ -291,15 +295,11 @@ export default function HandleRide({
                 alignItems: "center",
                 justifyContent: "center",
                 flexDirection: "row",
-                alignSelf: "flex-start",
               }}
               onPress={() => {
                 const destination = {
-                  lat:
-                    requestInfo.locationFrom?.coordinates?.latitude || 47.6062,
-                  lng:
-                    requestInfo.locationFrom?.coordinates?.longitude ||
-                    -122.3321,
+                  lat: requestInfo.locationFrom?.coordinates?.latitude || 47.6062,
+                  lng: requestInfo.locationFrom?.coordinates?.longitude || -122.3321,
                   title: "Pickup Location",
                 };
                 openGoogleMapsDirections(destination);
@@ -309,7 +309,31 @@ export default function HandleRide({
                 Directions
               </Text>
             </Pressable>
-            {/* add call student button here */}
+
+
+            {/* Spacer */}
+            <View style={{ width: 10 }} /> {/* optional space between buttons */}
+
+
+            {/* Call Student Button */}
+            <Pressable
+              style={{
+                backgroundColor: "#4B2E83",
+                paddingVertical: 10,
+                paddingHorizontal: 16,
+                borderRadius: 8,
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "row",
+              }}
+              onPress={() => {
+                makeCall(); // call the student
+              }}
+            >
+              <Text style={{ color: "white", fontSize: 14, fontWeight: "600" }}>
+                Call Student
+              </Text>
+            </Pressable>
           </View>
 
           {/* Grey line */}
@@ -462,60 +486,79 @@ export default function HandleRide({
             </View>
             <ProgressBarLabels />
           </View>
-          {/* Two buttons side by side */}
-          <View
+        {/* Two buttons side by side */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            marginTop: "5%",
+            paddingBottom: 20,
+          }}
+        >
+          <View style={{ flex: 1, marginRight: 8 }}>
+            {/* Button to confirm student was picked up */}
+            <Pressable
+              style={{
+                backgroundColor: "#4B2E83",
+                paddingVertical: 20,
+                borderRadius: 8,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              onPress={() => {
+                setPhase("headingToDropoff");
+                driverDrivingToDropOff();
+              }}
+            >
+              <Text style={{ color: "white", fontSize: 16, fontWeight: "400" }}>
+                I've found student
+              </Text>
+            </Pressable>
+          </View>
+
+
+          <View style={{ flex: 1, marginLeft: 8 }}>
+            {/* Button to cancel ride */}
+            <Pressable
+              style={{
+                backgroundColor: seconds <= 0 ? "#FF0000" : "#E0E0E0",
+                ...styles.driverCancelButton,
+              }}
+              onPress={timerDone ? cancelRide : onCancel}
+            >
+              <Text
+                style={{
+                  color: seconds <= 0 ? "white" : "black",
+                  fontSize: 16,
+                  fontWeight: "400",
+                }}
+              >
+                Cancel request
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+
+
+        {/* Call Student Button (underneath) */}
+        <View style={{ marginTop: 10 }}>
+          <Pressable
             style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              marginTop: "5%",
-              paddingBottom: 20,
+              backgroundColor: "#4B2E83",
+              paddingVertical: 20,
+              borderRadius: 8,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            onPress={() => {
+              makeCall(); // <-- your call logic
             }}
           >
-            <View style={{ flex: 1, marginRight: 8 }}>
-              {/* Button to confirm student was picked up */}
-              <Pressable
-                style={{
-                  backgroundColor: "#4B2E83",
-                  paddingVertical: 20,
-                  borderRadius: 8,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-                onPress={() => {
-                  // call the callback to update the state
-                  setPhase("headingToDropoff");
-                  driverDrivingToDropOff();
-                }}
-              >
-                <Text
-                  style={{ color: "white", fontSize: 16, fontWeight: "400" }}
-                >
-                  I've found student
-                </Text>
-              </Pressable>
-            </View>
-            <View style={{ flex: 1, marginLeft: 8 }}>
-              {/* Button to cancel ride, turns red and clickable after 5 min counter */}
-              <Pressable
-                style={{
-                  backgroundColor: seconds <= 0 ? "#FF0000" : "#E0E0E0",
-                  ...styles.driverCancelButton,
-                }}
-                onPress={timerDone ? cancelRide : onCancel}
-              >
-                <Text
-                  style={{
-                    color: seconds <= 0 ? "white" : "black",
-                    fontSize: 16,
-                    fontWeight: "400",
-                  }}
-                >
-                  Cancel request
-                </Text>
-              </Pressable>
-            </View>
-            {/* add call student button here */}
-          </View>
+            <Text style={{ color: "white", fontSize: 16, fontWeight: "400" }}>
+              Call Student
+            </Text>
+          </Pressable>
+        </View>
         </>
       ) : phase === "headingToDropoff" ? (
         <>
