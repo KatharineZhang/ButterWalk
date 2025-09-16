@@ -1356,6 +1356,9 @@ export const fetchGooglePlaceSuggestions = async (
       );
 
     const allResults = await Promise.all(placeDetailsPromises);
+
+    console.log("All fetched place details:", allResults);
+    
     const filtered = allResults.filter((place) => place !== null);
 
     // Deduplicate (e.g. by name)
