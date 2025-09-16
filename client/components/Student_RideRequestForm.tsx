@@ -695,7 +695,7 @@ export default function RideRequestForm({
       <BottomDrawer ref={bottomSheetRef}>
         {/* The search box with shadow under it*/}
         <View
-          style={styles.requestFormContainer}
+          style={[styles.requestFormContainer, { flexGrow: 1 }]}
           onLayout={() => {
             // on render, update the sidebar height to 40% the height of the screen
             // (which is the default height of the bottom sheet)
@@ -800,7 +800,6 @@ export default function RideRequestForm({
             {/* Next Button */}
             <View
               style={{
-                flex: 0.1,
                 justifyContent: "flex-end",
                 zIndex: 100,
               }}
