@@ -47,7 +47,6 @@ export const handleWebSocketMessage = async (
 ): Promise<void> => {
   let input: WebSocketMessage;
   let resp;
-  let client;
 
   //TODO(connor): setup debug and logging utility so this can be compiled away in prod
   console.log(`WEBSOCKET: Received message => ${message}`);
@@ -71,18 +70,6 @@ export const handleWebSocketMessage = async (
       break;
     case "DISCONNECT":
       // the user is signing out
-      // cancel any rides by this client if they close the app or signout
-      client = clients.find((client) => client.websocketInstance == ws);
-      if (client) {
-        handleWebSocketMessage(
-          ws,
-          JSON.stringify({
-            directive: "CANCEL",
-            netid: client.netid,
-            role: client.role,
-          })
-        );
-      }
       // "remove" the client from the list by nullifying netid and role
       refreshClient(ws);
       break;
@@ -463,7 +450,12 @@ export const notifyDrivers = (
   };
 
   // find all the drivers currently connected to the app
-  let drivers = clients.filter((client) => client.role == "DRIVER");
+  // only need the netid to send the message
+  let drivers = clients
+    .filter((client) => client.role == "DRIVER")
+    .map((client) => {
+      return { netid: client.netid as string };
+    });
   console.log(
     `WEBSOCKET: Notifying ${JSON.stringify(drivers)} drivers about ride existence: ${ridesExist}`
   );

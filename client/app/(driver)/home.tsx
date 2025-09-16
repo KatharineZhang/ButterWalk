@@ -69,7 +69,9 @@ export default function HomePage() {
     // needs to be its own function to avoid async issues
     const connectWebSocket = async () => {
       // call our new route
-      const msg: WebsocketConnectMessage = await WebSocketService.connect();
+      const msg: WebsocketConnectMessage = await WebSocketService.connect()
+        .then((msg) => msg)
+        .catch((err) => err);
       if (msg === "Failed to Connect") {
         console.error("Failed to connect to WebSocket");
       } else {

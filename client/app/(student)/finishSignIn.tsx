@@ -56,7 +56,9 @@ const FinishSignIn = () => {
     WebSocketService.addListener(handleSigninMessage, "SIGNIN");
 
     const connectWebSocket = async () => {
-      const msg: WebsocketConnectMessage = await WebSocketService.connect();
+      const msg: WebsocketConnectMessage = await WebSocketService.connect()
+        .then((msg) => msg)
+        .catch((err) => err);
       if (msg === "Connected Successfully") {
         WebSocketService.send({
           directive: "SIGNIN",
@@ -64,7 +66,9 @@ const FinishSignIn = () => {
           role: "STUDENT",
         });
       } else {
-        console.log("Failed to connect to WebSocket.");
+        console.log(
+          "WEBSOCKET: Failed to connect to WebSocket in FinishSignIn"
+        );
       }
     };
     

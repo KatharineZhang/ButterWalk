@@ -18,19 +18,16 @@ class WebSocketService {
   private websocket: WebSocket | null = null;
   private messageHandlers: Map<Command, WebSocketResponseHandler[]> = new Map();
   private appState = "";
-  private pingInterval: number | null = null;
 
   constructor() {
     // make a listener to update appState on change
-    AppState.addEventListener("change", (nextState) => {
-      console.log("App state:", nextState);
-
+    AppState.addEventListener("change", async (nextState) => {
       if (
         this.appState.match(/inactive|background/) &&
         nextState === "active"
       ) {
-        console.log("App has come to the foreground, reconnect WS");
-        this.connect();
+        // reconnect to websocket in case it disconnected while app was in background
+        console.log(await this.connect());
       }
 
       this.appState = nextState;
@@ -108,8 +105,8 @@ class WebSocketService {
       );
       // try reconnecting if the app is still active
       if (this.appState === "active") {
-        setTimeout(() => {
-          this.connect();
+        setTimeout(async () => {
+          await this.connect();
         }, 1000);
       }
     };

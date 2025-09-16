@@ -361,48 +361,45 @@ export async function setRideRequestDriver(
  */
 export async function setRideRequestDriverLocation(
   t: Transaction,
-  netid: string,
+  student_netid: string,
   driverLocation: { latitude: number; longitude: number }
 ) {
-  // find any ride by student 'netid' that
+  // find any ride by student 'student_netid' that
   // is not accepted, not processed and not CANCELED_STATUS/COMPLETED_STATUS
   // aka not processed currently
   const queryNetid = query(
     rideRequestsCollection,
-    where("netid", "==", netid),
-    where("status", "in", [REQUESTED_STATUS, VIEWING_STATUS])
+    where("netid", "==", student_netid),
+    where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS])
   );
   // run the query
   const res = await getDocs(queryNetid);
 
   if (res.size !== 1) {
     throw new Error(
-      `Expected exactly one active ride request for netid: ${netid}, found ${res.size}`
+      `Expected exactly one active ride request for netid: ${student_netid}, found ${res.size}`
     );
   }
 
-  // for each result (should only be one), check if the last update was less than 5 seconds ago
-  res.forEach((el) => {
-    const rideRequest = el.data() as RideRequest;
-    // the driverLocation.lastUpdated can be null if this is the first update
-    // if it is not null, check the time difference
-    if (
-      rideRequest.driverLocation.lastUpdated &&
-      Timestamp.now().seconds - rideRequest.driverLocation.lastUpdated.seconds <
-        5000
-    ) {
-      // it has been less than 5 seconds since last update
-      console.log("Skipping driver location update, throttled");
-      return; // skip this update
-    }
-  });
-
+  // get the first document
+  const rideRequest = res.docs[0].data() as RideRequest;
+  // the driverLocation.lastUpdated can be null if this is the first update
+  // if it is not null, check the time difference
+  if (
+    rideRequest.driverLocation.lastUpdated &&
+    Timestamp.now().seconds - rideRequest.driverLocation.lastUpdated.seconds <
+      60
+  ) {
+    // it has been less than 1 minute since last update
+    console.log("Skipping driver location update, throttled");
+    return; // skip this update
+  }
   const docRef = res.docs[0].ref;
   // update the driver location and lastUpdated
   await updateDoc(docRef, {
     driverLocation: {
       coords: driverLocation,
-      lastUpdated: Date.now(),
+      lastUpdated: Timestamp.now(),
     },
   });
 }
@@ -424,7 +421,7 @@ export async function setRideRequestStudentLocation(
   const queryNetid = query(
     rideRequestsCollection,
     where("netid", "==", netid),
-    where("status", "in", [REQUESTED_STATUS, VIEWING_STATUS])
+    where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS])
   );
   // run the query
   const res = await getDocs(queryNetid);
@@ -454,7 +451,7 @@ export async function setRideRequestStudentLocation(
   await updateDoc(docRef, {
     studentLocation: {
       coords: studentLocation,
-      lastUpdated: Date.now(),
+      lastUpdated: Timestamp.now(),
     },
   });
 }
