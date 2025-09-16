@@ -632,9 +632,9 @@ export default function RideRequestForm({
       console.log("bottomSheetRef is null");
       return;
     }
-    bottomSheetRef.current?.expand();
+    bottomSheetRef.current.expand();
   };
-
+  
   // Type definition for a formatted result item in the autocomplete suggestions list.
   // Each item represents a possible pickup or dropoff location, and can be a recent location,
   // a campus building, or a place search result.
@@ -692,7 +692,7 @@ export default function RideRequestForm({
   // the ride request panel
   const RideRequest: JSX.Element = (
     <View style={{ flex: 1, pointerEvents: "box-none", width: "100%" }}>
-      <BottomDrawer ref={bottomSheetRef}>
+      <BottomDrawer bottomSheetRef={bottomSheetRef}>
         {/* The search box with shadow under it*/}
         <View
           style={styles.requestFormContainer}

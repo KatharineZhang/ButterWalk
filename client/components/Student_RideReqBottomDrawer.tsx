@@ -55,25 +55,14 @@ const BottomDrawer = forwardRef<BottomDrawerRef, BottomDrawerProps>(
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onPanResponderMove: (_, gestureState) => {
-          // Use a ref to keep track of the last value
-          let lastTranslateY = 0;
-          translateY.addListener(({ value }) => {
-            lastTranslateY = value;
-          });
-          let newY = lastTranslateY + gestureState.dy;
+          let newY = translateY._value + gestureState.dy;
           newY = Math.min(Math.max(newY, SCREEN_HEIGHT - snap70), SCREEN_HEIGHT);
           translateY.setValue(newY);
         },
         onPanResponderRelease: () => {
-          let lastTranslateY = 0;
-          translateY.addListener(({ value }) => {
-            lastTranslateY = value;
-          });
           const middle = SCREEN_HEIGHT - (snap40 + snap70) / 2;
           const toValue =
-            lastTranslateY > middle
-              ? SCREEN_HEIGHT - snap40
-              : SCREEN_HEIGHT - snap70;
+            translateY._value > middle ? SCREEN_HEIGHT - snap40 : SCREEN_HEIGHT - snap70;
           Animated.spring(translateY, { toValue, useNativeDriver: true }).start();
         },
       })
