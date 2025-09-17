@@ -6,6 +6,7 @@ import {
   RideRequest,
   RidesExistResponse,
   ViewRideRequestResponse,
+  WaitTimeResponse,
   WebSocketResponse,
 } from "../../../server/src/api";
 import {
@@ -55,6 +56,8 @@ export default function HomePage() {
     WebSocketService.addListener(viewDecisionListener, "VIEW_DECISION");
     WebSocketService.addListener(reportStudentListener, "REPORT");
     WebSocketService.addListener(locationListener, "LOCATION");
+    WebSocketService.addListener(handleLoadRideResponse, "LOAD_RIDE");
+    WebSocketService.addListener(waitTimeListener, "WAIT_TIME");
     WebSocketService.addListener(
       driverDrivingToDropOffListener,
       "DRIVER_DRIVING_TO_DROPOFF"
@@ -63,7 +66,6 @@ export default function HomePage() {
       driverArrivedAtPickupListener,
       "DRIVER_ARRIVED_AT_PICKUP"
     );
-    WebSocketService.addListener(handleLoadRideResponse, "LOAD_RIDE");
 
     // Connect to the websocket server
     // needs to be its own function to avoid async issues
@@ -564,11 +566,63 @@ export default function HomePage() {
     if ("response" in message && message.response === "LOAD_RIDE") {
       const loadRideMessage = message as LoadRideResponse;
       if (loadRideMessage.rideRequest) {
-        console.log("Found active ride request", loadRideMessage.rideRequest);
+        const ride = loadRideMessage.rideRequest;
+        setPickUpLocation(ride.locationFrom.coordinates);
+        setDropOffLocation(ride.locationTo.coordinates);
+        setRequestInfo(ride);
+
+        // decide which phase to set based on the ride status
+        switch (ride.status as string) {
+          case "VIEWING":
+            // go to requestsAreAvailable page
+            setWhichComponent("requestsAreAvailable");
+            // Switch to the Let's Go page here
+            setShowAcceptScreen(false);
+            break;
+          case "DRIVING TO PICK UP":
+            setWhichComponent("handleRide");
+            setPhase("headingToPickup");
+            break;
+          case "DRIVER AT PICK UP":
+            setWhichComponent("handleRide");
+            setPhase("waitingForPickup");
+            break;
+          case "DRIVING TO DESTINATION":
+            setWhichComponent("handleRide");
+            setPhase("headingToDropoff");
+            break;
+          default:
+            // if the ride is in any other status, go to noRequests page
+            setWhichComponent("noRequests");
+            break;
+        }
+        // get any wait time info
+        WebSocketService.send({
+          directive: "WAIT_TIME",
+          requestid: ride.requestId,
+          requestedRide: {
+            pickUpLocation: ride.locationFrom.coordinates,
+            dropOffLocation: ride.locationTo.coordinates,
+          },
+          driverLocation: driverLocationRef.current,
+        });
       }
+      // if no ride request, do nothing and stay on current page
     } else {
       // something went wrong
       console.log("Load Ride response error: ", message);
+    }
+  };
+
+  // WEBSOCKET - WAIT_TIME
+  const waitTimeListener = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "WAIT_TIME") {
+      const waitTimeresp = message as WaitTimeResponse;
+      setDriverToPickupDuration(waitTimeresp.driverETA);
+      setPickupToDropoffDuration(waitTimeresp.rideDuration);
+    } else {
+      const errMessage = message as ErrorResponse;
+      console.log("Failed to get wait time: ", errMessage.error);
     }
   };
 

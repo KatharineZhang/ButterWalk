@@ -412,7 +412,6 @@ export const GooglePlaceSearchBadLocationTypes = [
   "night_club",
 ];
 
-
 /* DATABASE TYPES */
 
 // CREATE TABLE Users ( netid varchar(20) PRIMARY KEY, name text, student_num char(7),
@@ -546,16 +545,15 @@ export type RideRequest = {
    * - `VIEWING`: The ride has been checked out temporarily from the queue
    * to be accepted to denied by a potential driver (This is new behavior
    * implemented for the ride request broker system).
-   * - `ACCEPTED`: **SHOULD BE DEPRECATED ASAP** Represents that a ride request
-   * is either in progress or has been accepted by a driver who has not yet
-   * picked up the student. Does not have the necessary level of granularity to
-   * handle cancelation edge cases or ride request broker behavior.
-   * - `AWAITING PICK UP`: The ride request was accepted by a driver after being
+   * - `DRIVING TO PICK UP`: The ride request was accepted by a driver after being
    * checked out to them for viewing and is in the pick up stage, i.e. the driver
    * is driving to go pick up the student, the student is waiting to be picked up,
    * or the driver is waiting at the pick up location to pick up the student (This
    * is new behavior for the ride request broker).
-   * - `DRIVING`: The student has been picked up by the driver and the ride is in
+   * - `DRIVER AT PICK UP`: The driver has arrived at the pick up location and is
+   * waiting for the student to get in the vehicle (new behavior for the ride request
+   * broker).
+   * - `DRIVING TO DROPOFF`: The student has been picked up by the driver and the ride is in
    * progress (new behavior for the ride request broker).
    * - `COMPLETED`: The student was dropped off after completion of the ride.
    */

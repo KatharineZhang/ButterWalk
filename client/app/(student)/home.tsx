@@ -429,8 +429,55 @@ export default function HomePage() {
     if ("response" in message && message.response === "LOAD_RIDE") {
       const loadRideMessage = message as LoadRideResponse;
       if (loadRideMessage.rideRequest) {
-        console.log("Found active ride request", loadRideMessage.rideRequest);
+        // we have an active ride request
+        const ride = loadRideMessage.rideRequest;
+        setPickUpLocation(ride.locationFrom.coordinates);
+        setDropOffLocation(ride.locationTo.coordinates);
+        setPickUpLocationName(ride.locationFrom.name);
+        setDropOffLocationName(ride.locationTo.name);
+        setNumPassengers(ride.numRiders);
+        setPickUpAddress(ride.locationFrom.address);
+        setDropOffAddress(ride.locationTo.address);
+        setWhichComponent("handleRide");
+        setDriverLocation(ride.driverLocation.coords);
+
+        // on student side, if there is a ride, go to handle ride component
+        setWhichComponent("handleRide");
+        // now decide what the ride status is
+        switch (ride.status as string) {
+          case "REQUESTED":
+            rideStatusRef.current = "WaitingForRide";
+            setRideStatus("WaitingForRide");
+            break;
+          case "DRIVING TO PICK UP":
+            rideStatusRef.current = "DriverEnRoute";
+            setRideStatus("DriverEnRoute");
+            break;
+          case "DRIVER AT PICK UP":
+            rideStatusRef.current = "DriverArrived";
+            setRideStatus("DriverArrived");
+            break;
+          case "DRIVING TO DESTINATION":
+            rideStatusRef.current = "RideInProgress";
+            setRideStatus("RideInProgress");
+            break;
+          default:
+            rideStatusRef.current = "WaitingForRide";
+            setRideStatus("WaitingForRide");
+            break;
+        }
+        // get any wait time info
+        WebSocketService.send({
+          directive: "WAIT_TIME",
+          requestid: ride.requestId,
+          requestedRide: {
+            pickUpLocation: ride.locationFrom.coordinates,
+            dropOffLocation: ride.locationTo.coordinates,
+          },
+          driverLocation: ride.driverLocation.coords,
+        });
       }
+      // no active ride request, do nothing
     } else {
       // something went wrong
       console.log("Load Ride response error: ", message);
