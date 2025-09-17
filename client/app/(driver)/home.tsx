@@ -231,6 +231,7 @@ export default function HomePage() {
     useState<number>(0);
   const [pickupToDropoffDuration, setPickupToDropoffDuration] =
     useState<number>(0);
+  const [studentPhoneNumber, setStudentPhoneNumber] = useState<string>("");
   const [requestInfo, setRequestInfo] = useState<RideRequest>(
     {} as RideRequest
   );
@@ -460,6 +461,8 @@ export default function HomePage() {
         setPickupToDropoffDuration(
           viewReqResponse.rideInfo.pickUpToDropOffDuration
         );
+        setStudentPhoneNumber(viewReqResponse.rideInfo.studentPhoneNumber);
+
         // Switch to the Let's Go page here not in Driver_RequestAvailable
         setShowAcceptScreen(false);
       } else {
@@ -903,6 +906,7 @@ export default function HomePage() {
         <View style={styles.homePageComponentContainer}>
           <HandleRide
             phase={phase}
+            studentPhoneNumber={studentPhoneNumber}
             setPhase={setPhase}
             requestInfo={requestInfo}
             driverToPickupDuration={driverToPickupDuration}

@@ -36,6 +36,7 @@ interface HandleRideProps {
   dropoffProgress: number;
   isNearPickup: boolean;
   isNearDropoff: boolean;
+  studentPhoneNumber: string;
   updateSideBarHeight: (height: number) => void;
 }
 
@@ -95,10 +96,15 @@ function ProgressBarTopLabels({
 
 export default function HandleRide({
   phase,
-  setPhase,
   requestInfo,
   driverToPickupDuration,
   pickupToDropoffDuration,
+  pickupProgress,
+  dropoffProgress,
+  isNearPickup,
+  isNearDropoff,
+  studentPhoneNumber,
+  setPhase,
   changeFlaggingAllowed,
   completeRide,
   changeNotifState,
@@ -106,10 +112,6 @@ export default function HandleRide({
   driverArrivedAtPickup,
   driverDrivingToDropOff,
   setStudentIsLate,
-  pickupProgress,
-  dropoffProgress,
-  isNearPickup,
-  isNearDropoff,
   updateSideBarHeight,
 }: HandleRideProps) {
   // When timer is done in "waitingForPickup" state
@@ -151,6 +153,7 @@ export default function HandleRide({
         text: "Your ride will be canceled in one minute.",
         color: "#FFCBCB",
         boldText: "one minute",
+        trigger: Date.now(),
       });
     } else if (seconds <= 0) {
       // the timer ran out! cancel the ride
@@ -164,6 +167,7 @@ export default function HandleRide({
     changeNotifState({
       text: "Ride canceled",
       color: "#FFCBCB",
+      trigger: Date.now(),
     });
     onCancel();
   };
@@ -298,8 +302,11 @@ export default function HandleRide({
               }}
               onPress={() => {
                 const destination = {
-                  lat: requestInfo.locationFrom?.coordinates?.latitude || 47.6062,
-                  lng: requestInfo.locationFrom?.coordinates?.longitude || -122.3321,
+                  lat:
+                    requestInfo.locationFrom?.coordinates?.latitude || 47.6062,
+                  lng:
+                    requestInfo.locationFrom?.coordinates?.longitude ||
+                    -122.3321,
                   title: "Pickup Location",
                 };
                 openGoogleMapsDirections(destination);
@@ -309,12 +316,9 @@ export default function HandleRide({
                 Directions
               </Text>
             </Pressable>
-
-
             {/* Spacer */}
-            <View style={{ width: 10 }} /> {/* optional space between buttons */}
-
-
+            <View style={{ width: 10 }} />
+            {/* optional space between buttons */}
             {/* Call Student Button */}
             <Pressable
               style={{
@@ -327,7 +331,7 @@ export default function HandleRide({
                 flexDirection: "row",
               }}
               onPress={() => {
-                makeCall(); // call the student
+                makeCall(studentPhoneNumber); // call the student
               }}
             >
               <Text style={{ color: "white", fontSize: 14, fontWeight: "600" }}>
@@ -486,17 +490,62 @@ export default function HandleRide({
             </View>
             <ProgressBarLabels />
           </View>
-        {/* Two buttons side by side */}
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            marginTop: "5%",
-            paddingBottom: 20,
-          }}
-        >
-          <View style={{ flex: 1, marginRight: 8 }}>
-            {/* Button to confirm student was picked up */}
+          {/* Two buttons side by side */}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginTop: "5%",
+              paddingBottom: 20,
+            }}
+          >
+            <View style={{ flex: 1, marginRight: 8 }}>
+              {/* Button to confirm student was picked up */}
+              <Pressable
+                style={{
+                  backgroundColor: "#4B2E83",
+                  paddingVertical: 20,
+                  borderRadius: 8,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onPress={() => {
+                  setPhase("headingToDropoff");
+                  driverDrivingToDropOff();
+                }}
+              >
+                <Text
+                  style={{ color: "white", fontSize: 16, fontWeight: "400" }}
+                >
+                  I've found student
+                </Text>
+              </Pressable>
+            </View>
+
+            <View style={{ flex: 1, marginLeft: 8 }}>
+              {/* Button to cancel ride */}
+              <Pressable
+                style={{
+                  backgroundColor: seconds <= 0 ? "#FF0000" : "#E0E0E0",
+                  ...styles.driverCancelButton,
+                }}
+                onPress={timerDone ? cancelRide : onCancel}
+              >
+                <Text
+                  style={{
+                    color: seconds <= 0 ? "white" : "black",
+                    fontSize: 16,
+                    fontWeight: "400",
+                  }}
+                >
+                  Cancel request
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+
+          {/* Call Student Button (underneath) */}
+          <View style={{ marginTop: 10 }}>
             <Pressable
               style={{
                 backgroundColor: "#4B2E83",
@@ -506,59 +555,14 @@ export default function HandleRide({
                 justifyContent: "center",
               }}
               onPress={() => {
-                setPhase("headingToDropoff");
-                driverDrivingToDropOff();
+                makeCall(studentPhoneNumber);
               }}
             >
               <Text style={{ color: "white", fontSize: 16, fontWeight: "400" }}>
-                I've found student
+                Call Student
               </Text>
             </Pressable>
           </View>
-
-
-          <View style={{ flex: 1, marginLeft: 8 }}>
-            {/* Button to cancel ride */}
-            <Pressable
-              style={{
-                backgroundColor: seconds <= 0 ? "#FF0000" : "#E0E0E0",
-                ...styles.driverCancelButton,
-              }}
-              onPress={timerDone ? cancelRide : onCancel}
-            >
-              <Text
-                style={{
-                  color: seconds <= 0 ? "white" : "black",
-                  fontSize: 16,
-                  fontWeight: "400",
-                }}
-              >
-                Cancel request
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-
-
-        {/* Call Student Button (underneath) */}
-        <View style={{ marginTop: 10 }}>
-          <Pressable
-            style={{
-              backgroundColor: "#4B2E83",
-              paddingVertical: 20,
-              borderRadius: 8,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            onPress={() => {
-              makeCall(); // <-- your call logic
-            }}
-          >
-            <Text style={{ color: "white", fontSize: 16, fontWeight: "400" }}>
-              Call Student
-            </Text>
-          </Pressable>
-        </View>
         </>
       ) : phase === "headingToDropoff" ? (
         <>

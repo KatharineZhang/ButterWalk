@@ -222,6 +222,7 @@ export type ViewRideRequestResponse = {
     rideRequest: RideRequest & { requestId: string };
     driverToPickUpDuration: number; // in minutes
     pickUpToDropOffDuration: number; // in minutes
+    studentPhoneNumber: string; // sent to driver so they can call the student
   };
   notifyDrivers: boolean;
 };

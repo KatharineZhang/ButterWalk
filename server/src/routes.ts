@@ -231,7 +231,7 @@ export const checkIfDriverSignin = async (
     } as ErrorResponse;
   }
   return resp;
-}; 
+};
 
 // Finishes the account for the user by adding the phone number and student number to the database
 // returns a success message if the account creation is successful and a boolean value of true if the account already exists
@@ -531,6 +531,18 @@ export const viewRide = async (
       // so we can just add the driver id to the ride request now
       // for future use (if cancel, can set state back to viewing)
       setRideRequestDriver(t, bestRequest.netid, driverid);
+
+      // get student's phone number from their profile to send to driver
+      const studentPhoneNumber = await getProfile(t, bestRequest.netid).then(
+        (profileResp: User) => {
+          if ("phoneNumber" in profileResp) {
+            // Ensure studentPhoneNumber is always a string
+            return profileResp.phoneNumber as string;
+          } else {
+            throw new Error(`Error getting student phone number`);
+          }
+        }
+      );
       return {
         response: "VIEW_RIDE",
         rideExists: true,
@@ -541,6 +553,7 @@ export const viewRide = async (
           },
           driverToPickUpDuration,
           pickUpToDropOffDuration,
+          studentPhoneNumber,
         },
         notifyDrivers: notify,
       };
