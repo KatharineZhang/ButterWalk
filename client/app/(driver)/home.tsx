@@ -640,8 +640,9 @@ export default function HomePage() {
         console.log("Call log recorded successfully");
       } else {
         alert(
-          callLogResp.whoCalled +
-            " is calling you! Please answer so that this ride can be coordinated."
+          "Your passenger (netid: " +
+            callLogResp.whoCalled +
+            ") is calling you! Please answer so that this ride can be coordinated."
         );
       }
     } else {
