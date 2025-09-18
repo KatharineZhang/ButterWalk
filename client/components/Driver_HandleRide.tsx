@@ -5,7 +5,6 @@ import { NotificationType } from "./Both_Notification";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { styles } from "@/assets/styles";
 import { ProgressBar } from "react-native-paper";
-import { makeCall } from "./Both_CallUser";
 
 interface HandleRideProps {
   requestInfo: RideRequest;
@@ -30,6 +29,7 @@ interface HandleRideProps {
   driverArrivedAtPickup: () => void;
   driverDrivingToDropOff: () => void;
   setStudentIsLate: (isLate: boolean) => void; // callback to set student late state
+  makeCall: (phoneNumber: string) => void;
 
   // Progress tracking props
   pickupProgress: number;
@@ -104,6 +104,7 @@ export default function HandleRide({
   isNearPickup,
   isNearDropoff,
   studentPhoneNumber,
+  makeCall,
   setPhase,
   changeFlaggingAllowed,
   completeRide,

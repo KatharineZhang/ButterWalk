@@ -26,6 +26,7 @@ import {
   PlaceSearchResponse,
   PurpleZone,
   WrapperCancelResponse,
+  CallLogResponse,
 } from "./api";
 import {
   addFeedbackToDb,
@@ -48,6 +49,7 @@ import {
   // we want this import for when we have a drivers collection
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   verifyDriverId,
+  addCallLogToDb,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { highestRank, rankOf } from "./rankingAlgorithm";
@@ -1273,6 +1275,33 @@ export const getPlaceSearchResults = async (
       response: "ERROR",
       error: `Error fetching place search results: ${(e as Error).message}`,
       category: "PLACE_SEARCH",
+    };
+  }
+};
+
+export const addCallLog = async (
+  from: string,
+  to: string,
+  role: "STUDENT" | "DRIVER",
+  phoneNumberCalled: string
+): Promise<CallLogResponse | ErrorResponse> => {
+  if (!from || !to || !phoneNumberCalled) {
+    return {
+      response: "ERROR",
+      error: "Missing required fields.",
+      category: "CALL_LOG",
+    };
+  }
+  try {
+    return await runTransaction(db, async (transaction) => {
+      await addCallLogToDb(transaction, from, to, role, phoneNumberCalled);
+      return { response: "CALL_LOG", whoCalled: from };
+    });
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error adding call log: ${(e as Error).message}}`,
+      category: "CALL_LOG",
     };
   }
 };

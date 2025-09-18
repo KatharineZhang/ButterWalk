@@ -28,7 +28,8 @@ export type Command =
   | "DRIVER_ARRIVED_AT_PICKUP"
   | "DRIVER_DRIVING_TO_DROPOFF"
   | "DISCONNECT"
-  | "PLACE_SEARCH";
+  | "PLACE_SEARCH"
+  | "CALL_LOG";
 
 // Input types
 export type WebSocketMessage =
@@ -138,6 +139,13 @@ export type WebSocketMessage =
   | {
       directive: "PLACE_SEARCH";
       query: string;
+    }
+  | {
+      directive: "CALL_LOG";
+      from: string;
+      to: string;
+      role: "STUDENT" | "DRIVER";
+      phoneNumberCalled: string;
     };
 
 // TEMP FIX
@@ -165,7 +173,8 @@ export type WebSocketResponse =
   | RidesExistResponse
   | ViewRideRequestResponse
   | ViewDecisionResponse
-  | PlaceSearchResponse;
+  | PlaceSearchResponse
+  | CallLogResponse;
 
 export type LocationType = {
   name: string;
@@ -199,6 +208,11 @@ export type SnapLocationResponse = {
   roadName: string;
   latitude: number;
   longitude: number;
+};
+
+export type CallLogResponse = {
+  response: "CALL_LOG";
+  whoCalled: string;
 };
 
 export type RequestRideResponse = {
@@ -435,6 +449,13 @@ export type Feedback = {
   rideOrApp: "RIDE" | "APP";
 };
 
+export type CallLog = {
+  from: string;
+  to: string;
+  phoneNumberCalled: string;
+  timestamp: Timestamp;
+};
+
 /**
  * Possible states of RideRequest.status
  */
@@ -518,6 +539,11 @@ export type RideRequest = {
    * The number of students in the ride
    */
   numRiders: number;
+
+  /**
+   * Keeps track of any calls that were made between the student and driver
+   */
+  callLog?: CallLog[];
   /**
    * Status of the ride request.
    * - `CANCELED`: The ride request was canceled for any reason (could indicate
