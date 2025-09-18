@@ -1,115 +1,49 @@
-import React, { forwardRef, useImperativeHandle, useState, useRef } from "react";
-import { View, StyleSheet, Dimensions, PanResponder, Animated } from "react-native";
-
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+import React, { useMemo } from "react";
+import { StyleSheet, View } from "react-native";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 
 interface BottomDrawerProps {
   children: React.ReactNode;
-  initialVisible?: boolean;
+  bottomSheetRef: React.RefObject<BottomSheet | null>; // pass a reference to the bottom sheet for expansion
 }
 
-// Methods available to parent via ref
-export interface BottomDrawerRef {
-  open: () => void;
-  close: () => void;
-  expand: () => void;
-}
+const BottomDrawer: React.FC<BottomDrawerProps> = ({
+  children,
+  bottomSheetRef,
+}) => {
+  // Snap points define how high the drawer can be
+  const snapPoints = useMemo(() => ["40%", "89%"], []);
 
-const BottomDrawer = forwardRef<BottomDrawerRef, BottomDrawerProps>(
-  ({ children, initialVisible = true }, ref) => {
-    const [visible, setVisible] = useState(initialVisible);
-
-    const snap40 = 0.4 * SCREEN_HEIGHT;
-    const snap70 = 0.85 * SCREEN_HEIGHT;
-
-    const translateY = useRef(new Animated.Value(SCREEN_HEIGHT - snap40)).current;
-
-    // Expand drawer
-    const modalExpand = () => {
-      Animated.spring(translateY, {
-        toValue: SCREEN_HEIGHT - snap70,
-        useNativeDriver: true,
-      }).start();
-    };
-
-    // Expose open/close/expand functions
-    useImperativeHandle(ref, () => ({
-      open: () => {
-        setVisible(true);
-        Animated.spring(translateY, {
-          toValue: SCREEN_HEIGHT - snap40,
-          useNativeDriver: true,
-        }).start();
-      },
-      close: () => {
-        Animated.spring(translateY, {
-          toValue: SCREEN_HEIGHT,
-          useNativeDriver: true,
-        }).start(() => setVisible(false));
-      },
-      expand: modalExpand,
-    }));
-
-    // Gesture handler for dragging drawer
-    const panResponder = useRef(
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onPanResponderMove: (_, gestureState) => {
-          let newY = translateY._value + gestureState.dy;
-          newY = Math.min(Math.max(newY, SCREEN_HEIGHT - snap70), SCREEN_HEIGHT);
-          translateY.setValue(newY);
-        },
-        onPanResponderRelease: () => {
-          const middle = SCREEN_HEIGHT - (snap40 + snap70) / 2;
-          const toValue =
-            translateY._value > middle ? SCREEN_HEIGHT - snap40 : SCREEN_HEIGHT - snap70;
-          Animated.spring(translateY, { toValue, useNativeDriver: true }).start();
-        },
-      })
-    ).current;
-
-    if (!visible) return null;
-
-    return (
-      <View style={styles.gestureContainer}>
-        <Animated.View
-          {...panResponder.panHandlers}
-          style={[styles.drawer, { transform: [{ translateY }] }]}
-        >
-          <View style={styles.handle} />
-          <View style={{ flex: 1 }}>{children}</View>
-        </Animated.View>
-      </View>
-    );
-  }
-);
+  return (
+    <View style={styles.bottomSheetContainer}>
+      <BottomSheet
+        ref={bottomSheetRef}
+        snapPoints={snapPoints}
+        enablePanDownToClose={false}
+        index={0}
+      >
+        <BottomSheetView style={styles.contentContainer}>
+          {children}
+        </BottomSheetView>
+      </BottomSheet>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
-  gestureContainer: {
+  container: {
     flex: 1,
-    position: "absolute",
+  },
+  bottomSheetContainer: {
+    flex: 1,
     width: "100%",
-    height: SCREEN_HEIGHT,
+    height: "100%",
+    position: "absolute",
     bottom: 0,
   },
-  drawer: {
-    position: "absolute",
-    bottom: 0,
+  contentContainer: {
     width: "100%",
-    height: SCREEN_HEIGHT,
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    overflow: "hidden",
-  },
-  handle: {
-    width: 40,
-    height: 5,
-    backgroundColor: "#ccc",
-    borderRadius: 2.5,
-    alignSelf: "center",
-    marginBottom: 10,
+    height: "97%",
   },
 });
 
