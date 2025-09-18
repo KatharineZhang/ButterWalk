@@ -727,6 +727,7 @@ export default function HomePage() {
         setShowRequestLoading(false);
         setWalkDuration(walkMin); // convert seconds to minutes
         setWalkAddress(distanceResp.apiResponse.origin_addresses[0]);
+        setWhichComponent("confirmRide");
       }
     } else {
       console.log("Distance response error: ", message);
