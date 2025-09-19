@@ -1285,7 +1285,7 @@ export const fetchGooglePlaceSuggestions = async (
       const res = await fetch(autocompleteUrl);
       const json = await res.json();
 
-      console.log("Google Place Autocomplete response:", json);
+      console.log("Google Place Autocomplete API response:", json);
 
       if (!Array.isArray(json.predictions)) return [];
 
@@ -1333,8 +1333,6 @@ export const fetchGooglePlaceSuggestions = async (
           const detailsJson: PlaceDetailsResponse = await detailsRes.json();
           const result = detailsJson.result;
 
-          console.log("Google Place Details response:", detailsJson);
-
           const place: PlaceDetails = {
             name: result.name,
             coordinates: {
@@ -1357,7 +1355,7 @@ export const fetchGooglePlaceSuggestions = async (
 
     const allResults = await Promise.all(placeDetailsPromises);
 
-    console.log("All fetched place details:", allResults);
+    console.log("Google Place Details API response:", allResults);
     
     const filtered = allResults.filter((place) => place !== null);
 
