@@ -256,7 +256,18 @@ export async function setRideRequestStatus(
     );
   }
   const docRef = res.docs[0].ref;
-  await updateDoc(docRef, { status: status });
+  // add status to the fields we are updating first
+  let updatedFields: {
+    status: RideRequestStatus;
+    pickedUpAt?: Timestamp;
+  } = { status };
+  // if we are driving to destination, the student was picked up!
+  if (status == "DRIVING TO DESTINATION") {
+    // add pickedUpAt to the list of updated fields
+    updatedFields = { ...updatedFields, pickedUpAt: Timestamp.now() };
+  }
+  // update the Ride Request
+  await updateDoc(docRef, updatedFields);
 }
 
 /**

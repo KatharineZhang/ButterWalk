@@ -506,6 +506,10 @@ export type RideRequest = {
    */
   completedAt: Timestamp | null;
   /**
+   * The time when the student was picked up (as logged in server)
+   */
+  pickedUpAt: Timestamp | null;
+  /**
    * The pick up location.
    */
   locationFrom: LocationType;
