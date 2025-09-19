@@ -1,20 +1,20 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { styles } from "@/assets/styles";
-import { View, Text, Pressable, Image } from "react-native";
+import { View, Text, Pressable, Image, ActivityIndicator } from "react-native";
 import { RideRequest } from "../../server/src/api";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Animated, Easing } from "react-native";
 
 interface RequestAvailableProps {
-  requestInfo?: RideRequest;
+  requestInfo: RideRequest;
+  // switches between screen showing accept button and next ride details
+  // once "Let's Go" button is clicked, component should switch over to HandleRide component based on what is in home.tsx
+  showAcceptScreen: boolean;
   driverToPickupDuration?: number; // in minutes, might be undefined initially
   pickupToDropoffDuration?: number; // in minutes, might be undefined initially
   onAccept: () => void;
   onLetsGo: () => void;
   updateSideBarHeight: (height: number) => void;
-  // switches between screen showing accept button and next ride details
-  // once "Let's Go" button is clicked, component should switch over to HandleRide component based on what is in home.tsx
-  showAcceptScreen: boolean;
 }
 
 export default function RequestAvailable({
@@ -32,10 +32,12 @@ export default function RequestAvailable({
     inputRange: [0, 0.25, 0.5, 0.75, 1],
     outputRange: ["30deg", "0deg", "-30deg", "0deg", "30deg"],
   });
+  const [showLoading, setShowLoading] = useState(false);
 
   // changes the screen when the driver clicks accept
   const handleAccept = () => {
     onAccept();
+    setShowLoading(true);
   };
 
   // animation for clock
@@ -72,8 +74,8 @@ export default function RequestAvailable({
         updateSideBarHeight(event.nativeEvent.layout.height);
       }}
     >
-      {/* shows the screen with the "Let's Go" button and the ride graphic */}
-      {!showAcceptScreen && requestInfo != undefined ? (
+      {/* shows the screen with the "Let's Go" button and the ride graphic. Make sure requestInfo is populated to go to this page */}
+      {!showAcceptScreen && requestInfo.netid != undefined ? (
         <>
           {/* Top bar */}
           <View
@@ -308,12 +310,36 @@ export default function RequestAvailable({
 
           {/* Accept Request Button */}
           <View style={[styles.bottomModalButtonContainer]}>
-            <Pressable
-              style={[styles.bottomModalButton, styles.button]}
-              onPress={handleAccept}
-            >
-              <Text style={[styles.buttonLabel]}>Accept</Text>
-            </Pressable>
+            {showLoading ? (
+              <View
+                style={[
+                  styles.bottomModalButtonContainer,
+                  {
+                    paddingHorizontal: 10,
+                    alignItems: "center",
+                    paddingVertical: "7%",
+                    flexDirection: "row",
+                    justifyContent: "center",
+                  },
+                ]}
+              >
+                <ActivityIndicator
+                  size="small"
+                  color="#4B2E83"
+                  style={{ margin: "2%" }}
+                />
+                <Text style={{ fontStyle: "italic", fontSize: 18 }}>
+                  Retrieving your ride...
+                </Text>
+              </View>
+            ) : (
+              <Pressable
+                style={[styles.bottomModalButton, styles.button]}
+                onPress={handleAccept}
+              >
+                <Text style={[styles.buttonLabel]}>Accept</Text>
+              </Pressable>
+            )}
           </View>
         </>
       )}
