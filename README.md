@@ -1,5 +1,5 @@
 # Setup Instructions
-temp
+
 - Git clone this repo
 - If you haven't already, you need to also install `Node.js v20.18.0`
 - go into the client folder and copy the `.env.sample`. Rename the copied file `.env`.
