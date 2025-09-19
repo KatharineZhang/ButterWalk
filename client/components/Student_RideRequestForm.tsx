@@ -15,9 +15,9 @@ import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
 import AutocompleteInput from "./Student_AutocompleteTextInput";
 import { styles } from "../assets/styles";
-import BottomDrawer from "./Student_RideReqBottomDrawer";
+import BottomDrawer, { BottomDrawerRef } from "./Student_RideReqBottomDrawer";
 import PopUpModal from "./Student_PopUpModal";
-import BottomSheet from "@gorhom/bottom-sheet";
+// import BottomSheet from "@gorhom/bottom-sheet";
 import SegmentedProgressBar from "./Both_SegmentedProgressBar";
 import {
   BuildingService,
@@ -103,7 +103,7 @@ export default function RideRequestForm({
   const suggestionListHeight = screenHeight * 0.25;
 
   // Bottom Sheet Reference needed to expand the bottom sheet
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomSheetRef = useRef<BottomDrawerRef>(null);
 
   // Confirmation Modal
   const [confirmationModalVisible, setConfirmationModalVisible] =
@@ -634,6 +634,7 @@ export default function RideRequestForm({
     }
     bottomSheetRef.current?.expand();
   };
+
   // Type definition for a formatted result item in the autocomplete suggestions list.
   // Each item represents a possible pickup or dropoff location, and can be a recent location,
   // a campus building, or a place search result.
@@ -691,10 +692,10 @@ export default function RideRequestForm({
   // the ride request panel
   const RideRequest: JSX.Element = (
     <View style={{ flex: 1, pointerEvents: "box-none", width: "100%" }}>
-      <BottomDrawer bottomSheetRef={bottomSheetRef}>
+      <BottomDrawer ref={bottomSheetRef}>
         {/* The search box with shadow under it*/}
         <View
-          style={styles.requestFormContainer}
+          style={[styles.requestFormContainer, { flexGrow: 1 }]}
           onLayout={() => {
             // on render, update the sidebar height to 40% the height of the screen
             // (which is the default height of the bottom sheet)
@@ -799,7 +800,6 @@ export default function RideRequestForm({
             {/* Next Button */}
             <View
               style={{
-                flex: 0.1,
                 justifyContent: "flex-end",
                 zIndex: 100,
               }}
