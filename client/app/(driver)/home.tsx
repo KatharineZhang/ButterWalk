@@ -592,7 +592,7 @@ export default function HomePage() {
             setPhase("headingToDropoff");
             break;
           default:
-            // if the ride is in any other status, go to noRequests page
+            // if the ride is in any other status (completed), go to noRequests page
             setWhichComponent("noRequests");
             break;
         }

@@ -282,6 +282,12 @@ export const finishAccCreation = async (
   }
 };
 
+/**
+ * Get an active ride for a user, either a student or driver.
+ * @param id The netid of the user whose ride we want to load
+ * @param role
+ * @returns
+ */
 export const loadRide = async (
   id: string,
   role: "STUDENT" | "DRIVER"
@@ -295,7 +301,12 @@ export const loadRide = async (
   }
   try {
     return await runTransaction(db, async (transaction) => {
-      const rideRequest = await getActiveRideRequest(transaction, id, role);
+      const rideRequest = await getActiveRideRequest(
+        transaction,
+        id,
+        role,
+        true // we want to include recently completed rides
+      );
       return { response: "LOAD_RIDE", rideRequest };
     });
   } catch (e: unknown) {

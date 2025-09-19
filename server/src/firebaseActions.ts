@@ -5,6 +5,8 @@ import {
   doc,
   getDocs,
   getFirestore,
+  limit,
+  orderBy,
   query,
   QueryConstraint,
   Timestamp,
@@ -267,7 +269,8 @@ export async function setRideRequestStatus(
 export const getActiveRideRequest = async (
   t: Transaction,
   id: string,
-  role: "STUDENT" | "DRIVER"
+  role: "STUDENT" | "DRIVER",
+  includeRecentlyCompleted?: boolean
 ): Promise<(RideRequest & { requestId: string }) | undefined> => {
   let queryRide;
   // find any ride by student 'netid' or driver 'driverid' that
@@ -288,7 +291,11 @@ export const getActiveRideRequest = async (
   const docs = await getDocs(queryRide);
   if (docs.size === 0) {
     // no active ride request
-    return undefined;
+    // if we wanted to include recently completed rides, check that now
+    // else, return undefined
+    return includeRecentlyCompleted
+      ? getRecentlyCompletedRide(t, id, role)
+      : undefined;
   } else if (docs.size > 1) {
     // there are too many active ride requests?
     throw new Error(
@@ -301,6 +308,74 @@ export const getActiveRideRequest = async (
       requestId: docs.docs[0].id,
     } as RideRequest & { requestId: string };
   }
+};
+
+/**
+ * Returns the most recently completed ride if it is within the last 5 min
+ * @param t
+ * @param id driver or student netid
+ * @param role
+ * @returns
+ */
+export const getRecentlyCompletedRide = async (
+  t: Transaction,
+  id: string,
+  role: "STUDENT" | "DRIVER"
+): Promise<(RideRequest & { requestId: string }) | undefined> => {
+  const filters: {
+    field: string;
+    operator: WhereFilterOp;
+    value: string | Date | number;
+  }[] = [];
+  // check for completed rides
+  filters.push({
+    field: "status",
+    operator: "==",
+    value: COMPLETED_STATUS,
+  });
+  // must be completed at a time >= 5 min ago
+  filters.push({
+    field: "completedAt",
+    operator: ">=",
+    value: Timestamp.now().seconds - 300,
+  });
+  // filter based on the correct id field
+  if (role === "STUDENT") {
+    filters.push({
+      field: "netid",
+      operator: "==",
+      value: id,
+    });
+  } else {
+    filters.push({
+      field: "driverid",
+      operator: "==",
+      value: id,
+    });
+  }
+  // map the filters into where clauses
+  const queryConstraints = filters.map((filter) => {
+    return where(filter.field, filter.operator, filter.value);
+  });
+  // to the query, sort by most recent and only return the first one
+  const queryRide = query(
+    rideRequestsCollection,
+    ...queryConstraints,
+    orderBy("completedAt", "desc"),
+    limit(1)
+  );
+  // run the query
+  const docs = await getDocs(queryRide);
+  if (docs.size > 0) {
+    // there is at least one ride, the first one is the most recently completed one
+    // return the request with the id included (bc the driver needs it eventually)
+    return {
+      ...docs.docs[0].data(),
+      requestId: docs.docs[0].id,
+    } as RideRequest & { requestId: string };
+  }
+  // no recently completed ride found
+  return undefined;
 };
 
 /**

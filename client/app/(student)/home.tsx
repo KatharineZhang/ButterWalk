@@ -443,7 +443,7 @@ export default function HomePage() {
 
         // on student side, if there is a ride, go to handle ride component
         setWhichComponent("handleRide");
-        // now decide what the ride status is
+        // now decide what the ride status is based on the ride request status
         switch (ride.status as string) {
           case "REQUESTED":
             rideStatusRef.current = "WaitingForRide";
@@ -461,21 +461,27 @@ export default function HomePage() {
             rideStatusRef.current = "RideInProgress";
             setRideStatus("RideInProgress");
             break;
+          case "COMPLETED":
+            rideStatusRef.current = "RideCompleted";
+            setRideStatus("RideCompleted");
+            break;
           default:
             rideStatusRef.current = "WaitingForRide";
             setRideStatus("WaitingForRide");
             break;
         }
-        // get any wait time info
-        WebSocketService.send({
-          directive: "WAIT_TIME",
-          requestid: ride.requestId,
-          requestedRide: {
-            pickUpLocation: ride.locationFrom.coordinates,
-            dropOffLocation: ride.locationTo.coordinates,
-          },
-          driverLocation: ride.driverLocation.coords,
-        });
+        if (ride.status != "COMPLETED") {
+          // get any wait time info if we have an active ride
+          WebSocketService.send({
+            directive: "WAIT_TIME",
+            requestid: ride.requestId,
+            requestedRide: {
+              pickUpLocation: ride.locationFrom.coordinates,
+              dropOffLocation: ride.locationTo.coordinates,
+            },
+            driverLocation: ride.driverLocation.coords,
+          });
+        }
       }
       // no active ride request, do nothing
     } else {
