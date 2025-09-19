@@ -34,9 +34,13 @@ const Login = () => {
   useEffect(() => {
     const connectWebSocket = async () => {
       // call our new route
-      const msg: WebsocketConnectMessage = await WebSocketService.connect();
+      const msg: WebsocketConnectMessage = await WebSocketService.connect()
+        .then((msg) => msg)
+        .catch((err) => err);
       if (msg !== "Connected Successfully") {
-        console.log("failed to connect!!!");
+        console.log(
+          "WEBSOCKET: Failed to connect to WebSocket in Driver SignIn"
+        );
       }
       // if nothing is logged, assumed connected successfully
     };
