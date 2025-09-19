@@ -481,6 +481,12 @@ export default function HomePage() {
             },
             driverLocation: ride.driverLocation.coords,
           });
+          // if the ride is not completed,
+          // show a quick alert telling the student to cancel if needed
+          alert(
+            "Seems like you have an active ride!" +
+              " If you didn't want this ride, hit the cancel ride button."
+          );
         }
       }
       // no active ride request, do nothing
