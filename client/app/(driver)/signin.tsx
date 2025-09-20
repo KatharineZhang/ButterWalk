@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useEffect, useState } from "react";
 import { styles } from "../../assets/styles";
-import { Redirect } from "expo-router";
+import { Redirect, Link } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 
 // @ts-expect-error the image does exists so get rid of the error
@@ -94,6 +94,26 @@ const Login = () => {
         },
       ]}
     >
+    <View style={styles.buttonContainer}>
+        <Link href="/driverOrstudent" asChild>
+          <Pressable
+            style={{
+              borderColor: "#4B2E83",
+              borderWidth: 2,
+              width: "100%",
+              height: 50,
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: 10,
+            }}
+          >
+            <Text style={{ color: "#4B2E83", fontSize: 20, fontWeight: "400" }}>
+              Back
+            </Text>
+          </Pressable>
+        </Link>
+      </View>
+      
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
           <Text style={styles.appNameText}>Husky ButterWalk</Text>
