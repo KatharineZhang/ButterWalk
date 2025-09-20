@@ -1,29 +1,15 @@
 import { View, Text } from "react-native";
 import LogoutWarning from "./Driver_LogoutWarning";
 import WebsocketService from "../services/WebSocketService";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Redirect } from "expo-router";
-import { NotificationType } from "./Both_Notification";
 
 type ShiftIsOverProps = {
   updateSideBarHeight: (height: number) => void;
-  changeNotifState: (notif: NotificationType) => void;
 };
 
-export default function ShiftIsOver({
-  updateSideBarHeight,
-  changeNotifState,
-}: ShiftIsOverProps) {
+export default function ShiftIsOver({ updateSideBarHeight }: ShiftIsOverProps) {
   const [signedIn, setSignedIn] = useState(true);
-
-  // on render, show a notification that the shift is over
-  useEffect(() => {
-    changeNotifState({
-      text: "Your shift is over. Log back in when it is your next shift to see new requests.",
-      color: "#FF0000",
-      boldText: "shift is over",
-    });
-  }, []);
 
   if (signedIn === false) {
     // disconnect user from the websocket connection
@@ -56,7 +42,7 @@ export default function ShiftIsOver({
       >
         <View style={{ height: "1%" }} />
         {/* Title */}
-        <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+        <Text style={{ fontSize: 25, fontWeight: "bold" }}>
           Your Shift is Over
         </Text>
         <View style={{ height: "10%" }} />

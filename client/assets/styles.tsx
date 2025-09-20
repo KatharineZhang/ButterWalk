@@ -282,13 +282,9 @@ export const styles = StyleSheet.create({
   },
   heading: {
     fontSize: 28,
-    lineHeight: 35,
     fontWeight: "bold",
-    letterSpacing: 0.25,
-    color: "black",
+    color: "#4B2E83",
     fontFamily: "Encode Sans",
-    marginLeft: 23,
-    marginBottom: 30,
   },
   text: {
     fontSize: 16,
@@ -933,6 +929,18 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: 4,
+  },
+
+  logoutWarningContainer: {
+    position: "absolute",
+    width: "91%",
+    height: "25%",
+    paddingHorizontal: 16,
+    paddingVertical: "10%",
+    margin: 16,
+    backgroundColor: "#FFD055",
+    borderRadius: 8,
+    justifyContent: "space-between",
   },
 });
 
