@@ -687,27 +687,6 @@ export default function RideRequestForm({
             })),
         ];
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   /* PANEL UI */
   // the ride request panel
   const RideRequest: JSX.Element = (
@@ -970,25 +949,6 @@ export default function RideRequestForm({
       </BottomDrawer>
     </View>
   );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
 
   // number of riders panel
   const NumberRiders: JSX.Element = (
