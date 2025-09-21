@@ -209,17 +209,16 @@ const Map = forwardRef<MapRef, MapProps>(
           timeInterval: 1000, // Update every second
           distanceInterval: 1, // Update every meter
         },
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         (location) => {
           // when location changes, change our state
           setUserLocation({
-            latitude: 47.65718628834192,
-            longitude: -122.3100908847018,
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
           });
           // notify the parent component that the user's location has changed
           userLocationChanged({
-            latitude: 47.65718628834192,
-            longitude: -122.3100908847018,
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
           });
         }
       );
