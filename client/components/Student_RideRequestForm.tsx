@@ -687,6 +687,27 @@ export default function RideRequestForm({
             })),
         ];
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   /* PANEL UI */
   // the ride request panel
   const RideRequest: JSX.Element = (
@@ -710,7 +731,10 @@ export default function RideRequestForm({
               marginBottom: 20,
             }}
           >
-            <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+            <Text style={{ fontSize: 20, fontWeight: "bold",
+              marginRight: "5%",
+              marginLeft: "10%"
+            }}>
               Choose Your Locations
             </Text>
             <TouchableOpacity onPress={() => setFAQVisible(true)}>
@@ -729,56 +753,75 @@ export default function RideRequestForm({
           {/* Inputs with vertical icons */}
           <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
             {/* Icon column */}
-            <View style={{ alignItems: "center", marginRight: 8 }}>
-              {/* Pickup dot */}
+            <View style={{ flexDirection: "row" }}>
+              {/* Input column (full width) */}
+              <View style={{ flex: 1 }}>
+                <AutocompleteInput
+                  onPress={() => {
+                    setCurrentQuery("pickup");
+                    expand();
+                  }}
+                  query={pickUpQuery}
+                  setQuery={setPickUpQuery}
+                  enterPressed={enterPressed}
+                  placeholder="Pick Up Location"
+                />
+                <AutocompleteInput
+                  onPress={() => {
+                    setCurrentQuery("dropoff");
+                    expand();
+                  }}
+                  query={dropOffQuery}
+                  setQuery={setDropOffQuery}
+                  enterPressed={enterPressed}
+                  placeholder="Drop Off Location"
+                />
+              </View>
+
+              {/* Overlay column */}
               <View
                 style={{
-                  borderRadius: 13,
-                  backgroundColor: "#4B2E83",
-                  height: 15,
-                  width: 15,
+                  position: "absolute", // float above inputs
+                  left: 0,              // pin to the left
+                  top: 23,
+                  bottom: 0,
+                  alignItems: "center",
+                  marginLeft: 12,   // adjust spacing from input edge
+                  zIndex: 10,           // keep it above inputs
                 }}
-              />
-              {/* Dotted line */}
-              <Image
-                source={require("@/assets/images/dashed-line.png")}
-                style={{ width: 2, flex: 1, marginVertical: 4 }}
-                resizeMode="repeat"
-              />
-              {/* Dropoff pin */}
-              <Image
-                source={require("@/assets/images/dropoff-location.png")}
-                style={{ height: 20, width: 20 }}
-              />
-            </View>
-
-            {/* Input column */}
-            <View style={{ flex: 1 }}>
-              <AutocompleteInput
-                onPress={() => {
-                  setCurrentQuery("pickup");
-                  expand();
-                }}
-                query={pickUpQuery}
-                setQuery={setPickUpQuery}
-                enterPressed={enterPressed}
-                placeholder="Pick Up Location"
-              />
-              <AutocompleteInput
-                onPress={() => {
-                  setCurrentQuery("dropoff");
-                  expand();
-                }}
-                query={dropOffQuery}
-                setQuery={setDropOffQuery}
-                enterPressed={enterPressed}
-                placeholder="Drop Off Location"
-              />
+              >
+                {/* Pickup dot */}
+                <View
+                  style={{
+                    borderRadius: 13,
+                    backgroundColor: "#4B2E83",
+                    height: 15,
+                    width: 15,
+                  }}
+                />
+                {/* Dotted line */}
+                <Image
+                  source={require("@/assets/images/dashed-line.png")}
+                  style={{ width: 2, height: 45, marginVertical: 4 }}
+                  resizeMode="repeat"
+                />
+                {/* Dropoff pin */}
+                <Image
+                  source={require("@/assets/images/dropoff-location.png")}
+                  style={{ height: 20, width: 20 }}
+                />
+              </View>
             </View>
           </View>
 
           {/* Next Button */}
-          <View style={{ alignItems: "flex-end", marginTop: 16 }}>
+          <View
+            style={{
+              alignItems: "flex-start",  
+              marginVertical: "2%",
+              marginLeft: "45%"  
+            }}
+          >
             <TouchableOpacity
               style={{
                 flexDirection: "row",
@@ -927,6 +970,25 @@ export default function RideRequestForm({
       </BottomDrawer>
     </View>
   );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 
   // number of riders panel
   const NumberRiders: JSX.Element = (
