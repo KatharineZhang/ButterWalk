@@ -5,6 +5,8 @@ import {
   doc,
   getDocs,
   getFirestore,
+  limit,
+  orderBy,
   query,
   QueryConstraint,
   Timestamp,
@@ -166,7 +168,6 @@ export async function verifyDriverId(
   return false;
 }
 
-
 /**
  * Adds a new ride request to the database/pool, always with the status 'REQUESTED'
  * @param t The transaction running
@@ -191,20 +192,13 @@ export async function addRideRequestToPool(
   }
 
   // make sure there are no pending rides in the database by this user
-  const queryExistingRide = query(
-    rideRequestsCollection,
-    where("netid", "==", rideRequest.netid),
-    where("status", "in", [
-      REQUESTED_STATUS,
-      VIEWING_STATUS,
-      DRIVING_TO_PICK_UP_STATUS,
-      DRIVER_AT_PICK_UP_STATUS,
-      DRIVING_TO_DESTINATION_STATUS,
-    ])
+  const activeRide = await getActiveRideRequest(
+    t,
+    rideRequest.netid,
+    "STUDENT"
   );
-  const inDatabase = await getDocs(queryExistingRide); // get the document by netid
   //  check if user is in problematicUsers table
-  if (inDatabase.size > 0) {
+  if (activeRide) {
     throw new Error(`${rideRequest.netid} already has a pending ride`);
   }
   rideRequest.completedAt = null;
@@ -262,8 +256,138 @@ export async function setRideRequestStatus(
     );
   }
   const docRef = res.docs[0].ref;
-  await updateDoc(docRef, { status: status });
+  // add status to the fields we are updating first
+  let updatedFields: {
+    status: RideRequestStatus;
+    pickedUpAt?: Timestamp;
+  } = { status };
+  // if we are driving to destination, the student was picked up!
+  if (status == "DRIVING TO DESTINATION") {
+    // add pickedUpAt to the list of updated fields
+    updatedFields = { ...updatedFields, pickedUpAt: Timestamp.now() };
+  }
+  // update the Ride Request
+  await updateDoc(docRef, updatedFields);
 }
+
+/**
+ * Returns the currently in progress ride request for the given driver or student
+ * @param t
+ * @param id driver or student netid
+ * @param role
+ * @returns
+ */
+export const getActiveRideRequest = async (
+  t: Transaction,
+  id: string,
+  role: "STUDENT" | "DRIVER",
+  includeRecentlyCompleted?: boolean
+): Promise<(RideRequest & { requestId: string }) | undefined> => {
+  let queryRide;
+  // find any ride by student 'netid' or driver 'driverid' that
+  // is not CANCELED_STATUS or COMPLETED_STATUS
+  if (role === "STUDENT") {
+    queryRide = query(
+      rideRequestsCollection,
+      where("netid", "==", id),
+      where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS])
+    );
+  } else {
+    queryRide = query(
+      rideRequestsCollection,
+      where("driverid", "==", id),
+      where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS])
+    );
+  }
+  const docs = await getDocs(queryRide);
+  if (docs.size === 0) {
+    // no active ride request
+    // if we wanted to include recently completed rides, check that now
+    // else, return undefined
+    return includeRecentlyCompleted
+      ? getRecentlyCompletedRide(t, id, role)
+      : undefined;
+  } else if (docs.size > 1) {
+    // there are too many active ride requests?
+    throw new Error(
+      `Expected at most one active ride request for ${role} with id: ${id}, found ${docs.size}`
+    );
+  } else {
+    // return the request with the id included (bc the driver needs it eventually)
+    return {
+      ...docs.docs[0].data(),
+      requestId: docs.docs[0].id,
+    } as RideRequest & { requestId: string };
+  }
+};
+
+/**
+ * Returns the most recently completed ride if it is within the last 5 min
+ * @param t
+ * @param id driver or student netid
+ * @param role
+ * @returns
+ */
+export const getRecentlyCompletedRide = async (
+  t: Transaction,
+  id: string,
+  role: "STUDENT" | "DRIVER"
+): Promise<(RideRequest & { requestId: string }) | undefined> => {
+  const filters: {
+    field: string;
+    operator: WhereFilterOp;
+    value: string | Date | number;
+  }[] = [];
+  // check for completed rides
+  filters.push({
+    field: "status",
+    operator: "==",
+    value: COMPLETED_STATUS,
+  });
+  // must be completed at a time >= 5 min ago
+  filters.push({
+    field: "completedAt",
+    operator: ">=",
+    value: Timestamp.now().seconds - 300,
+  });
+  // filter based on the correct id field
+  if (role === "STUDENT") {
+    filters.push({
+      field: "netid",
+      operator: "==",
+      value: id,
+    });
+  } else {
+    filters.push({
+      field: "driverid",
+      operator: "==",
+      value: id,
+    });
+  }
+  // map the filters into where clauses
+  const queryConstraints = filters.map((filter) => {
+    return where(filter.field, filter.operator, filter.value);
+  });
+  // to the query, sort by most recent and only return the first one
+  const queryRide = query(
+    rideRequestsCollection,
+    ...queryConstraints,
+    orderBy("completedAt", "desc"),
+    limit(1)
+  );
+  // run the query
+  const docs = await getDocs(queryRide);
+  if (docs.size > 0) {
+    // there is at least one ride, the first one is the most recently completed one
+    // return the request with the id included (bc the driver needs it eventually)
+    return {
+      ...docs.docs[0].data(),
+      requestId: docs.docs[0].id,
+    } as RideRequest & { requestId: string };
+  }
+  // no recently completed ride found
+  return undefined;
+};
 
 /**
  * Returns if the student's ride request has been accepted or not
@@ -313,6 +437,109 @@ export async function setRideRequestDriver(
   }
   const docRef = res.docs[0].ref;
   await updateDoc(docRef, { driverid: driverid });
+}
+
+/**
+ * Updates the driver location of the active ride request for the given student netid
+ * @param t The associated transaction
+ * @param netid the STUDENT's netid
+ * @param driverLocation
+ */
+export async function setRideRequestDriverLocation(
+  t: Transaction,
+  student_netid: string,
+  driverLocation: { latitude: number; longitude: number }
+) {
+  // find any ride by student 'student_netid' that
+  // is not accepted, not processed and not CANCELED_STATUS/COMPLETED_STATUS
+  // aka not processed currently
+  const queryNetid = query(
+    rideRequestsCollection,
+    where("netid", "==", student_netid),
+    where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS])
+  );
+  // run the query
+  const res = await getDocs(queryNetid);
+
+  if (res.size !== 1) {
+    throw new Error(
+      `Expected exactly one active ride request for netid: ${student_netid}, found ${res.size}`
+    );
+  }
+
+  // get the first document
+  const rideRequest = res.docs[0].data() as RideRequest;
+  // the driverLocation.lastUpdated can be null if this is the first update
+  // if it is not null, check the time difference
+  if (
+    rideRequest.driverLocation.lastUpdated &&
+    Timestamp.now().seconds - rideRequest.driverLocation.lastUpdated.seconds <
+      60
+  ) {
+    // it has been less than 1 minute since last update
+    console.log("Skipping driver location update, throttled");
+    return; // skip this update
+  }
+  const docRef = res.docs[0].ref;
+  // update the driver location and lastUpdated
+  await updateDoc(docRef, {
+    driverLocation: {
+      coords: driverLocation,
+      lastUpdated: Timestamp.now(),
+    },
+  });
+}
+
+/**
+ * Updates the student location of the active ride request for the given student netid
+ * @param t
+ * @param netid the student's netid
+ * @param studentLocation
+ */
+export async function setRideRequestStudentLocation(
+  t: Transaction,
+  netid: string,
+  studentLocation: { latitude: number; longitude: number }
+) {
+  // find any ride by student 'netid' that
+  // is not accepted, not processed and not CANCELED_STATUS/COMPLETED_STATUS
+  // aka not processed currently
+  const queryNetid = query(
+    rideRequestsCollection,
+    where("netid", "==", netid),
+    where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS])
+  );
+  // run the query
+  const res = await getDocs(queryNetid);
+
+  if (res.size !== 1) {
+    throw new Error(
+      `Expected exactly one active ride request for netid: ${netid}, found ${res.size}`
+    );
+  }
+
+  // for each result (should only be one), check if the last update was less than 5 seconds ago
+  res.forEach((el) => {
+    const rideRequest = el.data() as RideRequest;
+    if (
+      Timestamp.now().seconds -
+        rideRequest.studentLocation.lastUpdated.seconds <
+      5000
+    ) {
+      // it has been less than 5 seconds since last update
+      console.log("Skipping student location update, throttled");
+      return; // skip this update
+    }
+  });
+
+  const docRef = res.docs[0].ref;
+  // update the student location and lastUpdated
+  await updateDoc(docRef, {
+    studentLocation: {
+      coords: studentLocation,
+      lastUpdated: Timestamp.now(),
+    },
+  });
 }
 
 // CANCEL RIDE - Update a student ride request to CANCELED_STATUS
