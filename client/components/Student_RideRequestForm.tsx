@@ -632,7 +632,7 @@ export default function RideRequestForm({
       console.log("bottomSheetRef is null");
       return;
     }
-    bottomSheetRef.current.expand();
+    bottomSheetRef.current?.expand();
   };
   // Type definition for a formatted result item in the autocomplete suggestions list.
   // Each item represents a possible pickup or dropoff location, and can be a recent location,
@@ -704,18 +704,23 @@ export default function RideRequestForm({
           <View
             style={{
               flexDirection: "row",
-              justifyContent: "space-between",
               alignItems: "center",
+              justifyContent: "center", // centers content by default
               marginHorizontal: 20,
               marginBottom: 20,
             }}
           >
-            <Text style={{ fontSize: 20, fontWeight: "bold",
-              marginRight: "5%",
-              marginLeft: "10%"
-            }}>
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: "bold",
+                textAlign: "center",
+                flex: 1, 
+              }}
+            >
               Choose Your Locations
             </Text>
+
             <TouchableOpacity onPress={() => setFAQVisible(true)}>
               <Ionicons
                 name="information-circle-outline"
@@ -760,13 +765,13 @@ export default function RideRequestForm({
               {/* Overlay column */}
               <View
                 style={{
-                  position: "absolute", // float above inputs
-                  left: 0,              // pin to the left
+                  position: "absolute",
+                  left: 0,           
                   top: 23,
                   bottom: 0,
                   alignItems: "center",
-                  marginLeft: 12,   // adjust spacing from input edge
-                  zIndex: 10,           // keep it above inputs
+                  marginLeft: 12,   
+                  zIndex: 10,         
                 }}
               >
                 {/* Pickup dot */}
@@ -796,9 +801,12 @@ export default function RideRequestForm({
           {/* Next Button */}
           <View
             style={{
-              alignItems: "flex-start",  
+              flexDirection: "row",
+              justifyContent: "flex-end", 
+              alignItems: "center",
               marginVertical: "2%",
-              marginLeft: "45%"  
+              paddingHorizontal: 2,     
+              width: "100%",            
             }}
           >
             <TouchableOpacity
