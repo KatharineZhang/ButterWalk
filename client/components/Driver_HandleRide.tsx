@@ -317,7 +317,7 @@ export default function HandleRide({
                 Directions
               </Text>
             </Pressable>
-            {/* Spacer */}
+            Spacer
             <View style={{ width: 10 }} />
             {/* optional space between buttons */}
             {/* Call Student Button */}
@@ -335,9 +335,6 @@ export default function HandleRide({
                 makeCall(studentPhoneNumber); // call the student
               }}
             >
-              <Text style={{ color: "white", fontSize: 14, fontWeight: "600" }}>
-                Call Student
-              </Text>
             </Pressable>
           </View>
 
