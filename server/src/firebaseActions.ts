@@ -336,19 +336,13 @@ export const getRecentlyCompletedRide = async (
   const filters: {
     field: string;
     operator: WhereFilterOp;
-    value: string | Date | number;
+    value: string | null;
   }[] = [];
   // check for completed rides
   filters.push({
     field: "status",
     operator: "==",
     value: COMPLETED_STATUS,
-  });
-  // must be completed at a time >= 5 min ago
-  filters.push({
-    field: "completedAt",
-    operator: ">=",
-    value: Timestamp.now().seconds - 300,
   });
   // filter based on the correct id field
   if (role === "STUDENT") {
@@ -380,10 +374,17 @@ export const getRecentlyCompletedRide = async (
   if (docs.size > 0) {
     // there is at least one ride, the first one is the most recently completed one
     // return the request with the id included (bc the driver needs it eventually)
-    return {
-      ...docs.docs[0].data(),
-      requestId: docs.docs[0].id,
-    } as RideRequest & { requestId: string };
+    const mostRecent = docs.docs[0].data() as RideRequest;
+    // only return this ride if this ride was completed in the last 5 min
+    if (
+      mostRecent.completedAt &&
+      mostRecent.completedAt.seconds >= Timestamp.now().seconds - 300
+    ) {
+      return {
+        ...docs.docs[0].data(),
+        requestId: docs.docs[0].id,
+      } as RideRequest & { requestId: string };
+    }
   }
   // no recently completed ride found
   return undefined;

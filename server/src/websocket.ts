@@ -134,6 +134,7 @@ export const handleWebSocketMessage = async (
         driverid: null,
         requestedAt: Timestamp.now(),
         completedAt: null,
+        pickedUpAt: null,
         locationFrom: input.location,
         locationTo: input.destination,
         numRiders: input.numRiders,
