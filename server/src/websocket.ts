@@ -23,6 +23,7 @@ import {
   getPlaceSearchResults,
   driverDrivingToDropoff,
   checkIfDriverSignin,
+  addCallLog,
 } from "./routes";
 import {
   CompleteResponse,
@@ -381,6 +382,20 @@ export const handleWebSocketMessage = async (
       sendWebSocketMessage(ws, resp);
       break;
 
+    case "CALL_LOG":
+      resp = await addCallLog(
+        input.from,
+        input.to,
+        input.role,
+        input.phoneNumberCalled
+      );
+      // send response back to client
+      sendWebSocketMessage(ws, resp);
+      if ("response" in resp && resp.response === "CALL_LOG") {
+        // send response back to opposite client as well
+        sendMessageToNetid(input.to, resp);
+      }
+      break;
     default:
       console.log(`WEBSOCKET: Unknown directive: ${JSON.stringify(input)}`);
       break;

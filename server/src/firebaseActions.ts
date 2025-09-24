@@ -30,6 +30,7 @@ import {
   DRIVING_TO_PICK_UP_STATUS,
   DRIVER_AT_PICK_UP_STATUS,
   DRIVING_TO_DESTINATION_STATUS,
+  CallLog,
 } from "./api";
 
 export const db = getFirestore(app);
@@ -165,7 +166,6 @@ export async function verifyDriverId(
   // otherwise, return false
   return false;
 }
-
 
 /**
  * Adds a new ride request to the database/pool, always with the status 'REQUESTED'
@@ -554,6 +554,66 @@ export async function getOtherNetId(netid: string): Promise<string> {
   }
   throw new Error("No accepted ride request found with user " + netid);
 }
+
+// CALL LOG - Add a call log entry to a ride request
+export async function addCallLogToDb(
+  transaction: Transaction,
+  from: string,
+  to: string,
+  role: "STUDENT" | "DRIVER",
+  phoneNumberCalled: string
+) {
+  // find any ride by student 'netid' that
+  // currently being processed and the driver is either heading to PICK UP or is at PICK UP
+  let queryNetid;
+  if (role == "STUDENT") {
+    // student query
+    queryNetid = query(
+      rideRequestsCollection,
+      where("netid", "==", from),
+      where("status", "in", [
+        DRIVING_TO_PICK_UP_STATUS,
+        DRIVER_AT_PICK_UP_STATUS,
+      ])
+    );
+  } else {
+    // driver query
+    queryNetid = query(
+      rideRequestsCollection,
+      where("driverid", "==", from),
+      where("status", "in", [
+        DRIVING_TO_PICK_UP_STATUS,
+        DRIVER_AT_PICK_UP_STATUS,
+      ])
+    );
+  }
+  // run the query
+  const res = await getDocs(queryNetid);
+  if (res.size !== 1) {
+    throw new Error(
+      `Expected exactly one active ride request for netid: ${from}, found ${res.size}`
+    );
+  }
+  const docRef = res.docs[0].ref;
+  const docSnap = await transaction.get(docRef);
+  if (!docSnap.exists()) {
+    throw new Error("Ride Request data is undefined");
+  }
+  const data = docSnap.data() as RideRequest;
+  let oldCallLog: CallLog[] = [];
+  if (data.callLog) {
+    oldCallLog = data.callLog;
+  }
+  oldCallLog.push({
+    from: from,
+    to: to,
+    phoneNumberCalled: phoneNumberCalled,
+    timestamp: Timestamp.now(),
+  });
+  transaction.update(docRef, { callLog: oldCallLog });
+  return;
+}
+
 
 // QUERY - Get all ride requests based on parameters
 export async function queryFeedback(

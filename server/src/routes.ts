@@ -26,6 +26,7 @@ import {
   PlaceSearchResponse,
   PurpleZone,
   WrapperCancelResponse,
+  CallLogResponse,
 } from "./api";
 import {
   addFeedbackToDb,
@@ -48,6 +49,7 @@ import {
   // we want this import for when we have a drivers collection
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   verifyDriverId,
+  addCallLogToDb,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { highestRank, rankOf } from "./rankingAlgorithm";
@@ -231,7 +233,7 @@ export const checkIfDriverSignin = async (
     } as ErrorResponse;
   }
   return resp;
-}; 
+};
 
 // Finishes the account for the user by adding the phone number and student number to the database
 // returns a success message if the account creation is successful and a boolean value of true if the account already exists
@@ -531,6 +533,18 @@ export const viewRide = async (
       // so we can just add the driver id to the ride request now
       // for future use (if cancel, can set state back to viewing)
       setRideRequestDriver(t, bestRequest.netid, driverid);
+
+      // get student's phone number from their profile to send to driver
+      const studentPhoneNumber = await getProfile(t, bestRequest.netid).then(
+        (profileResp: User) => {
+          if ("phoneNumber" in profileResp) {
+            // Ensure studentPhoneNumber is always a string
+            return profileResp.phoneNumber as string;
+          } else {
+            throw new Error(`Error getting student phone number`);
+          }
+        }
+      );
       return {
         response: "VIEW_RIDE",
         rideExists: true,
@@ -541,6 +555,7 @@ export const viewRide = async (
           },
           driverToPickUpDuration,
           pickUpToDropOffDuration,
+          studentPhoneNumber,
         },
         notifyDrivers: notify,
       };
@@ -1260,6 +1275,33 @@ export const getPlaceSearchResults = async (
       response: "ERROR",
       error: `Error fetching place search results: ${(e as Error).message}`,
       category: "PLACE_SEARCH",
+    };
+  }
+};
+
+export const addCallLog = async (
+  from: string,
+  to: string,
+  role: "STUDENT" | "DRIVER",
+  phoneNumberCalled: string
+): Promise<CallLogResponse | ErrorResponse> => {
+  if (!from || !to || !phoneNumberCalled) {
+    return {
+      response: "ERROR",
+      error: "Missing required fields.",
+      category: "CALL_LOG",
+    };
+  }
+  try {
+    return await runTransaction(db, async (transaction) => {
+      await addCallLogToDb(transaction, from, to, role, phoneNumberCalled);
+      return { response: "CALL_LOG", whoCalled: from };
+    });
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error adding call log: ${(e as Error).message}}`,
+      category: "CALL_LOG",
     };
   }
 };

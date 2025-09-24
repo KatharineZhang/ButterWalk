@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import {
+  CallLogResponse,
   ErrorResponse,
   LocationResponse,
   RideRequest,
@@ -13,6 +14,7 @@ import {
   useWindowDimensions,
   View,
   Text,
+  Linking,
 } from "react-native";
 import Map, { MapRef, isSameLocation } from "./map";
 import { useLocalSearchParams } from "expo-router";
@@ -54,6 +56,7 @@ export default function HomePage() {
     WebSocketService.addListener(viewDecisionListener, "VIEW_DECISION");
     WebSocketService.addListener(reportStudentListener, "REPORT");
     WebSocketService.addListener(locationListener, "LOCATION");
+    WebSocketService.addListener(callLogListener, "CALL_LOG");
     WebSocketService.addListener(
       driverDrivingToDropOffListener,
       "DRIVER_DRIVING_TO_DROPOFF"
@@ -231,6 +234,7 @@ export default function HomePage() {
     useState<number>(0);
   const [pickupToDropoffDuration, setPickupToDropoffDuration] =
     useState<number>(0);
+  const [studentPhoneNumber, setStudentPhoneNumber] = useState<string>("");
   const [requestInfo, setRequestInfo] = useState<RideRequest>(
     {} as RideRequest
   );
@@ -257,6 +261,26 @@ export default function HomePage() {
       netid: requestInfo.netid,
       decision: "ACCEPT",
     });
+  };
+
+  const makeCall = (phoneNumber: string) => {
+    if (!phoneNumber || !/^\d{10}$/.test(phoneNumber)) {
+      console.error("Invalid phone number: ", phoneNumber);
+      return;
+    }
+
+    WebSocketService.send({
+      directive: "CALL_LOG",
+      from: netid,
+      to: requestInfo.netid,
+      role: "DRIVER",
+      phoneNumberCalled: phoneNumber,
+    });
+
+    const phoneUrl = `tel:${phoneNumber}`;
+    Linking.openURL(phoneUrl).catch((err) =>
+      console.error("Error making call: ", err)
+    );
   };
 
   /* EN ROUTE STATE */
@@ -460,6 +484,8 @@ export default function HomePage() {
         setPickupToDropoffDuration(
           viewReqResponse.rideInfo.pickUpToDropOffDuration
         );
+        setStudentPhoneNumber(viewReqResponse.rideInfo.studentPhoneNumber);
+
         // Switch to the Let's Go page here not in Driver_RequestAvailable
         setShowAcceptScreen(false);
       } else {
@@ -603,6 +629,25 @@ export default function HomePage() {
     } else {
       const errMessage = message as ErrorResponse;
       console.log("Failed to send location: ", errMessage.error);
+    }
+  };
+
+  // WEBSOCKET - CALL_LOG
+  const callLogListener = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "CALL_LOG") {
+      const callLogResp = message as CallLogResponse;
+      if (callLogResp.whoCalled === netid) {
+        console.log("Call log recorded successfully");
+      } else {
+        alert(
+          "Your passenger (netid: " +
+            callLogResp.whoCalled +
+            ") is calling you! Please answer so that this ride can be coordinated."
+        );
+      }
+    } else {
+      const errMessage = message as ErrorResponse;
+      console.log("Failed to log call: ", errMessage.error);
     }
   };
 
@@ -903,10 +948,16 @@ export default function HomePage() {
         <View style={styles.homePageComponentContainer}>
           <HandleRide
             phase={phase}
-            setPhase={setPhase}
+            studentPhoneNumber={studentPhoneNumber}
             requestInfo={requestInfo}
             driverToPickupDuration={driverToPickupDuration}
             pickupToDropoffDuration={pickupToDropoffDuration}
+            pickupProgress={pickupProgress}
+            dropoffProgress={dropoffProgress}
+            isNearPickup={isNearPickup}
+            isNearDropoff={isNearDropoff}
+            setPhase={setPhase}
+            updateSideBarHeight={setCurrentComponentHeight}
             changeFlaggingAllowed={setFlaggingAllowed}
             completeRide={completeRide}
             changeNotifState={setNotifState}
@@ -914,11 +965,7 @@ export default function HomePage() {
             driverArrivedAtPickup={driverArrivedAtPickup}
             driverDrivingToDropOff={driverDrivingToDropOff}
             setStudentIsLate={setStudentIsLate}
-            pickupProgress={pickupProgress}
-            dropoffProgress={dropoffProgress}
-            isNearPickup={isNearPickup}
-            isNearDropoff={isNearDropoff}
-            updateSideBarHeight={setCurrentComponentHeight}
+            makeCall={makeCall}
           />
         </View>
       ) : whichComponent === "endShift" ? (
