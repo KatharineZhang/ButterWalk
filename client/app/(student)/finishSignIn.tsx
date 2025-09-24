@@ -36,7 +36,7 @@ const FinishSignIn = () => {
     if (!response) {
       return;
     }
-    
+
     const handleSigninMessage = (message: WebSocketResponse) => {
       if ("response" in message && message.response === "SIGNIN") {
         const signinResp = message as StudentSignInResponse;
@@ -49,7 +49,10 @@ const FinishSignIn = () => {
       } else {
         const errorResp = message as ErrorResponse;
         console.log("Signin related error:", errorResp.error);
-        router.replace({pathname: "/(student)/signin", params: {error: errorResp.error} });
+        router.replace({
+          pathname: "/(student)/signin",
+          params: { error: errorResp.error },
+        });
       }
     };
 
@@ -67,9 +70,9 @@ const FinishSignIn = () => {
         console.log("Failed to connect to WebSocket.");
       }
     };
-    
+
     connectWebSocket();
-    
+
     return () => {
       WebSocketService.removeListener(handleSigninMessage, "SIGNIN");
     };
@@ -92,9 +95,7 @@ const FinishSignIn = () => {
 
   // Loading page for a couple of seconds while the app logs the user in,
   // (UI for loading page is below)
-  return (
-    LoadingPage()
-  );
+  return LoadingPage();
 };
 export default FinishSignIn;
 

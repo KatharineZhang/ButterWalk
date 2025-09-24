@@ -6,6 +6,7 @@ import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
 import { useEffect } from "react";
 import { router, useLocalSearchParams, Link } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 // Images
 // @ts-expect-error the image does exists so get rid of the error
@@ -23,7 +24,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 const Login = () => {
   // comes from finishSignIn if any errors occur
-  const {error} = useLocalSearchParams();
+  const { error } = useLocalSearchParams();
   const config = {
     webClientId,
     iosClientId,
@@ -36,37 +37,28 @@ const Login = () => {
   const [request, response, promptAsync] = Google.useAuthRequest(config);
 
   useEffect(() => {
-    if (response?.type === 'success') {
+    if (response?.type === "success") {
       const serializedResponse = JSON.stringify(response);
       console.log(serializedResponse);
-      console.log('OAuth code received. Navigating to redirect page.');
+      console.log("OAuth code received. Navigating to redirect page.");
       // Passes the code to finishSignIn, which handles the Websocket exchange.
-      router.replace({ pathname: '/(student)/finishSignIn', params: { serializedResponse } });
+      router.replace({
+        pathname: "/(student)/finishSignIn",
+        params: { serializedResponse },
+      });
     }
   }, [response]);
 
   return (
     <SafeAreaView style={[styles.container, { padding: 20 }]}>
       <View style={{ flex: 1, width: "100%", justifyContent: "space-between" }}>
-        <View style={styles.buttonContainer}>
-                <Link href="/driverOrstudent" asChild>
-                  <Pressable
-                    style={{
-                      borderColor: "#4B2E83",
-                      borderWidth: 2,
-                      width: "100%",
-                      height: 50,
-                      justifyContent: "center",
-                      alignItems: "center",
-                      borderRadius: 10,
-                    }}
-                  >
-                    <Text style={{ color: "#4B2E83", fontSize: 20, fontWeight: "400" }}>
-                      Back
-                    </Text>
-                  </Pressable>
-                </Link>
-              </View>
+        <View style={{ alignSelf: "flex-start" }}>
+          <Link href="/driverOrstudent" asChild>
+            <Pressable>
+              <Ionicons name="arrow-back" size={40} color="#4B2E83" />
+            </Pressable>
+          </Link>
+        </View>
         {/* Main Content */}
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
