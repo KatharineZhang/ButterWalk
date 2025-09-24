@@ -56,7 +56,7 @@ export default function driverOrstudent() {
             }}
           >
             <Text style={{ color: "#4B2E83", fontSize: 20, fontWeight: "400" }}>
-              I'm a UW Student{" "}
+              I'm a UW Student or Staff{" "}
             </Text>
           </Pressable>
         </Link>
@@ -64,5 +64,3 @@ export default function driverOrstudent() {
     </View>
   );
 }
-
-//

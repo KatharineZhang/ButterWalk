@@ -1,11 +1,12 @@
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import { View, Text, TouchableOpacity, Image, Pressable } from "react-native";
 import { styles } from "../../assets/styles";
 import * as WebBrowser from "expo-web-browser";
 // need to 'npx expo install expo-web-browser expo-auth-session expo-crypto' ON MAC
 // or 'npm i expo-auth-session@~6.0.3' on windows
 import * as Google from "expo-auth-session/providers/google";
 import { useEffect } from "react";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, Link } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 // Images
 // @ts-expect-error the image does exists so get rid of the error
@@ -23,7 +24,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 const Login = () => {
   // comes from finishSignIn if any errors occur
-  const {error} = useLocalSearchParams();
+  const { error } = useLocalSearchParams();
   const config = {
     webClientId,
     iosClientId,
@@ -36,18 +37,28 @@ const Login = () => {
   const [request, response, promptAsync] = Google.useAuthRequest(config);
 
   useEffect(() => {
-    if (response?.type === 'success') {
+    if (response?.type === "success") {
       const serializedResponse = JSON.stringify(response);
       console.log(serializedResponse);
-      console.log('OAuth code received. Navigating to redirect page.');
+      console.log("OAuth code received. Navigating to redirect page.");
       // Passes the code to finishSignIn, which handles the Websocket exchange.
-      router.replace({ pathname: '/(student)/finishSignIn', params: { serializedResponse } });
+      router.replace({
+        pathname: "/(student)/finishSignIn",
+        params: { serializedResponse },
+      });
     }
   }, [response]);
 
   return (
     <SafeAreaView style={[styles.container, { padding: 20 }]}>
       <View style={{ flex: 1, width: "100%", justifyContent: "space-between" }}>
+        <View style={{ alignSelf: "flex-start" }}>
+          <Link href="/driverOrstudent" asChild>
+            <Pressable>
+              <Ionicons name="arrow-back" size={40} color="#4B2E83" />
+            </Pressable>
+          </Link>
+        </View>
         {/* Main Content */}
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
