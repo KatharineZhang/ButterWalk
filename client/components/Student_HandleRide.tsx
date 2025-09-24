@@ -358,29 +358,6 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
               Cancel Ride
             </Text>
           </Pressable>
-
-          {/* Call Driver Button */}
-          <Pressable
-            style={[
-              styles.bottomModalButton,
-              {
-                borderWidth: 2,
-                borderColor: "#4B2E83",
-                backgroundColor: "#4B2E83",
-                marginTop: 10, // space between buttons
-              },
-            ]}
-            onPress={() => {}}
-          >
-            <Text
-              style={[
-                styles.buttonText,
-                { color: "white", textAlign: "center" },
-              ]}
-            >
-              Call Driver
-            </Text>
-          </Pressable>
         </View>
       )}
       {/* I Found My Driver Button */}
@@ -449,29 +426,6 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             >
               <Text style={[styles.buttonText, { textAlign: "center" }]}>
                 I have arrived
-              </Text>
-            </Pressable>
-
-            {/* Call Driver Button */}
-            <Pressable
-              style={[
-                styles.bottomModalButton,
-                {
-                  borderWidth: 2,
-                  borderColor: "#4B2E83",
-                  backgroundColor: "#4B2E83",
-                  marginTop: 10, // space between the buttons
-                },
-              ]}
-              onPress={() => {}}
-            >
-              <Text
-                style={[
-                  styles.buttonText,
-                  { color: "white", textAlign: "center" },
-                ]}
-              >
-                Call Driver
               </Text>
             </Pressable>
           </View>

@@ -317,26 +317,6 @@ export default function HandleRide({
                 Directions
               </Text>
             </Pressable>
-            Spacer
-            <View style={{ width: 10 }} />
-            {/* optional space between buttons */}
-            {/* Call Student Button */}
-            <Pressable
-              style={{
-                backgroundColor: "#4B2E83",
-                paddingVertical: 10,
-                paddingHorizontal: 16,
-                borderRadius: 8,
-                alignItems: "center",
-                justifyContent: "center",
-                flexDirection: "row",
-              }}
-              onPress={() => {
-                makeCall(studentPhoneNumber); // call the student
-              }}
-            >
-            </Pressable>
-          </View>
 
           {/* Grey line */}
           <View style={styles.driverGreyLine} />
