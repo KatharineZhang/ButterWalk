@@ -1,3 +1,4 @@
+import { AppState } from "react-native";
 import {
   Command,
   ErrorResponse,
@@ -16,6 +17,22 @@ export type WebsocketConnectMessage =
 class WebSocketService {
   private websocket: WebSocket | null = null;
   private messageHandlers: Map<Command, WebSocketResponseHandler[]> = new Map();
+  private appState = "";
+
+  constructor() {
+    // make a listener to update appState on change
+    AppState.addEventListener("change", async (nextState) => {
+      if (
+        this.appState.match(/inactive|background/) &&
+        nextState === "active"
+      ) {
+        // reconnect to websocket in case it disconnected while app was in background
+        console.log(await this.connect());
+      }
+
+      this.appState = nextState;
+    });
+  }
 
   /**
    * Create a new websocket connection to the server,
@@ -40,7 +57,9 @@ class WebSocketService {
       return Promise.resolve("Failed to Connect");
     }
 
-    this.websocket = new WebSocket(`ws://${IP_ADDRESS}:8080/api/`);
+    this.websocket = new WebSocket(
+      `wss://triumphant-healing-production.up.railway.app/api/`
+    );
 
     if (this.websocket == null) {
       console.error("WEBSOCKET: Failed to create WebSocket");
@@ -80,7 +99,18 @@ class WebSocketService {
     };
 
     this.websocket.onclose = () => {
-      console.log("WEBSOCKET: Disconnected from Websocket");
+      console.log(
+        "WEBSOCKET: Disconnected from Websocket" +
+          (this.appState === "active"
+            ? " unexpectedly"
+            : " because app went background")
+      );
+      // try reconnecting if the app is still active
+      if (this.appState === "active") {
+        setTimeout(async () => {
+          await this.connect();
+        }, 1000);
+      }
     };
 
     this.websocket.onerror = (error: Event) => {
