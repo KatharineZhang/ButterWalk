@@ -355,7 +355,6 @@ export const styles = StyleSheet.create({
     alignItems: "center",
   },
   requestFormContainer: {
-    width: "100%",
     borderRadius: 10,
     shadowRadius: 2,
     shadowOpacity: 0.4,

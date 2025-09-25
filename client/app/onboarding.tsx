@@ -4,12 +4,12 @@ import { useState, useRef } from "react";
 import {
   Text,
   View,
-  SafeAreaView,
   FlatList,
   Animated,
   Pressable,
   ImageSourcePropType,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import OnboardingItem from "../components/Both_OnboardingItem";
 import Paginator from "@/components/Both_OnboardingPaginator";
 import { Link, router } from "expo-router";
