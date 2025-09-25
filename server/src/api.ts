@@ -28,7 +28,8 @@ export type Command =
   | "DRIVER_ARRIVED_AT_PICKUP"
   | "DRIVER_DRIVING_TO_DROPOFF"
   | "DISCONNECT"
-  | "PLACE_SEARCH";
+  | "PLACE_SEARCH"
+  | "LOAD_RIDE";
 
 // Input types
 export type WebSocketMessage =
@@ -59,6 +60,7 @@ export type WebSocketMessage =
       location: LocationType;
       destination: LocationType;
       numRiders: number;
+      studentLocation: { latitude: number; longitude: number };
     }
   | { directive: "CANCEL"; netid: string; role: "STUDENT" | "DRIVER" }
   | { directive: "COMPLETE"; requestid: string }
@@ -82,6 +84,7 @@ export type WebSocketMessage =
   | {
       directive: "LOCATION";
       id: string; // the netid of the student or driver
+      role: "STUDENT" | "DRIVER";
       latitude: number;
       longitude: number;
     }
@@ -138,6 +141,11 @@ export type WebSocketMessage =
   | {
       directive: "PLACE_SEARCH";
       query: string;
+    }
+  | {
+      directive: "LOAD_RIDE";
+      id: string;
+      role: "STUDENT" | "DRIVER";
     };
 
 // TEMP FIX
@@ -165,7 +173,8 @@ export type WebSocketResponse =
   | RidesExistResponse
   | ViewRideRequestResponse
   | ViewDecisionResponse
-  | PlaceSearchResponse;
+  | PlaceSearchResponse
+  | LoadRideResponse;
 
 export type LocationType = {
   name: string;
@@ -295,6 +304,11 @@ export type ProfileResponse = {
   locations: LocationType[];
 };
 
+export type LoadRideResponse = {
+  response: "LOAD_RIDE";
+  rideRequest?: RideRequest & { requestId: string };
+};
+
 export type ErrorResponse = {
   response: "ERROR";
   error: string;
@@ -398,13 +412,6 @@ export const GooglePlaceSearchBadLocationTypes = [
   "night_club",
 ];
 
-// Server Types and Data Structures
-
-export type localRideRequest = {
-  requestid: string;
-  netid: string;
-};
-
 /* DATABASE TYPES */
 
 // CREATE TABLE Users ( netid varchar(20) PRIMARY KEY, name text, student_num char(7),
@@ -499,6 +506,10 @@ export type RideRequest = {
    */
   completedAt: Timestamp | null;
   /**
+   * The time when the student was picked up (as logged in server)
+   */
+  pickedUpAt: Timestamp | null;
+  /**
    * The pick up location.
    */
   locationFrom: LocationType;
@@ -507,12 +518,22 @@ export type RideRequest = {
    */
   locationTo: LocationType;
   /**
-   * Most recent location at the time of the ride request.
-   * - Potentially used to calculate the earliest pick up time of the student
-   * based on their distance from the pick up location, may need to be updated
-   * accordingly or ignored after a certain amount of time.
+   * Most recent location of the student while the ride is active.
+   * - Should be updated periodically while the ride is active.
    */
-  studentLocation?: LocationType;
+  studentLocation: {
+    coords: { latitude: number; longitude: number };
+    lastUpdated: Timestamp;
+  };
+  /**
+   * Most recent location of the driver while the ride is active.
+   * - Should be updated periodically while the ride is active.
+   * - Used to provide the student with the driver's location while ride is in p
+   */
+  driverLocation: {
+    coords: { latitude: number; longitude: number };
+    lastUpdated: Timestamp | null;
+  };
   /**
    * The number of students in the ride
    */
@@ -528,16 +549,15 @@ export type RideRequest = {
    * - `VIEWING`: The ride has been checked out temporarily from the queue
    * to be accepted to denied by a potential driver (This is new behavior
    * implemented for the ride request broker system).
-   * - `ACCEPTED`: **SHOULD BE DEPRECATED ASAP** Represents that a ride request
-   * is either in progress or has been accepted by a driver who has not yet
-   * picked up the student. Does not have the necessary level of granularity to
-   * handle cancelation edge cases or ride request broker behavior.
-   * - `AWAITING PICK UP`: The ride request was accepted by a driver after being
+   * - `DRIVING TO PICK UP`: The ride request was accepted by a driver after being
    * checked out to them for viewing and is in the pick up stage, i.e. the driver
    * is driving to go pick up the student, the student is waiting to be picked up,
    * or the driver is waiting at the pick up location to pick up the student (This
    * is new behavior for the ride request broker).
-   * - `DRIVING`: The student has been picked up by the driver and the ride is in
+   * - `DRIVER AT PICK UP`: The driver has arrived at the pick up location and is
+   * waiting for the student to get in the vehicle (new behavior for the ride request
+   * broker).
+   * - `DRIVING TO DROPOFF`: The student has been picked up by the driver and the ride is in
    * progress (new behavior for the ride request broker).
    * - `COMPLETED`: The student was dropped off after completion of the ride.
    */

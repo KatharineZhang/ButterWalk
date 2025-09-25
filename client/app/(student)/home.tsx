@@ -13,6 +13,7 @@ import {
   CancelResponse,
   DistanceResponse,
   ErrorResponse,
+  LoadRideResponse,
   LocationResponse,
   LocationType,
   ProfileResponse,
@@ -81,6 +82,7 @@ export default function HomePage() {
       WebSocketService.send({
         directive: "LOCATION",
         id: netid,
+        role: "STUDENT",
         latitude: location.latitude,
         longitude: location.longitude,
       });
@@ -191,6 +193,7 @@ export default function HomePage() {
         coordinates: dropOffLocation,
       },
       numRiders: numPassengers,
+      studentLocation: userLocationRef.current,
     });
     // set the component to show to loading
     setWhichComponent("Loading");
@@ -287,9 +290,12 @@ export default function HomePage() {
       handleDriverPickedUp,
       "DRIVER_DRIVING_TO_DROPOFF"
     );
+    WebSocketService.addListener(handleLoadRideResponse, "LOAD_RIDE");
 
     // get the user's profile on first render
     sendProfile();
+    // see if there is an active ride request
+    sendLoadRide();
   }, []);
 
   // logic that should happen when the component FIRST changes
@@ -434,6 +440,84 @@ export default function HomePage() {
     }
   };
 
+  const sendLoadRide = () => {
+    WebSocketService.send({
+      directive: "LOAD_RIDE",
+      id: netid,
+      role: "STUDENT",
+    });
+  };
+  const handleLoadRideResponse = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "LOAD_RIDE") {
+      const loadRideMessage = message as LoadRideResponse;
+      if (loadRideMessage.rideRequest) {
+        // we have an active ride request
+        const ride = loadRideMessage.rideRequest;
+        setPickUpLocation(ride.locationFrom.coordinates);
+        setDropOffLocation(ride.locationTo.coordinates);
+        setPickUpLocationName(ride.locationFrom.name);
+        setDropOffLocationName(ride.locationTo.name);
+        setNumPassengers(ride.numRiders);
+        setPickUpAddress(ride.locationFrom.address);
+        setDropOffAddress(ride.locationTo.address);
+        setWhichComponent("handleRide");
+        setDriverLocation(ride.driverLocation.coords);
+
+        // on student side, if there is a ride, go to handle ride component
+        setWhichComponent("handleRide");
+        // now decide what the ride status is based on the ride request status
+        switch (ride.status as string) {
+          case "REQUESTED":
+            rideStatusRef.current = "WaitingForRide";
+            setRideStatus("WaitingForRide");
+            break;
+          case "DRIVING TO PICK UP":
+            rideStatusRef.current = "DriverEnRoute";
+            setRideStatus("DriverEnRoute");
+            break;
+          case "DRIVER AT PICK UP":
+            rideStatusRef.current = "DriverArrived";
+            setRideStatus("DriverArrived");
+            break;
+          case "DRIVING TO DESTINATION":
+            rideStatusRef.current = "RideInProgress";
+            setRideStatus("RideInProgress");
+            break;
+          case "COMPLETED":
+            rideStatusRef.current = "RideCompleted";
+            setRideStatus("RideCompleted");
+            break;
+          default:
+            rideStatusRef.current = "WaitingForRide";
+            setRideStatus("WaitingForRide");
+            break;
+        }
+        if (ride.status != "COMPLETED") {
+          // get any wait time info if we have an active ride
+          WebSocketService.send({
+            directive: "WAIT_TIME",
+            requestid: ride.requestId,
+            requestedRide: {
+              pickUpLocation: ride.locationFrom.coordinates,
+              dropOffLocation: ride.locationTo.coordinates,
+            },
+            driverLocation: ride.driverLocation.coords,
+          });
+          // if the ride is not completed,
+          // show a quick alert telling the student to cancel if needed
+          alert(
+            "Seems like you have an active ride!" +
+              " If you didn't want this ride, hit the cancel ride button."
+          );
+        }
+      }
+      // no active ride request, do nothing
+    } else {
+      // something went wrong
+      console.log("Load Ride response error: ", message);
+    }
+  };
+
   // WEBSOCKET -- LOCATION
   // listen for any LOCATION messages from the server about the driver's location
   const handleLocation = (message: WebSocketResponse) => {
@@ -554,6 +638,7 @@ export default function HomePage() {
       WebSocketService.send({
         directive: "LOCATION",
         id: netid,
+        role: "STUDENT",
         latitude: userLocationRef.current.latitude,
         longitude: userLocationRef.current.longitude,
       });
