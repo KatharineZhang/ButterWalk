@@ -15,9 +15,9 @@ import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
 import AutocompleteInput from "./Student_AutocompleteTextInput";
 import { styles } from "../assets/styles";
-import BottomDrawer from "./Student_RideReqBottomDrawer";
+import BottomDrawer, { BottomDrawerRef } from "./Student_RideReqBottomDrawer";
 import PopUpModal from "./Student_PopUpModal";
-import BottomSheet from "@gorhom/bottom-sheet";
+// import BottomSheet from "@gorhom/bottom-sheet";
 import SegmentedProgressBar from "./Both_SegmentedProgressBar";
 import {
   BuildingService,
@@ -103,7 +103,7 @@ export default function RideRequestForm({
   const suggestionListHeight = screenHeight * 0.25;
 
   // Bottom Sheet Reference needed to expand the bottom sheet
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomSheetRef = useRef<BottomDrawerRef>(null);
 
   // Confirmation Modal
   const [confirmationModalVisible, setConfirmationModalVisible] =
@@ -691,140 +691,141 @@ export default function RideRequestForm({
   // the ride request panel
   const RideRequest: JSX.Element = (
     <View style={{ flex: 1, pointerEvents: "box-none", width: "100%" }}>
-      <BottomDrawer bottomSheetRef={bottomSheetRef}>
-        {/* The search box with shadow under it*/}
+      <BottomDrawer ref={bottomSheetRef}>
+        {/* Request Form */}
         <View
           style={styles.requestFormContainer}
           onLayout={() => {
-            // on render, update the sidebar height to 40% the height of the screen
-            // (which is the default height of the bottom sheet)
+            // update sidebar height to 40% screen height
             updateSideBarHeight(height * 0.4);
           }}
         >
-          <View style={{ flex: 1, width: "99%" }}>
-            {/* Header */}
-            <View
+          {/* Header */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center", // centers content by default
+              marginHorizontal: 20,
+              marginBottom: 20,
+            }}
+          >
+            <Text
               style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                width: "90%",
-                marginHorizontal: 20,
-                marginBottom: 20,
+                fontSize: 20,
+                fontWeight: "bold",
+                textAlign: "center",
+                flex: 1, 
               }}
             >
-              <View style={{ width: "10%" }} />
-              {/* Title */}
-              <Text style={{ fontSize: 20, fontWeight: "bold" }}>
-                Choose Your Locations
-              </Text>
+              Choose Your Locations
+            </Text>
 
-              {/* faq button */}
-              <TouchableOpacity onPress={() => setFAQVisible(true)}>
-                <Ionicons
-                  name="information-circle-outline"
-                  size={25}
-                  color="black"
+            <TouchableOpacity onPress={() => setFAQVisible(true)}>
+              <Ionicons
+                name="information-circle-outline"
+                size={25}
+                color="black"
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Progress Bar */}
+          <SegmentedProgressBar type={1} />
+          <View style={{ height: 20 }} />
+
+          {/* Inputs with vertical icons */}
+          <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+            {/* Icon column */}
+            <View style={{ flexDirection: "row" }}>
+              {/* Input column (full width) */}
+              <View style={{ flex: 1 }}>
+                <AutocompleteInput
+                  onPress={() => {
+                    setCurrentQuery("pickup");
+                    expand();
+                  }}
+                  query={pickUpQuery}
+                  setQuery={setPickUpQuery}
+                  enterPressed={enterPressed}
+                  placeholder="Pick Up Location"
                 />
-              </TouchableOpacity>
-            </View>
-            <View style={{ height: 20 }} />
-            <SegmentedProgressBar type={1} />
-            <View style={{ height: 20 }} />
+                <AutocompleteInput
+                  onPress={() => {
+                    setCurrentQuery("dropoff");
+                    expand();
+                  }}
+                  query={dropOffQuery}
+                  setQuery={setDropOffQuery}
+                  enterPressed={enterPressed}
+                  placeholder="Drop Off Location"
+                />
+              </View>
 
-            {/* Location and Destination Icons */}
-            <View
-              style={{
-                borderRadius: 13,
-                backgroundColor: "#4B2E83",
-                position: "absolute",
-                zIndex: 3,
-                top: 110,
-                left: 13,
-                height: 15,
-                width: 15,
-              }}
-            />
-            <Image
-              source={require("@/assets/images/dashed-line.png")}
-              style={{
-                zIndex: 3,
-                position: "absolute",
-                top: 132,
-                left: 19,
-                width: 2,
-                height: 40,
-              }}
-            />
-            <Image
-              source={require("@/assets/images/dropoff-location.png")}
-              style={{
-                position: "absolute",
-                zIndex: 3,
-                top: 177,
-                left: 10,
-                height: 20,
-                width: 20,
-              }}
-            />
-            <View
-              style={{
-                zIndex: 2,
-              }}
-            >
-              {/* Location and Destination Inputs */}
-              <AutocompleteInput
-                onPress={() => {
-                  setCurrentQuery("pickup");
-                  expand();
-                }}
-                query={pickUpQuery}
-                setQuery={setPickUpQuery}
-                enterPressed={enterPressed}
-                placeholder="Pick Up Location"
-                // data={campusAPIResults}
-              />
-              <AutocompleteInput
-                onPress={() => {
-                  setCurrentQuery("dropoff");
-                  expand();
-                }}
-                query={dropOffQuery}
-                setQuery={setDropOffQuery}
-                enterPressed={enterPressed}
-                placeholder="Drop Off Location"
-                // data={campusAPIResults}
-              />
-            </View>
-            {/* Next Button */}
-            <View
-              style={{
-                flex: 0.1,
-                justifyContent: "flex-end",
-                zIndex: 100,
-              }}
-            >
-              <TouchableOpacity
+              {/* Overlay column */}
+              <View
                 style={{
-                  flexDirection: "row",
+                  position: "absolute",
+                  left: 0,           
+                  top: 23,
+                  bottom: 0,
                   alignItems: "center",
-                  marginVertical: 10,
-                  justifyContent: "flex-end",
+                  marginLeft: 12,   
+                  zIndex: 10,         
                 }}
-                onPress={goToNumberRiders}
               >
-                <Text style={{ fontStyle: "italic" }}>
-                  Choose # of passengers
-                </Text>
-                <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
-              </TouchableOpacity>
+                {/* Pickup dot */}
+                <View
+                  style={{
+                    borderRadius: 13,
+                    backgroundColor: "#4B2E83",
+                    height: 15,
+                    width: 15,
+                  }}
+                />
+                {/* Dotted line */}
+                <Image
+                  source={require("@/assets/images/dashed-line.png")}
+                  style={{ width: 2, height: 45, marginVertical: 4 }}
+                  resizeMode="repeat"
+                />
+                {/* Dropoff pin */}
+                <Image
+                  source={require("@/assets/images/dropoff-location.png")}
+                  style={{ height: 20, width: 20 }}
+                />
+              </View>
             </View>
           </View>
-        </View>
-        {/* Autocomplete Suggestions */}
 
+          {/* Next Button */}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "flex-end", 
+              alignItems: "center",
+              marginVertical: "2%",
+              paddingHorizontal: 2,     
+              width: "100%",            
+            }}
+          >
+            <TouchableOpacity
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+              onPress={goToNumberRiders}
+            >
+              <Text style={{ fontStyle: "italic", marginRight: 8 }}>
+                Choose # of passengers
+              </Text>
+              <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Suggestions */}
         <View style={{ flex: 1, height: suggestionListHeight }}>
-          {/* list all the possible buildings */}
           <FlatList
             data={formattedResults}
             keyExtractor={(item) => item.key}
@@ -932,6 +933,7 @@ export default function RideRequestForm({
             }
           />
         </View>
+
         {/* Confirmation Modal */}
         <PopUpModal
           type="half"
@@ -946,10 +948,7 @@ export default function RideRequestForm({
               <Text style={styles.description}>
                 Setting your pickup location to: {closestBuilding}
               </Text>
-              <Pressable
-                onPress={confirmPickUpLocation}
-                style={styles.sendButton}
-              >
+              <Pressable onPress={confirmPickUpLocation} style={styles.sendButton}>
                 <Text style={styles.buttonLabel}>Confirm</Text>
               </Pressable>
             </View>
