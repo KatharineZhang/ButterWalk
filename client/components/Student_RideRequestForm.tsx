@@ -10,6 +10,7 @@ import {
   Alert,
   FlatList,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
@@ -45,6 +46,7 @@ type RideRequestFormProps = {
   userLocation: { latitude: number; longitude: number };
   recentLocations: LocationType[];
   startingState?: { pickup: string; dropoff: string; numRiders: number };
+  showRequestLoading: boolean;
   pickUpLocationNameChanged: (location: string) => void;
   dropOffLocationNameChanged: (location: string) => void;
   pickUpLocationCoordChanged: (location: {
@@ -75,6 +77,7 @@ export default function RideRequestForm({
   setNotificationState,
   updateSideBarHeight,
   darkenScreen,
+  showRequestLoading,
 }: RideRequestFormProps) {
   /* STATE */
   // user input states for form
@@ -354,7 +357,7 @@ export default function RideRequestForm({
         "Service Unavailable",
         `Service is not available on ${holiday?.name}`
       );
-      // return;
+      return;
     }
 
     // check if within service hours
@@ -363,7 +366,7 @@ export default function RideRequestForm({
         "Service Unavailable",
         "Service is only available between 6:30 PM and 2:00 AM"
       );
-      // return;
+      return;
     }
 
     // Both location should be in the purple zone
@@ -478,6 +481,24 @@ export default function RideRequestForm({
     // only call place search if the text is longer than 3 characters
     // and if the text is different enough from the previous query
     if (text.length > 3 && levensteinDistance(text, previousQuery) > 2) {
+      // We are going to call the place search API
+      // update the previous query as the one we are currently using
+      if (currentQuery == "pickup") {
+        setPreviousPickUpQuery(text);
+      } else {
+        setPreviousDropOffQuery(text);
+      }
+      WebSocketService.send({
+        directive: "PLACE_SEARCH",
+        query: text,
+      });
+    }
+  };
+
+  // TEST: call place search every time the text changes,
+  // especially if there are no campus options
+  const callPlaceSearch = async (text: string) => {
+    if (campusAPIResults.length == 0 && text.length >= 3) {
       // We are going to call the place search API
       // update the previous query as the one we are currently using
       if (currentQuery == "pickup") {
@@ -649,25 +670,18 @@ export default function RideRequestForm({
   // If the query is empty, show recent locations first, then all campus locations,
   // and finally external place search results (excluding duplicates).
   const formattedResults: FormattedResult[] =
-    (currentQuery === "pickup" ? pickUpQuery : dropOffQuery) !== ""
+    (currentQuery === "pickup" ? pickUpQuery : dropOffQuery) == ""
       ? [
           // Only show campusAPIResults if the query is not empty
-          ...campusAPIResults.map((item, index) => ({
+          ...recentLocations.map((item, index) => ({
             key: `campus-${index}`,
-            name: item,
-            address: null,
-            type: "campus" as const,
-          })),
-        ]
-      : [
-          // Show recentLocations first
-          ...recentLocations.map((item) => ({
-            key: `recent-${item.name}`,
             name: item.name,
             address: item.address,
             type: "recent" as const,
           })),
-          // Then campusAPIResults
+        ]
+      : [
+          // show campusAPIResults
           ...campusAPIResults.map((item, index) => ({
             key: `campus-${index}`,
             name: item,
@@ -715,7 +729,7 @@ export default function RideRequestForm({
                 fontSize: 20,
                 fontWeight: "bold",
                 textAlign: "center",
-                flex: 1, 
+                flex: 1,
               }}
             >
               Choose Your Locations
@@ -746,7 +760,10 @@ export default function RideRequestForm({
                     expand();
                   }}
                   query={pickUpQuery}
-                  setQuery={setPickUpQuery}
+                  setQuery={(query) => {
+                    setPickUpQuery(query);
+                    callPlaceSearch(query);
+                  }}
                   enterPressed={enterPressed}
                   placeholder="Pick Up Location"
                 />
@@ -756,7 +773,10 @@ export default function RideRequestForm({
                     expand();
                   }}
                   query={dropOffQuery}
-                  setQuery={setDropOffQuery}
+                  setQuery={(query) => {
+                    setDropOffQuery(query);
+                    callPlaceSearch(query);
+                  }}
                   enterPressed={enterPressed}
                   placeholder="Drop Off Location"
                 />
@@ -766,12 +786,12 @@ export default function RideRequestForm({
               <View
                 style={{
                   position: "absolute",
-                  left: 0,           
+                  left: 0,
                   top: 23,
                   bottom: 0,
                   alignItems: "center",
-                  marginLeft: 12,   
-                  zIndex: 10,         
+                  marginLeft: 12,
+                  zIndex: 10,
                 }}
               >
                 {/* Pickup dot */}
@@ -802,11 +822,11 @@ export default function RideRequestForm({
           <View
             style={{
               flexDirection: "row",
-              justifyContent: "flex-end", 
+              justifyContent: "flex-end",
               alignItems: "center",
               marginVertical: "2%",
-              paddingHorizontal: 2,     
-              width: "100%",            
+              paddingHorizontal: 2,
+              width: "100%",
             }}
           >
             <TouchableOpacity
@@ -948,7 +968,10 @@ export default function RideRequestForm({
               <Text style={styles.description}>
                 Setting your pickup location to: {closestBuilding}
               </Text>
-              <Pressable onPress={confirmPickUpLocation} style={styles.sendButton}>
+              <Pressable
+                onPress={confirmPickUpLocation}
+                style={styles.sendButton}
+              >
                 <Text style={styles.buttonLabel}>Confirm</Text>
               </Pressable>
             </View>
@@ -1049,17 +1072,38 @@ export default function RideRequestForm({
           alignItems: "center",
         }}
       >
-        <TouchableOpacity
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            alignSelf: "flex-end",
-          }}
-          onPress={() => rideRequested(numRiders)}
-        >
-          <Text style={{ fontStyle: "italic" }}>See ride details</Text>
-          <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
-        </TouchableOpacity>
+        {showRequestLoading ? (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              alignSelf: "flex-end",
+            }}
+          >
+            <Text style={{ fontStyle: "italic", fontSize: 18 }}>
+              Requesting your ride...
+            </Text>
+            <ActivityIndicator
+              size="small"
+              color="#4B2E83"
+              style={{ margin: "2%" }}
+            />
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              alignSelf: "flex-end",
+            }}
+            onPress={() => {
+              rideRequested(numRiders);
+            }}
+          >
+            <Text style={{ fontStyle: "italic" }}>See ride details</Text>
+            <Ionicons name="arrow-forward" size={30} color="#4B2E83" />
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
