@@ -357,7 +357,7 @@ export default function RideRequestForm({
         "Service Unavailable",
         `Service is not available on ${holiday?.name} (but i'll allow it this time...)`
       );
-      return;
+      // return;
     }
 
     // check if within service hours
@@ -366,7 +366,7 @@ export default function RideRequestForm({
         "Service Unavailable",
         "Service is only available between 6:30 PM and 2:00 AM (but i'll allow it this time...)"
       );
-      return;
+      // return;
     }
 
     // Both location should be in the purple zone
