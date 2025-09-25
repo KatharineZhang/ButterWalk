@@ -12,7 +12,8 @@
 - Install the Expo Go app on your phone or a mobile emulator onto your computer.
   - Remember the login details you use to sign in with expo. You will need them soon.
 
-# To Run
+
+# To Run (using Expo Go)
 
 - cd into the server folder and run `npm run buildandstart`
 - In a new terminal, cd into the client folder and run `npx expo start`
@@ -22,6 +23,32 @@
   - You will be prompted to sign in with EAS in the terminal
   - Type the login details you used to sign in the to the expo app into the terminal.
   - Now rescan the QR code and see the app run!
+  - NOTE: MAKE SURE TO ALLOW ANY PERMISSION THE APP ASKS FOR (LOCATION, ETC.) !
+
+# To Run (using Development Simulator)
+
+- cd into the server folder and run `npm run buildandstart`
+- In a new terminal, cd into the client folder and run eas build:dev
+- You will be prompted to choose to run either a Android or iOS development simulator build
+- If a simulator build has been cached/stored previously, it will automatically reload and open the app again on your chosen simulator
+- If not, a new development simulator build will start (taking approx 10 minutes); once done, it will install the build onto your simulator (This build will be cached, and as you work on the code, it will reload/update changes on the app. If you however were to change any app settings (in files such as app.json or app.config.ts), it will generate a new build.)
+- ## IF THIS IS YOUR FIRST TIME RUNNING:
+  - You will be prompted to sign in with EAS in the terminal
+  - Type the login details used to sign in to expo.dev (ask Dev Leads for this info).
+  - NOTE: MAKE SURE TO ALLOW ANY PERMISSION THE APP ASKS FOR (LOCATION, ETC.) !
+
+# To Run (using Preview Build)
+
+Since Preview builds are like standalone apps, you must be on the deployment branch to build (otherwise the app sends messages/info to a nonexistent server!), ask Dev Leads for more details if required. 
+
+- switch to deployment branch, merging any changes (locally, NOT ACTUALLY PUSHING TO THE DEPLOYMENT BRANCH!!) that you would like to test
+- In a new terminal, run eas build --platform android --profile preview OR eas build --platform ios --profile preview for an Android/iOS build
+- (you will need to ask Dev Leads for more information if you don't have an Apple Dev account; if you do have an Apple Dev account, enter your credentials as follows) 
+- This generates a new build, taking approximately 10-12 minutes.
+- Once completed, it will provide you a link that you can copy/paste into the device of your choice, and from there, you can run your build! (It may even offer to download this build if you have an open phone simulator, which you may choose to do as well)
+- ## IF THIS IS YOUR FIRST TIME RUNNING:
+  - You will be prompted to sign in with EAS in the terminal
+  - Type the login details used to sign in to expo.dev (ask Dev Leads for this info).
   - NOTE: MAKE SURE TO ALLOW ANY PERMISSION THE APP ASKS FOR (LOCATION, ETC.) !
 
 # To Use Simulator (Mac)
