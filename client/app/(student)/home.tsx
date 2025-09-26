@@ -110,6 +110,7 @@ export default function HomePage() {
     latitude: number;
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
+  const [showRequestLoading, setShowRequestLoading] = useState<boolean>(false);
 
   // many components use the location name, so we store it here
   const [pickUpLocationName, setPickUpLocationName] = useState<string>("");
@@ -120,7 +121,23 @@ export default function HomePage() {
   // we want to show the confirm ride component
   const rideRequested = (numPassengers: number) => {
     setNumPassengers(numPassengers);
-    setWhichComponent("confirmRide");
+    setShowRequestLoading(true);
+    // get the ride duration and driver ETA
+    WebSocketService.send({
+      directive: "WAIT_TIME",
+      requestedRide: {
+        pickUpLocation,
+        dropOffLocation,
+      },
+    });
+    // find out how long it will take to walk
+    WebSocketService.send({
+      directive: "DISTANCE",
+      origin: [userLocationRef.current],
+      destination: [pickUpLocation],
+      mode: "walking",
+      tag: "walkToPickup",
+    });
   };
 
   // the user's recent locations that will be displayed in the dropdown
@@ -415,6 +432,11 @@ export default function HomePage() {
     } else {
       // something went wrong
       console.log("Profile response error: ", message);
+      setNotifState({
+        text: "DEV NOTIF: ProfileError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -510,6 +532,11 @@ export default function HomePage() {
     } else {
       // something went wrong
       console.log("Location response error: ", message);
+      setNotifState({
+        text: "DEV NOTIF: LocationError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -526,6 +553,7 @@ export default function HomePage() {
           // but stay on handle ride component
           rideStatusRef.current = "WaitingForRide";
           setRideStatus("WaitingForRide");
+          setDriverLocation({ latitude: 0, longitude: 0 }); // reset driver location
           setNotifState({
             text: "Your driver canceled the ride. Please wait for another driver",
             color: "#FFCBCB",
@@ -571,6 +599,11 @@ export default function HomePage() {
       }
     } else {
       console.log("Cancel Ride error: " + (message as ErrorResponse).error);
+      setNotifState({
+        text: "DEV NOTIF: CancelRideError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -613,6 +646,12 @@ export default function HomePage() {
       });
     } else {
       console.log("Driver arrived response error: ", message);
+      setNotifState({
+        text:
+          "DEV NOTIF: DriverArrivedError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -632,6 +671,13 @@ export default function HomePage() {
       });
     } else {
       console.log("Driver arrived at pickup response error: ", message);
+      setNotifState({
+        text:
+          "DEV NOTIF: DriverPickedUpStudentError: " +
+          (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -716,6 +762,11 @@ export default function HomePage() {
       setRideStatus("DriverEnRoute");
     } else {
       console.log("Accept ride error: ", message);
+      setNotifState({
+        text: "DEV NOTIF: AcceptRideError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -732,6 +783,11 @@ export default function HomePage() {
       setDropOffAddress(waitTimeresp.dropOffAddress as string);
     } else {
       console.log("Wait time response error: ", message);
+      setNotifState({
+        text: "DEV NOTIF: WaitTimeError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -742,11 +798,31 @@ export default function HomePage() {
       if (distanceResp.tag === "walkToPickup") {
         const walkSeconds =
           distanceResp.apiResponse.rows[0].elements[0].duration.value;
-        setWalkDuration(Math.floor(walkSeconds / 60)); // convert seconds to minutes
+        const walkMin = Math.floor(walkSeconds / 60);
+        if (walkMin > 20) {
+          // send a notification
+          setNotifState({
+            text: "You are too far away from the pickup location",
+            color: "#FFCBCB",
+            trigger: Date.now(),
+          });
+          // exit
+          setShowRequestLoading(false);
+          return;
+        }
+        // everything is good, set state and go to the confirm ride page
+        setShowRequestLoading(false);
+        setWalkDuration(walkMin); // convert seconds to minutes
         setWalkAddress(distanceResp.apiResponse.origin_addresses[0]);
+        setWhichComponent("confirmRide");
       }
     } else {
       console.log("Distance response error: ", message);
+      setNotifState({
+        text: "DEV NOTIF: DistanceError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -872,6 +948,7 @@ export default function HomePage() {
                 setNotificationState={setNotifState}
                 updateSideBarHeight={setCurrentComponentHeight}
                 darkenScreen={setDarkenScreen}
+                showRequestLoading={showRequestLoading}
               />
             </View>
           ) : whichComponent === "confirmRide" ? (
