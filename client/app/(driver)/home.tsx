@@ -569,6 +569,7 @@ export default function HomePage() {
         const ride = loadRideMessage.rideRequest;
         setPickUpLocation(ride.locationFrom.coordinates);
         setDropOffLocation(ride.locationTo.coordinates);
+        setStudentLocation(ride.studentLocation.coords);
         setRequestInfo(ride);
 
         // decide which phase to set based on the ride status
