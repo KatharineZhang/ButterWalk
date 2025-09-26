@@ -150,6 +150,7 @@ export default function HandleRide({
         text: "Your ride will be canceled in one minute.",
         color: "#FFCBCB",
         boldText: "one minute",
+        trigger: Date.now(),
       });
     } else if (seconds <= 0) {
       // the timer ran out! cancel the ride
@@ -163,6 +164,7 @@ export default function HandleRide({
     changeNotifState({
       text: "Ride canceled",
       color: "#FFCBCB",
+      trigger: Date.now(),
     });
     onCancel();
   };
