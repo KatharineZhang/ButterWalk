@@ -13,6 +13,7 @@ import {
   CancelResponse,
   DistanceResponse,
   ErrorResponse,
+  LoadRideResponse,
   LocationResponse,
   LocationType,
   ProfileResponse,
@@ -81,6 +82,7 @@ export default function HomePage() {
       WebSocketService.send({
         directive: "LOCATION",
         id: netid,
+        role: "STUDENT",
         latitude: location.latitude,
         longitude: location.longitude,
       });
@@ -108,6 +110,7 @@ export default function HomePage() {
     latitude: number;
     longitude: number;
   }>({ latitude: 0, longitude: 0 });
+  const [showRequestLoading, setShowRequestLoading] = useState<boolean>(false);
 
   // many components use the location name, so we store it here
   const [pickUpLocationName, setPickUpLocationName] = useState<string>("");
@@ -118,7 +121,23 @@ export default function HomePage() {
   // we want to show the confirm ride component
   const rideRequested = (numPassengers: number) => {
     setNumPassengers(numPassengers);
-    setWhichComponent("confirmRide");
+    setShowRequestLoading(true);
+    // get the ride duration and driver ETA
+    WebSocketService.send({
+      directive: "WAIT_TIME",
+      requestedRide: {
+        pickUpLocation,
+        dropOffLocation,
+      },
+    });
+    // find out how long it will take to walk
+    WebSocketService.send({
+      directive: "DISTANCE",
+      origin: [userLocationRef.current],
+      destination: [pickUpLocation],
+      mode: "walking",
+      tag: "walkToPickup",
+    });
   };
 
   // the user's recent locations that will be displayed in the dropdown
@@ -174,6 +193,7 @@ export default function HomePage() {
         coordinates: dropOffLocation,
       },
       numRiders: numPassengers,
+      studentLocation: userLocationRef.current,
     });
     // set the component to show to loading
     setWhichComponent("Loading");
@@ -270,9 +290,12 @@ export default function HomePage() {
       handleDriverPickedUp,
       "DRIVER_DRIVING_TO_DROPOFF"
     );
+    WebSocketService.addListener(handleLoadRideResponse, "LOAD_RIDE");
 
     // get the user's profile on first render
     sendProfile();
+    // see if there is an active ride request
+    sendLoadRide();
   }, []);
 
   // logic that should happen when the component FIRST changes
@@ -409,6 +432,89 @@ export default function HomePage() {
     } else {
       // something went wrong
       console.log("Profile response error: ", message);
+      setNotifState({
+        text: "DEV NOTIF: ProfileError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
+    }
+  };
+
+  const sendLoadRide = () => {
+    WebSocketService.send({
+      directive: "LOAD_RIDE",
+      id: netid,
+      role: "STUDENT",
+    });
+  };
+  const handleLoadRideResponse = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "LOAD_RIDE") {
+      const loadRideMessage = message as LoadRideResponse;
+      if (loadRideMessage.rideRequest) {
+        // we have an active ride request
+        const ride = loadRideMessage.rideRequest;
+        setPickUpLocation(ride.locationFrom.coordinates);
+        setDropOffLocation(ride.locationTo.coordinates);
+        setPickUpLocationName(ride.locationFrom.name);
+        setDropOffLocationName(ride.locationTo.name);
+        setNumPassengers(ride.numRiders);
+        setPickUpAddress(ride.locationFrom.address);
+        setDropOffAddress(ride.locationTo.address);
+        setWhichComponent("handleRide");
+        setDriverLocation(ride.driverLocation.coords);
+
+        // on student side, if there is a ride, go to handle ride component
+        setWhichComponent("handleRide");
+        // now decide what the ride status is based on the ride request status
+        switch (ride.status as string) {
+          case "REQUESTED":
+            rideStatusRef.current = "WaitingForRide";
+            setRideStatus("WaitingForRide");
+            break;
+          case "DRIVING TO PICK UP":
+            rideStatusRef.current = "DriverEnRoute";
+            setRideStatus("DriverEnRoute");
+            break;
+          case "DRIVER AT PICK UP":
+            rideStatusRef.current = "DriverArrived";
+            setRideStatus("DriverArrived");
+            break;
+          case "DRIVING TO DESTINATION":
+            rideStatusRef.current = "RideInProgress";
+            setRideStatus("RideInProgress");
+            break;
+          case "COMPLETED":
+            rideStatusRef.current = "RideCompleted";
+            setRideStatus("RideCompleted");
+            break;
+          default:
+            rideStatusRef.current = "WaitingForRide";
+            setRideStatus("WaitingForRide");
+            break;
+        }
+        if (ride.status != "COMPLETED") {
+          // get any wait time info if we have an active ride
+          WebSocketService.send({
+            directive: "WAIT_TIME",
+            requestid: ride.requestId,
+            requestedRide: {
+              pickUpLocation: ride.locationFrom.coordinates,
+              dropOffLocation: ride.locationTo.coordinates,
+            },
+            driverLocation: ride.driverLocation.coords,
+          });
+          // if the ride is not completed,
+          // show a quick alert telling the student to cancel if needed
+          alert(
+            "Seems like you have an active ride!" +
+              " If you didn't want this ride, hit the cancel ride button."
+          );
+        }
+      }
+      // no active ride request, do nothing
+    } else {
+      // something went wrong
+      console.log("Load Ride response error: ", message);
     }
   };
 
@@ -426,6 +532,11 @@ export default function HomePage() {
     } else {
       // something went wrong
       console.log("Location response error: ", message);
+      setNotifState({
+        text: "DEV NOTIF: LocationError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -442,6 +553,7 @@ export default function HomePage() {
           // but stay on handle ride component
           rideStatusRef.current = "WaitingForRide";
           setRideStatus("WaitingForRide");
+          setDriverLocation({ latitude: 0, longitude: 0 }); // reset driver location
           setNotifState({
             text: "Your driver canceled the ride. Please wait for another driver",
             color: "#FFCBCB",
@@ -452,6 +564,8 @@ export default function HomePage() {
         resetAllFields();
         // go back to ride request component
         setWhichComponent("rideReq");
+        rideStatusRef.current = "WaitingForRide";
+        
         // set the notif state based on the reason for cancelation
         switch (cancelReason.current) {
           case "none":
@@ -485,6 +599,11 @@ export default function HomePage() {
       }
     } else {
       console.log("Cancel Ride error: " + (message as ErrorResponse).error);
+      setNotifState({
+        text: "DEV NOTIF: CancelRideError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -521,11 +640,18 @@ export default function HomePage() {
       WebSocketService.send({
         directive: "LOCATION",
         id: netid,
+        role: "STUDENT",
         latitude: userLocationRef.current.latitude,
         longitude: userLocationRef.current.longitude,
       });
     } else {
       console.log("Driver arrived response error: ", message);
+      setNotifState({
+        text:
+          "DEV NOTIF: DriverArrivedError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -545,6 +671,13 @@ export default function HomePage() {
       });
     } else {
       console.log("Driver arrived at pickup response error: ", message);
+      setNotifState({
+        text:
+          "DEV NOTIF: DriverPickedUpStudentError: " +
+          (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -629,6 +762,11 @@ export default function HomePage() {
       setRideStatus("DriverEnRoute");
     } else {
       console.log("Accept ride error: ", message);
+      setNotifState({
+        text: "DEV NOTIF: AcceptRideError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -645,6 +783,11 @@ export default function HomePage() {
       setDropOffAddress(waitTimeresp.dropOffAddress as string);
     } else {
       console.log("Wait time response error: ", message);
+      setNotifState({
+        text: "DEV NOTIF: WaitTimeError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -655,11 +798,31 @@ export default function HomePage() {
       if (distanceResp.tag === "walkToPickup") {
         const walkSeconds =
           distanceResp.apiResponse.rows[0].elements[0].duration.value;
-        setWalkDuration(Math.floor(walkSeconds / 60)); // convert seconds to minutes
+        const walkMin = Math.floor(walkSeconds / 60);
+        if (walkMin > 20) {
+          // send a notification
+          setNotifState({
+            text: "You are too far away from the pickup location",
+            color: "#FFCBCB",
+            trigger: Date.now(),
+          });
+          // exit
+          setShowRequestLoading(false);
+          return;
+        }
+        // everything is good, set state and go to the confirm ride page
+        setShowRequestLoading(false);
+        setWalkDuration(walkMin); // convert seconds to minutes
         setWalkAddress(distanceResp.apiResponse.origin_addresses[0]);
+        setWhichComponent("confirmRide");
       }
     } else {
       console.log("Distance response error: ", message);
+      setNotifState({
+        text: "DEV NOTIF: DistanceError: " + (message as ErrorResponse).error,
+        color: "#FFD580",
+        trigger: Date.now(),
+      });
     }
   };
 
@@ -785,6 +948,7 @@ export default function HomePage() {
                 setNotificationState={setNotifState}
                 updateSideBarHeight={setCurrentComponentHeight}
                 darkenScreen={setDarkenScreen}
+                showRequestLoading={showRequestLoading}
               />
             </View>
           ) : whichComponent === "confirmRide" ? (
