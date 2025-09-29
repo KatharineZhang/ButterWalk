@@ -111,6 +111,8 @@ export default function HomePage() {
       // setWhichComponent("endShift");
       setWhichComponent("noRequests");
       seeIfRidesExist();
+      // see if there is an active ride request
+      sendLoadRide();
     }
   };
 
