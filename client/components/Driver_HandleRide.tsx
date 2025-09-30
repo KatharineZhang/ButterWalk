@@ -281,7 +281,6 @@ export default function HandleRide({
             </View>
           </View>
 
-          {/* Directions + Call Student Buttons */}
           <View
             style={{
               marginTop: 4,
@@ -317,6 +316,7 @@ export default function HandleRide({
                 Directions
               </Text>
             </Pressable>
+          </View>
 
           {/* Grey line */}
           <View style={styles.driverGreyLine} />
