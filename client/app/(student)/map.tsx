@@ -10,7 +10,6 @@ import MapView, {
   PROVIDER_GOOGLE,
   Polygon,
   Marker,
-  Polyline,
 } from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
