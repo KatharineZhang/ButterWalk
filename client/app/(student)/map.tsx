@@ -84,30 +84,6 @@ const Map = forwardRef<MapRef, MapProps>(
       { latitude: 0, longitude: 0 },
     ]);
 
-    const [ridePath, setRidePath] = useState<
-      { latitude: number; longitude: number }[]
-    >([]);
-
-    useEffect(() => {
-      if (
-        status === "RideInProgress" &&
-        driverLocation.latitude != 0 &&
-        driverLocation.longitude != 0 &&
-        !isSameLocation(driverLocation, ridePath[ridePath.length - 1]) // check if we have moved far enough
-      ) {
-        // if the ride is in progress, show the path
-        // add newest driverLocation to the path
-        setRidePath([...ridePath, driverLocation]);
-      }
-    }, [driverLocation]);
-
-    useEffect(() => {
-      // when the ride is completed, clear the path
-      if (status === "RideCompleted") {
-        setRidePath([]);
-      }
-    }, [status]);
-
     // GOOGLE MAPS API KEY
     const GOOGLE_MAPS_APIKEY =
       // production
@@ -372,15 +348,18 @@ const Map = forwardRef<MapRef, MapProps>(
               />
             )}
 
-          {/* show the path of the ride if it is in progress. 
-        Used to plot the path of the driver during the ride */}
-          {status === "RideInProgress" && (
-            <Polyline
-              coordinates={ridePath}
-              strokeWidth={3}
-              strokeColor="#4B2E83"
-            />
-          )}
+          {/* (in progress): Returns a new MapViewDirections if in progress (not the polyline trail) */}
+          {status === "RideInProgress" &&
+            driverLocation.latitude !== 0 &&
+            dropOffLocation.latitude !== 0 && (
+              <MapViewDirections
+                origin={driverLocation}
+                destination={dropOffLocation}
+                apikey={GOOGLE_MAPS_APIKEY}
+                strokeWidth={3}
+                strokeColor="#4B2E83" 
+              />
+            )}
         </MapView>
       </View>
     );
