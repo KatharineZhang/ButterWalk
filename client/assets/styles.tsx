@@ -355,7 +355,6 @@ export const styles = StyleSheet.create({
     alignItems: "center",
   },
   requestFormContainer: {
-    width: "100%",
     borderRadius: 10,
     shadowRadius: 2,
     shadowOpacity: 0.4,
@@ -933,7 +932,7 @@ export const styles = StyleSheet.create({
 
   logoutWarningContainer: {
     position: "absolute",
-    width: "91%",
+    width: "90%",
     height: "25%",
     paddingHorizontal: 16,
     paddingVertical: "10%",

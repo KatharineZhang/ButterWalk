@@ -26,6 +26,7 @@ import {
   PlaceSearchResponse,
   PurpleZone,
   WrapperCancelResponse,
+  LoadRideResponse,
 } from "./api";
 import {
   addFeedbackToDb,
@@ -48,6 +49,9 @@ import {
   // we want this import for when we have a drivers collection
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   verifyDriverId,
+  setRideRequestDriverLocation,
+  setRideRequestStudentLocation,
+  getActiveRideRequest,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { highestRank, rankOf } from "./rankingAlgorithm";
@@ -231,7 +235,7 @@ export const checkIfDriverSignin = async (
     } as ErrorResponse;
   }
   return resp;
-}; 
+};
 
 // Finishes the account for the user by adding the phone number and student number to the database
 // returns a success message if the account creation is successful and a boolean value of true if the account already exists
@@ -274,6 +278,42 @@ export const finishAccCreation = async (
       response: "ERROR",
       error: `Error adding phone number or student number to database: ${(e as Error).message}.`,
       category: "FINISH_ACC",
+    };
+  }
+};
+
+/**
+ * Get an active ride for a user, either a student or driver.
+ * @param id The netid of the user whose ride we want to load
+ * @param role
+ * @returns
+ */
+export const loadRide = async (
+  id: string,
+  role: "STUDENT" | "DRIVER"
+): Promise<LoadRideResponse | ErrorResponse> => {
+  if (!id) {
+    return {
+      response: "ERROR",
+      error: "Missing or invalid netid.",
+      category: "LOAD_RIDE",
+    };
+  }
+  try {
+    return await runTransaction(db, async (transaction) => {
+      const rideRequest = await getActiveRideRequest(
+        transaction,
+        id,
+        role,
+        true // we want to include recently completed rides
+      );
+      return { response: "LOAD_RIDE", rideRequest };
+    });
+  } catch (e: unknown) {
+    return {
+      response: "ERROR",
+      error: `Error loading ride from database: ${(e as Error).message}.`,
+      category: "LOAD_RIDE",
     };
   }
 };
@@ -1161,6 +1201,7 @@ information to the opposite user (student → driver, driver → student).
 { response: “LOCATION”, netid: string, latitude: number, longitude: number } where netid is the id of the opposite user. */
 export const location = async (
   id: string,
+  role: "STUDENT" | "DRIVER",
   latitude: number,
   longitude: number
 ): Promise<LocationResponse | ErrorResponse> => {
@@ -1174,9 +1215,22 @@ export const location = async (
   // Look for an accepted request with the netid passed in and extract the opposite user netid
   let otherNetId;
   try {
-    return await runTransaction(db, async () => {
+    return await runTransaction(db, async (transaction) => {
       // we can't use transactions to query so hopefully this is fine
       otherNetId = await getOtherNetId(id); // get the location of the user
+
+      // update the location of the user in the RideReques if needed
+      if (role === "STUDENT") {
+        // id in this case is the student netid
+        setRideRequestStudentLocation(transaction, id, { latitude, longitude });
+      } else if (role === "DRIVER") {
+        // id in this case is the driverid and otherNetId is the student netid
+        setRideRequestDriverLocation(transaction, otherNetId, {
+          latitude,
+          longitude,
+        });
+      }
+
       // pass the location information to the opposite user
       return { response: "LOCATION", netid: otherNetId, latitude, longitude };
     });

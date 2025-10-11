@@ -35,9 +35,13 @@ const Login = () => {
   useEffect(() => {
     const connectWebSocket = async () => {
       // call our new route
-      const msg: WebsocketConnectMessage = await WebSocketService.connect();
+      const msg: WebsocketConnectMessage = await WebSocketService.connect()
+        .then((msg) => msg)
+        .catch((err) => err);
       if (msg !== "Connected Successfully") {
-        console.log("failed to connect!!!");
+        console.log(
+          "WEBSOCKET: Failed to connect to WebSocket in Driver SignIn"
+        );
       }
       // if nothing is logged, assumed connected successfully
     };
@@ -48,7 +52,7 @@ const Login = () => {
   // check that the driver ID input is correct
   // param: input - the driver id input in the sign in
   const checkDriverIdInput = () => {
-    if (/^[a-z]{5,7}$/.test(driverId.toLowerCase())) {
+    if (/^[a-z0-9]+$/.test(driverId.toLowerCase())) {
       setNetid(driverId.toLowerCase());
       setErrMsg("");
       // send the signin request to the backend
@@ -60,7 +64,7 @@ const Login = () => {
       });
     } else {
       setDriverId("");
-      setErrMsg("Driver ID must be 5 to 7 lowercase letters.");
+      setErrMsg("Driver ID must have only lowercase letters or numbers.");
     }
   };
 

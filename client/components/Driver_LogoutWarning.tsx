@@ -19,25 +19,24 @@ export default function LogoutWarning({ onLogout }: Props) {
   }, []);
 
   return (
-    <Animated.View style={[styles.logoutWarningContainer, { top: top }]}>
+    <Animated.View
+      style={[styles.logoutWarningContainer, { top: top, alignSelf: "center" }]}
+    >
       <View
         style={{
           flexDirection: "row",
-          justifyContent: "space-between",
+          justifyContent: "center",
           alignItems: "center",
+          paddingHorizontal: "10%",
         }}
       >
         <FontAwesome name="warning" size={40} color="black" />
-        <View
-          style={{
-            width: "80%",
-          }}
-        >
-          <Text style={{ fontSize: 18 }}>
-            It's the end of your shift. Please logout.
-          </Text>
-        </View>
+        <View style={{ width: "10%" }} />
+        <Text style={{ fontSize: 20 }}>
+          It's the end of your shift. Please logout.
+        </Text>
       </View>
+      <View style={{ height: "35%" }} />
       <Pressable
         onPress={onLogout}
         style={[styles.logoutButton, { backgroundColor: "white" }]}
