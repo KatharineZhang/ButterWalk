@@ -46,8 +46,6 @@ import {
   setRideRequestDriver,
   getRecentLocations,
   isNotAccepted,
-  // we want this import for when we have a drivers collection
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   verifyDriverId,
   setRideRequestDriverLocation,
   setRideRequestStudentLocation,
@@ -187,12 +185,11 @@ export const checkIfDriverSignin = async (
           } as ErrorResponse;
         }
 
-        driverValid = true; // TODO: remove this line when we have a drivers collection
         // check if the driverid exists in the database
-        // ** TODO: Uncomment the following when we have a drivers collection **
-        // driverValid = await runTransaction(db, async (transaction) => {
-        //   return await verifyDriverId(transaction, netid);
-        // });
+        // if not, return an error message
+        driverValid = await runTransaction(db, async (transaction) => {
+          return await verifyDriverId(transaction, netid);
+        });
 
         // if the driver id is valid, return a successful signin response
         if (driverValid) {
