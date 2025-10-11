@@ -38,6 +38,7 @@ import {
   RidesExistResponse,
   ViewRideRequestResponse,
   WrapperCancelResponse,
+  ChatMessageResponse,
 } from "./api";
 import { Timestamp } from "firebase/firestore";
 
@@ -387,6 +388,39 @@ export const handleWebSocketMessage = async (
       resp = await loadRide(input.id, input.role);
       // send response back to client (the student)
       sendWebSocketMessage(ws, resp);
+      break;
+    }
+
+    case "CHAT_MESSAGE": {
+      let fromUser, toUser;
+      if (input.role == "STUDENT"){
+        fromUser = input.studentId;
+        toUser = input.driverId;
+      }
+      else{
+        fromUser = input.driverId;
+        toUser = input.studentId;
+      }
+      if (!fromUser || !toUser) {
+        console.error("CHAT_MESSAGE missing sender or recipient ID");
+        break; 
+      }
+
+      const chatMessage: ChatMessageResponse = {
+        response: "CHAT_MESSAGE",
+        fromNetid: fromUser,
+        toNetid: toUser,
+        role: input.role,
+        text: input.text,
+        timestamp: Date.now(),
+      };
+
+      // relay to recipient
+      sendMessageToNetid(toUser, chatMessage);
+
+      // echo back to sender so they see their own msg
+      sendWebSocketMessage(ws, chatMessage);
+
       break;
     }
 

@@ -34,6 +34,7 @@ import WebSocketService, {
 } from "@/services/WebSocketService";
 import { useRouter } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import Message from "../message";
 
 export type HandleRidePhase =
   | "headingToPickup"
@@ -46,6 +47,8 @@ export default function HomePage() {
   const [whichComponent, setWhichComponent] = useState<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
   >(TimeService.inServicableTime() ? "noRequests" : "endShift");
+  // only visibile when driver accepts ride request 
+  const [messageVisible, setMessageVisible] = useState(false);
 
   /* USE EFFECTS */
   useEffect(() => {
@@ -883,6 +886,44 @@ export default function HomePage() {
           netid={netid}
         />
       </View>
+
+      {/* message pop-up modal */}
+      <Message
+          isVisible={messageVisible}
+          onClose={() => setMessageVisible(false)} 
+          studentId={requestInfo.netid}
+          driverId={netid}
+          role="DRIVER"          
+      />
+      {/* Message button in top right corner */}
+      {whichComponent === "handleRide" && (
+        <TouchableOpacity
+          style={{
+            position: "absolute",
+            top: "5%",
+            right: "5%", // offset a little so it doesn’t overlap with the flag
+            zIndex: 200,
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.5,
+            shadowRadius: 5,
+            shadowColor: "grey",
+          }}
+          onPress={() => setMessageVisible(true)}
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              borderRadius: 100,
+              width: 40,
+              height: 40,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Ionicons name="chatbubble-ellipses" size={30} color="#4B2E83" />
+          </View>
+        </TouchableOpacity>
+      )}
 
       {/* Flag button in top right corner*/}
       {flaggingAllowed && (

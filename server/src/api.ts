@@ -29,7 +29,8 @@ export type Command =
   | "DRIVER_DRIVING_TO_DROPOFF"
   | "DISCONNECT"
   | "PLACE_SEARCH"
-  | "LOAD_RIDE";
+  | "LOAD_RIDE"
+  | "CHAT_MESSAGE";
 
 // Input types
 export type WebSocketMessage =
@@ -146,6 +147,13 @@ export type WebSocketMessage =
       directive: "LOAD_RIDE";
       id: string;
       role: "STUDENT" | "DRIVER";
+    }
+  | {
+      directive: "CHAT_MESSAGE";
+      studentId: string;
+      driverId: string;
+      text: string;
+      role: "STUDENT" | "DRIVER";
     };
 
 // TEMP FIX
@@ -174,7 +182,8 @@ export type WebSocketResponse =
   | ViewRideRequestResponse
   | ViewDecisionResponse
   | PlaceSearchResponse
-  | LoadRideResponse;
+  | LoadRideResponse
+  | ChatMessageResponse;
 
 export type LocationType = {
   name: string;
@@ -307,6 +316,15 @@ export type ProfileResponse = {
 export type LoadRideResponse = {
   response: "LOAD_RIDE";
   rideRequest?: RideRequest & { requestId: string };
+};
+
+export type ChatMessageResponse = {
+  response: "CHAT_MESSAGE";         
+  fromNetid: string;            // sender’s ID
+  toNetid: string;              // recipient’s ID
+  role: "STUDENT" | "DRIVER";   // who sent it
+  text: string;                 // message text
+  timestamp: number;            // time sent
 };
 
 export type ErrorResponse = {
