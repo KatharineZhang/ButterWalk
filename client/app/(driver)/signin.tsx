@@ -11,8 +11,9 @@ import {
 } from "react-native";
 import { useEffect, useState } from "react";
 import { styles } from "../../assets/styles";
-import { Redirect } from "expo-router";
+import { Redirect, Link } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 // @ts-expect-error the image does exists so get rid of the error
 import butterWalkLogo from "@/assets/images/butterWalkLogo.png";
@@ -98,6 +99,14 @@ const Login = () => {
         },
       ]}
     >
+      <View style={{ alignSelf: "flex-start" }}>
+        <Link href="/driverOrstudent" asChild>
+          <Pressable>
+            <Ionicons name="arrow-back" size={40} color="#4B2E83" />
+          </Pressable>
+        </Link>
+      </View>
+
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
           <Text style={styles.appNameText}>Husky ButterWalk</Text>
