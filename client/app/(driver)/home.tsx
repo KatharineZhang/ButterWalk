@@ -191,6 +191,12 @@ export default function HomePage() {
   }) => {
     setDriverLocation(location);
     driverLocationRef.current = location;
+    
+    setNotifState({
+      text: `component: (${whichComponent.current}), request info: (${requestInfo.current.netid})`,
+      color: "#ffc847ff",
+      trigger: Date.now(),
+    })
     // send the location to the student once the ride is accepted
     if (whichComponent.current === "handleRide" && requestInfo.current.netid) {
       WebSocketService.send({

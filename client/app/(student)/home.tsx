@@ -78,6 +78,13 @@ export default function HomePage() {
     setUserLocation(location); // trigger rerender when the user's location changes
     userLocationRef.current = location; // actually store the state for use
     // if the ride has been accepted, send the new location to the driver
+
+    setNotifState({
+      text: `ride status: (${rideStatusRef.current})`,
+      color: "#ffc847ff",
+      trigger: Date.now(),
+    })
+
     if (rideStatusRef.current === "DriverEnRoute") {
       WebSocketService.send({
         directive: "LOCATION",
