@@ -10,7 +10,7 @@ import {
 import { useEffect, useState } from "react";
 import { Redirect } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 import WebSocketService, {
   WebsocketConnectMessage,
@@ -27,9 +27,14 @@ const Login = () => {
 
   useEffect(() => {
     const connectWebSocket = async () => {
-      const msg: WebsocketConnectMessage = await WebSocketService.connect();
+      // call our new route
+      const msg: WebsocketConnectMessage = await WebSocketService.connect()
+        .then((msg) => msg)
+        .catch((err) => err);
       if (msg !== "Connected Successfully") {
-        console.log("failed to connect!!!");
+        console.log(
+          "WEBSOCKET: Failed to connect to WebSocket in Driver SignIn"
+        );
       }
     };
     connectWebSocket();
@@ -37,7 +42,7 @@ const Login = () => {
   }, []);
 
   const checkDriverIdInput = () => {
-    if (/^[a-z]{5,7}$/.test(driverId.toLowerCase())) {
+    if (/^[a-z0-9]+$/.test(driverId.toLowerCase())) {
       setNetid(driverId.toLowerCase());
       setErrMsg("");
       WebSocketService.send({
@@ -48,7 +53,7 @@ const Login = () => {
       });
     } else {
       setDriverId("");
-      setErrMsg("Driver ID must be 5 to 7 lowercase letters.");
+      setErrMsg("Driver ID must have only lowercase letters or numbers.");
     }
   };
 
