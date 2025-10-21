@@ -340,6 +340,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
         <View
           style={[styles.bottomModalButtonContainer, { paddingHorizontal: 10 }]}
         >
+          {/* Cancel Ride Button */}
           <Pressable
             style={[
               styles.bottomModalButton,
@@ -351,7 +352,9 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             ]}
             onPress={() => onCancel("button")}
           >
-            <Text style={[styles.buttonText, { color: "red" }]}>
+            <Text
+              style={[styles.buttonText, { color: "red", textAlign: "center" }]}
+            >
               Cancel Ride
             </Text>
           </Pressable>
@@ -411,6 +414,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
               { paddingHorizontal: 10 },
             ]}
           >
+            {/* I Have Arrived Button */}
             <Pressable
               style={[
                 styles.bottomModalButton,
@@ -420,7 +424,9 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
                 setShowWaitingForConfirmation(true);
               }}
             >
-              <Text style={styles.buttonText}>I have arrived</Text>
+              <Text style={[styles.buttonText, { textAlign: "center" }]}>
+                I have arrived
+              </Text>
             </Pressable>
           </View>
         ) : (

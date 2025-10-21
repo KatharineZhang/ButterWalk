@@ -4,19 +4,14 @@ import {
   KeyboardAvoidingView,
   Pressable,
   TextInput,
-  Image,
   TouchableWithoutFeedback,
   Keyboard,
-  Dimensions,
 } from "react-native";
 import { useEffect, useState } from "react";
-import { styles } from "../../assets/styles";
-import { Redirect, Link } from "expo-router";
+import { Redirect } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-// @ts-expect-error the image does exists so get rid of the error
-import butterWalkLogo from "@/assets/images/butterWalkLogo.png";
 import WebSocketService, {
   WebsocketConnectMessage,
 } from "@/services/WebSocketService";
@@ -30,8 +25,6 @@ const Login = () => {
   const [errMsg, setErrMsg] = useState("");
   const [netid, setNetid] = useState("");
 
-  // on render,
-  // connect to websocket and send the response to backend when we get it
   useEffect(() => {
     const connectWebSocket = async () => {
       // call our new route
@@ -43,19 +36,15 @@ const Login = () => {
           "WEBSOCKET: Failed to connect to WebSocket in Driver SignIn"
         );
       }
-      // if nothing is logged, assumed connected successfully
     };
     connectWebSocket();
     WebSocketService.addListener(handleSigninMessage, "SIGNIN");
   }, []);
 
-  // check that the driver ID input is correct
-  // param: input - the driver id input in the sign in
   const checkDriverIdInput = () => {
     if (/^[a-z0-9]+$/.test(driverId.toLowerCase())) {
       setNetid(driverId.toLowerCase());
       setErrMsg("");
-      // send the signin request to the backend
       WebSocketService.send({
         directive: "SIGNIN",
         response: null,
@@ -72,82 +61,107 @@ const Login = () => {
     if ("response" in message && message.response == "SIGNIN") {
       setSignedIn(true);
     } else {
-      // there was a signin related error
       const errorResp = message as ErrorResponse;
       setErrMsg(errorResp.error);
       setSignedIn(false);
     }
   };
 
-  // if signed in successfully, redirect
   return signedIn && netid ? (
     <Redirect
       href={{
         pathname: "/(driver)/home",
-        params: {
-          netid: netid,
-        },
+        params: { netid: netid },
       }}
     />
   ) : (
-    <View
-      style={[
-        styles.container,
-        {
-          margin: "10%",
-          alignItems: "center",
-        },
-      ]}
-    >
-      <View style={{ alignSelf: "flex-start" }}>
-        <Link href="/driverOrstudent" asChild>
-          <Pressable>
-            <Ionicons name="arrow-back" size={40} color="#4B2E83" />
-          </Pressable>
-        </Link>
-      </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          paddingHorizontal: 40,
+          backgroundColor: "#fff",
+        }}
+        behavior="padding"
+      >
+        <Text
+          style={{
+            fontSize: 30,
+            fontWeight: "700",
+            color: "#4B2E83",
+            textAlign: "left",
+          }}
+        >
+          Driver’s Log In
+        </Text>
 
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
-          <Text style={styles.appNameText}>Husky ButterWalk</Text>
-          <Image style={styles.signinLogo} source={butterWalkLogo} />
-          <Text style={styles.signInText}>Driver Sign In</Text>
-          <View style={{ height: "7%" }}></View>
+        <Text
+          style={{
+            marginTop: 8,
+            fontSize: 14,
+            color: "#555",
+            textAlign: "left",
+          }}
+        >
+          Start your shift by entering your UWPD Driver ID.
+        </Text>
 
-          <Text style={{ fontSize: 17, fontWeight: "500" }}>Driver Netid</Text>
-          {errMsg && (
-            <Text style={{ wordWrap: "true", maxWidth: "70%", color: "red" }}>
-              {errMsg}
-            </Text>
-          )}
-
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            borderWidth: 1,
+            borderColor: "#ddd",
+            borderRadius: 12,
+            paddingHorizontal: 12,
+            marginTop: 30,
+            width: "100%",
+            height: 70,
+          }}
+        >
+          <Ionicons name="person-outline" size={20} color="#7D5BA6" />
           <TextInput
             value={driverId}
-            style={[
-              styles.input,
-              driverId && styles.inputFocused,
-              {
-                alignSelf: "center",
-                width: Dimensions.get("window").width * 0.9,
-                marginBottom: "5%",
-              },
-            ]}
-            placeholderTextColor={"#808080"}
-            onChangeText={(text: string) => setDriverId(text)}
+            style={{
+              flex: 1,
+              marginLeft: 8,
+              height: 60,
+              fontSize: 16,
+              color: "#000",
+            }}
+            placeholder="Enter Your Driver ID"
+            placeholderTextColor="#808080"
+            onChangeText={setDriverId}
             autoCapitalize="none"
           />
+        </View>
 
-          <Pressable
-            style={styles.signInButton}
-            onPress={() => {
-              checkDriverIdInput();
-            }}
-          >
-            <Text style={styles.signInButtonText}>Sign In</Text>
-          </Pressable>
-        </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
-    </View>
+        {errMsg ? (
+          <Text style={{ marginTop: 10, color: "red", fontSize: 13 }}>
+            {errMsg}
+          </Text>
+        ) : null}
+
+        <Pressable
+          style={{
+            backgroundColor: driverId.length > 0 ? "#4B2E83" : "gray",
+            borderRadius: 16,
+            marginTop: 280, 
+            width: "100%",
+            height: 70,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+          disabled={!driverId.length}
+          onPress={checkDriverIdInput}
+        >
+          <Text style={{ color: "white", fontSize: 18, fontWeight: "600" }}>
+            Log In
+          </Text>
+        </Pressable>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 };
 
