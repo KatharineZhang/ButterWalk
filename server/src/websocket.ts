@@ -23,6 +23,7 @@ import {
   getPlaceSearchResults,
   driverDrivingToDropoff,
   checkIfDriverSignin,
+  addCallLog,
   loadRide,
 } from "./routes";
 import {
@@ -383,6 +384,20 @@ export const handleWebSocketMessage = async (
       sendWebSocketMessage(ws, resp);
       break;
 
+    case "CALL_LOG":
+      resp = await addCallLog(
+        input.from,
+        input.to,
+        input.role,
+        input.phoneNumberCalled
+      );
+      // send response back to client
+      sendWebSocketMessage(ws, resp);
+      if ("response" in resp && resp.response === "CALL_LOG") {
+        // send response back to opposite client as well
+        sendMessageToNetid(input.to, resp);
+      }
+      break;
     case "LOAD_RIDE": {
       resp = await loadRide(input.id, input.role);
       // send response back to client (the student)
