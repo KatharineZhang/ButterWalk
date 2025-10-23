@@ -32,7 +32,7 @@ import {
   DRIVING_TO_PICK_UP_STATUS,
   DRIVER_AT_PICK_UP_STATUS,
   DRIVING_TO_DESTINATION_STATUS,
-} from "./api";
+} from "../api";
 
 export const db = getFirestore(app);
 
