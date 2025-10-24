@@ -329,25 +329,21 @@ const Map = forwardRef<MapRef, MapProps>(
               <Ionicons name="car-sharp" size={30} color="black" />
             </View>
           </Marker>
-          {/* show the directions between the pickup and dropoff locations if they are valid,
-          a ride has been requested, and if the ride is not currently happening / happened */}
-          {whichComponent === "handleRide" &&
-            status !== "RideInProgress" &&
-            status !== "RideCompleted" &&
+          {/* show the directions from start -> pickup, if valid and while they are walking*/}
+          {(status === "WaitingForRide" || status === "DriverEnRoute") &&
             startLocation.latitude !== 0 &&
-            pickUpLocation.latitude !== 0 &&
-            dropOffLocation.latitude !== 0 && (
+            pickUpLocation.latitude !== 0 && (
               <MapViewDirections
                 origin={startLocation}
-                waypoints={[pickUpLocation]}
-                destination={dropOffLocation}
+                destination={pickUpLocation}
                 apikey={GOOGLE_MAPS_APIKEY}
                 strokeWidth={3}
-                strokeColor="#4B2E83"
+                strokeColor="#000000"
               />
             )}
 
-          {/* (in progress): Returns a new MapViewDirections if in progress (not the polyline trail) */}
+          {/* shows directions from pickup -> dropoff, if valid 
+          (using the driverLocation as the origin) if ride is progress */}
           {status === "RideInProgress" &&
             driverLocation.latitude !== 0 &&
             dropOffLocation.latitude !== 0 && (
@@ -356,7 +352,7 @@ const Map = forwardRef<MapRef, MapProps>(
                 destination={dropOffLocation}
                 apikey={GOOGLE_MAPS_APIKEY}
                 strokeWidth={3}
-                strokeColor="#4B2E83" 
+                strokeColor="#000000" 
               />
             )}
         </MapView>
