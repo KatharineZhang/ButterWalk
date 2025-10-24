@@ -344,7 +344,7 @@ const Map = forwardRef<MapRef, MapProps>(
 
           {/* shows directions from pickup -> dropoff, if valid 
           (using the driverLocation as the origin) if ride is progress */}
-          {status === "RideInProgress" &&
+          {whichComponent === "handleRide" && status === "RideInProgress" &&
             driverLocation.latitude !== 0 &&
             dropOffLocation.latitude !== 0 && (
               <MapViewDirections
