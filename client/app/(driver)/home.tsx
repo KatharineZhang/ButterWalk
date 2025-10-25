@@ -47,7 +47,7 @@ export default function HomePage() {
   /* HOME PAGE STATE */
   const [, setWhichComponent] = useState<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
-  >(TimeService.inServicableTime() ? "noRequests" : "endShift");
+  >(TimeService.inServicableTime() ? "noRequests" : "noRequests");
   const whichComponent = useRef<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
   >("noRequests");
@@ -115,7 +115,11 @@ export default function HomePage() {
       sendLoadRide();
     } else {
       // off shift
-      setWhichComponent("endShift");
+      // setWhichComponent("endShift");
+      setWhichComponent("noRequests");
+      seeIfRidesExist();
+      // see if there is an active ride request
+      sendLoadRide();
     }
   };
 
@@ -908,7 +912,7 @@ export default function HomePage() {
         dropOffLocation={dropOffLocation}
         studentLocation={studentLocation}
         userLocationChanged={userLocationChanged}
-        currPhase={phase}
+        currPhase={whichComponent == "handleRide" ? phase : "none"}
       />
 
       {/* profile button in top left corner*/}
