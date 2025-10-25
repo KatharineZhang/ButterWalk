@@ -559,8 +559,7 @@ export type RideRequest = {
   /**
    * The number of students in the ride
    */
-  numRiders: number;
-  
+  numRiders: number;  
   /**
    * Keeps track of any calls that were made between the student and driver
    */
