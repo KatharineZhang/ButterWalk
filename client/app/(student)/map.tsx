@@ -60,7 +60,6 @@ const Map = forwardRef<MapRef, MapProps>(
       dropOffLocation = { latitude: 0, longitude: 0 },
       startLocation = { latitude: 0, longitude: 0 },
       status,
-      whichComponent,
       userLocationChanged,
     },
     ref
