@@ -347,7 +347,7 @@ const Map = forwardRef<MapRef, MapProps>(
             driverLocation.latitude !== 0 &&
             dropOffLocation.latitude !== 0 && (
               <MapViewDirections
-                origin={driverLocation}
+                origin={userLocation}
                 destination={dropOffLocation}
                 apikey={GOOGLE_MAPS_APIKEY}
                 strokeWidth={3}
