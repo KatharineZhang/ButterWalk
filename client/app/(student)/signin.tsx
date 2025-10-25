@@ -5,7 +5,8 @@ import * as WebBrowser from "expo-web-browser";
 // or 'npm i expo-auth-session@~6.0.3' on windows
 import * as Google from "expo-auth-session/providers/google";
 import { useEffect, useState } from "react";
-import { Redirect, router, useLocalSearchParams } from "expo-router";
+import { Redirect, router, useLocalSearchParams, Link } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 // Images
 // @ts-expect-error the image does exists so get rid of the error
@@ -77,6 +78,13 @@ const Login = () => {
   ) : (
     <SafeAreaView style={[styles.container, { padding: 20 }]}>
       <View style={{ flex: 1, width: "100%", justifyContent: "space-between" }}>
+        <View style={{ alignSelf: "flex-start" }}>
+          <Link href="/driverOrstudent" asChild>
+            <Pressable>
+              <Ionicons name="arrow-back" size={40} color="#4B2E83" />
+            </Pressable>
+          </Link>
+        </View>
         {/* Main Content */}
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
