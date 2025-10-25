@@ -132,6 +132,14 @@ const getUserProfile = async (token: string): Promise<GoogleResponse> => {
   return { message: "Error signing in: Error getting profile" };
 };
 
+/* Signs a specific student or driver into the app. Will check the users database for the specific id, 
+and if it is not there, will add a new user. If the user is in the table, we need to make sure this user 
+is not in the ProblematicUsers table with a blacklisted field of 1 before we return success : true.
+- Takes in a json object formatted as: {
+directive: "SIGNIN", phoneNum: string, netID: string, name: string, studentNum: number, role: 'STUDENT' | 'DRIVER' }.
+- On error, returns the json object in the form:  { response: “ERROR”, success: false, error: string, category: “SIGNIN” }. 
+- Returns a json object TO THE STUDENT in the form: { response: “SIGNIN”, success: true }. */
+// Removed duplicate declaration of fetchRecentLocations
 export const signIn = async (
   netid: string,
   firstName: string,
@@ -792,6 +800,11 @@ export const addFeedback = async (
   }
 };
 
+/* Driver needs to be able to report a specific student they just dropped off for bad behavior. 
+This will add a new student entry to the ProblematicUsers table with a blacklisted field of 0.
+- Takes in: { directive: "REPORT”, netID: string, requestid: string, reason: string }
+- On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: “REPORT” }.
+- Returns a json object TO THE DRIVER in the format: { response: “REPORT”, success: true } */
 export const report = async (
   netid: string,
   requestid: string,
@@ -1086,6 +1099,10 @@ export const location = async (
   }
 };
 
+/* Get user information based on the netid
+- Takes in: { directive: "PROFILE", netid: string }
+- On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: PROFILE }.
+- Returns a json object TO THE DRIVER in the format: { response: PROFILE, user: User } */
 export const profile = async (
   netid: string
 ): Promise<ProfileResponse | ErrorResponse> => {
@@ -1118,6 +1135,13 @@ export const profile = async (
   }
 };
 
+/* We need to get some basic stats about our current feedback table back to the client. 
+The types of canned queries we will return are: number of feedback entries, filter ride or app feedback, 
+all feedback from a date, all feedback from a specific rating.
+- Takes in: { directive: "QUERY”, rideOrApp?: bigint // 0 for ride, 1 for app, default: query both, date?: { start: Date; end: Date }, rating?: bigint }
+- On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: “QUERY” }.
+- Returns a json object TO THE DRIVER in the format: 
+{ response: “QUERY”, numberOfEntries: bigint, feedback: [ { rating: bigint, textFeeback: string } ] } */
 export const query = async (
   rideOrApp?: "RIDE" | "APP",
   date?: { start: Date; end: Date },
