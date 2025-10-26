@@ -33,9 +33,11 @@ import HandleRide from "@/components/Driver_HandleRide";
 import Flagging from "@/components/Driver_Flagging";
 import WebSocketService, {
   WebsocketConnectMessage,
+  WSConnectionState,
 } from "@/services/WebSocketService";
 import { useRouter } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import DisconnectedModal from "@/components/Both_Disconnected";
 
 export type HandleRidePhase =
   | "headingToPickup"
@@ -72,6 +74,7 @@ export default function HomePage() {
       driverArrivedAtPickupListener,
       "DRIVER_ARRIVED_AT_PICKUP"
     );
+    // handle disconnects by listening for changes in websocket state
     WebSocketService.addConnectionListener(handleWebsocketConnection);
 
     // Connect to the websocket server
@@ -684,6 +687,20 @@ export default function HomePage() {
     }
   };
 
+  // WEBSOCKET- PING
+  const [websocketStatus, setWebsocketStatus] =
+    useState<WSConnectionState>("CONNECTED");
+  const handleWebsocketConnection = (wsStatus: number | undefined) => {
+    const status: WSConnectionState =
+      wsStatus == WebSocket.OPEN
+        ? "CONNECTED"
+        : wsStatus == WebSocket.CONNECTING
+          ? "CONNECTING"
+          : "DISCONNECTED";
+    console.log("DRIVER SEES WS " + status);
+    setWebsocketStatus(status);
+  };
+
   // WEBSOCKET - WAIT_TIME
   const waitTimeListener = (message: WebSocketResponse) => {
     if ("response" in message && message.response === "WAIT_TIME") {
@@ -729,16 +746,6 @@ export default function HomePage() {
       });
     }
   };
-
-    // WEBSOCKET- PING
-  type ConnectionState = 'CONNECTED' | 'DISCONNECTED' | 'CONNECTING';
-  const handleWebsocketConnection = (wsStatus: number | undefined) => {
-    const status: ConnectionState = 
-    wsStatus == WebSocket.OPEN? "CONNECTED" : (wsStatus == WebSocket.CONNECTING? "CONNECTING": "DISCONNECTED")
-    
-    console.log("DRIVER SEES WS " + status);
-
-  }
 
   // WEBSOCKET - DRIVER_DRIVING_TO_DROPOFF
   const driverDrivingToDropOffListener = (message: WebSocketResponse) => {
@@ -921,7 +928,10 @@ export default function HomePage() {
         userLocationChanged={userLocationChanged}
         currPhase={phase}
       />
-
+      {/* Disconnected pop-up */}
+      <View style={styles.modalContainer}>
+        <DisconnectedModal isVisible={websocketStatus != "CONNECTED"} />
+      </View>
       {/* profile button in top left corner*/}
       <View
         style={{

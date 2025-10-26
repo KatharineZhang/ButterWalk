@@ -8,7 +8,9 @@ import {
 import Profile from "./profile";
 import Map, { calculateDistance, isSameLocation, MapRef } from "./map";
 import { useLocalSearchParams } from "expo-router";
-import WebSocketService from "@/services/WebSocketService";
+import WebSocketService, {
+  WSConnectionState,
+} from "@/services/WebSocketService";
 import {
   CallLogResponse,
   CancelResponse,
@@ -294,6 +296,7 @@ export default function HomePage() {
       "DRIVER_DRIVING_TO_DROPOFF"
     );
     WebSocketService.addListener(handleLoadRideResponse, "LOAD_RIDE");
+    // handle disconnects by listening for changes in websocket state
     WebSocketService.addConnectionListener(handleWebsocketConnection);
 
     // get the user's profile on first render
@@ -569,7 +572,7 @@ export default function HomePage() {
         // go back to ride request component
         setWhichComponent("rideReq");
         rideStatusRef.current = "WaitingForRide";
-        
+
         // set the notif state based on the reason for cancelation
         switch (cancelReason.current) {
           case "none":
@@ -705,14 +708,18 @@ export default function HomePage() {
   };
 
   // WEBSOCKET- PING
-  type ConnectionState = 'CONNECTED' | 'DISCONNECTED' | 'CONNECTING';
-  const [websocketStatus, setWebsocketStatus] = useState<ConnectionState>('CONNECTED');
+  const [websocketStatus, setWebsocketStatus] =
+    useState<WSConnectionState>("CONNECTED");
   const handleWebsocketConnection = (wsStatus: number | undefined) => {
-    const status: ConnectionState = 
-    wsStatus == WebSocket.OPEN? "CONNECTED" : (wsStatus == WebSocket.CONNECTING? "CONNECTING": "DISCONNECTED")
+    const status: WSConnectionState =
+      wsStatus == WebSocket.OPEN
+        ? "CONNECTED"
+        : wsStatus == WebSocket.CONNECTING
+          ? "CONNECTING"
+          : "DISCONNECTED";
     console.log("STUDENT SEES WS " + status);
     setWebsocketStatus(status);
-  }
+  };
 
   const resetAllFields = () => {
     // reset ride locations when the ride is done
@@ -875,9 +882,7 @@ export default function HomePage() {
         />
         {/* Disconnected pop-up */}
         <View style={styles.modalContainer}>
-          <DisconnectedModal
-            isVisible={websocketStatus != "CONNECTED"}
-          />
+          <DisconnectedModal isVisible={websocketStatus != "CONNECTED"} />
         </View>
         {/* profile pop-up modal */}
         <View style={styles.modalContainer}>

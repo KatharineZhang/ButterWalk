@@ -19,7 +19,7 @@ export default function DisconnectedModal({
         <View style={styles.modalView}>
           <>
             <ActivityIndicator size="small" color="#2d1877ff" />
-            <Text>(Re)Connecting to server...</Text>
+            <Text>You disconnected! Reconnecting to the server...</Text>
           </>
         </View>
       </View>

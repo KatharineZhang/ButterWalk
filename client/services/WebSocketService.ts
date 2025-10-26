@@ -14,6 +14,8 @@ export type WebsocketConnectMessage =
   | `Failed to Connect`
   | "Connected Successfully";
 
+export type WSConnectionState = "CONNECTED" | "DISCONNECTED" | "CONNECTING";
+
 // Abstracts the websocket details from the react native app
 class WebSocketService {
   private websocket: WebSocket | null = null;
@@ -123,7 +125,7 @@ class WebSocketService {
     };
 
     this.websocket.onerror = (error: Event) => {
-      console.error(`WEBSOCKET: Error: ${(error as ErrorEvent).message}`);
+      console.log(`WEBSOCKET: Error: ${(error as ErrorEvent).message}`);
     };
   };
 
