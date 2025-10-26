@@ -39,6 +39,7 @@ import {
   RidesExistResponse,
   ViewRideRequestResponse,
   WrapperCancelResponse,
+  PingResponse,
 } from "./api";
 import { Timestamp } from "firebase/firestore";
 
@@ -401,6 +402,16 @@ export const handleWebSocketMessage = async (
     case "LOAD_RIDE": {
       resp = await loadRide(input.id, input.role);
       // send response back to client (the student)
+      sendWebSocketMessage(ws, resp);
+      break;
+    }
+
+    case "PING": {
+      // just send a ping response back
+      resp = {
+        response: "PING",
+      } as PingResponse;
+      // send to client
       sendWebSocketMessage(ws, resp);
       break;
     }
