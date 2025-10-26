@@ -29,12 +29,14 @@ interface HandleRideProps {
   driverArrivedAtPickup: () => void;
   driverDrivingToDropOff: () => void;
   setStudentIsLate: (isLate: boolean) => void; // callback to set student late state
+  makeCall: (phoneNumber: string) => void;
 
   // Progress tracking props
   pickupProgress: number;
   dropoffProgress: number;
   isNearPickup: boolean;
   isNearDropoff: boolean;
+  studentPhoneNumber: string;
   updateSideBarHeight: (height: number) => void;
 }
 
@@ -94,10 +96,16 @@ function ProgressBarTopLabels({
 
 export default function HandleRide({
   phase,
-  setPhase,
   requestInfo,
   driverToPickupDuration,
   pickupToDropoffDuration,
+  pickupProgress,
+  dropoffProgress,
+  isNearPickup,
+  isNearDropoff,
+  studentPhoneNumber,
+  makeCall,
+  setPhase,
   changeFlaggingAllowed,
   completeRide,
   changeNotifState,
@@ -105,10 +113,6 @@ export default function HandleRide({
   driverArrivedAtPickup,
   driverDrivingToDropOff,
   setStudentIsLate,
-  pickupProgress,
-  dropoffProgress,
-  isNearPickup,
-  isNearDropoff,
   updateSideBarHeight,
 }: HandleRideProps) {
   // When timer is done in "waitingForPickup" state
@@ -277,13 +281,15 @@ export default function HandleRide({
             </View>
           </View>
 
-          {/* Directions Button */}
           <View
             style={{
               marginTop: 4,
               marginBottom: 12,
+              flexDirection: "row", // row layout
+              alignItems: "center", // vertically align buttons
             }}
           >
+            {/* Directions Button */}
             <Pressable
               style={{
                 backgroundColor: "#4B2E83",
@@ -293,7 +299,6 @@ export default function HandleRide({
                 alignItems: "center",
                 justifyContent: "center",
                 flexDirection: "row",
-                alignSelf: "flex-start",
               }}
               onPress={() => {
                 const destination = {
@@ -483,7 +488,6 @@ export default function HandleRide({
                   justifyContent: "center",
                 }}
                 onPress={() => {
-                  // call the callback to update the state
                   setPhase("headingToDropoff");
                   driverDrivingToDropOff();
                 }}
@@ -495,8 +499,9 @@ export default function HandleRide({
                 </Text>
               </Pressable>
             </View>
+
             <View style={{ flex: 1, marginLeft: 8 }}>
-              {/* Button to cancel ride, turns red and clickable after 5 min counter */}
+              {/* Button to cancel ride */}
               <Pressable
                 style={{
                   backgroundColor: seconds <= 0 ? "#FF0000" : "#E0E0E0",
@@ -515,6 +520,26 @@ export default function HandleRide({
                 </Text>
               </Pressable>
             </View>
+          </View>
+
+          {/* Call Student Button (underneath) */}
+          <View style={{ marginTop: 10 }}>
+            <Pressable
+              style={{
+                backgroundColor: "#4B2E83",
+                paddingVertical: 20,
+                borderRadius: 8,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              onPress={() => {
+                makeCall(studentPhoneNumber);
+              }}
+            >
+              <Text style={{ color: "white", fontSize: 16, fontWeight: "400" }}>
+                Call Student
+              </Text>
+            </Pressable>
           </View>
         </>
       ) : phase === "headingToDropoff" ? (

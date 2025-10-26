@@ -29,7 +29,8 @@ export type Command =
   | "DRIVER_DRIVING_TO_DROPOFF"
   | "DISCONNECT"
   | "PLACE_SEARCH"
-  | "LOAD_RIDE";
+  | "LOAD_RIDE"
+  | "CALL_LOG";
 
 // Input types
 export type WebSocketMessage =
@@ -146,6 +147,13 @@ export type WebSocketMessage =
       directive: "LOAD_RIDE";
       id: string;
       role: "STUDENT" | "DRIVER";
+    }
+  | {
+      directive: "CALL_LOG";
+      from: string;
+      to: string;
+      role: "STUDENT" | "DRIVER";
+      phoneNumberCalled: string;
     };
 
 // TEMP FIX
@@ -174,7 +182,8 @@ export type WebSocketResponse =
   | ViewRideRequestResponse
   | ViewDecisionResponse
   | PlaceSearchResponse
-  | LoadRideResponse;
+  | LoadRideResponse
+  | CallLogResponse;
 
 export type LocationType = {
   name: string;
@@ -210,6 +219,11 @@ export type SnapLocationResponse = {
   longitude: number;
 };
 
+export type CallLogResponse = {
+  response: "CALL_LOG";
+  whoCalled: string;
+};
+
 export type RequestRideResponse = {
   response: "REQUEST_RIDE";
   requestid: string;
@@ -231,6 +245,7 @@ export type ViewRideRequestResponse = {
     rideRequest: RideRequest & { requestId: string };
     driverToPickUpDuration: number; // in minutes
     pickUpToDropOffDuration: number; // in minutes
+    studentPhoneNumber: string; // sent to driver so they can call the student
   };
   notifyDrivers: boolean;
 };
@@ -441,6 +456,13 @@ export type Feedback = {
   rideOrApp: "RIDE" | "APP";
 };
 
+export type CallLog = {
+  from: string;
+  to: string;
+  phoneNumberCalled: string;
+  timestamp: Timestamp;
+};
+
 /**
  * Possible states of RideRequest.status
  */
@@ -538,6 +560,11 @@ export type RideRequest = {
    * The number of students in the ride
    */
   numRiders: number;
+
+  /**
+   * Keeps track of any calls that were made between the student and driver
+   */
+  callLog?: CallLog[];
   /**
    * Status of the ride request.
    * - `CANCELED`: The ride request was canceled for any reason (could indicate
