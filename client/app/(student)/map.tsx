@@ -330,7 +330,7 @@ const Map = forwardRef<MapRef, MapProps>(
           </Marker>
           {/* show the directions from start -> pickup, if valid and while they are walking*/}
           {(status === "WaitingForRide" || status === "DriverEnRoute") &&
-            startLocation.latitude !== 0 &&
+            userLocation.latitude !== 0 &&
             pickUpLocation.latitude !== 0 && (
               <MapViewDirections
                 origin={startLocation}
@@ -347,7 +347,7 @@ const Map = forwardRef<MapRef, MapProps>(
             driverLocation.latitude !== 0 &&
             dropOffLocation.latitude !== 0 && (
               <MapViewDirections
-                origin={userLocation}
+                origin={driverLocation}
                 destination={dropOffLocation}
                 apikey={GOOGLE_MAPS_APIKEY}
                 strokeWidth={3}
