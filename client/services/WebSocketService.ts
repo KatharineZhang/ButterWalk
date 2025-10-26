@@ -18,6 +18,10 @@ class WebSocketService {
   private websocket: WebSocket | null = null;
   private messageHandlers: Map<Command, WebSocketResponseHandler[]> = new Map();
   private appState = "";
+  private lastPong: number = 0;
+  private pingTimer: number | undefined = undefined;
+  private PING_INTERVAL_MS = 30000; // every 30s, ping the server
+  private PONG_TIMEOUT_MS = 5000; // expect pong within 5s
 
   constructor() {
     // make a listener to update appState on change
@@ -75,6 +79,7 @@ class WebSocketService {
     }
     this.websocket.onopen = () => {
       console.log("WEBSOCKET: Connected to Websocket");
+      this.startPing();
     };
 
     this.websocket.onmessage = (event) => {
@@ -191,7 +196,26 @@ class WebSocketService {
       this.websocket.readyState === WebSocket.OPEN
     ) {
       this.websocket.close();
+      // stop pinging
+      clearInterval(this.pingTimer);
     }
+  }
+
+  startPing() {
+    // Send a ping every 30 seconds to check that the client is alive, and to
+    // keep the connection alive
+    this.pingTimer  = setInterval(() => {
+      if (this.websocket?.readyState === WebSocket.OPEN) {
+        console.log('Sending ping');
+        this.websocket.send(JSON.stringify({}));
+
+        // check if last pong is too old
+        if (this.lastPong && Date.now() - this.lastPong > this.PING_INTERVAL_MS + this.PONG_TIMEOUT_MS) {
+          console.log('Pong timeout — reconnecting...');
+          this.connect();
+        }
+      }
+    }, 30000);
   }
 }
 
