@@ -8,6 +8,7 @@ import {
 
 // the type of function (event handler) that will be called when a message of a certain type is received
 type WebSocketResponseHandler = (message: WebSocketResponse) => void;
+type ConnectionHandler = (state: number | undefined) => void;
 
 export type WebsocketConnectMessage =
   | `Failed to Connect`
@@ -17,6 +18,7 @@ export type WebsocketConnectMessage =
 class WebSocketService {
   private websocket: WebSocket | null = null;
   private messageHandlers: Map<Command, WebSocketResponseHandler[]> = new Map();
+  private pingHandlers: ConnectionHandler[] = [];
   private appState = "";
   private lastPong: number = 0;
   private pingTimer: number | undefined = undefined;
@@ -77,12 +79,15 @@ class WebSocketService {
     if (this.websocket == null) {
       return;
     }
+
     this.websocket.onopen = () => {
       console.log("WEBSOCKET: Connected to Websocket");
       this.startPing();
+      this.callPingHandlers();
     };
 
     this.websocket.onmessage = (event) => {
+      this.callPingHandlers();
       console.log(`WEBSOCKET: Received message => ${event.data}`);
       const message = JSON.parse(event.data) as WebSocketResponse;
       // send message to any component interested in this message type
@@ -102,6 +107,7 @@ class WebSocketService {
     };
 
     this.websocket.onclose = () => {
+      this.callPingHandlers();
       console.log(
         "WEBSOCKET: Disconnected from Websocket" +
           (this.appState === "active"
@@ -160,6 +166,7 @@ class WebSocketService {
       this.websocket.send(JSON.stringify(message));
       return;
     }
+    this.callPingHandlers();
     console.log("No websocket connection");
   }
 
@@ -177,6 +184,11 @@ class WebSocketService {
     }
     // add to the directive's array of handlers
     this.messageHandlers.get(directive)?.push(handler);
+  }
+
+  addConnectionListener(handler: ConnectionHandler) {
+    // add to our array of ping handlers
+    this.pingHandlers.push(handler);
   }
 
   /**
@@ -204,18 +216,33 @@ class WebSocketService {
   startPing() {
     // Send a ping every 30 seconds to check that the client is alive, and to
     // keep the connection alive
-    this.pingTimer  = setInterval(() => {
-      if (this.websocket?.readyState === WebSocket.OPEN) {
-        console.log('Sending ping');
-        this.websocket.send(JSON.stringify({}));
+    this.pingTimer = setInterval(() => {
+      if (
+        this.websocket != null &&
+        this.websocket.readyState === WebSocket.OPEN
+      ) {
+        console.log("Sending " + JSON.stringify({ directive: "PING" }));
+        this.websocket.send(JSON.stringify({ directive: "PING" }));
 
         // check if last pong is too old
-        if (this.lastPong && Date.now() - this.lastPong > this.PING_INTERVAL_MS + this.PONG_TIMEOUT_MS) {
-          console.log('Pong timeout — reconnecting...');
+        if (
+          this.lastPong &&
+          Date.now() - this.lastPong >
+            this.PING_INTERVAL_MS + this.PONG_TIMEOUT_MS
+        ) {
+          console.log("Pong timeout — reconnecting...");
+          this.callPingHandlers();
           this.connect();
         }
       }
-    }, 30000);
+    }, 10000);
+  }
+
+  callPingHandlers() {
+    this.pingHandlers.forEach((handler) => {
+      // call each handler with the websocket's current state
+      handler(this.websocket?.readyState);
+    });
   }
 }
 

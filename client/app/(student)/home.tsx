@@ -34,6 +34,7 @@ import { createOpenLink } from "react-native-open-maps";
 import LoadingPageComp from "@/components/Student_LoadingPage";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Legend from "@/components/Student_Legend";
+import DisconnectedModal from "@/components/Both_Disconnected";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -293,6 +294,7 @@ export default function HomePage() {
       "DRIVER_DRIVING_TO_DROPOFF"
     );
     WebSocketService.addListener(handleLoadRideResponse, "LOAD_RIDE");
+    WebSocketService.addConnectionListener(handleWebsocketConnection);
 
     // get the user's profile on first render
     sendProfile();
@@ -702,6 +704,16 @@ export default function HomePage() {
     }
   };
 
+  // WEBSOCKET- PING
+  type ConnectionState = 'CONNECTED' | 'DISCONNECTED' | 'CONNECTING';
+  const [websocketStatus, setWebsocketStatus] = useState<ConnectionState>('CONNECTED');
+  const handleWebsocketConnection = (wsStatus: number | undefined) => {
+    const status: ConnectionState = 
+    wsStatus == WebSocket.OPEN? "CONNECTED" : (wsStatus == WebSocket.CONNECTING? "CONNECTING": "DISCONNECTED")
+    console.log("STUDENT SEES WS " + status);
+    setWebsocketStatus(status);
+  }
+
   const resetAllFields = () => {
     // reset ride locations when the ride is done
     setDriverLocation({
@@ -861,6 +873,12 @@ export default function HomePage() {
           startLocation={startLocation}
           whichComponent={"rideReq"}
         />
+        {/* Disconnected pop-up */}
+        <View style={styles.modalContainer}>
+          <DisconnectedModal
+            isVisible={websocketStatus != "CONNECTED"}
+          />
+        </View>
         {/* profile pop-up modal */}
         <View style={styles.modalContainer}>
           <Profile

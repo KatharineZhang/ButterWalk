@@ -72,6 +72,7 @@ export default function HomePage() {
       driverArrivedAtPickupListener,
       "DRIVER_ARRIVED_AT_PICKUP"
     );
+    WebSocketService.addConnectionListener(handleWebsocketConnection);
 
     // Connect to the websocket server
     // needs to be its own function to avoid async issues
@@ -728,6 +729,16 @@ export default function HomePage() {
       });
     }
   };
+
+    // WEBSOCKET- PING
+  type ConnectionState = 'CONNECTED' | 'DISCONNECTED' | 'CONNECTING';
+  const handleWebsocketConnection = (wsStatus: number | undefined) => {
+    const status: ConnectionState = 
+    wsStatus == WebSocket.OPEN? "CONNECTED" : (wsStatus == WebSocket.CONNECTING? "CONNECTING": "DISCONNECTED")
+    
+    console.log("DRIVER SEES WS " + status);
+
+  }
 
   // WEBSOCKET - DRIVER_DRIVING_TO_DROPOFF
   const driverDrivingToDropOffListener = (message: WebSocketResponse) => {
