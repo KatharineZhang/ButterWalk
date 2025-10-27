@@ -121,6 +121,7 @@ export default function HomePage() {
         "Service is only available between 6:30 PM and 2:00 AM (but i'll allow it this time...)"
       );
       setWhichComponent("noRequests");
+      whichComponent.current = "noRequests";
       seeIfRidesExist();
       // see if there is an active ride request
       sendLoadRide();
