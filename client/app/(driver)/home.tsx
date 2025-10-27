@@ -17,6 +17,7 @@ import {
   View,
   Text,
   Linking,
+  Alert,
 } from "react-native";
 import Map, { MapRef, isSameLocation } from "./map";
 import { useLocalSearchParams } from "expo-router";
@@ -47,7 +48,7 @@ export default function HomePage() {
   /* HOME PAGE STATE */
   const [, setWhichComponent] = useState<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
-  >(TimeService.inServicableTime() ? "noRequests" : "endShift");
+  >(TimeService.inServicableTime() ? "noRequests" : "noRequests");
   const whichComponent = useRef<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
   >("noRequests");
@@ -115,7 +116,16 @@ export default function HomePage() {
       sendLoadRide();
     } else {
       // off shift
-      setWhichComponent("endShift");
+      Alert.alert(
+        "Service Unavailable",
+        "Service is only available between 6:30 PM and 2:00 AM (but i'll allow it this time...)"
+      );
+      setWhichComponent("noRequests");
+      whichComponent.current = "noRequests";
+      seeIfRidesExist();
+      // see if there is an active ride request
+      sendLoadRide();
+      // setWhichComponent("endShift");
     }
   };
 
