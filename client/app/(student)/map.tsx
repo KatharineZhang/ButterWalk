@@ -330,7 +330,7 @@ const Map = forwardRef<MapRef, MapProps>(
           </Marker>
           {/* show the directions from start -> pickup, if valid and while they are walking*/}
           {(status === "WaitingForRide" || status === "DriverEnRoute") &&
-            startLocation.latitude !== 0 &&
+            userLocation.latitude !== 0 &&
             pickUpLocation.latitude !== 0 && (
               <MapViewDirections
                 origin={userLocation}
