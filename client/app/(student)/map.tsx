@@ -10,7 +10,6 @@ import MapView, {
   PROVIDER_GOOGLE,
   Polygon,
   Marker,
-  Polyline,
 } from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -62,7 +61,6 @@ const Map = forwardRef<MapRef, MapProps>(
       dropOffLocation = { latitude: 0, longitude: 0 },
       startLocation = { latitude: 0, longitude: 0 },
       status,
-      whichComponent,
       userLocationChanged,
     },
     ref
@@ -84,30 +82,6 @@ const Map = forwardRef<MapRef, MapProps>(
       { latitude: 0, longitude: 0 },
       { latitude: 0, longitude: 0 },
     ]);
-
-    const [ridePath, setRidePath] = useState<
-      { latitude: number; longitude: number }[]
-    >([]);
-
-    useEffect(() => {
-      if (
-        status === "RideInProgress" &&
-        driverLocation.latitude != 0 &&
-        driverLocation.longitude != 0 &&
-        !isSameLocation(driverLocation, ridePath[ridePath.length - 1]) // check if we have moved far enough
-      ) {
-        // if the ride is in progress, show the path
-        // add newest driverLocation to the path
-        setRidePath([...ridePath, driverLocation]);
-      }
-    }, [driverLocation]);
-
-    useEffect(() => {
-      // when the ride is completed, clear the path
-      if (status === "RideCompleted") {
-        setRidePath([]);
-      }
-    }, [status]);
 
     // GOOGLE MAPS API KEY
     const GOOGLE_MAPS_APIKEY =
@@ -423,24 +397,13 @@ const Map = forwardRef<MapRef, MapProps>(
             pickUpLocation.latitude !== 0 &&
             dropOffLocation.latitude !== 0 && (
               <MapViewDirections
-                origin={startLocation}
-                waypoints={[pickUpLocation]}
+                origin={driverLocation}
                 destination={dropOffLocation}
                 apikey={GOOGLE_MAPS_APIKEY}
                 strokeWidth={3}
-                strokeColor="#4B2E83"
+                strokeColor="#000000" 
               />
             )}
-
-          {/* show the path of the ride if it is in progress. 
-        Used to plot the path of the driver during the ride */}
-          {status === "RideInProgress" && (
-            <Polyline
-              coordinates={ridePath}
-              strokeWidth={3}
-              strokeColor="#4B2E83"
-            />
-          )}
         </MapView>
       </View>
     );
