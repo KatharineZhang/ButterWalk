@@ -33,7 +33,8 @@ interface MapProps {
     | "DriverEnRoute" // the ride is accepted
     | "DriverArrived" // the driver is at the pickup location
     | "RideInProgress" // the driver is taking the student to dropoff location
-    | "RideCompleted"; // the driver arrived at the dropoff location
+    | "RideCompleted" // the driver arrived at the dropoff location
+    | "none";
   whichComponent:
     | "rideReq"
     | "confirmRide"
@@ -183,20 +184,65 @@ const Map = forwardRef<MapRef, MapProps>(
           timeInterval: 1000, // Update every second
           distanceInterval: 1, // Update every meter
         },
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         (location) => {
-          // when location changes, change our state
-          setUserLocation({
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          });
-          // notify the parent component that the user's location has changed
-          userLocationChanged({
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          });
+          // // when location changes, change our state
+          // setUserLocation({
+          //   latitude: 47.65605827543173,
+          //   longitude: -122.3139639865059,
+          // });
+          // // notify the parent component that the user's location has changed
+          // userLocationChanged({
+          //   latitude: 47.65605827543173,
+          //   longitude: -122.3139639865059,
+          // });
         }
       );
     }
+
+        // Track the current index for each route
+    let pickupIndexRef = 0;
+    let currPhaseInterval: number;
+
+    useEffect(() => {
+      if (status == "none"){
+   // when location changes, change our state
+          setUserLocation({
+            latitude: 47.65605827543173,
+            longitude: -122.3139639865059,
+          });
+          // notify the parent component that the user's location has changed
+          userLocationChanged({
+            latitude: 47.65605827543173,
+            longitude: -122.3139639865059,
+          });
+      } else if (status == "WaitingForRide") {
+        console.log("Heading to pickup, starting interval");
+        currPhaseInterval = setInterval(() => {
+          if (
+            pickupIndexRef >= driverToPickupLocations.length &&
+            currPhaseInterval !== null
+          ) {
+            console.log("clearing user location interval at end");
+            clearInterval(currPhaseInterval);
+            pickupIndexRef = 0;
+            return;
+          }
+
+          console.log("Pickup Interval running", pickupIndexRef);
+
+          setUserLocation({
+            latitude: driverToPickupLocations[pickupIndexRef].latitude,
+            longitude: driverToPickupLocations[pickupIndexRef].longitude,
+          });
+          userLocationChanged({
+            latitude: driverToPickupLocations[pickupIndexRef].latitude,
+            longitude: driverToPickupLocations[pickupIndexRef].longitude,
+          });
+          pickupIndexRef++;
+        }, 1000); // update every second
+      }
+    }, [status])
 
     // RECENTER
     const recenterMap = () => {
@@ -328,9 +374,11 @@ const Map = forwardRef<MapRef, MapProps>(
               <Ionicons name="car-sharp" size={30} color="black" />
             </View>
           </Marker>
-          {/* show the directions from start -> pickup, if valid and while they are walking*/}
-          {(status === "WaitingForRide" || status === "DriverEnRoute") &&
-            userLocation.latitude !== 0 &&
+          {/* show the directions between the pickup and dropoff locations if they are valid,
+          a ride has been requested, and if the ride is not currently happening / happened */}
+          {status !== "RideInProgress" &&
+            status !== "RideCompleted" &&
+            startLocation.latitude !== 0 &&
             pickUpLocation.latitude !== 0 && (
               <MapViewDirections
                 origin={userLocation}
@@ -345,13 +393,14 @@ const Map = forwardRef<MapRef, MapProps>(
           (using the driverLocation as the origin) if ride is progress */}
           {status === "RideInProgress" &&
             driverLocation.latitude !== 0 &&
+            pickUpLocation.latitude !== 0 &&
             dropOffLocation.latitude !== 0 && (
               <MapViewDirections
                 origin={driverLocation}
                 destination={dropOffLocation}
                 apikey={GOOGLE_MAPS_APIKEY}
                 strokeWidth={3}
-                strokeColor="#000000" 
+                strokeColor="#000000"
               />
             )}
         </MapView>
@@ -392,3 +441,15 @@ export const isSameLocation = (
 };
 
 export default Map;
+
+const driverToPickupLocations = [
+  {
+            latitude: 47.65605827543173,
+            longitude: -122.3139639865059,
+          },
+{ latitude: 47.66011313857209, longitude: -122.30972564647298 },
+  { latitude: 47.65925736458627, longitude: -122.30968477128673 },
+  { latitude: 47.658514912737736, longitude: -122.30954940014837 },
+  { latitude: 47.657368650554865, longitude: -122.30978146495697 },
+  { latitude: 47.65718628834192, longitude: -122.3100908847018 },
+];
