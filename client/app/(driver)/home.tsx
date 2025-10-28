@@ -912,7 +912,7 @@ export default function HomePage() {
         dropOffLocation={dropOffLocation}
         studentLocation={studentLocation}
         userLocationChanged={userLocationChanged}
-        currPhase={whichComponent == "handleRide" ? phase : "none"}
+        currPhase={whichComponent.current == "handleRide" ? phase : "none"}
       />
 
       {/* profile button in top left corner*/}

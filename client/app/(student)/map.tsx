@@ -376,8 +376,7 @@ const Map = forwardRef<MapRef, MapProps>(
           </Marker>
           {/* show the directions between the pickup and dropoff locations if they are valid,
           a ride has been requested, and if the ride is not currently happening / happened */}
-          {whichComponent === "handleRide" &&
-            status !== "RideInProgress" &&
+          {status !== "RideInProgress" &&
             status !== "RideCompleted" &&
             startLocation.latitude !== 0 &&
             pickUpLocation.latitude !== 0 && (
@@ -401,7 +400,7 @@ const Map = forwardRef<MapRef, MapProps>(
                 destination={dropOffLocation}
                 apikey={GOOGLE_MAPS_APIKEY}
                 strokeWidth={3}
-                strokeColor="#000000" 
+                strokeColor="#000000"
               />
             )}
         </MapView>
