@@ -27,6 +27,7 @@ import {
   PurpleZone,
   WrapperCancelResponse,
   LoadRideResponse,
+  CallLogResponse,
 } from "./api";
 import {
   addFeedbackToDb,
@@ -46,12 +47,11 @@ import {
   setRideRequestDriver,
   getRecentLocations,
   isNotAccepted,
-  // we want this import for when we have a drivers collection
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   verifyDriverId,
   setRideRequestDriverLocation,
   setRideRequestStudentLocation,
   getActiveRideRequest,
+  addCallLogToDb,
 } from "./firebaseActions";
 import { runTransaction } from "firebase/firestore";
 import { highestRank, rankOf } from "./rankingAlgorithm";
@@ -187,12 +187,11 @@ export const checkIfDriverSignin = async (
           } as ErrorResponse;
         }
 
-        driverValid = true; // TODO: remove this line when we have a drivers collection
         // check if the driverid exists in the database
-        // ** TODO: Uncomment the following when we have a drivers collection **
-        // driverValid = await runTransaction(db, async (transaction) => {
-        //   return await verifyDriverId(transaction, netid);
-        // });
+        // if not, return an error message
+        driverValid = await runTransaction(db, async (transaction) => {
+          return await verifyDriverId(transaction, netid);
+        });
 
         // if the driver id is valid, return a successful signin response
         if (driverValid) {
@@ -571,6 +570,18 @@ export const viewRide = async (
       // so we can just add the driver id to the ride request now
       // for future use (if cancel, can set state back to viewing)
       setRideRequestDriver(t, bestRequest.netid, driverid);
+
+      // get student's phone number from their profile to send to driver
+      const studentPhoneNumber = await getProfile(t, bestRequest.netid).then(
+        (profileResp: User) => {
+          if ("phoneNumber" in profileResp) {
+            // Ensure studentPhoneNumber is always a string
+            return profileResp.phoneNumber as string;
+          } else {
+            throw new Error(`Error getting student phone number`);
+          }
+        }
+      );
       return {
         response: "VIEW_RIDE",
         rideExists: true,
@@ -581,6 +592,7 @@ export const viewRide = async (
           },
           driverToPickUpDuration,
           pickUpToDropOffDuration,
+          studentPhoneNumber,
         },
         notifyDrivers: notify,
       };
@@ -1314,6 +1326,33 @@ export const getPlaceSearchResults = async (
       response: "ERROR",
       error: `Error fetching place search results: ${(e as Error).message}`,
       category: "PLACE_SEARCH",
+    };
+  }
+};
+
+export const addCallLog = async (
+  from: string,
+  to: string,
+  role: "STUDENT" | "DRIVER",
+  phoneNumberCalled: string
+): Promise<CallLogResponse | ErrorResponse> => {
+  if (!from || !to || !phoneNumberCalled) {
+    return {
+      response: "ERROR",
+      error: "Missing required fields.",
+      category: "CALL_LOG",
+    };
+  }
+  try {
+    return await runTransaction(db, async (transaction) => {
+      await addCallLogToDb(transaction, from, to, role, phoneNumberCalled);
+      return { response: "CALL_LOG", whoCalled: from };
+    });
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error adding call log: ${(e as Error).message}}`,
+      category: "CALL_LOG",
     };
   }
 };
