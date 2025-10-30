@@ -231,6 +231,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
         <Pressable
               style={{
                 backgroundColor: "#4B2E83",
+                marginTop: 5,
                 paddingVertical: 10,
                 paddingHorizontal: 16,
                 borderRadius: 8,
@@ -243,7 +244,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
               }}
             >
               <Text style={{ color: "white", fontSize: 14, fontWeight: "600" }}>
-                Directions
+                Directions to Pickup
               </Text>
             </Pressable>
       </View>
@@ -255,120 +256,13 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             ? { borderBottomWidth: 2, borderBottomColor: "#EEEEEE" }
             : {},
         ]}
-      >
-        {/* If walking is needed show Walk and Ride Duration*/}
-        <View style={{ flexDirection: "row", paddingBottom: 10 }}>
-          {/* Open walking directions in native maps */} 
-          <TouchableOpacity
-            onPress={
-              walkProgress < 1
-                ? openNavigation
-                : () =>
-                    alert(
-                      "You are already at the pickup location! Walking directions are not needed :)"
-                    )
-            }
-          >
-            <View style={{ height: 12 }} />
-            <Text
-              style={{
-                alignSelf: "baseline",
-                fontSize: 12,
-                fontWeight: "bold",
-                textDecorationLine: "underline",
-              }}
-            >
-              {walkDuration} min Walk
-            </Text>
-          </TouchableOpacity>
-          <View style={{ width: 100 }} />
-          {/* Descriptor above the progress bar ( __ min Ride) */}
-          <View
-            style={{
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-              left: -20,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "bold",
-              }}
-            >
-              {rideDuration} min Ride
-            </Text>
-            {/* Show more or less details about the ride */}
-            <Pressable onPress={() => setExpanded(!expanded)}>
-              <Text
-                style={[
-                  styles.locationText,
-                  { textDecorationLine: "underline" },
-                ]}
-              >
-                {expanded ? "(Less Details)" : "(More Details)"}
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-        
+      >        
         <Both_ProgressBar
           pickupAddress={pickUpAddress}
           dropoffAddress={dropOffAddress}
-          driverToPickupMinutes={driverETA}
+          driverToPickupMinutes={walkDuration > driverETA ? walkDuration : driverETA}
           pickupToDropoffMinutes={rideDuration}
         />
-
-
-        {/* Locations Text */}
-        <View style={styles.locationsContainer}>
-          {/* show Start and Pickup Location */}
-          <View style={{ flexDirection: "row", maxWidth: "50%" }}>
-            <View style={{ alignSelf: "flex-start" }}>
-              <Text style={styles.locationTitle}>Start</Text>
-            </View>
-            <View
-              style={{
-                left: 60,
-                width: 100,
-                alignItems: "center",
-              }}
-            >
-              <Text style={styles.locationTitle}>Pickup</Text>
-              {/* If expanded, show location name and address */}
-              {expanded && (
-                <View style={{ alignItems: "center" }}>
-                  <Text
-                    style={[styles.locationSubtitle, { textAlign: "center" }]}
-                  >
-                    {pickUpLocation}
-                  </Text>
-                  <Text style={{ fontSize: 10, textAlign: "center" }}>
-                    {pickUpAddress}21qz
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-          {/* Dropoff Location */}
-          <View style={[styles.dropOffContainer, { maxWidth: "30%" }]}>
-            <Text style={styles.locationTitle}>Dropoff</Text>
-            {expanded && (
-              <View style={{ alignItems: "flex-end" }}>
-                {/* If expanded, show location name and address */}
-                <Text style={[styles.locationSubtitle, { textAlign: "right" }]}>
-                  {dropOffLocation}
-                </Text>
-                <Text
-                  style={{ fontSize: 10, marginBottom: 5, textAlign: "right" }}
-                >
-                  {dropOffAddress}
-                </Text>
-              </View>
-            )}
-          </View>
-        </View>
       </View>
       {/* Cancel Button */}
       {(status == "WaitingForRide" || status == "DriverEnRoute") && (

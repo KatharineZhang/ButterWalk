@@ -1,6 +1,6 @@
 // components/Both_ProgressBar.tsx
-import React from "react";
 import { View, Text } from "react-native";
+import { FontAwesome6 } from "@expo/vector-icons";
 import { progressBarStyles } from "../assets/styles"; // adjust path as needed
 
 export default function Both_ProgressBar({
@@ -18,7 +18,16 @@ export default function Both_ProgressBar({
     <View style={progressBarStyles.progressBarRowContainer}>
       {/* Start */}
       <View style={progressBarStyles.progressBarNode}>
-        <View style={progressBarStyles.progressBarStartIcon} />
+        <View
+          style={{
+            borderRadius: 13,
+            backgroundColor: "white",
+            borderColor: "black",
+            borderWidth: 1,
+            height: 20,
+            width: 20,
+          }}
+        />
         <Text style={progressBarStyles.progressBarLabel}>Start</Text>
       </View>
 
@@ -32,7 +41,16 @@ export default function Both_ProgressBar({
 
       {/* Pickup */}
       <View style={progressBarStyles.progressBarNode}>
-        <View style={progressBarStyles.progressBarPickupIcon} />
+        
+        
+        <View
+          style={{
+            borderRadius: 13,
+            backgroundColor: "#4B2E83",
+            height: 20,
+            width: 20,
+          }}
+        />
         <Text style={progressBarStyles.progressBarLabel}>Pickup</Text>
         <Text style={progressBarStyles.progressBarAddress}>{pickupAddress}</Text>
       </View>
@@ -47,7 +65,7 @@ export default function Both_ProgressBar({
 
       {/* Dropoff */}
       <View style={progressBarStyles.progressBarNode}>
-        <View style={progressBarStyles.progressBarDropoffIcon} />
+        <FontAwesome6 name="location-dot" size={24} color="#d02323" />
         <Text style={progressBarStyles.progressBarLabel}>Dropoff</Text>
         <Text style={progressBarStyles.progressBarAddress}>{dropoffAddress}</Text>
       </View>

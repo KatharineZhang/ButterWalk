@@ -572,7 +572,7 @@ export const styles = StyleSheet.create({
     paddingLeft: 80,
   },
   bottomModalButtonContainer: {
-    paddingVertical: 10,
+    paddingVertical: 20,
     justifyContent: "center",
     width: "100%",
   },
@@ -599,7 +599,7 @@ export const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     backgroundColor: "white",
-    padding: 16,
+    padding: 8,
     borderRadius: 10,
     width: "100%",
   },
@@ -612,7 +612,7 @@ export const styles = StyleSheet.create({
   },
   mainTextContainer: {
     flexDirection: "row",
-    marginBottom: 10,
+    marginBottom: 5,
   },
   mainText: {
     fontSize: 18,
@@ -623,7 +623,7 @@ export const styles = StyleSheet.create({
   subTextContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 5,
+    margin: 5,
   },
   subText: {
     fontSize: 16,
@@ -632,7 +632,7 @@ export const styles = StyleSheet.create({
   },
   progressBarBottom: {
     alignItems: "center",
-    paddingBottom: 25,
+    padding: 8,
   },
   rideTimeText: {
     fontSize: 12,
@@ -948,44 +948,20 @@ export const progressBarStyles = StyleSheet.create({
   progressBarRowContainer: {
     flexDirection: "row",
     alignItems: "flex-start",
-    paddingHorizontal: 16,
-    paddingVertical: 20,
   },
   progressBarNode: {
     alignItems: "center",
-    maxWidth: 120,
-  },
-  progressBarStartIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 3,
-    borderColor: "#4B2E83",
-    backgroundColor: "white",
-  },
-  progressBarPickupIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#4B2E83",
-  },
-  progressBarDropoffIcon: {
-    width: 24,
-    height: 30,
-    backgroundColor: "#E34B64",
-    borderRadius: 12,
-    borderBottomLeftRadius: 2,
-    borderBottomRightRadius: 2,
-    position: "relative",
+    maxWidth: 100,
+    paddingHorizontal: 2,
   },
   progressBarLabel: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "bold",
-    marginTop: 8,
+    marginTop: 4,
     textAlign: "center",
   },
   progressBarAddress: {
-    fontSize: 12,
+    fontSize: 8,
     color: "#333",
     marginTop: 4,
     textAlign: "center",
