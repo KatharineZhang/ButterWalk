@@ -4,7 +4,7 @@ import {
   TouchableOpacity,
   Pressable,
   ActivityIndicator,
-  Linking
+  Linking,
 } from "react-native";
 import { styles } from "../assets/styles";
 import React, { useEffect, useState } from "react";
@@ -12,7 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import moment from "moment";
 import momentTimezone from "moment-timezone";
 import { NotificationType } from "./Both_Notification";
-import  Both_ProgressBar  from "./Both_ProgressBar";
+import Both_ProgressBar from "./Both_ProgressBar";
 
 export type RideStatus =
   | "WaitingForRide" // the ride has been requested
@@ -26,7 +26,7 @@ interface HandleRideProps {
   dropOffLocation: string;
   pickUpAddress: string;
   dropOffAddress: string;
-  pickUpLocationCoord: {latitude: number, longitude: number}
+  pickUpLocationCoord: { latitude: number; longitude: number };
   status: RideStatus;
   // the progress of user walking to pickup location // will be -1 if walking is not needed
   walkProgress: number;
@@ -229,24 +229,24 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
         )}
 
         <Pressable
-              style={{
-                backgroundColor: "#4B2E83",
-                marginTop: 5,
-                paddingVertical: 10,
-                paddingHorizontal: 16,
-                borderRadius: 8,
-                alignItems: "center",
-                justifyContent: "center",
-                flexDirection: "row",
-              }}
-              onPress={() => {
-                openGoogleMapsDirections(pickUpLocationCoord);
-              }}
-            >
-              <Text style={{ color: "white", fontSize: 14, fontWeight: "600" }}>
-                Directions to Pickup
-              </Text>
-            </Pressable>
+          style={{
+            backgroundColor: "#4B2E83",
+            marginTop: 5,
+            paddingVertical: 10,
+            paddingHorizontal: 16,
+            borderRadius: 8,
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "row",
+          }}
+          onPress={() => {
+            openGoogleMapsDirections(pickUpLocationCoord);
+          }}
+        >
+          <Text style={{ color: "white", fontSize: 14, fontWeight: "600" }}>
+            Directions to Pickup
+          </Text>
+        </Pressable>
       </View>
       {/* Progress Bar Top Labels */}
       <View
@@ -256,11 +256,13 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             ? { borderBottomWidth: 2, borderBottomColor: "#EEEEEE" }
             : {},
         ]}
-      >        
+      >
         <Both_ProgressBar
           pickupAddress={pickUpAddress}
           dropoffAddress={dropOffAddress}
-          driverToPickupMinutes={walkDuration > driverETA ? walkDuration : driverETA}
+          driverToPickupMinutes={
+            walkDuration > driverETA ? walkDuration : driverETA
+          }
           pickupToDropoffMinutes={rideDuration}
         />
       </View>

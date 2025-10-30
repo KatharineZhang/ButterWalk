@@ -843,7 +843,6 @@ export async function addCallLogToDb(
   return;
 }
 
-
 // QUERY - Get all ride requests based on parameters
 export async function queryFeedback(
   rideOrApp?: "RIDE" | "APP",

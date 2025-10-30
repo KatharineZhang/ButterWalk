@@ -40,8 +40,6 @@ interface HandleRideProps {
   updateSideBarHeight: (height: number) => void;
 }
 
-
-
 export default function HandleRide({
   phase,
   requestInfo,
@@ -252,10 +250,10 @@ export default function HandleRide({
 
           {/* Progress Bar Section */}
           <Both_ProgressBar
-          pickupAddress={requestInfo.locationFrom.address}
-          dropoffAddress={requestInfo.locationTo.address}
-          driverToPickupMinutes={driverToPickupDuration}
-          pickupToDropoffMinutes={pickupToDropoffDuration}
+            pickupAddress={requestInfo.locationFrom.address}
+            dropoffAddress={requestInfo.locationTo.address}
+            driverToPickupMinutes={driverToPickupDuration}
+            pickupToDropoffMinutes={pickupToDropoffDuration}
           />
 
           {/* If proximity to pickup location is near, 
@@ -361,12 +359,11 @@ export default function HandleRide({
 
           {/* Actual Progress Bar */}
           <Both_ProgressBar
-          pickupAddress={requestInfo.locationFrom.address}
-          dropoffAddress={requestInfo.locationTo.address}
-          driverToPickupMinutes={driverToPickupDuration}
-          pickupToDropoffMinutes={pickupToDropoffDuration}
+            pickupAddress={requestInfo.locationFrom.address}
+            dropoffAddress={requestInfo.locationTo.address}
+            driverToPickupMinutes={driverToPickupDuration}
+            pickupToDropoffMinutes={pickupToDropoffDuration}
           />
-
 
           {/* Two buttons side by side */}
           <View

@@ -567,7 +567,7 @@ export default function HomePage() {
         // go back to ride request component
         setWhichComponent("rideReq");
         rideStatusRef.current = "WaitingForRide";
-        
+
         // set the notif state based on the reason for cancelation
         switch (cancelReason.current) {
           case "none":
