@@ -8,10 +8,10 @@ import {
 import { styles } from "../assets/styles";
 import React, { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { ProgressBar } from "react-native-paper";
 import moment from "moment";
 import momentTimezone from "moment-timezone";
 import { NotificationType } from "./Both_Notification";
+import  Both_ProgressBar  from "./Both_ProgressBar";
 
 export type RideStatus =
   | "WaitingForRide" // the ride has been requested
@@ -271,20 +271,23 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             </Pressable>
           </View>
         </View>
-        {/* Actual Progress Bar */}
-        <View style={styles.progressBarWrapper}>
-          {/* show white circle */}
-          <View style={[styles.circleStart, { backgroundColor: "white" }]} />
-          {/* move purple circle to middle */}
-          <View style={[styles.circleStart, { left: 130 }]} />
-          {/* Progress Bar */}
-          <ProgressBar
-            progress={progress}
-            color="#C5B4E3"
-            style={styles.progressBar}
-          />
-          <View style={styles.circleEnd} />
-        </View>
+        {/* New Timeline Component */}
+        <Both_ProgressBar
+          phase={
+            status === "DriverEnRoute"
+              ? "headingToPickup"
+              : status === "DriverArrived"
+              ? "waitingForPickup"
+              : status === "RideInProgress"
+              ? "headingToDropoff"
+              : status === "RideCompleted"
+              ? "arrivedAtDropoff"
+              : "headingToPickup"
+          }
+          driverToPickupMinutes={driverETA}
+          pickupToDropoffMinutes={rideDuration}
+        />
+
 
         {/* Locations Text */}
         <View style={styles.locationsContainer}>
