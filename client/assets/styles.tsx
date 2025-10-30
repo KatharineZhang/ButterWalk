@@ -943,6 +943,72 @@ export const styles = StyleSheet.create({
   },
 });
 
+export const progressBarStyles = StyleSheet.create({
+  // Progress Bar Component
+  progressBarRowContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+  },
+  progressBarNode: {
+    alignItems: "center",
+    maxWidth: 120,
+  },
+  progressBarStartIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 3,
+    borderColor: "#4B2E83",
+    backgroundColor: "white",
+  },
+  progressBarPickupIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#4B2E83",
+  },
+  progressBarDropoffIcon: {
+    width: 24,
+    height: 30,
+    backgroundColor: "#E34B64",
+    borderRadius: 12,
+    borderBottomLeftRadius: 2,
+    borderBottomRightRadius: 2,
+    position: "relative",
+  },
+  progressBarLabel: {
+    fontSize: 14,
+    fontWeight: "bold",
+    marginTop: 8,
+    textAlign: "center",
+  },
+  progressBarAddress: {
+    fontSize: 12,
+    color: "#333",
+    marginTop: 4,
+    textAlign: "center",
+  },
+  progressBarLineContainer: {
+    flex: 1,
+    alignItems: "center",
+    paddingTop: 10,
+  },
+  progressBarTimeLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  progressBarDottedLine: {
+    width: "100%",
+    height: 2,
+    borderStyle: "dotted",
+    borderWidth: 1,
+    borderColor: "#999",
+  },
+});
+
 export const loadingPageCompStyles = StyleSheet.create({
   rootContainer: {
     flex: 1,

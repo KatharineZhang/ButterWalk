@@ -1,107 +1,55 @@
-// components/Both_ProgressBar.tsx (timeline replacement)
+// components/Both_ProgressBar.tsx
 import React from "react";
-import { View, Text, TextStyle, ViewStyle } from "react-native";
+import { View, Text } from "react-native";
+import { progressBarStyles } from "../assets/styles"; // adjust path as needed
 
-type Phase =
-  | "headingToPickup"
-  | "waitingForPickup"
-  | "headingToDropoff"
-  | "arrivedAtDropoff";
-
-export default function Both_Timeline({
-  phase,
-  startLabel = "Start",
-  pickupLabel = "Pickup",
-  dropoffLabel = "Dropoff",
+export default function Both_ProgressBar({
+  pickupAddress,
+  dropoffAddress,
   driverToPickupMinutes,
   pickupToDropoffMinutes,
 }: {
-  phase: Phase;
-  startLabel?: string;
-  pickupLabel?: string;
-  dropoffLabel?: string;
+  pickupAddress: string;
+  dropoffAddress: string;
   driverToPickupMinutes?: number;
   pickupToDropoffMinutes?: number;
 }) {
-  // state -> which steps are completed
-  const startCompleted =
-    phase === "waitingForPickup" ||
-    phase === "headingToDropoff" ||
-    phase === "arrivedAtDropoff";
-  const pickupCompleted = phase === "headingToDropoff" || phase === "arrivedAtDropoff";
-  const dropoffCompleted = phase === "arrivedAtDropoff";
-
-  const startActive = !startCompleted;
-  const pickupActive = !pickupCompleted && startCompleted;
-  const dropoffActive = !dropoffCompleted && pickupCompleted;
-
-  const colorActive = "#4B2E83";   // purple
-  const colorCompleted = "#C9C9D1"; // grey
-  const colorIdle = "#EAE8F6";      // light track
-
-  const dotStyle = (active: boolean, completed: boolean): ViewStyle => ({
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: completed ? colorCompleted : active ? colorActive : "#FFFFFF",
-    borderWidth: completed ? 0 : 2,
-    borderColor: active ? colorActive : colorCompleted,
-  });
-
-  const labelTextStyle = (active: boolean, completed: boolean): TextStyle => ({
-    fontSize: 13,
-    // cast to satisfy RN's union type for fontWeight
-    fontWeight: (active ? "700" : "600") as TextStyle["fontWeight"],
-    color: completed ? "#6E6E78" : active ? "#1F1A3D" : "#6E6E78",
-    marginTop: 8,
-  });
-
-  const timeTextStyle: TextStyle = {
-    fontSize: 11,
-    color: "#6E6E78",
-    marginTop: 4,
-  };
-
   return (
-    <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
-      {/* background track */}
-      <View
-        style={{
-          position: "absolute",
-          left: 16,
-          right: 16,
-          top: 15,
-          height: 2,
-          backgroundColor: colorIdle,
-        }}
-      />
+    <View style={progressBarStyles.progressBarRowContainer}>
+      {/* Start */}
+      <View style={progressBarStyles.progressBarNode}>
+        <View style={progressBarStyles.progressBarStartIcon} />
+        <Text style={progressBarStyles.progressBarLabel}>Start</Text>
+      </View>
 
-      {/* 3 milestones */}
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        {/* Start */}
-        <View style={{ alignItems: "center" }}>
-          <View style={dotStyle(startActive, startCompleted)} />
-          <Text style={labelTextStyle(startActive, startCompleted)}>{startLabel}</Text>
-          <Text style={timeTextStyle}>
-            {driverToPickupMinutes != null ? `${driverToPickupMinutes} min` : " "}
-          </Text>
-        </View>
+      {/* Line 1 with time */}
+      <View style={progressBarStyles.progressBarLineContainer}>
+        {driverToPickupMinutes != null && (
+          <Text style={progressBarStyles.progressBarTimeLabel}>{driverToPickupMinutes} min</Text>
+        )}
+        <View style={progressBarStyles.progressBarDottedLine} />
+      </View>
 
-        {/* Pickup */}
-        <View style={{ alignItems: "center" }}>
-          <View style={dotStyle(pickupActive, pickupCompleted)} />
-          <Text style={labelTextStyle(pickupActive, pickupCompleted)}>{pickupLabel}</Text>
-          <Text style={timeTextStyle}>
-            {pickupToDropoffMinutes != null ? `${pickupToDropoffMinutes} min` : " "}
-          </Text>
-        </View>
+      {/* Pickup */}
+      <View style={progressBarStyles.progressBarNode}>
+        <View style={progressBarStyles.progressBarPickupIcon} />
+        <Text style={progressBarStyles.progressBarLabel}>Pickup</Text>
+        <Text style={progressBarStyles.progressBarAddress}>{pickupAddress}</Text>
+      </View>
 
-        {/* Dropoff */}
-        <View style={{ alignItems: "center" }}>
-          <View style={dotStyle(dropoffActive, dropoffCompleted)} />
-          <Text style={labelTextStyle(dropoffActive, dropoffCompleted)}>{dropoffLabel}</Text>
-          <Text style={timeTextStyle}>{/* no ETA for final */} </Text>
-        </View>
+      {/* Line 2 with time */}
+      <View style={progressBarStyles.progressBarLineContainer}>
+        {pickupToDropoffMinutes != null && (
+          <Text style={progressBarStyles.progressBarTimeLabel}>{pickupToDropoffMinutes} min</Text>
+        )}
+        <View style={progressBarStyles.progressBarDottedLine} />
+      </View>
+
+      {/* Dropoff */}
+      <View style={progressBarStyles.progressBarNode}>
+        <View style={progressBarStyles.progressBarDropoffIcon} />
+        <Text style={progressBarStyles.progressBarLabel}>Dropoff</Text>
+        <Text style={progressBarStyles.progressBarAddress}>{dropoffAddress}</Text>
       </View>
     </View>
   );

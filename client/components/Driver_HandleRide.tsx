@@ -47,8 +47,6 @@ export default function HandleRide({
   requestInfo,
   driverToPickupDuration,
   pickupToDropoffDuration,
-  pickupProgress,
-  dropoffProgress,
   isNearPickup,
   isNearDropoff,
   studentPhoneNumber,
@@ -61,8 +59,6 @@ export default function HandleRide({
   driverArrivedAtPickup,
   driverDrivingToDropOff,
   setStudentIsLate,
-  isNearPickup,
-  isNearDropoff,
   updateSideBarHeight,
 }: HandleRideProps) {
   // When timer is done in "waitingForPickup" state
@@ -256,7 +252,8 @@ export default function HandleRide({
 
           {/* Progress Bar Section */}
           <Both_ProgressBar
-          phase={phase}
+          pickupAddress={requestInfo.locationFrom.address}
+          dropoffAddress={requestInfo.locationTo.address}
           driverToPickupMinutes={driverToPickupDuration}
           pickupToDropoffMinutes={pickupToDropoffDuration}
           />
@@ -364,9 +361,10 @@ export default function HandleRide({
 
           {/* Actual Progress Bar */}
           <Both_ProgressBar
-            phase={phase}
-            driverToPickupMinutes={driverToPickupDuration}
-            pickupToDropoffMinutes={pickupToDropoffDuration}
+          pickupAddress={requestInfo.locationFrom.address}
+          dropoffAddress={requestInfo.locationTo.address}
+          driverToPickupMinutes={driverToPickupDuration}
+          pickupToDropoffMinutes={pickupToDropoffDuration}
           />
 
 
@@ -508,9 +506,10 @@ export default function HandleRide({
 
           {/* Grey line */}
           <View style={styles.driverGreyLine} />
-          {/* Progress Bar */}
+          {/* Progress Bar Section */}
           <Both_ProgressBar
-            phase={phase}
+            pickupAddress={requestInfo.locationFrom.address}
+            dropoffAddress={requestInfo.locationTo.address}
             driverToPickupMinutes={driverToPickupDuration}
             pickupToDropoffMinutes={pickupToDropoffDuration}
           />
@@ -544,7 +543,8 @@ export default function HandleRide({
           </View>
           {/* Progress Bar Section */}
           <Both_ProgressBar
-            phase={phase}
+            pickupAddress={requestInfo.locationFrom.address}
+            dropoffAddress={requestInfo.locationTo.address}
             driverToPickupMinutes={driverToPickupDuration}
             pickupToDropoffMinutes={pickupToDropoffDuration}
           />

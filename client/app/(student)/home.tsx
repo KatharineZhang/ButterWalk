@@ -1006,6 +1006,7 @@ export default function HomePage() {
                 rideProgress={rideProgress}
                 pickUpLocation={pickUpLocationName}
                 dropOffLocation={dropOffLocationName}
+                pickUpLocationCoord={pickUpLocation}
                 pickUpAddress={pickUpAddress}
                 dropOffAddress={dropOffAddress}
                 walkDuration={walkDuration}

@@ -4,6 +4,7 @@ import {
   TouchableOpacity,
   Pressable,
   ActivityIndicator,
+  Linking
 } from "react-native";
 import { styles } from "../assets/styles";
 import React, { useEffect, useState } from "react";
@@ -25,6 +26,7 @@ interface HandleRideProps {
   dropOffLocation: string;
   pickUpAddress: string;
   dropOffAddress: string;
+  pickUpLocationCoord: {latitude: number, longitude: number}
   status: RideStatus;
   // the progress of user walking to pickup location // will be -1 if walking is not needed
   walkProgress: number;
@@ -45,6 +47,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   status,
   pickUpLocation,
   dropOffLocation,
+  pickUpLocationCoord,
   pickUpAddress,
   dropOffAddress,
   walkProgress,
@@ -132,6 +135,25 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
     return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
   };
 
+  // Function to open Google Maps with directions while app still runs in background
+  const openGoogleMapsDirections = async (destination: {
+    latitude: number;
+    longitude: number;
+  }) => {
+    try {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${destination.latitude},${destination.longitude}&travelmode=walking`;
+
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        console.error("Cannot open maps URL");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   if (status == "RideInProgress") {
     // when ride is in progress
     // progress = 0.45 + (dist from driver+student to dropoff) / (dist from pickup to dropoff)
@@ -205,6 +227,25 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             </Text>
           </View>
         )}
+
+        <Pressable
+              style={{
+                backgroundColor: "#4B2E83",
+                paddingVertical: 10,
+                paddingHorizontal: 16,
+                borderRadius: 8,
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "row",
+              }}
+              onPress={() => {
+                openGoogleMapsDirections(pickUpLocationCoord);
+              }}
+            >
+              <Text style={{ color: "white", fontSize: 14, fontWeight: "600" }}>
+                Directions
+              </Text>
+            </Pressable>
       </View>
       {/* Progress Bar Top Labels */}
       <View
@@ -217,7 +258,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
       >
         {/* If walking is needed show Walk and Ride Duration*/}
         <View style={{ flexDirection: "row", paddingBottom: 10 }}>
-          {/* Open walking directions in native maps */}
+          {/* Open walking directions in native maps */} 
           <TouchableOpacity
             onPress={
               walkProgress < 1
@@ -271,19 +312,10 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             </Pressable>
           </View>
         </View>
-        {/* New Timeline Component */}
+        
         <Both_ProgressBar
-          phase={
-            status === "DriverEnRoute"
-              ? "headingToPickup"
-              : status === "DriverArrived"
-              ? "waitingForPickup"
-              : status === "RideInProgress"
-              ? "headingToDropoff"
-              : status === "RideCompleted"
-              ? "arrivedAtDropoff"
-              : "headingToPickup"
-          }
+          pickupAddress={pickUpAddress}
+          dropoffAddress={dropOffAddress}
           driverToPickupMinutes={driverETA}
           pickupToDropoffMinutes={rideDuration}
         />
