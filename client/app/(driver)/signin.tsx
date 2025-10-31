@@ -147,7 +147,7 @@ const Login = () => {
           style={{
             backgroundColor: driverId.length > 0 ? "#4B2E83" : "gray",
             borderRadius: 16,
-            marginTop: 280, 
+            marginTop: 280,
             width: "100%",
             height: 70,
             justifyContent: "center",

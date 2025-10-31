@@ -4,8 +4,8 @@ import * as WebBrowser from "expo-web-browser";
 // need to 'npx expo install expo-web-browser expo-auth-session expo-crypto' ON MAC
 // or 'npm i expo-auth-session@~6.0.3' on windows
 import * as Google from "expo-auth-session/providers/google";
-import { useEffect } from "react";
-import { router, useLocalSearchParams, Link } from "expo-router";
+import { useEffect, useState } from "react";
+import { Redirect, router, useLocalSearchParams, Link } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 // Images
@@ -35,6 +35,8 @@ const Login = () => {
   // but is not explicitly used, hence the override
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [request, response, promptAsync] = Google.useAuthRequest(config);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [goToFinishAcc, setGoToFinishAcc] = useState<boolean>(false);
 
   useEffect(() => {
     if (response?.type === "success") {
@@ -49,7 +51,16 @@ const Login = () => {
     }
   }, [response]);
 
-  return (
+  return goToFinishAcc ? (
+    <Redirect
+      href={{
+        pathname: "/(student)/finishAcc",
+        params: {
+          netid: "snigsm",
+        },
+      }}
+    />
+  ) : (
     <SafeAreaView style={[styles.container, { padding: 20 }]}>
       <View style={{ flex: 1, width: "100%", justifyContent: "space-between" }}>
         <View style={{ alignSelf: "flex-start" }}>
