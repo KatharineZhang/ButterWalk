@@ -1,6 +1,7 @@
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { FontAwesome6, Entypo, FontAwesome } from "@expo/vector-icons";
 import { progressBarStyles } from "../assets/styles";
+import { useState } from "react";
 
 export default function Both_ProgressBar({
   rideStatus,
@@ -15,6 +16,9 @@ export default function Both_ProgressBar({
   driverToPickupMinutes?: number;
   pickupToDropoffMinutes?: number;
 }) {
+
+  const [showDetails, setShowDetails] = useState(false);
+
   // Define icon colors based on rideStatus
   const grey = "#adacaa";
   const purple = "#4B2E83";
@@ -67,13 +71,20 @@ export default function Both_ProgressBar({
         </Text>
       </View>
 
-      {/* Line 2 with time */}
+      {/* Line 2 with time and more details link */}
       <View style={progressBarStyles.progressBarLineContainer}>
-        {pickupToDropoffMinutes != null && (
-          <Text style={progressBarStyles.progressBarTimeLabel}>
-            {pickupToDropoffMinutes} min
-          </Text>
-        )}
+        <View style={progressBarStyles.progressBarTimeLabelContainer}>
+          {pickupToDropoffMinutes != null && (
+            <Text style={progressBarStyles.progressBarTimeLabel}>
+              {pickupToDropoffMinutes} min
+            </Text>
+          )}
+          <Pressable onPress={() => setShowDetails(!showDetails)}>
+            <Text style={progressBarStyles.progressBarDetailsLink}>
+              {showDetails ? "less details" : "more details"}
+            </Text>
+          </Pressable>
+        </View>
         <View style={progressBarStyles.progressBarDottedLine} />
       </View>
 
@@ -88,3 +99,4 @@ export default function Both_ProgressBar({
     </View>
   );
 }
+

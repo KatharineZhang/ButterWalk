@@ -983,7 +983,19 @@ export const progressBarStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#999",
   },
+  progressBarTimeLabelContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 5,
+  },
+  progressBarDetailsLink: {
+    color: "#4B2E83",
+    fontSize: 12,
+    textDecorationLine: "underline",
+  },
 });
+
 
 export const loadingPageCompStyles = StyleSheet.create({
   rootContainer: {

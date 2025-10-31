@@ -250,7 +250,7 @@ export default function HandleRide({
 
           {/* Progress Bar Section */}
           <Both_ProgressBar
-            rideStatus="start"
+            rideStatus={"start"}
             pickupAddress={requestInfo.locationFrom.address}
             dropoffAddress={requestInfo.locationTo.address}
             driverToPickupMinutes={driverToPickupDuration}
@@ -564,3 +564,4 @@ export default function HandleRide({
     </View>
   );
 }
+
