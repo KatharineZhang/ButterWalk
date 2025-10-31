@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { styles } from "../assets/styles";
 import React, { useEffect, useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import moment from "moment";
 import momentTimezone from "moment-timezone";
 import { NotificationType } from "./Both_Notification";
@@ -233,21 +233,32 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
         {(status === "WaitingForRide" || status === "DriverEnRoute") && (
           <Pressable
             style={{
-              backgroundColor: "#4B2E83",
+              backgroundColor: "#F5F5F5",
               marginTop: 5,
               paddingVertical: 10,
               paddingHorizontal: 16,
-              borderRadius: 8,
+              borderRadius: 20,
               alignItems: "center",
               justifyContent: "center",
               flexDirection: "row",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.1,
+              shadowRadius: 2,
+              elevation: 2, // For Android shadow
             }}
             onPress={() => {
               openGoogleMapsDirections(pickUpLocationCoord);
             }}
           >
-            <Text style={{ color: "white", fontSize: 14, fontWeight: "600" }}>
-              Directions to Pickup
+            <FontAwesome5 name="directions" size={20} color="#6B4FA3" />
+            <Text style={{ 
+              color: "#6B4FA3",
+              fontSize: 14, 
+              fontWeight: "600",
+              marginLeft: 8,
+            }}>
+              Directions
             </Text>
           </Pressable>
         )}
