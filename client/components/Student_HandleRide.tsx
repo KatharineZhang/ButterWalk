@@ -223,8 +223,8 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             status === "WaitingForRide"
               ? "start"
               : status === "DriverEnRoute" || status === "DriverArrived"
-              ? "pickup"
-              : "dropoff"
+                ? "pickup"
+                : "dropoff"
           }
           pickupAddress={pickUpAddress}
           dropoffAddress={dropOffAddress}
