@@ -944,58 +944,122 @@ export const styles = StyleSheet.create({
 });
 
 export const progressBarStyles = StyleSheet.create({
-  // Progress Bar Component
-  progressBarRowContainer: {
+  // Row 1: Minutes
+  progressBarMinutesRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  progressBarNode: {
+    justifyContent: "space-between",
     alignItems: "center",
-    maxWidth: 100,
-    paddingHorizontal: 2,
+    marginBottom: 8,
+    paddingHorizontal: 10,
   },
+  progressBarMinutesSection: {
+    flex: 1,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 5,
+  },
+  progressBarTimeLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  // Row 2: Icons and Lines
+  progressBarIconRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
+    paddingHorizontal: "8%"
+  },
+  progressBarLine: {
+    flex: 1,
+    paddingHorizontal: 5,
+  },
+  progressBarDottedLine: {
+    width: "100%",
+    height: 2,
+    borderTopWidth: 2,
+    borderStyle: "dashed",
+    borderColor: "#999",
+  },
+
+  // Row 3: Labels
+  progressBarLabelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    paddingHorizontal: "4%"
+  },
+  progressBarLabelSection: {
+  flex: 1,
+  alignItems: "center",
+},
+progressBarLabelSectionStart: {
+  flex: 1,
+  alignItems: "flex-start", // Align to left edge
+},
+progressBarLabelSectionDropoff: {
+  flex: 1,
+  alignItems: "flex-end", // Align to right edge
+},
   progressBarLabel: {
     fontSize: 12,
     fontWeight: "bold",
-    marginTop: 4,
     textAlign: "center",
   },
   progressBarAddress: {
     fontSize: 8,
     color: "#333",
     marginTop: 4,
-    textAlign: "center",
+    textAlign: "left",
+    backgroundColor: "blue"
   },
-  progressBarLineContainer: {
-    flex: 1,
-    alignItems: "center",
-    paddingTop: 10,
-  },
-  progressBarTimeLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    marginBottom: 4,
-  },
-  progressBarDottedLine: {
-    width: "100%",
-    height: 2,
-    borderStyle: "dotted",
-    borderWidth: 1,
-    borderColor: "#999",
-  },
-  progressBarTimeLabelContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
-    gap: 5,
-  },
+  progressBarAddressPickup: {
+  fontSize: 8,
+  color: "#333",
+  marginTop: 4,
+  width: "100%",
+  textAlign: "left", // Align to left edge
+},
+progressBarAddressDropoff: {
+  fontSize: 8,
+  color: "#333",
+  marginTop: 4,
+  width: "100%",
+  textAlign: "right", // Align to right edge
+},
   progressBarDetailsLink: {
     color: "#4B2E83",
     fontSize: 12,
     textDecorationLine: "underline",
   },
-});
 
+  // Old styles (can be removed if not used elsewhere)
+  progressBarRowContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  progressBarNode: {
+    alignItems: "center",
+    maxWidth: 100,
+    paddingHorizontal: 2,
+  },
+  progressBarLineContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  progressBarTimeLabelContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    marginBottom: 4,
+  },
+});
 
 export const loadingPageCompStyles = StyleSheet.create({
   rootContainer: {

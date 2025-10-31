@@ -16,7 +16,6 @@ export default function Both_ProgressBar({
   driverToPickupMinutes?: number;
   pickupToDropoffMinutes?: number;
 }) {
-
   const [showDetails, setShowDetails] = useState(false);
 
   // Define icon colors based on rideStatus
@@ -45,35 +44,17 @@ export default function Both_ProgressBar({
   }
 
   return (
-    <View style={progressBarStyles.progressBarRowContainer}>
-      {/* Start */}
-      <View style={progressBarStyles.progressBarNode}>
-        <Entypo name="circle" size={20} color={startColor} />
-        <Text style={progressBarStyles.progressBarLabel}>Start</Text>
-      </View>
-
-      {/* Line 1 with time */}
-      <View style={progressBarStyles.progressBarLineContainer}>
-        {driverToPickupMinutes != null && (
-          <Text style={progressBarStyles.progressBarTimeLabel}>
-            {driverToPickupMinutes} min
-          </Text>
-        )}
-        <View style={progressBarStyles.progressBarDottedLine} />
-      </View>
-
-      {/* Pickup */}
-      <View style={progressBarStyles.progressBarNode}>
-        <FontAwesome name="circle" size={20} color={pickupColor} />
-        <Text style={progressBarStyles.progressBarLabel}>Pickup</Text>
-        <Text style={progressBarStyles.progressBarAddress}>
-          {pickupAddress}
-        </Text>
-      </View>
-
-      {/* Line 2 with time and more details link */}
-      <View style={progressBarStyles.progressBarLineContainer}>
-        <View style={progressBarStyles.progressBarTimeLabelContainer}>
+    <View style={{ width: "100%" }}>
+      {/* Row 1: Minutes and Details */}
+      <View style={progressBarStyles.progressBarMinutesRow}>
+        <View style={progressBarStyles.progressBarMinutesSection}>
+          {driverToPickupMinutes != null && (
+            <Text style={progressBarStyles.progressBarTimeLabel}>
+              {driverToPickupMinutes} min
+            </Text>
+          )}
+        </View>
+        <View style={progressBarStyles.progressBarMinutesSection}>
           {pickupToDropoffMinutes != null && (
             <Text style={progressBarStyles.progressBarTimeLabel}>
               {pickupToDropoffMinutes} min
@@ -85,18 +66,52 @@ export default function Both_ProgressBar({
             </Text>
           </Pressable>
         </View>
-        <View style={progressBarStyles.progressBarDottedLine} />
       </View>
 
-      {/* Dropoff */}
-      <View style={progressBarStyles.progressBarNode}>
+      {/* Row 2: Icons and Dotted Lines */}
+      <View style={progressBarStyles.progressBarIconRow}>
+        {/* Start Icon */}
+        <Entypo name="circle" size={20} color={startColor} />
+
+        {/* Line 1 */}
+        <View style={progressBarStyles.progressBarLine}>
+          <View style={progressBarStyles.progressBarDottedLine} />
+        </View>
+
+        {/* Pickup Icon */}
+        <FontAwesome name="circle" size={20} color={pickupColor} />
+
+        {/* Line 2 */}
+        <View style={progressBarStyles.progressBarLine}>
+          <View style={progressBarStyles.progressBarDottedLine} />
+        </View>
+
+        {/* Dropoff Icon */}
         <FontAwesome6 name="location-dot" size={24} color={dropoffColor} />
-        <Text style={progressBarStyles.progressBarLabel}>Dropoff</Text>
-        <Text style={progressBarStyles.progressBarAddress}>
-          {dropoffAddress}
-        </Text>
+      </View>
+
+      {/* Row 3: Labels */}
+      <View style={progressBarStyles.progressBarLabelRow}>
+        <View style={progressBarStyles.progressBarLabelSectionStart}>
+          <Text style={progressBarStyles.progressBarLabel}>Start</Text>
+        </View>
+        <View style={progressBarStyles.progressBarLabelSection}>
+          <Text style={progressBarStyles.progressBarLabel}>Pickup</Text>
+          {showDetails && (
+            <Text style={progressBarStyles.progressBarAddressPickup}>
+              {pickupAddress}
+            </Text>
+          )}
+        </View>
+        <View style={progressBarStyles.progressBarLabelSectionDropoff}>
+          <Text style={progressBarStyles.progressBarLabel}>Dropoff</Text>
+          {showDetails && (
+            <Text style={progressBarStyles.progressBarAddressDropoff}>
+              {dropoffAddress}
+            </Text>
+          )}
+        </View>
       </View>
     </View>
   );
 }
-
