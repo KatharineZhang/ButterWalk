@@ -38,6 +38,7 @@ const Login = () => {
   // but is not explicitly used, hence the override
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [request, response, promptAsync] = Google.useAuthRequest(config);
+   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [goToFinishAcc, setGoToFinishAcc] = useState<boolean>(false);
 
   useEffect(() => {

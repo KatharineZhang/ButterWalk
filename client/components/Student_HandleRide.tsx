@@ -4,7 +4,6 @@ import {
   TouchableOpacity,
   Pressable,
   ActivityIndicator,
-  Linking,
 } from "react-native";
 import { styles } from "../assets/styles";
 import React, { useEffect, useState } from "react";
@@ -45,9 +44,6 @@ interface HandleRideProps {
 
 const HandleRideComponent: React.FC<HandleRideProps> = ({
   status,
-  pickUpLocation,
-  dropOffLocation,
-  pickUpLocationCoord,
   pickUpAddress,
   dropOffAddress,
   walkProgress,
@@ -65,9 +61,6 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   // TIMER STUFF
   // keep track of the seconds left
   const [seconds, setSeconds] = useState(5 * 60); // 5 minutes
-
-  // height expansion
-  const [expanded, setExpanded] = useState(false); // if the progress bar is expanded or not
 
   // show the waiting for driver confirmation during pickup
   const [showWaitingForConfirmation, setShowWaitingForConfirmation] =

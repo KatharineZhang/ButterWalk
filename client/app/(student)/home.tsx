@@ -3,9 +3,7 @@ import {
   Pressable,
   TouchableOpacity,
   useWindowDimensions,
-  View,
-  Text,
-  Linking,
+  View
 } from "react-native";
 import Profile from "./profile";
 import Map, { calculateDistance, isSameLocation, MapRef } from "./map";
