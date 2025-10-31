@@ -15,9 +15,6 @@ import logo from "@/assets/images/GoogleG.png";
 // import butterWalkLogo from "@/assets/images/butterWalkLogo.png";
 import huskyCarImage from "@/assets/images/husky-car.png";
 import { SafeAreaView } from "react-native-safe-area-context";
-import WebSocketService, {
-  WebsocketConnectMessage,
-} from "@/services/WebSocketService";
 
 const webClientId = process.env.EXPO_PUBLIC_WEB_CLIENT_ID;
 const iosClientId = process.env.EXPO_PUBLIC_IOS_CLIENT_ID;
@@ -38,7 +35,7 @@ const Login = () => {
   // but is not explicitly used, hence the override
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [request, response, promptAsync] = Google.useAuthRequest(config);
-   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [goToFinishAcc, setGoToFinishAcc] = useState<boolean>(false);
 
   useEffect(() => {
