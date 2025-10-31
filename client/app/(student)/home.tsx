@@ -4,6 +4,8 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   View,
+  Text,
+  Linking
 } from "react-native";
 import Profile from "./profile";
 import Map, { calculateDistance, isSameLocation, MapRef } from "./map";
@@ -27,7 +29,7 @@ import RideRequestForm from "@/components/Student_RideRequestForm";
 import ConfirmRide from "@/components/Student_ConfirmRide";
 import Notification, { NotificationType } from "@/components/Both_Notification";
 import FAQ from "./faq";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { styles } from "@/assets/styles";
 import HandleRideComponent from "@/components/Student_HandleRide";
 import { createOpenLink } from "react-native-open-maps";
@@ -847,6 +849,26 @@ export default function HomePage() {
     }
   };
 
+
+  // Function to open Google Maps with directions while app still runs in background
+  const openGoogleMapsDirections = async (destination: {
+    latitude: number;
+    longitude: number;
+  }) => {
+    try {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${destination.latitude},${destination.longitude}&travelmode=walking`;
+
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        console.error("Cannot open maps URL");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View>
@@ -950,6 +972,52 @@ export default function HomePage() {
           {/* Side map legend */}
           <Legend role={"STUDENT"}></Legend>
         </View>
+        
+
+        {/* Directions button - positioned on the right side */}
+{(rideStatusRef.current === "WaitingForRide" || rideStatusRef.current === "DriverEnRoute") && (
+  <View
+    style={{
+      position: "absolute",
+      bottom: currentComponentHeight + 10,
+      right: 10, // Position on the right side
+      alignItems: "flex-end",
+    }}
+  >
+    <Pressable
+      style={{
+        backgroundColor: "#F5F5F5",
+        borderWidth: 2, // Add border width
+        borderColor: "#6B4FA3",
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "row",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
+      }}
+      onPress={() => {
+        openGoogleMapsDirections(pickUpLocation);
+      }}
+    >
+      <FontAwesome5 name="directions" size={20} color="#6B4FA3" />
+      <Text style={{ 
+        color: "#6B4FA3",
+        fontSize: 14, 
+        fontWeight: "600",
+        marginLeft: 8,
+      }}>
+        Directions
+      </Text>
+    </Pressable>
+  </View>
+)}
+        
 
         {/* Figure out which component to render */}
         {
@@ -999,6 +1067,7 @@ export default function HomePage() {
             </View>
           ) : whichComponent === "handleRide" ? (
             <View style={styles.homePageComponentContainer}>
+              
               {/* driver on way component */}
               <HandleRideComponent
                 status={rideStatusRef.current}

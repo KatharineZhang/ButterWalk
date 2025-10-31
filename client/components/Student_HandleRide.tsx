@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { styles } from "../assets/styles";
 import React, { useEffect, useState } from "react";
-import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import moment from "moment";
 import momentTimezone from "moment-timezone";
 import { NotificationType } from "./Both_Notification";
@@ -135,24 +135,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
     return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
   };
 
-  // Function to open Google Maps with directions while app still runs in background
-  const openGoogleMapsDirections = async (destination: {
-    latitude: number;
-    longitude: number;
-  }) => {
-    try {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${destination.latitude},${destination.longitude}&travelmode=walking`;
-
-      const canOpen = await Linking.canOpenURL(url);
-      if (canOpen) {
-        await Linking.openURL(url);
-      } else {
-        console.error("Cannot open maps URL");
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  
 
   if (status == "RideInProgress") {
     // when ride is in progress
@@ -226,41 +209,6 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
                   : `Estimated Wait Time: ${driverETA == 0 ? "<2" : driverETA} min`}
             </Text>
           </View>
-        )}
-
-
-        {/* Directions button for student! */}
-        {(status === "WaitingForRide" || status === "DriverEnRoute") && (
-          <Pressable
-            style={{
-              backgroundColor: "#F5F5F5",
-              marginTop: 5,
-              paddingVertical: 10,
-              paddingHorizontal: 16,
-              borderRadius: 20,
-              alignItems: "center",
-              justifyContent: "center",
-              flexDirection: "row",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.1,
-              shadowRadius: 2,
-              elevation: 2, // For Android shadow
-            }}
-            onPress={() => {
-              openGoogleMapsDirections(pickUpLocationCoord);
-            }}
-          >
-            <FontAwesome5 name="directions" size={20} color="#6B4FA3" />
-            <Text style={{ 
-              color: "#6B4FA3",
-              fontSize: 14, 
-              fontWeight: "600",
-              marginLeft: 8,
-            }}>
-              Directions
-            </Text>
-          </Pressable>
         )}
       </View>
       {/* Progress Bar Top Labels */}

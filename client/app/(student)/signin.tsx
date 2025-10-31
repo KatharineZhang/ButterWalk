@@ -132,16 +132,6 @@ const Login = () => {
             </Text>
           </TouchableOpacity>
           <Text style={{ color: "red", marginTop: 10 }}>{error}</Text>
-          <Pressable
-            style={[styles.button, { position: "absolute", bottom: "5%" }]}
-            onPress={() => {
-              // temporary connection to websocket since we aren't going through the sign in process
-              connectWebSocket();
-              setGoToFinishAcc(true);
-            }}
-          >
-            <Text style={styles.text}>Bypass Signin</Text>
-          </Pressable>
         </View>
       </View>
     </SafeAreaView>
