@@ -29,13 +29,14 @@ import RideRequestForm from "@/components/Student_RideRequestForm";
 import ConfirmRide from "@/components/Student_ConfirmRide";
 import Notification, { NotificationType } from "@/components/Both_Notification";
 import FAQ from "./faq";
-import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { styles } from "@/assets/styles";
 import HandleRideComponent from "@/components/Student_HandleRide";
 import { createOpenLink } from "react-native-open-maps";
 import LoadingPageComp from "@/components/Student_LoadingPage";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Legend from "@/components/Student_Legend";
+import Student_DirectionsButton from "@/components/Student_DirectionsButton";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -850,24 +851,7 @@ export default function HomePage() {
   };
 
 
-  // Function to open Google Maps with directions while app still runs in background
-  const openGoogleMapsDirections = async (destination: {
-    latitude: number;
-    longitude: number;
-  }) => {
-    try {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${destination.latitude},${destination.longitude}&travelmode=walking`;
-
-      const canOpen = await Linking.canOpenURL(url);
-      if (canOpen) {
-        await Linking.openURL(url);
-      } else {
-        console.error("Cannot open maps URL");
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -984,37 +968,7 @@ export default function HomePage() {
       alignItems: "flex-end",
     }}
   >
-    <Pressable
-      style={{
-        backgroundColor: "#F5F5F5",
-        borderWidth: 2, // Add border width
-        borderColor: "#6B4FA3",
-        paddingVertical: 10,
-        paddingHorizontal: 16,
-        borderRadius: 20,
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "row",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
-      }}
-      onPress={() => {
-        openGoogleMapsDirections(pickUpLocation);
-      }}
-    >
-      <FontAwesome5 name="directions" size={20} color="#6B4FA3" />
-      <Text style={{ 
-        color: "#6B4FA3",
-        fontSize: 14, 
-        fontWeight: "600",
-        marginLeft: 8,
-      }}>
-        Directions
-      </Text>
-    </Pressable>
+    <Student_DirectionsButton pickUpLocation={pickUpLocation}/>
   </View>
 )}
         
