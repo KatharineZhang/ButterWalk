@@ -21,11 +21,8 @@ export type RideStatus =
   | "RideCompleted"; // the driver arrived at the dropoff location
 
 interface HandleRideProps {
-  pickUpLocation: string;
-  dropOffLocation: string;
   pickUpAddress: string;
   dropOffAddress: string;
-  pickUpLocationCoord: { latitude: number; longitude: number };
   status: RideStatus;
   // the progress of user walking to pickup location // will be -1 if walking is not needed
   walkProgress: number;
@@ -36,7 +33,6 @@ interface HandleRideProps {
   driverETA: number;
   onCancel: (reason: "button" | "timer") => void; // tell homepage to cancel the ride
   setFAQVisible: (visible: boolean) => void; // callback function to set the visibility of the FAQ modal
-  openNavigation: () => void; // open the native maps app with the pickup location
   setNotificationState: (state: NotificationType) => void; // show a notification to the user by calling this function
   goHome: () => void; // callback function to go back to the ride request form
   updateSideBarHeight: (height: number) => void; // callback function to update the height of the sidebar
@@ -53,7 +49,6 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   driverETA,
   onCancel,
   setFAQVisible,
-  openNavigation,
   setNotificationState,
   goHome,
   updateSideBarHeight,

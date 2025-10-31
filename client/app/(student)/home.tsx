@@ -3,7 +3,7 @@ import {
   Pressable,
   TouchableOpacity,
   useWindowDimensions,
-  View
+  View,
 } from "react-native";
 import Profile from "./profile";
 import Map, { calculateDistance, isSameLocation, MapRef } from "./map";
@@ -1020,9 +1020,6 @@ export default function HomePage() {
                 status={rideStatusRef.current}
                 walkProgress={walkProgress}
                 rideProgress={rideProgress}
-                pickUpLocation={pickUpLocationName}
-                dropOffLocation={dropOffLocationName}
-                pickUpLocationCoord={pickUpLocation}
                 pickUpAddress={pickUpAddress}
                 dropOffAddress={dropOffAddress}
                 walkDuration={walkDuration}
@@ -1030,7 +1027,6 @@ export default function HomePage() {
                 rideDuration={rideDuration}
                 onCancel={cancelRide}
                 setFAQVisible={setFAQVisible}
-                openNavigation={routeToPickup}
                 setNotificationState={setNotifState}
                 goHome={goHome}
                 updateSideBarHeight={setCurrentComponentHeight}

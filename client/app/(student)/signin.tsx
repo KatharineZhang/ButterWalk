@@ -54,19 +54,6 @@ const Login = () => {
     }
   }, [response]);
 
-  const connectWebSocket = async () => {
-    const msg: WebsocketConnectMessage = await WebSocketService.connect();
-    if (msg === "Connected Successfully") {
-      WebSocketService.send({
-        directive: "CONNECT",
-        netid: "snigsm",
-        role: "STUDENT",
-      });
-    } else {
-      console.log("Failed to connect to WebSocket.");
-    }
-  };
-
   return goToFinishAcc ? (
     <Redirect
       href={{
