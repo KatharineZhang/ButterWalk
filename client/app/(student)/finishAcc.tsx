@@ -152,7 +152,35 @@ const finishAcc = () => {
       </View>
       <Pressable style={styles.button_finishAcc} onPress={setValues}>
         <Text style={styles.button_text}>Sign Up</Text>
-      </Pressable>      
+      </Pressable>
+      <Pressable
+        style={[styles.button, { position: "absolute", bottom: "5%" }]}
+        onPress={() => {
+          // temporary connection to websocket since we aren't going through the sign in process
+          WebSocketService.send({
+            directive: "CONNECT",
+            netid: netid as string,
+            role: "STUDENT",
+          });
+          setAccFinished(true);
+        }}
+      >
+        <Text style={styles.text}>Bypass Signin</Text>
+      </Pressable>
+      <Pressable
+        style={[styles.button, { position: "absolute", bottom: "5%" }]}
+        onPress={() => {
+          // temporary connection to websocket since we aren't going through the sign in process
+          WebSocketService.send({
+            directive: "CONNECT",
+            netid: netid as string,
+            role: "STUDENT",
+          });
+          setAccFinished(true);
+        }}
+      >
+        <Text style={styles.text}>Bypass Signin</Text>
+      </Pressable>
     </View>
   );
 };
