@@ -228,25 +228,29 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
           </View>
         )}
 
-        <Pressable
-          style={{
-            backgroundColor: "#4B2E83",
-            marginTop: 5,
-            paddingVertical: 10,
-            paddingHorizontal: 16,
-            borderRadius: 8,
-            alignItems: "center",
-            justifyContent: "center",
-            flexDirection: "row",
-          }}
-          onPress={() => {
-            openGoogleMapsDirections(pickUpLocationCoord);
-          }}
-        >
-          <Text style={{ color: "white", fontSize: 14, fontWeight: "600" }}>
-            Directions to Pickup
-          </Text>
-        </Pressable>
+
+        {/* Directions button for student! */}
+        {(status === "WaitingForRide" || status === "DriverEnRoute") && (
+          <Pressable
+            style={{
+              backgroundColor: "#4B2E83",
+              marginTop: 5,
+              paddingVertical: 10,
+              paddingHorizontal: 16,
+              borderRadius: 8,
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "row",
+            }}
+            onPress={() => {
+              openGoogleMapsDirections(pickUpLocationCoord);
+            }}
+          >
+            <Text style={{ color: "white", fontSize: 14, fontWeight: "600" }}>
+              Directions to Pickup
+            </Text>
+          </Pressable>
+        )}
       </View>
       {/* Progress Bar Top Labels */}
       <View
