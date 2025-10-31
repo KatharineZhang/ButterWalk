@@ -373,4 +373,3 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
 };
 
 export default HandleRideComponent;
-
