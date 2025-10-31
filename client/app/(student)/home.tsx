@@ -5,7 +5,7 @@ import {
   useWindowDimensions,
   View,
   Text,
-  Linking
+  Linking,
 } from "react-native";
 import Profile from "./profile";
 import Map, { calculateDistance, isSameLocation, MapRef } from "./map";
@@ -850,9 +850,6 @@ export default function HomePage() {
     }
   };
 
-
-  
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View>
@@ -956,22 +953,21 @@ export default function HomePage() {
           {/* Side map legend */}
           <Legend role={"STUDENT"}></Legend>
         </View>
-        
 
         {/* Directions button - positioned on the right side */}
-{(rideStatusRef.current === "WaitingForRide" || rideStatusRef.current === "DriverEnRoute") && (
-  <View
-    style={{
-      position: "absolute",
-      bottom: currentComponentHeight + 10,
-      right: 10, // Position on the right side
-      alignItems: "flex-end",
-    }}
-  >
-    <Student_DirectionsButton pickUpLocation={pickUpLocation}/>
-  </View>
-)}
-        
+        {(rideStatusRef.current === "WaitingForRide" ||
+          rideStatusRef.current === "DriverEnRoute") && (
+          <View
+            style={{
+              position: "absolute",
+              bottom: currentComponentHeight + 10,
+              right: 10, // Position on the right side
+              alignItems: "flex-end",
+            }}
+          >
+            <Student_DirectionsButton pickUpLocation={pickUpLocation} />
+          </View>
+        )}
 
         {/* Figure out which component to render */}
         {
@@ -1021,7 +1017,6 @@ export default function HomePage() {
             </View>
           ) : whichComponent === "handleRide" ? (
             <View style={styles.homePageComponentContainer}>
-              
               {/* driver on way component */}
               <HandleRideComponent
                 status={rideStatusRef.current}

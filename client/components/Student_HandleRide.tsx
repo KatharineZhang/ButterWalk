@@ -135,8 +135,6 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
     return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
   };
 
-  
-
   if (status == "RideInProgress") {
     // when ride is in progress
     // progress = 0.45 + (dist from driver+student to dropoff) / (dist from pickup to dropoff)
