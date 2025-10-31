@@ -250,6 +250,7 @@ export default function HandleRide({
 
           {/* Progress Bar Section */}
           <Both_ProgressBar
+            rideStatus="start"
             pickupAddress={requestInfo.locationFrom.address}
             dropoffAddress={requestInfo.locationTo.address}
             driverToPickupMinutes={driverToPickupDuration}
@@ -359,6 +360,7 @@ export default function HandleRide({
 
           {/* Actual Progress Bar */}
           <Both_ProgressBar
+            rideStatus={"pickup"}
             pickupAddress={requestInfo.locationFrom.address}
             dropoffAddress={requestInfo.locationTo.address}
             driverToPickupMinutes={driverToPickupDuration}
@@ -505,6 +507,7 @@ export default function HandleRide({
           <View style={styles.driverGreyLine} />
           {/* Progress Bar Section */}
           <Both_ProgressBar
+            rideStatus={"dropoff"}
             pickupAddress={requestInfo.locationFrom.address}
             dropoffAddress={requestInfo.locationTo.address}
             driverToPickupMinutes={driverToPickupDuration}
@@ -540,6 +543,7 @@ export default function HandleRide({
           </View>
           {/* Progress Bar Section */}
           <Both_ProgressBar
+            rideStatus={"dropoff"}
             pickupAddress={requestInfo.locationFrom.address}
             dropoffAddress={requestInfo.locationTo.address}
             driverToPickupMinutes={driverToPickupDuration}

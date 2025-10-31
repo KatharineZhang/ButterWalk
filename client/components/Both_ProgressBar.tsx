@@ -1,33 +1,50 @@
-// components/Both_ProgressBar.tsx
 import { View, Text } from "react-native";
-import { FontAwesome6 } from "@expo/vector-icons";
-import { progressBarStyles } from "../assets/styles"; // adjust path as needed
+import { FontAwesome6, Entypo, FontAwesome } from "@expo/vector-icons";
+import { progressBarStyles } from "../assets/styles";
 
 export default function Both_ProgressBar({
+  rideStatus,
   pickupAddress,
   dropoffAddress,
   driverToPickupMinutes,
   pickupToDropoffMinutes,
 }: {
+  rideStatus: "start" | "pickup" | "dropoff";
   pickupAddress: string;
   dropoffAddress: string;
   driverToPickupMinutes?: number;
   pickupToDropoffMinutes?: number;
 }) {
+  // Define icon colors based on rideStatus
+  const grey = "#adacaa";
+  const purple = "#4B2E83";
+  const red = "#d02323";
+  const black = "black";
+
+  // Default (active) colors
+  let startColor = black;
+  let pickupColor = purple;
+  let dropoffColor = red;
+
+  if (rideStatus === "start") {
+    startColor = black;
+    pickupColor = grey;
+    dropoffColor = grey;
+  } else if (rideStatus === "pickup") {
+    startColor = grey;
+    pickupColor = purple;
+    dropoffColor = grey;
+  } else if (rideStatus === "dropoff") {
+    startColor = grey;
+    pickupColor = grey;
+    dropoffColor = red;
+  }
+
   return (
     <View style={progressBarStyles.progressBarRowContainer}>
       {/* Start */}
       <View style={progressBarStyles.progressBarNode}>
-        <View
-          style={{
-            borderRadius: 13,
-            backgroundColor: "white",
-            borderColor: "black",
-            borderWidth: 1,
-            height: 20,
-            width: 20,
-          }}
-        />
+        <Entypo name="circle" size={20} color={startColor} />
         <Text style={progressBarStyles.progressBarLabel}>Start</Text>
       </View>
 
@@ -43,14 +60,7 @@ export default function Both_ProgressBar({
 
       {/* Pickup */}
       <View style={progressBarStyles.progressBarNode}>
-        <View
-          style={{
-            borderRadius: 13,
-            backgroundColor: "#4B2E83",
-            height: 20,
-            width: 20,
-          }}
-        />
+        <FontAwesome name="circle" size={20} color={pickupColor} />
         <Text style={progressBarStyles.progressBarLabel}>Pickup</Text>
         <Text style={progressBarStyles.progressBarAddress}>
           {pickupAddress}
@@ -69,7 +79,7 @@ export default function Both_ProgressBar({
 
       {/* Dropoff */}
       <View style={progressBarStyles.progressBarNode}>
-        <FontAwesome6 name="location-dot" size={24} color="#d02323" />
+        <FontAwesome6 name="location-dot" size={24} color={dropoffColor} />
         <Text style={progressBarStyles.progressBarLabel}>Dropoff</Text>
         <Text style={progressBarStyles.progressBarAddress}>
           {dropoffAddress}

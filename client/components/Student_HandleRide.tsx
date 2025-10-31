@@ -219,6 +219,13 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
         ]}
       >
         <Both_ProgressBar
+          rideStatus={
+            status === "WaitingForRide"
+              ? "start"
+              : status === "DriverEnRoute" || status === "DriverArrived"
+              ? "pickup"
+              : "dropoff"
+          }
           pickupAddress={pickUpAddress}
           dropoffAddress={dropOffAddress}
           driverToPickupMinutes={
