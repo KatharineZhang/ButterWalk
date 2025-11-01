@@ -30,6 +30,7 @@ export type Command =
   | "DISCONNECT"
   | "PLACE_SEARCH"
   | "LOAD_RIDE"
+  | "CALL_LOG"
   | "CHAT_MESSAGE";
 
 // Input types
@@ -149,6 +150,13 @@ export type WebSocketMessage =
       role: "STUDENT" | "DRIVER";
     }
   | {
+      directive: "CALL_LOG";
+      from: string;
+      to: string;
+      role: "STUDENT" | "DRIVER";
+      phoneNumberCalled: string;
+    }
+  | {
       directive: "CHAT_MESSAGE";
       senderID: string;
       recipientID: string;
@@ -184,6 +192,7 @@ export type WebSocketResponse =
   | ViewDecisionResponse
   | PlaceSearchResponse
   | LoadRideResponse
+  | CallLogResponse
   | ChatMessageResponse;
 
 export type LocationType = {
@@ -220,6 +229,11 @@ export type SnapLocationResponse = {
   longitude: number;
 };
 
+export type CallLogResponse = {
+  response: "CALL_LOG";
+  whoCalled: string;
+};
+
 export type RequestRideResponse = {
   response: "REQUEST_RIDE";
   requestid: string;
@@ -241,6 +255,7 @@ export type ViewRideRequestResponse = {
     rideRequest: RideRequest & { requestId: string };
     driverToPickUpDuration: number; // in minutes
     pickUpToDropOffDuration: number; // in minutes
+    studentPhoneNumber: string; // sent to driver so they can call the student
   };
   notifyDrivers: boolean;
 };
@@ -463,6 +478,13 @@ export type Feedback = {
   rideOrApp: "RIDE" | "APP";
 };
 
+export type CallLog = {
+  from: string;
+  to: string;
+  phoneNumberCalled: string;
+  timestamp: Timestamp;
+};
+
 // metadata behind a single chat message
 export interface MessageEntry {
   sender: string;
@@ -568,6 +590,11 @@ export type RideRequest = {
    * The number of students in the ride
    */
   numRiders: number;
+
+  /**
+   * Keeps track of any calls that were made between the student and driver
+   */
+  callLog?: CallLog[];
   /**
    * Status of the ride request.
    * - `CANCELED`: The ride request was canceled for any reason (could indicate

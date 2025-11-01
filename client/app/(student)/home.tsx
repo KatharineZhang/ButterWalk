@@ -10,6 +10,7 @@ import Map, { calculateDistance, isSameLocation, MapRef } from "./map";
 import { useLocalSearchParams } from "expo-router";
 import WebSocketService from "@/services/WebSocketService";
 import {
+  CallLogResponse,
   CancelResponse,
   DistanceResponse,
   ErrorResponse,
@@ -286,6 +287,7 @@ export default function HomePage() {
     WebSocketService.addListener(handleComplete, "COMPLETE");
     WebSocketService.addListener(handleWaitTime, "WAIT_TIME");
     WebSocketService.addListener(handleDistance, "DISTANCE");
+    WebSocketService.addListener(callLogListener, "CALL_LOG");
     WebSocketService.addListener(
       handleDriverArrived,
       "DRIVER_ARRIVED_AT_PICKUP"
@@ -688,6 +690,25 @@ export default function HomePage() {
     }
   };
 
+  // WEBSOCKET - CALL_LOG
+  const callLogListener = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "CALL_LOG") {
+      const callLogResp = message as CallLogResponse;
+      if (callLogResp.whoCalled === netid) {
+        console.log("Call log recorded successfully");
+      } else {
+        alert(
+          "Your driver (netid: " +
+            callLogResp.whoCalled +
+            ") is calling you! Please answer so that this ride can be coordinated."
+        );
+      }
+    } else {
+      const errMessage = message as ErrorResponse;
+      console.log("Failed to log call: ", errMessage.error);
+    }
+  };
+
   const resetAllFields = () => {
     // reset ride locations when the ride is done
     setDriverLocation({
@@ -843,7 +864,7 @@ export default function HomePage() {
           dropOffLocation={dropOffLocation}
           driverLocation={driverLocation}
           userLocationChanged={userLocationChanged}
-          status={rideStatusRef.current}
+          status={whichComponent == "handleRide" ? rideStatusRef.current: "none"}
           startLocation={startLocation}
           whichComponent={"rideReq"}
         />

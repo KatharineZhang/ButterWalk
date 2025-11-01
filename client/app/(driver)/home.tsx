@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import {
+  CallLogResponse,
   ErrorResponse,
   LoadRideResponse,
   LocationResponse,
@@ -15,6 +16,7 @@ import {
   useWindowDimensions,
   View,
   Text,
+  Linking,
 } from "react-native";
 import Map, { MapRef, isSameLocation } from "./map";
 import { useLocalSearchParams } from "expo-router";
@@ -44,9 +46,12 @@ export type HandleRidePhase =
 
 export default function HomePage() {
   /* HOME PAGE STATE */
-  const [whichComponent, setWhichComponent] = useState<
+  const [, setWhichComponent] = useState<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
-  >(TimeService.inServicableTime() ? "noRequests" : "endShift");
+  >(TimeService.inServicableTime() ? "noRequests" : "noRequests");
+  const whichComponent = useRef<
+    "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
+  >("noRequests");
   // only visibile when driver accepts ride request 
   const [messageVisible, setMessageVisible] = useState(false);
 
@@ -61,6 +66,7 @@ export default function HomePage() {
     WebSocketService.addListener(locationListener, "LOCATION");
     WebSocketService.addListener(handleLoadRideResponse, "LOAD_RIDE");
     WebSocketService.addListener(waitTimeListener, "WAIT_TIME");
+    WebSocketService.addListener(callLogListener, "CALL_LOG");
     WebSocketService.addListener(
       driverDrivingToDropOffListener,
       "DRIVER_DRIVING_TO_DROPOFF"
@@ -106,12 +112,17 @@ export default function HomePage() {
     if (TimeService.inServicableTime()) {
       // in shift
       setWhichComponent("noRequests");
+      whichComponent.current = "noRequests";
       seeIfRidesExist();
       // see if there is an active ride request
       sendLoadRide();
     } else {
       // off shift
-      setWhichComponent("endShift");
+      // setWhichComponent("endShift");
+      setWhichComponent("noRequests");
+      seeIfRidesExist();
+      // see if there is an active ride request
+      sendLoadRide();
     }
   };
 
@@ -131,10 +142,10 @@ export default function HomePage() {
 
   // Set start location when ride is accepted
   useEffect(() => {
-    if (whichComponent == "handleRide") {
+    if (whichComponent.current == "handleRide") {
       setStartLocation(driverLocationRef.current);
     }
-  }, [whichComponent]);
+  }, [whichComponent.current]);
 
   /* MAP STATE */
   const [, setDriverLocation] = useState<{
@@ -181,7 +192,7 @@ export default function HomePage() {
     setDriverLocation(location);
     driverLocationRef.current = location;
     // send the location to the student once the ride is accepted
-    if (whichComponent === "handleRide" && requestInfo.netid) {
+    if (whichComponent.current === "handleRide" && requestInfo.current.netid) {
       WebSocketService.send({
         directive: "LOCATION",
         id: netid,
@@ -243,9 +254,10 @@ export default function HomePage() {
     useState<number>(0);
   const [pickupToDropoffDuration, setPickupToDropoffDuration] =
     useState<number>(0);
-  const [requestInfo, setRequestInfo] = useState<RideRequest>(
-    {} as RideRequest
-  );
+  const [studentPhoneNumber, setStudentPhoneNumber] = useState<string>("");
+  const [, setRequestInfo] = useState<RideRequest>({} as RideRequest);
+  const requestInfo = useRef<RideRequest>({} as RideRequest);
+
   const [showAcceptScreen, setShowAcceptScreen] = useState(true);
 
   const onAccept = () => {
@@ -266,9 +278,29 @@ export default function HomePage() {
     WebSocketService.send({
       directive: "VIEW_DECISION",
       driverid: netid,
-      netid: requestInfo.netid,
+      netid: requestInfo.current.netid,
       decision: "ACCEPT",
     });
+  };
+
+  const makeCall = (phoneNumber: string) => {
+    if (!phoneNumber || !/^\d{10}$/.test(phoneNumber)) {
+      console.error("Invalid phone number: ", phoneNumber);
+      return;
+    }
+
+    WebSocketService.send({
+      directive: "CALL_LOG",
+      from: netid,
+      to: requestInfo.current.netid,
+      role: "DRIVER",
+      phoneNumberCalled: phoneNumber,
+    });
+
+    const phoneUrl = `tel:${phoneNumber}`;
+    Linking.openURL(phoneUrl).catch((err) =>
+      console.error("Error making call: ", err)
+    );
   };
 
   /* EN ROUTE STATE */
@@ -304,14 +336,14 @@ export default function HomePage() {
   const [isNearDropoff, setIsNearDropoff] = useState(false);
 
   const flagStudent = (reason: string) => {
-    if (!requestInfo.requestId) {
+    if (!requestInfo.current.requestId) {
       return; // TODO: handle error case where requestId is not set
     }
     // call the REPORT route
     WebSocketService.send({
       directive: "REPORT",
-      netid: requestInfo.netid, // the student netid
-      requestid: requestInfo.requestId, // the ride request id
+      netid: requestInfo.current.netid, // the student netid
+      requestid: requestInfo.current.requestId, // the ride request id
       reason,
     });
   };
@@ -328,7 +360,7 @@ export default function HomePage() {
   const completeRide = () => {
     WebSocketService.send({
       directive: "COMPLETE",
-      requestid: requestInfo.requestId as string,
+      requestid: requestInfo.current.requestId as string,
     });
   };
 
@@ -336,7 +368,7 @@ export default function HomePage() {
     WebSocketService.send({
       directive: "DRIVER_ARRIVED_AT_PICKUP",
       driverid: netid,
-      studentNetid: requestInfo.netid,
+      studentNetid: requestInfo.current.netid,
     });
   };
 
@@ -344,7 +376,7 @@ export default function HomePage() {
     WebSocketService.send({
       directive: "DRIVER_DRIVING_TO_DROPOFF",
       driverid: netid,
-      studentNetid: requestInfo.netid,
+      studentNetid: requestInfo.current.netid,
     });
   };
 
@@ -354,6 +386,7 @@ export default function HomePage() {
     setDropOffLocation({ latitude: 0, longitude: 0 });
     setDriverToPickupDuration(0);
     setPickupToDropoffDuration(0);
+    requestInfo.current = {} as RideRequest;
     setRequestInfo({} as RideRequest);
     setFlaggingAllowed(false);
     setFlagPopupVisible(false);
@@ -363,7 +396,7 @@ export default function HomePage() {
       boldText: "",
       trigger: 0,
     });
-    setWhichComponent("noRequests");
+    whichComponent.current = "noRequests";
     // Reset progress tracking states
     setPickupProgress(0);
     setDropoffProgress(0);
@@ -384,6 +417,7 @@ export default function HomePage() {
       // if successful, set the current component to "noRequests"
       resetAllFields();
       setWhichComponent("noRequests");
+      whichComponent.current = "noRequests";
       setNotifState({
         text: "Your ride was canceled",
         color: "#FFCBCB",
@@ -409,6 +443,7 @@ export default function HomePage() {
       // reset all fields
       resetAllFields();
       setWhichComponent("noRequests");
+      whichComponent.current = "noRequests";
     } else {
       // if not successful, log the error
       const errMessage = message as ErrorResponse;
@@ -426,13 +461,15 @@ export default function HomePage() {
     if ("response" in message && message.response === "RIDES_EXIST") {
       const ridesExistMessage = message as RidesExistResponse;
       if (
-        whichComponent === "noRequests" ||
-        whichComponent === "requestsAreAvailable"
+        whichComponent.current === "noRequests" ||
+        whichComponent.current === "requestsAreAvailable"
       ) {
         // if the driver is waiting for a request
         if (ridesExistMessage.ridesExist) {
           // and rides exist, set the component to "requestsAreAvailable"
           setWhichComponent("requestsAreAvailable");
+          whichComponent.current = "requestsAreAvailable";
+
           setNotifState({
             text: "New ride request available",
             color: "#C9FED0",
@@ -442,6 +479,7 @@ export default function HomePage() {
         } else {
           // if false, set the component to "noRequests"
           setWhichComponent("noRequests");
+          whichComponent.current = "noRequests";
         }
       } else {
         // if the driver is not waiting for a request, do nothing
@@ -475,6 +513,7 @@ export default function HomePage() {
       if (viewReqResponse.rideInfo) {
         // if the ride request info exists, then the view was successful
         // set the requestInfo state to the ride request info
+        requestInfo.current = viewReqResponse.rideInfo.rideRequest;
         setRequestInfo(viewReqResponse.rideInfo.rideRequest);
 
         // set the pick up and drop off locations coordinates
@@ -493,6 +532,8 @@ export default function HomePage() {
         setPickupToDropoffDuration(
           viewReqResponse.rideInfo.pickUpToDropOffDuration
         );
+        setStudentPhoneNumber(viewReqResponse.rideInfo.studentPhoneNumber);
+
         // Switch to the Let's Go page here not in Driver_RequestAvailable
         setShowAcceptScreen(false);
       } else {
@@ -505,6 +546,7 @@ export default function HomePage() {
         });
         resetAllFields(); // reset all fields
         setWhichComponent("noRequests"); // go to no requests page
+        whichComponent.current = "noRequests";
       }
     } else {
       const errMessage = message as ErrorResponse;
@@ -514,6 +556,7 @@ export default function HomePage() {
         trigger: Date.now(),
       });
       setWhichComponent("noRequests"); // go to no requests page
+      whichComponent.current = "noRequests";
     }
   };
 
@@ -530,6 +573,7 @@ export default function HomePage() {
       });
       setStartLocation(driverLocationRef.current);
       setWhichComponent("handleRide");
+      whichComponent.current = "handleRide";
       WebSocketService.send({
         directive: "LOCATION",
         id: netid,
@@ -550,6 +594,7 @@ export default function HomePage() {
       });
       resetAllFields(); // reset all fields
       setWhichComponent("noRequests"); // go to no requests page
+      whichComponent.current = "noRequests";
     }
   };
 
@@ -594,6 +639,7 @@ export default function HomePage() {
         setPickUpLocation(ride.locationFrom.coordinates);
         setDropOffLocation(ride.locationTo.coordinates);
         setStudentLocation(ride.studentLocation.coords);
+        requestInfo.current = ride;
         setRequestInfo(ride);
 
         // decide which phase to set based on the ride status
@@ -601,11 +647,15 @@ export default function HomePage() {
           case "VIEWING":
             // go to requestsAreAvailable page
             setWhichComponent("requestsAreAvailable");
+            whichComponent.current = "requestsAreAvailable";
+
             // Switch to the Let's Go page here
             setShowAcceptScreen(false);
             break;
           case "DRIVING TO PICK UP":
             setWhichComponent("handleRide");
+            whichComponent.current = "handleRide";
+
             setPhase("headingToPickup");
             break;
           case "DRIVER AT PICK UP":
@@ -619,6 +669,7 @@ export default function HomePage() {
           default:
             // if the ride is in any other status (completed), go to noRequests page
             setWhichComponent("noRequests");
+            whichComponent.current = "noRequests";
             break;
         }
         // get any wait time info
@@ -728,10 +779,29 @@ export default function HomePage() {
     }
   };
 
+  // WEBSOCKET - CALL_LOG
+  const callLogListener = (message: WebSocketResponse) => {
+    if ("response" in message && message.response === "CALL_LOG") {
+      const callLogResp = message as CallLogResponse;
+      if (callLogResp.whoCalled === netid) {
+        console.log("Call log recorded successfully");
+      } else {
+        alert(
+          "Your passenger (netid: " +
+            callLogResp.whoCalled +
+            ") is calling you! Please answer so that this ride can be coordinated."
+        );
+      }
+    } else {
+      const errMessage = message as ErrorResponse;
+      console.log("Failed to log call: ", errMessage.error);
+    }
+  };
+
   /* PROGRESS TRACKING EFFECTS */
   // Track progress when driver location changes and is handling a ride
   useEffect(() => {
-    if (whichComponent === "handleRide") {
+    if (whichComponent.current === "handleRide") {
       let pickupProgress = 0;
       let dropoffProgress = 0;
 
@@ -778,7 +848,12 @@ export default function HomePage() {
         setDropoffProgress(dropoffProgress);
       }
     }
-  }, [driverLocationRef.current, phase, whichComponent, requestInfo.requestId]);
+  }, [
+    driverLocationRef.current,
+    phase,
+    whichComponent.current,
+    requestInfo.current.requestId,
+  ]);
 
   // Calculate progress based on total distance and remaining distance for non-linear tracking
   const calculateProgress = (): number => {
@@ -840,7 +915,7 @@ export default function HomePage() {
         dropOffLocation={dropOffLocation}
         studentLocation={studentLocation}
         userLocationChanged={userLocationChanged}
-        currPhase={phase}
+        currPhase={whichComponent.current == "handleRide" ? phase : "none"}
       />
 
       {/* profile button in top left corner*/}
@@ -1040,17 +1115,17 @@ export default function HomePage() {
       </View>
 
       {/* Decide which component to render */}
-      {whichComponent === "noRequests" ? (
+      {whichComponent.current === "noRequests" ? (
         <View style={styles.homePageComponentContainer}>
           <NoRequests
             updateSideBarHeight={setCurrentComponentHeight}
             seeIfRidesExist={seeIfRidesExist}
           />
         </View>
-      ) : whichComponent === "requestsAreAvailable" ? (
+      ) : whichComponent.current === "requestsAreAvailable" ? (
         <View style={styles.homePageComponentContainer}>
           <RequestAvailable
-            requestInfo={requestInfo}
+            requestInfo={requestInfo.current}
             showAcceptScreen={showAcceptScreen}
             updateSideBarHeight={setCurrentComponentHeight}
             driverToPickupDuration={driverToPickupDuration}
@@ -1059,14 +1134,20 @@ export default function HomePage() {
             onLetsGo={onLetsGo}
           />
         </View>
-      ) : whichComponent === "handleRide" ? (
+      ) : whichComponent.current === "handleRide" ? (
         <View style={styles.homePageComponentContainer}>
           <HandleRide
             phase={phase}
-            setPhase={setPhase}
-            requestInfo={requestInfo}
+            studentPhoneNumber={studentPhoneNumber}
+            requestInfo={requestInfo.current}
             driverToPickupDuration={driverToPickupDuration}
             pickupToDropoffDuration={pickupToDropoffDuration}
+            pickupProgress={pickupProgress}
+            dropoffProgress={dropoffProgress}
+            isNearPickup={isNearPickup}
+            isNearDropoff={isNearDropoff}
+            setPhase={setPhase}
+            updateSideBarHeight={setCurrentComponentHeight}
             changeFlaggingAllowed={setFlaggingAllowed}
             completeRide={completeRide}
             changeNotifState={setNotifState}
@@ -1074,14 +1155,10 @@ export default function HomePage() {
             driverArrivedAtPickup={driverArrivedAtPickup}
             driverDrivingToDropOff={driverDrivingToDropOff}
             setStudentIsLate={setStudentIsLate}
-            pickupProgress={pickupProgress}
-            dropoffProgress={dropoffProgress}
-            isNearPickup={isNearPickup}
-            isNearDropoff={isNearDropoff}
-            updateSideBarHeight={setCurrentComponentHeight}
+            makeCall={makeCall}
           />
         </View>
-      ) : whichComponent === "endShift" ? (
+      ) : whichComponent.current === "endShift" ? (
         <View style={styles.homePageComponentContainer}>
           <ShiftIsOver updateSideBarHeight={setCurrentComponentHeight} />
         </View>
