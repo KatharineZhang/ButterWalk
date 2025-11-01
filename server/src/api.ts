@@ -150,9 +150,10 @@ export type WebSocketMessage =
     }
   | {
       directive: "CHAT_MESSAGE";
-      studentId: string;
-      driverId: string;
-      text: string;
+      senderID: string;
+      recipientID: string;
+      message: string;
+      timestamp: Timestamp;
       role: "STUDENT" | "DRIVER";
     };
 
@@ -319,12 +320,15 @@ export type LoadRideResponse = {
 };
 
 export type ChatMessageResponse = {
-  response: "CHAT_MESSAGE";         
-  fromNetid: string;            // sender’s ID
-  toNetid: string;              // recipient’s ID
-  role: "STUDENT" | "DRIVER";   // who sent it
-  text: string;                 // message text
-  timestamp: number;            // time sent
+  response: "CHAT_MESSAGE";
+  toSender: GeneralResponse;
+  toReceiver: {
+    senderID: string;
+    recipientID: string;
+    message: string;
+    timestamp: Timestamp;
+    role: string;
+  };
 };
 
 export type ErrorResponse = {
@@ -459,6 +463,14 @@ export type Feedback = {
   rideOrApp: "RIDE" | "APP";
 };
 
+// metadata behind a single chat message
+export interface MessageEntry {
+  sender: string;
+  recipient: string;
+  message: string;
+  timestamp: Timestamp;
+}
+
 /**
  * Possible states of RideRequest.status
  */
@@ -580,6 +592,9 @@ export type RideRequest = {
    * - `COMPLETED`: The student was dropped off after completion of the ride.
    */
   status: RideRequestStatus;
+
+  // the message history between student and driver
+  messageLog?: MessageEntry[];
 };
 
 // CREATE TABLE ProblematicUsers (netid varchar(20) REFERENCES Users(netid) PRIMARY KEY,

@@ -24,6 +24,7 @@ import {
   driverDrivingToDropoff,
   checkIfDriverSignin,
   loadRide,
+  chatMessage,
 } from "./routes";
 import {
   CompleteResponse,
@@ -38,7 +39,6 @@ import {
   RidesExistResponse,
   ViewRideRequestResponse,
   WrapperCancelResponse,
-  ChatMessageResponse,
 } from "./api";
 import { Timestamp } from "firebase/firestore";
 
@@ -392,34 +392,16 @@ export const handleWebSocketMessage = async (
     }
 
     case "CHAT_MESSAGE": {
-      let fromUser, toUser;
-      if (input.role == "STUDENT"){
-        fromUser = input.studentId;
-        toUser = input.driverId;
-      }
-      else{
-        fromUser = input.driverId;
-        toUser = input.studentId;
-      }
-      if (!fromUser || !toUser) {
-        console.error("CHAT_MESSAGE missing sender or recipient ID");
-        break; 
-      }
+      resp = await chatMessage(input.senderID, input.recipientID, input.message, input.timestamp, input.role);
 
-      const chatMessage: ChatMessageResponse = {
-        response: "CHAT_MESSAGE",
-        fromNetid: fromUser,
-        toNetid: toUser,
-        role: input.role,
-        text: input.text,
-        timestamp: Date.now(),
-      };
-
-      // relay to recipient
-      sendMessageToNetid(toUser, chatMessage);
-
-      // echo back to sender so they see their own msg
-      sendWebSocketMessage(ws, chatMessage);
+      if ("toReceiver" in resp && "toSender" in resp) {
+        // send message to recipient
+        sendMessageToNetid(input.recipientID, resp);
+        // send message to sender
+        sendWebSocketMessage(ws, resp);
+      } else {
+        console.error("Failed to send chat message:", resp.error);
+      }
 
       break;
     }
