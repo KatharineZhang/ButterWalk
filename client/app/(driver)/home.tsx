@@ -966,12 +966,12 @@ export default function HomePage() {
       <Message
           isVisible={messageVisible}
           onClose={() => setMessageVisible(false)} 
-          studentId={requestInfo.netid}
+          studentId={requestInfo.current.netid}
           driverId={netid}
           role="DRIVER"          
       />
       {/* Message button in top right corner */}
-      {whichComponent === "handleRide" && (
+      {whichComponent.current === "noRequests" && (
         <TouchableOpacity
           style={{
             position: "absolute",
