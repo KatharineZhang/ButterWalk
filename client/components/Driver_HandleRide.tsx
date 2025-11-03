@@ -206,12 +206,9 @@ export default function HandleRide({
     title: string;
   }) => {
     try {
-      openMap({
-        latitude: destination.lat,
-        longitude: destination.lng,
-        provider: "google",
-        query: destination.title,
-      });
+      // with this url, it will open in app if app is installed, else it will open in web browser
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${destination.lat},${destination.lng}&travelmode=driving`;
+      await Linking.openURL(url);
     } catch (error) {
       console.error("Error opening Google Maps:", error);
     }
@@ -261,7 +258,7 @@ export default function HandleRide({
     setShowMapModal(false);
   };
 
-  // Function to open in web browser
+  // Function to open google maps in web browser
   const openWebBrowser = async (destination: {
     lat: number;
     lng: number;
