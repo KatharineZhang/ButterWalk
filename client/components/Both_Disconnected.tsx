@@ -4,6 +4,7 @@ import {
   Text,
   View,
   ActivityIndicator,
+  Dimensions,
 } from "react-native";
 
 interface DisconnectedModalProps {
@@ -17,10 +18,13 @@ export default function DisconnectedModal({
     <Modal animationType="slide" transparent={true} visible={isVisible}>
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
-          <>
-            <ActivityIndicator size="small" color="#2d1877ff" />
-            <Text>You disconnected! Reconnecting to the server...</Text>
-          </>
+          <View style={{ flexDirection: "column" }}>
+            <Text style={{ fontSize: 20, fontWeight: "bold", color: "white" }}>
+              Reconnecting...
+            </Text>
+            <View style={{ height: Dimensions.get("screen").height * 0.02 }} />
+            <ActivityIndicator size="small" color="white" />
+          </View>
         </View>
       </View>
     </Modal>
@@ -35,7 +39,7 @@ const styles = StyleSheet.create({
   },
   modalView: {
     margin: 20,
-    backgroundColor: "white",
+    backgroundColor: "#4B2E83",
     borderRadius: 20,
     padding: 35,
     alignItems: "center",
