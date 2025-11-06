@@ -687,9 +687,11 @@ export default function HomePage() {
     }
   };
 
-  // WEBSOCKET- PING
+  // WEBSOCKET- for checking the websocket state
+  // store the websocket's status
   const [websocketStatus, setWebsocketStatus] =
     useState<WSConnectionState>("CONNECTED");
+  // listener that will update websocket status when called
   const handleWebsocketConnection = (wsStatus: number | undefined) => {
     const status: WSConnectionState =
       wsStatus == WebSocket.OPEN
@@ -928,7 +930,7 @@ export default function HomePage() {
         userLocationChanged={userLocationChanged}
         currPhase={phase}
       />
-      {/* Disconnected pop-up */}
+      {/* Disconnected pop-up. Show it if the websocket is not connected */}
       <View style={styles.modalContainer}>
         <DisconnectedModal isVisible={websocketStatus != "CONNECTED"} />
       </View>

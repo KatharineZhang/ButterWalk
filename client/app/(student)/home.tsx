@@ -707,9 +707,11 @@ export default function HomePage() {
     }
   };
 
-  // WEBSOCKET- PING
+  // WEBSOCKET- for checking the websocket state
+  // store the websocket's status
   const [websocketStatus, setWebsocketStatus] =
     useState<WSConnectionState>("CONNECTED");
+  // listener that will update websocket status when called
   const handleWebsocketConnection = (wsStatus: number | undefined) => {
     const status: WSConnectionState =
       wsStatus == WebSocket.OPEN

@@ -8,6 +8,7 @@ import {
 
 // the type of function (event handler) that will be called when a message of a certain type is received
 type WebSocketResponseHandler = (message: WebSocketResponse) => void;
+// the type of function (connection handler) that will be called when the websocket state changes
 type ConnectionHandler = (state: number | undefined) => void;
 
 export type WebsocketConnectMessage =
@@ -77,6 +78,10 @@ class WebSocketService {
     return await this.waitForOpenConnection();
   }
 
+  /**
+   * On startup, start the main websocket listener
+   * @returns
+   */
   startWebsocketListeners = () => {
     if (this.websocket == null) {
       return;
@@ -84,11 +89,14 @@ class WebSocketService {
 
     this.websocket.onopen = () => {
       console.log("WEBSOCKET: Connected to Websocket");
+      // now that the websocket is open, start pinging the server
       this.startPing();
+      // call the pingHandlers to make sure they know the websocket state
       this.callPingHandlers();
     };
 
     this.websocket.onmessage = (event) => {
+      // call the pingHandlers to make sure they know the websocket state
       this.callPingHandlers();
       console.log(`WEBSOCKET: Received message => ${event.data}`);
       const message = JSON.parse(event.data) as WebSocketResponse;
@@ -109,6 +117,7 @@ class WebSocketService {
     };
 
     this.websocket.onclose = () => {
+      // call the pingHandlers to make sure they know the websocket state
       this.callPingHandlers();
       console.log(
         "WEBSOCKET: Disconnected from Websocket" +
@@ -188,6 +197,13 @@ class WebSocketService {
     this.messageHandlers.get(directive)?.push(handler);
   }
 
+  /**
+   * Add a connection handler to the collection.
+   * The conncectionHandler will listen for updates to the websocket state
+   * and allow components to perform actions on websocket state change
+   *
+   * @param handler
+   */
   addConnectionListener(handler: ConnectionHandler) {
     // add to our array of ping handlers
     this.pingHandlers.push(handler);
@@ -227,12 +243,15 @@ class WebSocketService {
         this.websocket.send(JSON.stringify({ directive: "PING" }));
 
         // check if last pong is too old
+        // if it has been too long since the server responded to us,
+        // try to reconnect and call the pingHandlers in case the websocket state is bad
         if (
           this.lastPong &&
           Date.now() - this.lastPong >
             this.PING_INTERVAL_MS + this.PONG_TIMEOUT_MS
         ) {
           console.log("Pong timeout — reconnecting...");
+          // call the pingHandlers to make sure they know the websocket state
           this.callPingHandlers();
           this.connect();
         }
@@ -240,6 +259,9 @@ class WebSocketService {
     }, 10000);
   }
 
+  /**
+   * Call all of the pingHandlers to tell them that websocket state has changed
+   */
   callPingHandlers() {
     this.pingHandlers.forEach((handler) => {
       // call each handler with the websocket's current state

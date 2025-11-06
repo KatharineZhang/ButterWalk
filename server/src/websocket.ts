@@ -407,7 +407,7 @@ export const handleWebSocketMessage = async (
     }
 
     case "PING": {
-      // just send a ping response back
+      // if we got a ping from a client, just send a "pong" response back
       resp = {
         response: "PING",
       } as PingResponse;
