@@ -1,11 +1,17 @@
 import dotenv from "dotenv";
 import { AuthSessionResult } from "expo-auth-session";
-import {
-  runTransaction,
-  doc,
-  getDoc,
-  DocumentReference,
-} from "firebase/firestore";
+// Removed client-side imports
+// import {
+//   runTransaction,
+//   doc,
+//   getDoc,
+//   DocumentReference,
+// } from "firebase/firestore";
+
+// Added admin-side imports
+import { DocumentReference } from "firebase-admin/firestore";
+import { firestore } from "./firebase/firebaseConfig"; // Import the admin firestore service
+
 import {
   ErrorResponse,
   GeneralResponse,
@@ -35,8 +41,8 @@ import {
   GooglePlaceSearchBadLocationTypes,
   CallLogResponse,
 } from "./api";
+// Updated import paths to admin-migrated files
 import {
-  db,
   findActiveRideRef,
   getRideRequestsInPool,
   getOtherUserNetId,
@@ -154,7 +160,7 @@ export const signIn = async (
     };
   }
   try {
-    const alreadyExists = await runTransaction(db, (transaction) => {
+    const alreadyExists = await firestore.runTransaction((transaction) => {
       return createUserLogic(transaction, {
         netid,
         firstName,
@@ -266,7 +272,7 @@ export const finishAccCreation = async (
 
   // add values to database
   try {
-    await runTransaction(db, (transaction) => {
+    await firestore.runTransaction((transaction) => {
       return finishCreatingUserLogic(
         transaction,
         netid,
@@ -442,7 +448,7 @@ export const requestRide = async (
       throw new Error("User already has an active ride request.");
     }
 
-    const newRideRef = (await runTransaction(db, async (t) => {
+    const newRideRef = (await firestore.runTransaction(async (t) => {
       return addRideRequestToPoolLogic(t, rideRequest);
     })) as DocumentReference;
 
@@ -505,9 +511,9 @@ export const viewRide = async (
     if (!bestRequest.requestId) {
       throw new Error("Assertion failed: Highest ranked ride must have an ID.");
     }
-    const rideRef = doc(rideRequestsCollection, bestRequest.requestId);
+    const rideRef = rideRequestsCollection.doc(bestRequest.requestId);
 
-    await runTransaction(db, async (t) => {
+    await firestore.runTransaction(async (t) => {
       return assignRideForViewingLogic(t, rideRef, driverid);
     });
 
@@ -577,7 +583,7 @@ export const handleDriverViewChoice = async (
 
     const wasPoolEmpty = (await getRideRequestsInPool()).length === 0;
 
-    const newStatus = await runTransaction(db, (t) => {
+    const newStatus = await firestore.runTransaction((t) => {
       return handleDriverViewChoiceLogic(
         t,
         rideToDecideInfo.ref,
@@ -620,7 +626,7 @@ export const driverArrived = async (
   try {
     const activeRide = await findActiveRideRef(netid, "STUDENT");
     if (!activeRide) throw new Error("No active ride found for student.");
-    await runTransaction(db, async (t) => {
+    await firestore.runTransaction(async (t) => {
       setRideStatusLogic(t, activeRide.ref, "DRIVER AT PICK UP");
     });
     return { response: "DRIVER_ARRIVED_AT_PICKUP", success: true };
@@ -647,7 +653,7 @@ export const driverDrivingToDropoff = async (
   try {
     const activeRide = await findActiveRideRef(netid, "STUDENT");
     if (!activeRide) throw new Error("No active ride found for student.");
-    await runTransaction(db, async (t) => {
+    await firestore.runTransaction(async (t) => {
       setRideStatusLogic(t, activeRide.ref, "DRIVING TO DESTINATION");
     });
     return { response: "DRIVER_DRIVING_TO_DROPOFF", success: true };
@@ -695,9 +701,9 @@ export const cancelRide = async (
     const pool = await getRideRequestsInPool();
     const wasRideInPool = activeRideInfo.ride.status === REQUESTED_STATUS;
 
-    const result = await runTransaction(db, async (t) => {
+    const result = await firestore.runTransaction(async (t) => {
       const freshRideDoc = await t.get(activeRideInfo.ref);
-      if (!freshRideDoc.exists()) throw new Error("Ride no longer exists.");
+      if (!freshRideDoc.exists) throw new Error("Ride no longer exists.");
       return cancelRideLogic(
         t,
         freshRideDoc.data() as RideRequest,
@@ -745,8 +751,8 @@ export const completeRide = async (
   requestid: string
 ): Promise<CompleteResponse | ErrorResponse> => {
   try {
-    const rideRef = doc(rideRequestsCollection, requestid);
-    const netids = await runTransaction(db, (t) => {
+    const rideRef = rideRequestsCollection.doc(requestid);
+    const netids = await firestore.runTransaction((t) => {
       return completeRideLogic(t, rideRef);
     });
     return {
@@ -787,7 +793,7 @@ export const addFeedback = async (
   }
   
   try {
-    await runTransaction(db, async (t) => {
+    await firestore.runTransaction(async (t) => {
       addFeedbackLogic(t, { rating, textFeedback, rideOrApp });
     });
     return { response: "ADD_FEEDBACK", success: true };
@@ -818,7 +824,7 @@ export const report = async (
     };
   }
   try {
-    await runTransaction(db, async (t) => {
+    await firestore.runTransaction(async (t) => {
       reportUserLogic(t, { netid, requestid, reason, category: "REPORTED" });
     });
     return { response: "REPORT", success: true };
@@ -846,7 +852,7 @@ export const blacklist = async (
     return { response: "ERROR", error: "Missing netid.", category: "BLACKLIST" };
   }
   try {
-    await runTransaction(db, async (t) => blacklistUserLogic(t, netid));
+    await firestore.runTransaction(async (t) => blacklistUserLogic(t, netid));
     return { response: "BLACKLIST", success: true };
   } catch (e) {
     return {
@@ -1107,23 +1113,27 @@ export const profile = async (
   netid: string
 ): Promise<ProfileResponse | ErrorResponse> => {
   try {
-    // This is a read-only operation, no transaction is needed.
-    const userRef = doc(usersCollection, netid);
-    const locationsRef = doc(recentlocationsCollection, netid);
+    const userRef = usersCollection.doc(netid);
+    const locationsRef = recentlocationsCollection.doc(netid);
 
-    const userDoc = await getDoc(userRef);
-    if (!userDoc.exists()) {
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) {
       throw new Error(`User with netid ${netid} not found.`);
     }
+    const userData = userDoc.data() as User;
+    if (!userData) {
+      throw new Error(`User data missing for netid ${netid}.`);
+    }
 
-    const locationsDoc = await getDoc(locationsRef);
-    const locations = locationsDoc.exists()
-      ? (locationsDoc.data() as RecentLocation).locations
+    const locationsDoc = await locationsRef.get();
+    const locationData = locationsDoc.data() as RecentLocation;
+    const locations = (locationsDoc.exists && locationData)
+      ? locationData.locations
       : [];
 
     return {
       response: "PROFILE",
-      user: userDoc.data() as User,
+      user: userData,
       locations,
     };
   } catch (e) {
@@ -1212,7 +1222,7 @@ export const addCallLog = async (
       throw new Error("No active ride found in a state that can be called.");
     }
 
-    await runTransaction(db, (transaction) => {
+    await firestore.runTransaction((transaction) => {
       return addCallLogLogic(
         transaction,
         rideRef,

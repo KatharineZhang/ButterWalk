@@ -1,15 +1,12 @@
 import {
-  collection,
-  // doc,
-  getDocs,
-  getFirestore,
-  query,
-  where,
-  QueryConstraint,
   DocumentReference,
-  limit,
-} from "firebase/firestore";
-import { app } from "./firebaseConfig";
+  Query,
+} from "firebase-admin/firestore";
+
+// CHANGED: Import 'firestore' service, not 'app'
+// (You must update your firebaseConfig.js file to export 'firestore')
+import { firestore } from "./firebaseConfig";
+
 import {
   Feedback,
   RideRequest,
@@ -22,13 +19,12 @@ import {
   DRIVER_AT_PICK_UP_STATUS,
 } from "../api";
 
-export const db = getFirestore(app);
-export const usersCollection = collection(db, "Users");
-export const driversCollection = collection(db, "Drivers");
-export const rideRequestsCollection = collection(db, "RideRequests");
-export const problematicUsersCollection = collection(db, "ProblematicUsers");
-export const feedbackCollection = collection(db, "Feedback");
-export const recentlocationsCollection = collection(db, "RecentLocations");
+export const usersCollection = firestore.collection("Users");
+export const driversCollection = firestore.collection("/Drivers");
+export const rideRequestsCollection = firestore.collection("/RideRequests");
+export const problematicUsersCollection = firestore.collection("/ProblematicUsers");
+export const feedbackCollection = firestore.collection("/Feedback");
+export const recentlocationsCollection = firestore.collection("/RecentLocations");
 
 /**
  * Checks if a driver ID exists in the Drivers collection.
@@ -37,9 +33,8 @@ export const recentlocationsCollection = collection(db, "RecentLocations");
  * @returns True if a single driver document exists, false otherwise.
  */
 export async function verifyDriverId(driverid: string): Promise<boolean> {
-  const q = query(driversCollection, where("driverid", "==", driverid));
-  const querySnapshot = await getDocs(q);
-  // Expect exactly one document
+  const q = driversCollection.where("driverid", "==", driverid);
+  const querySnapshot = await q.get();
   return querySnapshot.size === 1;
 }
 
@@ -47,9 +42,8 @@ export async function verifyDriverId(driverid: string): Promise<boolean> {
  * Gets a user's profile from the Users collection.
  */
 export async function getProfile(netid: string): Promise<User> {
-  // Query for the document where the 'netid' field matches
-  const q = query(usersCollection, where("netid", "==", netid), limit(1));
-  const querySnapshot = await getDocs(q);
+  const q = usersCollection.where("netid", "==", netid).limit(1);
+  const querySnapshot = await q.get();
 
   if (querySnapshot.empty) {
     throw new Error(`User profile not found for netid: ${netid}`);
@@ -71,13 +65,11 @@ export async function findActiveRideRef(
   role: "STUDENT" | "DRIVER"
 ): Promise<{ ride: RideRequest; ref: DocumentReference } | null> {
   const field = role === "STUDENT" ? "netid" : "driverid";
-  const q = query(
-    rideRequestsCollection,
-    where(field, "==", id),
-    where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS])
-  );
+  const q = rideRequestsCollection
+    .where(field, "==", id)
+    .where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS]);
 
-  const querySnapshot = await getDocs(q);
+  const querySnapshot = await q.get();
 
   if (querySnapshot.size > 1) {
     throw new Error(`Data integrity issue: Found ${querySnapshot.size} active rides for ${role} ${id}.`);
@@ -99,8 +91,8 @@ export async function findActiveRideRef(
  * @returns An array of RideRequest objects.
  */
 export async function getRideRequestsInPool(): Promise<(RideRequest & { requestId: string })[]> {
-  const q = query(rideRequestsCollection, where("status", "==", REQUESTED_STATUS));
-  const querySnapshot = await getDocs(q);
+  const q = rideRequestsCollection.where("status", "==", REQUESTED_STATUS);
+  const querySnapshot = await q.get();
   return querySnapshot.docs.map(
     (doc) => ({ ...doc.data(), requestId: doc.id } as RideRequest & { requestId: string })
   );
@@ -112,12 +104,10 @@ export async function getRideRequestsInPool(): Promise<(RideRequest & { requestI
  * @returns True if the ride has a status of 'REQUESTED' or 'VIEWING'.
  */
 export async function isRideAvailableForAcceptance(netid: string): Promise<boolean> {
-  const q = query(
-    rideRequestsCollection,
-    where("netid", "==", netid),
-    where("status", "in", [REQUESTED_STATUS, VIEWING_STATUS])
-  );
-  const querySnapshot = await getDocs(q);
+  const q = rideRequestsCollection
+    .where("netid", "==", netid)
+    .where("status", "in", [REQUESTED_STATUS, VIEWING_STATUS]);
+  const querySnapshot = await q.get();
   return !querySnapshot.empty;
 }
 
@@ -157,20 +147,19 @@ export async function queryFeedback(
   date?: { start: Date; end: Date },
   rating?: number
 ): Promise<Feedback[]> {
-  const filters: QueryConstraint[] = [];
+  let q: Query = feedbackCollection;
   if (rideOrApp) {
-    filters.push(where("rideOrApp", "==", rideOrApp));
+    q = q.where("rideOrApp", "==", rideOrApp);
   }
   if (date) {
-    filters.push(where("date", ">=", new Date(date.start)));
-    filters.push(where("date", "<=", new Date(date.end)));
+    q = q.where("date", ">=", new Date(date.start));
+    q = q.where("date", "<=", new Date(date.end));
   }
   if (rating) {
-    filters.push(where("rating", "==", rating));
+    q = q.where("rating", "==", rating);
   }
 
-  const q = query(feedbackCollection, ...filters);
-  const querySnapshot = await getDocs(q);
+  const querySnapshot = await q.get();
   return querySnapshot.docs.map((doc) => doc.data() as Feedback);
 }
 
@@ -186,17 +175,16 @@ export async function findActiveRideForCall(
   role: "STUDENT" | "DRIVER"
 ): Promise<DocumentReference | null> {
   const field = role === "STUDENT" ? "netid" : "driverid";
-  const q = query(
-    rideRequestsCollection,
-    where(field, "==", id),
-    where("status", "in", [
+  
+  const q = rideRequestsCollection
+    .where(field, "==", id)
+    .where("status", "in", [
       DRIVING_TO_PICK_UP_STATUS,
       DRIVER_AT_PICK_UP_STATUS,
-    ]),
-    limit(1) // We only expect one
-  );
+    ])
+    .limit(1) // We only expect one
 
-  const querySnapshot = await getDocs(q);
+  const querySnapshot = await q.get();
   if (querySnapshot.empty) {
     return null;
   }

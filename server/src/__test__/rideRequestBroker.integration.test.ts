@@ -23,17 +23,12 @@
 import { clients, server, wss } from "..";
 import { describe, expect, test } from "@jest/globals";
 import { WebSocket } from "ws";
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  getDocs,
-  query,
-  Timestamp,
-  where,
-} from "firebase/firestore";
+import { Timestamp } from "firebase-admin/firestore";
 import { setTimeout } from "timers/promises";
-import { db, usersCollection } from "../firebase/firebaseQueries"; // <-- FIXED IMPORT PATH
+import {
+  usersCollection,
+  rideRequestsCollection,
+} from "../firebase/firebaseQueries";
 import { LocationType } from "../api";
 
 const MOCK_LOCATION_FROM: LocationType = {
@@ -63,22 +58,22 @@ const MOCK_RR_MSG: string = JSON.stringify({
   studentLocation: MOCK_STUDENT_LOCATION,
 });
 
-const rideRequestsCollection = collection(db, "RideRequests");
-
 // returns number of test rides in the database
 const mockRideCount = async (): Promise<number> => {
-  const queryExistingRide = query(
-    rideRequestsCollection,
-    where("netid", "in", ["0000000", "1111111", "2222222", "3333333"])
-  );
-  const inDatabase = await getDocs(queryExistingRide);
+  const queryExistingRide = rideRequestsCollection.where("netid", "in", [
+    "0000000",
+    "1111111",
+    "2222222",
+    "3333333",
+  ]);
+  const inDatabase = await queryExistingRide.get();
   return inDatabase.size;
 };
 
 describe("Websocket Integration", () => {
   beforeAll(async () => {
     // add test users to the firestore
-    await addDoc(usersCollection, {
+    await usersCollection.add({
       firstName: "first_name_0000000",
       lastName: "last_name_0000000",
       netid: "0000000",
@@ -87,7 +82,7 @@ describe("Websocket Integration", () => {
       studentNumber: "0000000",
       studentOrDriver: "STUDENT",
     });
-    await addDoc(usersCollection, {
+    await usersCollection.add({
       firstName: "first_name_1111111",
       lastName: "last_name_1111111",
       netid: "1111111",
@@ -96,7 +91,7 @@ describe("Websocket Integration", () => {
       studentNumber: "1111111",
       studentOrDriver: "STUDENT",
     });
-    await addDoc(usersCollection, {
+    await usersCollection.add({
       firstName: "first_name_2222222",
       lastName: "last_name_2222222",
       netid: "2222222",
@@ -105,7 +100,7 @@ describe("Websocket Integration", () => {
       studentNumber: "2222222",
       studentOrDriver: "STUDENT",
     });
-    await addDoc(usersCollection, {
+    await usersCollection.add({
       firstName: "first_name_3333333",
       lastName: "last_name_3333333",
       netid: "3333333",
@@ -138,39 +133,67 @@ describe("Websocket Integration", () => {
     expect(clients.length).toStrictEqual(1);
     // make sure all test data has been removed from the RideRequests table
     // tests in this file always use netids: 0000000, 1111111, 2222222, or 3333333
-    const queryExistingRide = query(
-      rideRequestsCollection,
-      where("netid", "in", ["0000000", "1111111", "2222222", "3333333"])
-    );
-    const inDatabase = await getDocs(queryExistingRide);
+    const queryExistingRide = rideRequestsCollection.where("netid", "in", [
+      "0000000",
+      "1111111",
+      "2222222",
+      "3333333",
+    ]);
+    const inDatabase = await queryExistingRide.get();
     expect(inDatabase.size).toBe(0);
   });
   afterEach(async () => {
-    ws.close();
-    // make sure all test data has been removed from the RideRequests table
-    // tests in this file always use netids: 0000000, 1111111, 2222222, or 3333333
-    const queryExistingRide = query(
-      rideRequestsCollection,
-      where("netid", "in", ["0000000", "1111111", "2222222", "3333333"])
-    );
-    const inDatabase = await getDocs(queryExistingRide);
-    inDatabase.forEach((el) => {
-      deleteDoc(el.ref);
-    });
-    // Wait for documents to be deleted
-    await Promise.all(inDatabase.docs.map((doc) => deleteDoc(doc.ref)));
-    // wait for the websocket to close (yes this is terrible, it also works)
-    await setTimeout(1000);
+    if (ws) {
+      const closePromise = new Promise((resolve) => {
+        ws.on("close", () => {
+          resolve(true);
+        });
+      });
+
+      if (
+        ws.readyState !== WebSocket.CLOSING &&
+        ws.readyState !== WebSocket.CLOSED
+      ) {
+        ws.close();
+      }
+      await Promise.race([closePromise, setTimeout(2000)]);
+    }
+    const queryExistingRide = rideRequestsCollection.where("netid", "in", [
+      "0000000",
+      "1111111",
+      "2222222",
+      "3333333",
+    ]);
+    const inDatabase = await queryExistingRide.get();
+    const deletePromises = inDatabase.docs.map((doc) => doc.ref.delete());
+    await Promise.all(deletePromises);
+    let retries = 0;
+    const maxRetries = 25;
+    let finalSize = inDatabase.size;
+
+    while (finalSize > 0 && retries < maxRetries) {
+      await setTimeout(200); // Wait 200ms
+      const snapshot = await queryExistingRide.get(); // Re-run query
+      finalSize = snapshot.size;
+      retries++;
+    }
+    if (finalSize > 0) {
+      throw new Error(
+        `[afterEach] Failed to clean up database. ${finalSize} documents remain.`
+      );
+    }
   });
   afterAll(async () => {
     //remove test users from firestore
-    const queryUsers = query(
-      usersCollection,
-      where("netid", "in", ["0000000", "1111111", "2222222", "3333333"])
-    );
-    const inDatabase = await getDocs(queryUsers);
+    const queryUsers = usersCollection.where("netid", "in", [
+      "0000000",
+      "1111111",
+      "2222222",
+      "3333333",
+    ]);
+    const inDatabase = await queryUsers.get();
     inDatabase.forEach((el) => {
-      deleteDoc(el.ref);
+      el.ref.delete();
     });
     //close socket server and server
     wss.close();
@@ -190,11 +213,10 @@ describe("Websocket Integration", () => {
     });
     ws.send(message);
     await setTimeout(1000);
-    const queryExistingRide = query(
-      rideRequestsCollection,
-      where("netid", "in", ["0000000"])
-    );
-    const inDatabase = await getDocs(queryExistingRide);
+    const queryExistingRide = rideRequestsCollection.where("netid", "in", [
+      "0000000",
+    ]);
+    const inDatabase = await queryExistingRide.get();
     expect(inDatabase.size).toBe(1);
     expect(typeof lastMsg.requestid).toBe("string");
   });
@@ -223,7 +245,7 @@ describe("Websocket Integration", () => {
   });
 
   test("RIDES_EXIST returns false when rides exist but don't have REQUESTED status", async () => {
-    await addDoc(rideRequestsCollection, {
+    await rideRequestsCollection.add({
       netid: "0000000",
       driverid: "TEST_WHATEVER",
       requestedAt: Timestamp.now(),
@@ -237,7 +259,7 @@ describe("Websocket Integration", () => {
       numRiders: 100,
       status: "COMPLETED",
     });
-    await addDoc(rideRequestsCollection, {
+    await rideRequestsCollection.add({
       netid: "1111111",
       driverid: "TEST_WHATEVER",
       requestedAt: Timestamp.now(),
@@ -251,7 +273,7 @@ describe("Websocket Integration", () => {
       numRiders: 100,
       status: "CANCELED",
     });
-    await addDoc(rideRequestsCollection, {
+    await rideRequestsCollection.add({
       netid: "1111111",
       driverid: "TEST_WHATEVER",
       requestedAt: Timestamp.now(),
@@ -308,11 +330,10 @@ describe("Websocket Integration", () => {
     expect(lastMsg.response).toBe("VIEW_RIDE");
     expect(lastMsg.rideExists).toBe(true);
     expect(lastMsg.rideInfo.rideRequest.netid).toBe("3333333"); // <-- FIXED TYPO
-    const queryExistingRide = query(
-      rideRequestsCollection,
-      where("netid", "in", ["3333333"])
-    );
-    const inDatabase = await getDocs(queryExistingRide);
+    const queryExistingRide = rideRequestsCollection.where("netid", "in", [
+      "3333333",
+    ]);
+    const inDatabase = await queryExistingRide.get();
     expect(inDatabase.size).toBe(1);
     expect(inDatabase.docs[0].get("status")).toBe("VIEWING");
   });
@@ -334,11 +355,10 @@ describe("Websocket Integration", () => {
     expect(lastMsg.response).toBe("VIEW_RIDE");
     expect(lastMsg.rideExists).toBe(true);
     expect(lastMsg.rideInfo.rideRequest.netid).toBe("3333333"); // <-- FIXED TYPO
-    const queryExistingRide = query(
-      rideRequestsCollection,
-      where("netid", "in", ["3333333"])
-    );
-    const inDatabase = await getDocs(queryExistingRide);
+    const queryExistingRide = rideRequestsCollection.where("netid", "in", [
+      "3333333",
+    ]);
+    const inDatabase = await queryExistingRide.get();
     expect(inDatabase.size).toBe(1);
     expect(inDatabase.docs[0].get("status")).toBe("VIEWING");
     const msg = {
@@ -351,7 +371,7 @@ describe("Websocket Integration", () => {
     await setTimeout(1000);
     expect(lastMsg.response).toBe("VIEW_DECISION");
     expect(lastMsg.success).toBe(true);
-    const updatedInDatabase = await getDocs(queryExistingRide);
+    const updatedInDatabase = await queryExistingRide.get();
     expect(updatedInDatabase.size).toBe(1);
     expect(updatedInDatabase.docs[0].get("status")).toBe("DRIVING TO PICK UP");
     expect(updatedInDatabase.docs[0].get("netid")).toBe("3333333");
@@ -374,11 +394,10 @@ describe("Websocket Integration", () => {
     expect(lastMsg.response).toBe("VIEW_RIDE");
     expect(lastMsg.rideExists).toBe(true);
     expect(lastMsg.rideInfo.rideRequest.netid).toBe("3333333");
-    const queryExistingRide = query(
-      rideRequestsCollection,
-      where("netid", "in", ["3333333"])
-    );
-    const inDatabase = await getDocs(queryExistingRide);
+    const queryExistingRide = rideRequestsCollection.where("netid", "in", [
+      "3333333",
+    ]);
+    const inDatabase = await queryExistingRide.get();
     expect(inDatabase.size).toBe(1);
     expect(inDatabase.docs[0].get("status")).toBe("VIEWING");
     const msg = {
@@ -391,7 +410,7 @@ describe("Websocket Integration", () => {
     await setTimeout(1000);
     expect(lastMsg.response).toBe("VIEW_DECISION");
     expect(lastMsg.success).toBe(true);
-    const updatedInDatabase = await getDocs(queryExistingRide);
+    const updatedInDatabase = await queryExistingRide.get();
     expect(updatedInDatabase.size).toBe(1);
     expect(updatedInDatabase.docs[0].get("status")).toBe("DRIVING TO PICK UP");
     expect(updatedInDatabase.docs[0].get("netid")).toBe("3333333");
@@ -405,7 +424,7 @@ describe("Websocket Integration", () => {
     await setTimeout(1000);
     expect(lastMsg.response).toBe("DRIVER_ARRIVED_AT_PICKUP");
     expect(lastMsg.success).toBe(true);
-    const updatedAgain = await getDocs(queryExistingRide);
+    const updatedAgain = await queryExistingRide.get();
     expect(updatedAgain.size).toBe(1);
     expect(updatedAgain.docs[0].get("status")).toBe("DRIVER AT PICK UP");
     expect(updatedAgain.docs[0].get("netid")).toBe("3333333");

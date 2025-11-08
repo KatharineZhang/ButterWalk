@@ -1,5 +1,5 @@
 // This is where all the server / database data structures will go
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from "firebase-admin/firestore";
 import { AuthSessionResult } from "expo-auth-session";
 
 // Webhook commands
