@@ -1,9 +1,8 @@
 import {
-  doc,
   DocumentReference,
   Timestamp,
   Transaction,
-} from "firebase/firestore";
+} from "firebase-admin/firestore";
 import {
   Feedback,
   ProblematicUser,
@@ -40,25 +39,31 @@ export async function createUserLogic(
   t: Transaction,
   user: User
 ): Promise<boolean> {
-  const problematicRef = doc(problematicUsersCollection, user.netid);
-  const userRef = doc(usersCollection, user.netid);
-  const locationRef = doc(recentlocationsCollection, user.netid);
+  const problematicRef = problematicUsersCollection.doc(user.netid);
+  const userRef = usersCollection.doc(user.netid);
+  const locationRef = recentlocationsCollection.doc(user.netid);
 
   const [problematicDoc, userDoc] = await Promise.all([
     t.get(problematicRef),
     t.get(userRef),
   ]);
 
+  const problematicData = problematicDoc.data();
   if (
-    problematicDoc.exists() &&
-    problematicDoc.data().category === "BLACKLISTED"
+    problematicDoc.exists &&
+    problematicData && 
+    problematicData.category === "BLACKLISTED"
   ) {
     throw new Error("User is blacklisted.");
   }
 
-  if (userDoc.exists()) {
+  if (userDoc.exists) {
     // User exists, check if their account is fully set up.
-    return (userDoc.data() as User).phoneNumber !== null;
+    const userData = userDoc.data() as User;
+    if (!userData) {
+      throw new Error("User document exists but data is missing.");
+    }
+    return userData.phoneNumber !== null;
   } else {
     // New user, create both user and recent locations documents.
     t.set(userRef, user);
@@ -82,9 +87,9 @@ export async function finishCreatingUserLogic(
   phoneNumber: string,
   studentNumber: string
 ) {
-  const userRef = doc(usersCollection, netid);
+  const userRef = usersCollection.doc(netid);
   const userDoc = await t.get(userRef);
-  if (!userDoc.exists()) {
+  if (!userDoc.exists) {
     throw new Error("User does not exist to be updated.");
   }
   t.update(userRef, { preferredName, phoneNumber, studentNumber });
@@ -100,7 +105,7 @@ export function addRideRequestToPoolLogic(
   t: Transaction,
   newRide: Omit<RideRequest, "requestId">
 ): DocumentReference {
-  const rideRef = doc(rideRequestsCollection);
+  const rideRef = rideRequestsCollection.doc();
   t.set(rideRef, {
     ...newRide,
     status: REQUESTED_STATUS,
@@ -121,7 +126,8 @@ export async function assignRideForViewingLogic(
   driverid: string
 ) {
   const rideDoc = await t.get(rideToViewRef);
-  if (!rideDoc.exists() || rideDoc.data().status !== REQUESTED_STATUS) {
+  const rideData = rideDoc.data();
+  if (!rideDoc.exists || !rideData || rideData.status !== REQUESTED_STATUS) {
     throw new Error("This ride is no longer available to be viewed.");
   }
 
@@ -146,7 +152,7 @@ export async function handleDriverViewChoiceLogic(
   decision: "ACCEPT" | "DENY" | "TIMEOUT" | "ERROR"
 ): Promise<RideRequestStatus> {
   const rideDoc = await t.get(rideRef);
-  if (!rideDoc.exists()) throw new Error("Ride does not exist.");
+  if (!rideDoc.exists) throw new Error("Ride does not exist.");
 
   const rideData = rideDoc.data() as RideRequest;
   if (rideData.status !== VIEWING_STATUS) {
@@ -209,7 +215,7 @@ export async function completeRideLogic(
   rideRef: DocumentReference
 ) {
   const rideDoc = await t.get(rideRef);
-  if (!rideDoc.exists()) throw new Error("Ride does not exist.");
+  if (!rideDoc.exists) throw new Error("Ride does not exist.");
 
   const ride = rideDoc.data() as RideRequest;
   if (ride.status !== DRIVING_TO_DESTINATION_STATUS) {
@@ -221,10 +227,11 @@ export async function completeRideLogic(
   t.update(rideRef, { status: COMPLETED_STATUS, completedAt: Timestamp.now() });
 
   // Update recent locations for the student
-  const locationRef = doc(recentlocationsCollection, ride.netid);
+  const locationRef = recentlocationsCollection.doc(ride.netid);
   const locationDoc = await t.get(locationRef);
-  const currentLocations = locationDoc.exists()
-    ? (locationDoc.data() as RecentLocation).locations
+  const locationData = locationDoc.data() as RecentLocation;
+  const currentLocations = locationDoc.exists && locationData
+    ? locationData.locations
     : [];
 
   const newLocations = [ride.locationTo, ride.locationFrom, ...currentLocations]
@@ -249,7 +256,6 @@ export function setRideStatusLogic(
   rideRef: DocumentReference,
   status: RideRequestStatus
 ) {
-  // Corrected: Changed 'let' to 'const' as updateData is not reassigned.
   const updateData: { status: RideRequestStatus; pickedUpAt?: Timestamp } = {
     status,
   };
@@ -268,7 +274,7 @@ export function addFeedbackLogic(
   t: Transaction,
   feedback: Omit<Feedback, "date">
 ) {
-  const feedbackRef = doc(feedbackCollection);
+  const feedbackRef = feedbackCollection.doc();
   t.set(feedbackRef, { ...feedback, date: Timestamp.now() });
 }
 
@@ -278,7 +284,7 @@ export function addFeedbackLogic(
  * @param problem The problematic user data.
  */
 export function reportUserLogic(t: Transaction, problem: ProblematicUser) {
-  const problemRef = doc(problematicUsersCollection, problem.netid);
+  const problemRef = problematicUsersCollection.doc(problem.netid);
   t.set(problemRef, { ...problem, category: "REPORTED" });
 }
 
@@ -288,7 +294,7 @@ export function reportUserLogic(t: Transaction, problem: ProblematicUser) {
  * @param netid The netid of the user to blacklist.
  */
 export function blacklistUserLogic(t: Transaction, netid: string) {
-  const problemRef = doc(problematicUsersCollection, netid);
+  const problemRef = problematicUsersCollection.doc(netid);
   t.update(problemRef, { category: "BLACKLISTED" });
 }
 
@@ -308,7 +314,7 @@ export async function addCallLogLogic(
   phoneNumberCalled: string
 ) {
   const rideDoc = await t.get(rideRef);
-  if (!rideDoc.exists()) {
+  if (!rideDoc.exists) {
     throw new Error("Ride request does not exist.");
   }
 
