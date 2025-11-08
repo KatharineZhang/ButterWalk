@@ -1,7 +1,9 @@
 // This file initializes the Firebase app with the configuration details from the .env file.
 // It exports the initialized app to be used in other files.
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import admin from "firebase-admin";
+
+// import { initializeApp } from "firebase-admin/app";
+// import { getAuth } from "firebase-admin/auth";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -27,6 +29,8 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-export { app, auth };
+admin.initializeApp(firebaseConfig);
+const db = admin.database();
+// const app = initializeApp(firebaseConfig);
+const auth = admin.auth();
+export { db, auth };

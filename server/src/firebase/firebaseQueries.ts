@@ -1,15 +1,15 @@
 import {
-  collection,
+  // collection,
   // doc,
   getDocs,
-  getFirestore,
+  // getFirestore,
   query,
   where,
   QueryConstraint,
   DocumentReference,
   limit,
 } from "firebase/firestore";
-import { app } from "./firebaseConfig";
+import { db } from "./firebaseConfig";
 import {
   Feedback,
   RideRequest,
@@ -22,13 +22,13 @@ import {
   DRIVER_AT_PICK_UP_STATUS,
 } from "../api";
 
-export const db = getFirestore(app);
-export const usersCollection = collection(db, "Users");
-export const driversCollection = collection(db, "Drivers");
-export const rideRequestsCollection = collection(db, "RideRequests");
-export const problematicUsersCollection = collection(db, "ProblematicUsers");
-export const feedbackCollection = collection(db, "Feedback");
-export const recentlocationsCollection = collection(db, "RecentLocations");
+// export const db = app;
+export const usersCollection = db.ref("Users");
+export const driversCollection = db.ref("/Drivers");
+export const rideRequestsCollection = db.ref("/RideRequests");
+export const problematicUsersCollection = db.ref("/ProblematicUsers");
+export const feedbackCollection = db.ref("/Feedback");
+export const recentlocationsCollection = db.ref("/RecentLocations");
 
 /**
  * Checks if a driver ID exists in the Drivers collection.
