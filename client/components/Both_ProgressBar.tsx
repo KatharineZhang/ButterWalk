@@ -62,7 +62,7 @@ export default function Both_ProgressBar({
           )}
           <Pressable onPress={() => setShowDetails(!showDetails)}>
             <Text style={progressBarStyles.progressBarDetailsLink}>
-              {showDetails ? "less details" : "more details"}
+              {showDetails ? "Less Details" : "More Details"}
             </Text>
           </Pressable>
         </View>
