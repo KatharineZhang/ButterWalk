@@ -1009,6 +1009,22 @@ progressBarLabelSectionDropoff: {
     fontWeight: "bold",
     textAlign: "center",
   },
+  progressBarLocationNamePickup: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: "#4B2E83",
+    marginTop: 4,
+    width: "100%",
+    textAlign: "center",
+  },
+  progressBarLocationNameDropoff: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: "#4B2E83",
+    marginTop: 4,
+    width: "100%",
+    textAlign: "right",
+  },
   progressBarAddress: {
     fontSize: 8,
     color: "#333",

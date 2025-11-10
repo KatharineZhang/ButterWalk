@@ -7,12 +7,16 @@ export default function Both_ProgressBar({
   rideStatus,
   pickupAddress,
   dropoffAddress,
+  pickUpLocationName,
+  dropOffLocationName,
   driverToPickupMinutes,
   pickupToDropoffMinutes,
 }: {
   rideStatus: "start" | "pickup" | "dropoff";
   pickupAddress: string;
   dropoffAddress: string;
+  pickUpLocationName: string;
+  dropOffLocationName: string;
   driverToPickupMinutes?: number;
   pickupToDropoffMinutes?: number;
 }) {
@@ -97,6 +101,9 @@ export default function Both_ProgressBar({
         </View>
         <View style={progressBarStyles.progressBarLabelSection}>
           <Text style={progressBarStyles.progressBarLabel}>Pickup</Text>
+          <Text style={progressBarStyles.progressBarLocationNamePickup}>
+            {pickUpLocationName}
+          </Text>
           {showDetails && (
             <Text style={progressBarStyles.progressBarAddressPickup}>
               {pickupAddress}
@@ -105,6 +112,9 @@ export default function Both_ProgressBar({
         </View>
         <View style={progressBarStyles.progressBarLabelSectionDropoff}>
           <Text style={progressBarStyles.progressBarLabel}>Dropoff</Text>
+          <Text style={progressBarStyles.progressBarLocationNameDropoff}>
+            {dropOffLocationName}
+          </Text>
           {showDetails && (
             <Text style={progressBarStyles.progressBarAddressDropoff}>
               {dropoffAddress}

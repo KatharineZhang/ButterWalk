@@ -23,6 +23,8 @@ export type RideStatus =
 interface HandleRideProps {
   pickUpAddress: string;
   dropOffAddress: string;
+  pickUpLocationName: string;
+  dropOffLocationName: string;
   status: RideStatus;
   // the progress of user walking to pickup location // will be -1 if walking is not needed
   walkProgress: number;
@@ -42,6 +44,8 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
   status,
   pickUpAddress,
   dropOffAddress,
+  pickUpLocationName,
+  dropOffLocationName,
   walkProgress,
   rideProgress,
   walkDuration,
@@ -216,6 +220,8 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
           }
           pickupAddress={pickUpAddress}
           dropoffAddress={dropOffAddress}
+          pickUpLocationName={pickUpLocationName}
+          dropOffLocationName={dropOffLocationName}
           driverToPickupMinutes={
             walkDuration > driverETA ? walkDuration : driverETA
           }
