@@ -947,7 +947,7 @@ export default function HomePage() {
         </View>
 
         {/* Directions button - positioned on the right side */}
-        {whichComponent === "rideReq"
+        {whichComponent === "handleRide" 
           ? (rideStatusRef.current === "WaitingForRide" ||
               rideStatusRef.current === "DriverEnRoute") && (
               <View
