@@ -947,19 +947,21 @@ export default function HomePage() {
         </View>
 
         {/* Directions button - positioned on the right side */}
-        {(rideStatusRef.current === "WaitingForRide" ||
-          rideStatusRef.current === "DriverEnRoute") && (
-          <View
-            style={{
-              position: "absolute",
-              bottom: currentComponentHeight + 10,
-              right: 10, // Position on the right side
-              alignItems: "flex-end",
-            }}
-          >
-            <Student_DirectionsButton pickUpLocation={pickUpLocation} />
-          </View>
-        )}
+        {whichComponent === "rideReq"
+          ? (rideStatusRef.current === "WaitingForRide" ||
+              rideStatusRef.current === "DriverEnRoute") && (
+              <View
+                style={{
+                  position: "absolute",
+                  bottom: currentComponentHeight + 10,
+                  right: 10, // Position on the right side
+                  alignItems: "flex-end",
+                }}
+              >
+                <Student_DirectionsButton pickUpLocation={pickUpLocation} />
+              </View>
+            )
+          : null}
 
         {/* Figure out which component to render */}
         {
