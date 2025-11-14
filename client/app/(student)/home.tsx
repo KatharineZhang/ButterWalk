@@ -8,7 +8,9 @@ import {
 import Profile from "./profile";
 import Map, { calculateDistance, isSameLocation, MapRef } from "./map";
 import { useLocalSearchParams } from "expo-router";
-import WebSocketService from "@/services/WebSocketService";
+import WebSocketService, {
+  WSConnectionState,
+} from "@/services/WebSocketService";
 import {
   CallLogResponse,
   CancelResponse,
@@ -34,6 +36,7 @@ import { createOpenLink } from "react-native-open-maps";
 import LoadingPageComp from "@/components/Student_LoadingPage";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Legend from "@/components/Student_Legend";
+import DisconnectedModal from "@/components/Both_Disconnected";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -293,6 +296,8 @@ export default function HomePage() {
       "DRIVER_DRIVING_TO_DROPOFF"
     );
     WebSocketService.addListener(handleLoadRideResponse, "LOAD_RIDE");
+    // handle disconnects by listening for changes in websocket state
+    WebSocketService.addConnectionListener(handleWebsocketConnection);
 
     // get the user's profile on first render
     sendProfile();
@@ -567,7 +572,7 @@ export default function HomePage() {
         // go back to ride request component
         setWhichComponent("rideReq");
         rideStatusRef.current = "WaitingForRide";
-        
+
         // set the notif state based on the reason for cancelation
         switch (cancelReason.current) {
           case "none":
@@ -700,6 +705,22 @@ export default function HomePage() {
       const errMessage = message as ErrorResponse;
       console.log("Failed to log call: ", errMessage.error);
     }
+  };
+
+  // WEBSOCKET- for checking the websocket state
+  // store the websocket's status
+  const [websocketStatus, setWebsocketStatus] =
+    useState<WSConnectionState>("CONNECTED");
+  // listener that will update websocket status when called
+  const handleWebsocketConnection = (wsStatus: number | undefined) => {
+    const status: WSConnectionState =
+      wsStatus == WebSocket.OPEN
+        ? "CONNECTED"
+        : wsStatus == WebSocket.CONNECTING
+          ? "CONNECTING"
+          : "DISCONNECTED";
+    console.log("STUDENT SEES WS " + status);
+    setWebsocketStatus(status);
   };
 
   const resetAllFields = () => {
@@ -861,6 +882,10 @@ export default function HomePage() {
           startLocation={startLocation}
           whichComponent={"rideReq"}
         />
+        {/* Disconnected pop-up */}
+        <View style={styles.modalContainer}>
+          <DisconnectedModal isVisible={websocketStatus != "CONNECTED"} />
+        </View>
         {/* profile pop-up modal */}
         <View style={styles.modalContainer}>
           <Profile
