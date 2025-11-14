@@ -32,7 +32,7 @@ export class BuildingService {
       name: "Aerospace and Engineering Research Building",
       location: {
         latitude: 47.653996,
-        longitude: -122.306079, 
+        longitude: -122.306079,
       },
     },
     {
@@ -180,6 +180,48 @@ export class BuildingService {
       location: {
         latitude: 47.65307776703236,
         longitude: -122.29979157657776,
+      },
+    },
+    {
+      name: "Central Plaza Garage C1",
+      location: {
+        latitude: 47.656872597222964,
+        longitude: -122.31167702345559,
+      },
+    },
+    {
+      name: "Central Plaza Garage C2",
+      location: {
+        latitude: 47.656872597222964,
+        longitude: -122.31167702345559,
+      },
+    },
+    {
+      name: "Central Plaza Garage C3",
+      location: {
+        latitude: 47.656872597222964,
+        longitude: -122.31167702345559,
+      },
+    },
+    {
+      name: "Central Plaza Garage C4",
+      location: {
+        latitude: 47.656872597222964,
+        longitude: -122.31167702345559,
+      },
+    },
+    {
+      name: "Central Plaza Garage C5",
+      location: {
+        latitude: 47.656872597222964,
+        longitude: -122.31167702345559,
+      },
+    },
+    {
+      name: "Central Plaza Garage C6",
+      location: {
+        latitude: 47.656872597222964,
+        longitude: -122.31167702345559,
       },
     },
     {
@@ -356,7 +398,6 @@ export class BuildingService {
         latitude: 47.65322385230462,
         longitude: -122.31351835075509,
       },
-      
     },
     /*
     {
@@ -379,7 +420,7 @@ export class BuildingService {
       name: "Hans Rosling Center for Population Health (HRC)",
       location: {
         latitude: 47.654788570813494,
-        longitude: -122.31189903381835, 
+        longitude: -122.31189903381835,
       },
     },
     {
@@ -490,8 +531,8 @@ export class BuildingService {
     {
       name: "Lander Hall (LAN)",
       location: {
-        latitude: 47.655798083774954,
-        longitude: -122.31504353371332,
+        latitude: 47.655982627641194,
+        longitude: -122.315010993999,
       },
     },
     {
@@ -610,8 +651,8 @@ export class BuildingService {
     {
       name: "Maple Hall (MAH)",
       location: {
-        latitude: 47.65595673980453,
-        longitude: -122.3163337344104, 
+        latitude: 47.65597239975355,
+        longitude: -122.31499908990595,
       },
     },
     {
@@ -918,8 +959,8 @@ export class BuildingService {
     {
       name: "Terry Hall (TEH)",
       location: {
-        latitude: 47.65564055939026,
-        longitude: -122.31726623339738,
+        latitude: 47.65597962648944,
+        longitude: -122.31500713653254,
       },
     },
     {
@@ -1017,7 +1058,7 @@ export class BuildingService {
       name: "Winkenwerder Forest Sciences Laboratory (WFS)",
       location: {
         latitude: 47.65125849356901,
-        longitude: -122.30702974653657,  
+        longitude: -122.30702974653657,
       },
     },
   ];
