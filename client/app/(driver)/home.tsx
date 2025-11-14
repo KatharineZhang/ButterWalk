@@ -38,6 +38,7 @@ import WebSocketService, {
 import { useRouter } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import DisconnectedModal from "@/components/Both_Disconnected";
+import { Coordinates } from "@/services/BuildingService";
 
 export type HandleRidePhase =
   | "headingToPickup"
@@ -173,10 +174,11 @@ export default function HomePage() {
   }>({ latitude: 0, longitude: 0 });
 
   // The student's location
-  const [studentLocation, setStudentLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  }>({ latitude: 0, longitude: 0 });
+  const studentLocation = useRef<Coordinates>({ latitude: 0, longitude: 0 });
+  const [, setStudentLocation] = useState<Coordinates>({
+    latitude: 0,
+    longitude: 0,
+  });
 
   // retain a reference to the map to call functions on it later
   const mapRef = useRef<MapRef>(null);
@@ -635,7 +637,10 @@ export default function HomePage() {
         const ride = loadRideMessage.rideRequest;
         setPickUpLocation(ride.locationFrom.coordinates);
         setDropOffLocation(ride.locationTo.coordinates);
+
+        studentLocation.current = ride.studentLocation.coords;
         setStudentLocation(ride.studentLocation.coords);
+
         requestInfo.current = ride;
         setRequestInfo(ride);
 
@@ -781,6 +786,10 @@ export default function HomePage() {
         latitude: locationMessage.latitude,
         longitude: locationMessage.longitude,
       });
+      studentLocation.current = {
+        latitude: locationMessage.latitude,
+        longitude: locationMessage.longitude,
+      };
     } else {
       const errMessage = message as ErrorResponse;
       console.log("Failed to send location: ", errMessage.error);
@@ -926,7 +935,7 @@ export default function HomePage() {
         startLocation={startLocation}
         pickUpLocation={pickUpLocation}
         dropOffLocation={dropOffLocation}
-        studentLocation={studentLocation}
+        studentLocation={studentLocation.current}
         userLocationChanged={userLocationChanged}
         currPhase={phase}
       />
