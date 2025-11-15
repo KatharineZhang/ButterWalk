@@ -460,8 +460,8 @@ export default function HomePage() {
     if ("response" in message && message.response === "RIDES_EXIST") {
       const ridesExistMessage = message as RidesExistResponse;
       if (
-        whichComponent.current === "noRequests" ||
-        whichComponent.current === "requestsAreAvailable"
+        whichComponent.current === "noRequests" // ||
+        // whichComponent.current === "requestsAreAvailable"
       ) {
         // if the driver is waiting for a request
         if (ridesExistMessage.ridesExist) {
