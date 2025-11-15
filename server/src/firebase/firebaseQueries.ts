@@ -3,8 +3,6 @@ import {
   Query,
 } from "firebase-admin/firestore";
 
-// CHANGED: Import 'firestore' service, not 'app'
-// (You must update your firebaseConfig.js file to export 'firestore')
 import { firestore } from "./firebaseConfig";
 
 import {
