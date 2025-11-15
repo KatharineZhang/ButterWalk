@@ -20,11 +20,11 @@ import {
 } from "../api";
 
 export const usersCollection = firestore.collection("Users");
-export const driversCollection = firestore.collection("/Drivers");
-export const rideRequestsCollection = firestore.collection("/RideRequests");
-export const problematicUsersCollection = firestore.collection("/ProblematicUsers");
-export const feedbackCollection = firestore.collection("/Feedback");
-export const recentlocationsCollection = firestore.collection("/RecentLocations");
+export const driversCollection = firestore.collection("Drivers");
+export const rideRequestsCollection = firestore.collection("RideRequests");
+export const problematicUsersCollection = firestore.collection("ProblematicUsers");
+export const feedbackCollection = firestore.collection("Feedback");
+export const recentlocationsCollection = firestore.collection("RecentLocations");
 
 /**
  * Checks if a driver ID exists in the Drivers collection.
