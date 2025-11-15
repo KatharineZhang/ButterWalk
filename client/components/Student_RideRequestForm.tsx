@@ -238,6 +238,13 @@ export default function RideRequestForm({
       const recentLocOptionClicked = recentLocations.find(
         (item) => item.name === value
       );
+      // Adwita's planned change: use snapping for 
+      // basically any of the "regular buildings"/where there is a
+      // road
+      // However if the building is one of those that is classified as
+      // "not a driveable road", then use zoning (it will act like a 
+      // special case that I will check for) and manually tell it
+      // to go to a specific place.
       if (placeSearchOptionClicked) {
         // if it was, we can just use the coordinates attached to it
         pickupCoord = placeSearchOptionClicked.coordinates;
