@@ -34,7 +34,7 @@ import { createOpenLink } from "react-native-open-maps";
 import LoadingPageComp from "@/components/Student_LoadingPage";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Legend from "@/components/Student_Legend";
-import Message from "../message";
+import Message from "./message";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -459,9 +459,6 @@ export default function HomePage() {
       if (loadRideMessage.rideRequest) {
         // we have an active ride request
         const ride = loadRideMessage.rideRequest;
-        if (ride.driverid){
-          setDriverId(ride.driverid);
-        }
         setPickUpLocation(ride.locationFrom.coordinates);
         setDropOffLocation(ride.locationTo.coordinates);
         setPickUpLocationName(ride.locationFrom.name);
@@ -482,6 +479,9 @@ export default function HomePage() {
             break;
           case "DRIVING TO PICK UP":
             rideStatusRef.current = "DriverEnRoute";
+            if (ride.driverid) {
+              setDriverId(ride.driverid);
+            }
             setRideStatus("DriverEnRoute");
             break;
           case "DRIVER AT PICK UP":
@@ -897,15 +897,12 @@ export default function HomePage() {
         </View>
 
         {/* message pop-up modal */}
-        <View style={[styles.modalContainer, { bottom: 0 }]}>
-          <Message
-            isVisible={messageVisible}
-            onClose={() => setMessageVisible(false)} 
-            studentId={netid}
-            driverId={driverId ?? ""}
-            role="STUDENT"          
-          />
-        </View>
+        <Message
+          isVisible={messageVisible}
+          onClose={() => setMessageVisible(false)}
+          studentId={netid}
+          driverId={driverId}
+        />
 
         <View
           style={{
@@ -919,25 +916,25 @@ export default function HomePage() {
             pointerEvents: "box-none",
           }}
         >
-          {/* Profile button (left) */}
-          <TouchableOpacity
-            style={{ width: 35, height: 35 }}
-            onPress={() => setProfileVisible(true)}
-          >
-            <View style={{ backgroundColor: "white", borderRadius: 100 }}>
-              <Ionicons name="person-circle" size={35} color="#4B2E83" />
-            </View>
-          </TouchableOpacity>
+          {/* Profile button (left), only visible when message is not rendered */}
+          {!messageVisible && (
+            <TouchableOpacity
+              style={{ width: 35, height: 35 }}
+              onPress={() => setProfileVisible(true)}
+            >
+              <View style={{ backgroundColor: "white", borderRadius: 100 }}>
+                <Ionicons name="person-circle" size={35} color="#4B2E83" />
+              </View>
+            </TouchableOpacity>
+          )}
 
           {/* Message button (right) */}
-          {(whichComponent === "handleRide" && driverETA <= 15) && (
+          {(rideStatusRef.current === "DriverEnRoute" || rideStatusRef.current === "DriverArrived") && (
             <TouchableOpacity
               style={{
                 position: "absolute",
-                top: "5%",
-                right: "5%", // offset a little so it doesn’t overlap with the flag
-                zIndex: 200,
-                shadowOffset: { width: 0, height: 1 },
+                top: "66%",
+                right: "5%",
                 shadowOpacity: 0.5,
                 shadowRadius: 5,
                 shadowColor: "grey",
@@ -954,11 +951,15 @@ export default function HomePage() {
                   alignItems: "center",
                 }}
               >
-                <Ionicons name="chatbubble-ellipses" size={30} color="#4B2E83" />
+                <Ionicons
+                  name="chatbubble-ellipses"
+                  size={34}
+                  color="#4B2E83"
+                  style={{ transform: [{ scaleX: -1 }] }}
+                />
               </View>
             </TouchableOpacity>
           )}
-
         </View>
 
         {/* Side Bar */}

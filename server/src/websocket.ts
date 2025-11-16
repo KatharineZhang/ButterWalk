@@ -407,7 +407,13 @@ export const handleWebSocketMessage = async (
     }
 
     case "CHAT_MESSAGE": {
-      resp = await chatMessage(input.senderID, input.recipientID, input.message, input.timestamp, input.role);
+      resp = await chatMessage(
+        input.senderID,
+        input.recipientID,
+        input.message,
+        input.timestamp,
+        input.role
+      );
 
       if ("toReceiver" in resp && "toSender" in resp) {
         // send message to recipient

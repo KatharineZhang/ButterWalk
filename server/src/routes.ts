@@ -1458,7 +1458,7 @@ export const chatMessage = async (
           recipientID,
           message,
           timestamp,
-          role
+          role,
         },
       };
 

@@ -36,13 +36,7 @@ import WebSocketService, {
 } from "@/services/WebSocketService";
 import { useRouter } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import Message from "../message";
-
-export type HandleRidePhase =
-  | "headingToPickup"
-  | "waitingForPickup"
-  | "headingToDropoff"
-  | "arrivedAtDropoff";
+import Message from "./message";
 
 export default function HomePage() {
   /* HOME PAGE STATE */
@@ -51,8 +45,8 @@ export default function HomePage() {
   >(TimeService.inServicableTime() ? "noRequests" : "noRequests");
   const whichComponent = useRef<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
-  >("noRequests");
-  // only visibile when driver accepts ride request 
+  >("endShift");
+  // only visibile when driver accepts ride request
   const [messageVisible, setMessageVisible] = useState(false);
 
   /* USE EFFECTS */
@@ -118,11 +112,7 @@ export default function HomePage() {
       sendLoadRide();
     } else {
       // off shift
-      // setWhichComponent("endShift");
-      setWhichComponent("noRequests");
-      seeIfRidesExist();
-      // see if there is an active ride request
-      sendLoadRide();
+      setWhichComponent("endShift");
     }
   };
 
@@ -270,6 +260,12 @@ export default function HomePage() {
       driverLocation: driverLocationRef.current,
     });
   };
+
+  type HandleRidePhase =
+  | "headingToPickup"
+  | "waitingForPickup"
+  | "headingToDropoff"
+  | "arrivedAtDropoff";
 
   // Handler for the "Let's Go" action in RequestAvailable
   const onLetsGo = () => {
@@ -964,19 +960,18 @@ export default function HomePage() {
 
       {/* message pop-up modal */}
       <Message
-          isVisible={messageVisible}
-          onClose={() => setMessageVisible(false)} 
-          studentId={requestInfo.current.netid}
-          driverId={netid}
-          role="DRIVER"          
+        isVisible={messageVisible}
+        onClose={() => setMessageVisible(false)}
+        studentId={requestInfo.current.netid}
+        driverId={netid}
       />
       {/* Message button in top right corner */}
-      {whichComponent.current === "noRequests" && (
+      {phase === "headingToPickup" || phase === "waitingForPickup" && (
         <TouchableOpacity
           style={{
             position: "absolute",
-            top: "5%",
-            right: "5%", // offset a little so it doesn’t overlap with the flag
+            top: "66%",
+            right: "5%",
             zIndex: 200,
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.5,
@@ -995,7 +990,12 @@ export default function HomePage() {
               alignItems: "center",
             }}
           >
-            <Ionicons name="chatbubble-ellipses" size={30} color="#4B2E83" />
+            <Ionicons
+              name="chatbubble-ellipses"
+              size={30}
+              color="#4B2E83"
+              style={{ transform: [{ scaleX: -1 }] }}
+            />
           </View>
         </TouchableOpacity>
       )}
