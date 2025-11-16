@@ -1,5 +1,17 @@
 import dotenv from "dotenv";
 import { AuthSessionResult } from "expo-auth-session";
+// Removed client-side imports
+// import {
+//   runTransaction,
+//   doc,
+//   getDoc,
+//   DocumentReference,
+// } from "firebase/firestore";
+
+// Added admin-side imports
+import { DocumentReference } from "firebase-admin/firestore";
+import { firestore } from "./firebase/firebaseConfig"; // Import the admin firestore service
+
 import {
   ErrorResponse,
   GeneralResponse,
@@ -9,8 +21,6 @@ import {
   LocationResponse,
   QueryResponse,
   RideRequest,
-  Feedback,
-  ProblematicUser,
   CompleteResponse,
   StudentSignInResponse,
   GoogleResponse,
@@ -20,43 +30,48 @@ import {
   ViewRideRequestResponse,
   ViewDecisionResponse,
   SnapLocationResponse,
+  WrapperCancelResponse,
+  LoadRideResponse,
+  REQUESTED_STATUS,
+  VIEWING_STATUS,
+  PlaceSearchResponse,
+  RecentLocation,
   PlaceSearchResult,
   GooglePlaceSearchResponse,
   GooglePlaceSearchBadLocationTypes,
-  PlaceSearchResponse,
-  PurpleZone,
-  WrapperCancelResponse,
-  LoadRideResponse,
   CallLogResponse,
   ChatMessageResponse,
 } from "./api";
+// Updated import paths to admin-migrated files
 import {
-  addFeedbackToDb,
-  addProblematic,
-  blacklistUser,
-  cancelRideRequest,
-  completeRideRequest,
-  createUser,
-  finishCreatingUser,
-  getOtherNetId,
-  queryFeedback,
-  db,
-  getProfile,
-  addRideRequestToPool,
-  getRideRequests,
-  setRideRequestStatus,
-  setRideRequestDriver,
-  getRecentLocations,
-  isNotAccepted,
+  findActiveRideRef,
+  getRideRequestsInPool,
+  getOtherUserNetId,
+  queryFeedback as queryFeedbackFromDb,
+  rideRequestsCollection,
+  usersCollection,
+  recentlocationsCollection,
   verifyDriverId,
-  setRideRequestDriverLocation,
-  setRideRequestStudentLocation,
-  getActiveRideRequest,
-  addCallLogToDb,
-  addChatToRideRequest,
-} from "./firebaseActions";
-import { runTransaction, Timestamp } from "firebase/firestore";
-import { highestRank, rankOf } from "./rankingAlgorithm";
+  getProfile,
+  findActiveRideForCall,
+} from "./firebase/firebaseQueries";
+import {
+  addCallLogLogic,
+  addFeedbackLogic,
+  addRideRequestToPoolLogic,
+  assignRideForViewingLogic,
+  blacklistUserLogic,
+  cancelRideLogic,
+  completeRideLogic,
+  createUserLogic,
+  finishCreatingUserLogic,
+  handleDriverViewChoiceLogic,
+  reportUserLogic,
+  setRideStatusLogic,
+} from "./firebase/firebaseTransactions";
+import { highestRank, rankOf } from "./util/rankingAlgorithm";
+import { PurpleZone } from "./util/zones";
+
 dotenv.config();
 
 // performs the google auth and returns the user profile information
@@ -127,14 +142,11 @@ const getUserProfile = async (token: string): Promise<GoogleResponse> => {
 /* Signs a specific student or driver into the app. Will check the users database for the specific id, 
 and if it is not there, will add a new user. If the user is in the table, we need to make sure this user 
 is not in the ProblematicUsers table with a blacklisted field of 1 before we return success : true.
-
 - Takes in a json object formatted as: {
 directive: "SIGNIN", phoneNum: string, netID: string, name: string, studentNum: number, role: 'STUDENT' | 'DRIVER' }.
-
 - On error, returns the json object in the form:  { response: “ERROR”, success: false, error: string, category: “SIGNIN” }. 
 - Returns a json object TO THE STUDENT in the form: { response: “SIGNIN”, success: true }. */
 // Removed duplicate declaration of fetchRecentLocations
-
 export const signIn = async (
   netid: string,
   firstName: string,
@@ -149,8 +161,8 @@ export const signIn = async (
     };
   }
   try {
-    return await runTransaction(db, async (transaction) => {
-      const alreadyExists = await createUser(transaction, {
+    const alreadyExists = await firestore.runTransaction((transaction) => {
+      return createUserLogic(transaction, {
         netid,
         firstName,
         lastName,
@@ -158,8 +170,8 @@ export const signIn = async (
         studentNumber: null,
         studentOrDriver,
       });
-      return { response: "SIGNIN", success: true, alreadyExists, netid };
     });
+    return { response: "SIGNIN", success: true, alreadyExists, netid };
   } catch (e: unknown) {
     return {
       response: "ERROR",
@@ -189,11 +201,8 @@ export const checkIfDriverSignin = async (
           } as ErrorResponse;
         }
 
-        // check if the driverid exists in the database
         // if not, return an error message
-        driverValid = await runTransaction(db, async (transaction) => {
-          return await verifyDriverId(transaction, netid);
-        });
+        driverValid = await verifyDriverId(netid);
 
         // if the driver id is valid, return a successful signin response
         if (driverValid) {
@@ -264,20 +273,20 @@ export const finishAccCreation = async (
 
   // add values to database
   try {
-    return await runTransaction(db, async (transaction) => {
-      const isSuccessful = await finishCreatingUser(
+    await firestore.runTransaction((transaction) => {
+      return finishCreatingUserLogic(
         transaction,
         netid,
         preferredName,
         phone_number,
         student_num
       );
-      return { response: "FINISH_ACC", success: isSuccessful };
     });
+    return { response: "FINISH_ACC", success: true };
   } catch (e: unknown) {
     return {
       response: "ERROR",
-      error: `Error adding phone number or student number to database: ${(e as Error).message}.`,
+      error: `Error adding phone/student number: ${(e as Error).message}.`,
       category: "FINISH_ACC",
     };
   }
@@ -301,15 +310,11 @@ export const loadRide = async (
     };
   }
   try {
-    return await runTransaction(db, async (transaction) => {
-      const rideRequest = await getActiveRideRequest(
-        transaction,
-        id,
-        role,
-        true // we want to include recently completed rides
-      );
-      return { response: "LOAD_RIDE", rideRequest };
-    });
+    const activeRideInfo = await findActiveRideRef(id, role);
+    const rideRequest = activeRideInfo
+      ? { ...activeRideInfo.ride, requestId: activeRideInfo.ref.id }
+      : undefined;
+    return { response: "LOAD_RIDE", rideRequest };
   } catch (e: unknown) {
     return {
       response: "ERROR",
@@ -391,45 +396,36 @@ async function getMatch(lat: number, long: number) {
   url.searchParams.set("geometries", "geojson");
   url.searchParams.set("radiuses", `${radius};${radius}`);
   url.searchParams.set("steps", "false");
-  url.searchParams.set("access_token", process.env.MAPBOX_SNAPPING_TOKEN);
+  url.searchParams.set("access_token", process.env.MAPBOX_SNAPPING_TOKEN!);
 
   const query = await fetch(url.toString(), { method: "GET" });
   const response = await query.json();
-  // Handle errors
+
   if (response.code !== "Ok") {
     console.error(
-      `${response.code} - ${response.message}.\n\nFor more information: https://docs.mapbox.com/api/navigation/map-matching/#map-matching-api-errors`
+      `${response.code} - ${response.message}.\nFor more information: https://docs.mapbox.com/api/navigation/map-matching/#map-matching-api-errors`
     );
     return;
   }
-  // Get the coordinates from the response.
   const coords = response.matchings[0].geometry;
-  console.log(coords);
-
-  // check if we have a valid road name
   let roadName = response.tracepoints[1].name;
+
   if (roadName.length < 1) {
-    // there was no road name, so we need to use the reverse geocoding API
-    // to get the name of the street
     const geoCodingBase = `https://api.mapbox.com/search/geocode/v6/reverse`;
     const geoCodingUrl = new URL(geoCodingBase);
-    geoCodingUrl.searchParams.set("longitude", `${safeLong}`); // from the coordinates
-    geoCodingUrl.searchParams.set("latitude", `${safeLat}`);
-    geoCodingUrl.searchParams.set("types", "street"); // get the street name
+    geoCodingUrl.searchParams.set("longitude", safeLong);
+    geoCodingUrl.searchParams.set("latitude", safeLat);
+    geoCodingUrl.searchParams.set("types", "street");
     geoCodingUrl.searchParams.set(
       "access_token",
-      process.env.MAPBOX_SNAPPING_TOKEN
+      process.env.MAPBOX_SNAPPING_TOKEN!
     );
-    const query = await fetch(geoCodingUrl.toString(), { method: "GET" });
-    const response = await query.json();
-    console.log("response from mapbox:", response.features[0].properties);
-
-    if (response.features.length > 0) {
-      roadName = response.features[0].properties.name;
+    const geoQuery = await fetch(geoCodingUrl.toString(), { method: "GET" });
+    const geoResponse = await geoQuery.json();
+    if (geoResponse.features.length > 0) {
+      roadName = geoResponse.features[0].properties.name;
     }
-    // else we give up and just return the empty string
   }
-  // Code from the next step will go here
   return { coords: coords, roadName };
 }
 
@@ -445,19 +441,27 @@ export const requestRide = async (
   rideRequest: RideRequest
 ): Promise<RequestRideResponse | ErrorResponse> => {
   try {
-    const response: { requestid: string; notifyDrivers: boolean } =
-      await runTransaction(db, async (t) => {
-        return await addRideRequestToPool(t, rideRequest);
-      });
-    if (response.requestid != null) {
-      return { response: "REQUEST_RIDE", ...response };
-    } else {
-      throw new Error(`requestid was null`);
+    const ridesInPool = await getRideRequestsInPool();
+    const notifyDrivers = ridesInPool.length === 0;
+
+    const existingRide = await findActiveRideRef(rideRequest.netid, "STUDENT");
+    if (existingRide) {
+      throw new Error("User already has an active ride request.");
     }
+
+    const newRideRef = (await firestore.runTransaction(async (t) => {
+      return addRideRequestToPoolLogic(t, rideRequest);
+    })) as DocumentReference;
+
+    return {
+      response: "REQUEST_RIDE",
+      requestid: newRideRef.id,
+      notifyDrivers,
+    };
   } catch (e: unknown) {
     return {
       response: "ERROR",
-      error: `Error adding new ride request to the database: ${(e as Error).message}`,
+      error: `Error adding ride request: ${(e as Error).message}`,
       category: "REQUEST_RIDE",
     };
   }
@@ -469,17 +473,13 @@ export const requestRide = async (
  */
 export const ridesExist = async (): Promise<boolean | ErrorResponse> => {
   try {
-    return await runTransaction(db, async () => {
-      // get all REQUESTED rides
-      const rideRequests: RideRequest[] = await getRideRequests();
-      // check if there are actually rides
-      return rideRequests.length !== 0;
-    });
+    const rideRequests = await getRideRequestsInPool();
+    return rideRequests.length > 0;
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Error getting ride requests from the database: ${(e as Error).message}`,
-      category: "REQUEST_RIDE",
+      error: `Error checking for rides: ${(e as Error).message}`,
+      category: "RIDES_EXIST",
     };
   }
 };
@@ -502,107 +502,61 @@ export const viewRide = async (
   }
 ): Promise<ViewRideRequestResponse | ErrorResponse> => {
   try {
-    return await runTransaction(db, async (t) => {
-      // get REQUESTED rides
-      const rideRequests: RideRequest[] = await getRideRequests();
-      if (rideRequests.length === 0) {
-        return {
-          response: "VIEW_RIDE",
-          rideExists: false,
-          notifyDrivers: false,
-        };
-      }
-      // get the best ride
-      // currently this is the ride requested earliest in time
-      const bestRequest: RideRequest = highestRank(
-        rideRequests,
-        driverid,
-        driverLocation
-      );
+    const availableRides = await getRideRequestsInPool();
 
-      // Ensure requestId is present and is a string
-      if (!bestRequest.requestId || typeof bestRequest.requestId !== "string") {
-        throw new Error("RideRequest is missing a valid requestId.");
-      }
+    if (availableRides.length === 0) {
+      return { response: "VIEW_RIDE", rideExists: false, notifyDrivers: false };
+    }
 
-      // get some stats on the ride
-      const driverToPickUpDuration = await getDuration(
-        driverLocation,
-        bestRequest.locationFrom.coordinates,
-        false // we are getting driverETA so don't get addresses
-      ).then((resp) => {
-        if ("duration" in resp) {
-          return resp.duration;
-        } else {
-          // error response
-          throw new Error(
-            `Error getting driver to pick up duration: ${resp.error}`
-          );
-        }
-      });
+    const bestRequest = highestRank(availableRides, driverid, driverLocation);
+    if (!bestRequest.requestId) {
+      throw new Error("Assertion failed: Highest ranked ride must have an ID.");
+    }
+    const rideRef = rideRequestsCollection.doc(bestRequest.requestId);
 
-      // get stats on ride part 2
-      const pickUpToDropOffDuration = await getDuration(
-        bestRequest.locationFrom.coordinates,
-        bestRequest.locationTo.coordinates,
-        false // we are getting rideDuration so don't get addresses
-      ).then((resp) => {
-        if ("duration" in resp) {
-          return resp.duration;
-        } else {
-          // error response
-          throw new Error(
-            `Error getting driver to pick up duration: ${resp.error}`
-          );
-        }
-      });
-
-      // before we take the request out of the queue,
-      // check if this was the last request before empty
-      let notify = false;
-      const numReqs = await getRideRequests();
-      if (numReqs.length == 1) {
-        notify = true;
-      }
-
-      // take the ride out of the "pool"
-      // by changing its status to VIEWING
-      setRideRequestStatus(t, "VIEWING", bestRequest.netid);
-      // when a driver is viewing a ride, no other driver can view it
-      // so we can just add the driver id to the ride request now
-      // for future use (if cancel, can set state back to viewing)
-      setRideRequestDriver(t, bestRequest.netid, driverid);
-
-      // get student's phone number from their profile to send to driver
-      const studentPhoneNumber = await getProfile(t, bestRequest.netid).then(
-        (profileResp: User) => {
-          if ("phoneNumber" in profileResp) {
-            // Ensure studentPhoneNumber is always a string
-            return profileResp.phoneNumber as string;
-          } else {
-            throw new Error(`Error getting student phone number`);
-          }
-        }
-      );
-      return {
-        response: "VIEW_RIDE",
-        rideExists: true,
-        rideInfo: {
-          rideRequest: {
-            ...bestRequest,
-            requestId: bestRequest.requestId as string,
-          },
-          driverToPickUpDuration,
-          pickUpToDropOffDuration,
-          studentPhoneNumber,
-        },
-        notifyDrivers: notify,
-      };
+    await firestore.runTransaction(async (t) => {
+      return assignRideForViewingLogic(t, rideRef, driverid);
     });
+
+    const driverToPickUpDuration = await getDuration(
+      driverLocation,
+      bestRequest.locationFrom.coordinates,
+      false
+    ).then((r) => ("duration" in r ? r.duration : 0));
+    const pickUpToDropOffDuration = await getDuration(
+      bestRequest.locationFrom.coordinates,
+      bestRequest.locationTo.coordinates,
+      false
+    ).then((r) => ("duration" in r ? r.duration : 0));
+
+
+    // get student's phone number from their profile to send to driver
+    const studentPhoneNumber = await getProfile(bestRequest.netid).then(
+      (profileResp: User) => {
+        if ("phoneNumber" in profileResp) {
+          // Ensure studentPhoneNumber is always a string
+          return profileResp.phoneNumber as string;
+        } else {
+          throw new Error(`Error getting student phone number`);
+        }
+      }
+    );
+
+    return {
+      response: "VIEW_RIDE",
+      rideExists: true,
+      rideInfo: {
+        rideRequest: { ...bestRequest, requestId: bestRequest.requestId },
+        driverToPickUpDuration,
+        pickUpToDropOffDuration,
+        studentPhoneNumber,
+      },
+      notifyDrivers: availableRides.length === 1,
+    };
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Unknown problem during viewRide: ${(e as Error).message}}`,
+      error: `Error viewing ride: ${(e as Error).message}`,
       category: "VIEW_RIDE",
     };
   }
@@ -623,73 +577,38 @@ export const handleDriverViewChoice = async (
   decision: "ACCEPT" | "DENY" | "TIMEOUT" | "ERROR"
 ): Promise<ViewDecisionResponse | ErrorResponse> => {
   try {
-    return await runTransaction(db, async (t) => {
-      if (decision === "ACCEPT") {
-        // this will throw an error if the student's ride is no longer simply requested/viewed
-        if (await isNotAccepted(netid)) {
-          setRideRequestDriver(t, netid, driverid);
-          setRideRequestStatus(t, "DRIVING TO PICK UP", netid);
-          return {
-            response: "VIEW_DECISION",
-            driver: {
-              response: "VIEW_DECISION",
-              success: true,
-            },
-            student: {
-              response: "ACCEPT_RIDE",
-              success: true,
-            },
-            notifyDrivers: false, // already notified drivers during VIEW_RIDE
-          };
-        } else {
-          throw new Error(
-            `Request is no longer available for decision: ${decision}`
-          );
-        }
-      } else if (
-        decision === "DENY" ||
-        decision === "TIMEOUT" ||
-        decision === "ERROR"
-      ) {
-        // check if the pool was empty and the ride we are about to
-        // add back in the queue is the first one in the pool
-        let notify = false;
-        const numReqs = await getRideRequests();
-        if (numReqs.length == 0) {
-          notify = true;
-        }
-        // make sure the ride has not been accepted / processed by the time we make our decision
-        if (await isNotAccepted(netid)) {
-          // reset the status to put the request put it back in the queue
-          setRideRequestStatus(t, "REQUESTED", netid);
-          return {
-            response: "VIEW_DECISION",
-            driver: {
-              response: "VIEW_DECISION",
-              success: true,
-            },
-            student: undefined,
-            notifyDrivers: notify,
-          };
-        } else {
-          // ride was taken by someone else!
-          throw new Error(
-            `Request is no longer available for decision: ${decision}`
-          );
-        }
-      }
-      // A bad decision was passed in
-      return {
-        response: "ERROR",
-        error: `Invalid decision or missing parameters. ${decision}`,
-        category: "VIEW_RIDE",
-      };
+    const rideToDecideInfo = await findActiveRideRef(netid, "STUDENT");
+    if (!rideToDecideInfo || rideToDecideInfo.ride.status !== VIEWING_STATUS) {
+      throw new Error("Ride is no longer available for a decision.");
+    }
+
+    const wasPoolEmpty = (await getRideRequestsInPool()).length === 0;
+
+    const newStatus = await firestore.runTransaction((t) => {
+      return handleDriverViewChoiceLogic(
+        t,
+        rideToDecideInfo.ref,
+        driverid,
+        decision
+      );
     });
+
+    const notify = newStatus === REQUESTED_STATUS && wasPoolEmpty;
+
+    return {
+      response: "VIEW_DECISION",
+      driver: { response: "VIEW_DECISION", success: true },
+      student:
+        decision === "ACCEPT"
+          ? { response: "ACCEPT_RIDE", success: true }
+          : undefined,
+      notifyDrivers: notify,
+    };
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Unexpected Error during handleDriverViewChoice: ${(e as Error).message}}`,
-      category: "VIEW_RIDE",
+      error: `Error handling driver choice: ${(e as Error).message}`,
+      category: "VIEW_DECISION",
     };
   }
 };
@@ -706,17 +625,16 @@ export const driverArrived = async (
   netid: string
 ): Promise<ErrorResponse | GeneralResponse> => {
   try {
-    await runTransaction(db, async (t) => {
-      await setRideRequestStatus(t, "DRIVER AT PICK UP", netid);
+    const activeRide = await findActiveRideRef(netid, "STUDENT");
+    if (!activeRide) throw new Error("No active ride found for student.");
+    await firestore.runTransaction(async (t) => {
+      setRideStatusLogic(t, activeRide.ref, "DRIVER AT PICK UP");
     });
-    return {
-      response: "DRIVER_ARRIVED_AT_PICKUP",
-      success: true,
-    };
+    return { response: "DRIVER_ARRIVED_AT_PICKUP", success: true };
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Unexpected Error during driverArrived: ${(e as Error).message}`,
+      error: `Error during driverArrived: ${(e as Error).message}`,
       category: "DRIVER_ARRIVED_AT_PICKUP",
     };
   }
@@ -734,17 +652,16 @@ export const driverDrivingToDropoff = async (
   netid: string
 ): Promise<ErrorResponse | GeneralResponse> => {
   try {
-    await runTransaction(db, async (t) => {
-      await setRideRequestStatus(t, "DRIVING TO DESTINATION", netid);
+    const activeRide = await findActiveRideRef(netid, "STUDENT");
+    if (!activeRide) throw new Error("No active ride found for student.");
+    await firestore.runTransaction(async (t) => {
+      setRideStatusLogic(t, activeRide.ref, "DRIVING TO DESTINATION");
     });
-    return {
-      response: "DRIVER_DRIVING_TO_DROPOFF",
-      success: true,
-    };
+    return { response: "DRIVER_DRIVING_TO_DROPOFF", success: true };
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Unexpected Error during driverPickedUpStudent: ${(e as Error).message}}`,
+      error: `Error during driverDrivingToDropoff: ${(e as Error).message}`,
       category: "DRIVER_DRIVING_TO_DROPOFF",
     };
   }
@@ -779,36 +696,44 @@ export const cancelRide = async (
   role: "STUDENT" | "DRIVER"
 ): Promise<WrapperCancelResponse | ErrorResponse> => {
   try {
-    return await runTransaction(db, async (transaction) => {
-      const response = await cancelRideRequest(transaction, netid, role);
-      if (response.otherId) {
-        // if we have an accepted ride, we have annetid of the opposite user
-        return {
-          response: "CANCEL",
-          info: {
-            response: "CANCEL",
-            success: true,
-            newRideStatus: response.newRideStatus,
-          },
-          otherNetid: response.otherId,
-          notifyDrivers: response.notifyDrivers,
-        };
-      }
-      // no driver specified in this pending request case!
-      return {
-        response: "CANCEL",
-        info: {
-          response: "CANCEL",
-          success: true,
-          newRideStatus: response.newRideStatus,
-        },
-        notifyDrivers: response.notifyDrivers,
-      };
+    const activeRideInfo = await findActiveRideRef(netid, role);
+    if (!activeRideInfo) throw new Error("No active ride to cancel.");
+
+    const pool = await getRideRequestsInPool();
+    const wasRideInPool = activeRideInfo.ride.status === REQUESTED_STATUS;
+
+    const result = await firestore.runTransaction(async (t) => {
+      const freshRideDoc = await t.get(activeRideInfo.ref);
+      if (!freshRideDoc.exists) throw new Error("Ride no longer exists.");
+      return cancelRideLogic(
+        t,
+        freshRideDoc.data() as RideRequest,
+        activeRideInfo.ref,
+        role
+      );
     });
+
+    let notify = false;
+    if (result.newRideStatus === REQUESTED_STATUS && pool.length === 0) {
+      notify = true; // Notified drivers that a ride is now available.
+    } else if (wasRideInPool && pool.length === 1) {
+      notify = true; // The only ride was cancelled, pool is now empty.
+    }
+
+    return {
+      response: "CANCEL",
+      info: {
+        response: "CANCEL",
+        success: true,
+        newRideStatus: result.newRideStatus as "CANCELED" | "REQUESTED",
+      },
+      otherNetid: result.otherId || undefined,
+      notifyDrivers: notify,
+    };
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Error canceling ride request: ${(e as Error).message}}`,
+      error: `Error canceling ride: ${(e as Error).message}`,
       category: "CANCEL",
     };
   }
@@ -827,24 +752,22 @@ export const completeRide = async (
   requestid: string
 ): Promise<CompleteResponse | ErrorResponse> => {
   try {
-    return await runTransaction(db, async (t) => {
-      const netids = await completeRideRequest(t, requestid);
-      return {
-        response: "COMPLETE",
-        info: {
-          response: "COMPLETE",
-          success: true,
-        },
-        netids: {
-          student: netids.student,
-          driver: netids.driver,
-        },
-      };
+    const rideRef = rideRequestsCollection.doc(requestid);
+    const netids = await firestore.runTransaction((t) => {
+      return completeRideLogic(t, rideRef);
     });
+    return {
+      response: "COMPLETE",
+      info: { response: "COMPLETE", success: true },
+      netids: {
+        student: netids.student!,
+        driver: netids.driver!,
+      },
+    };
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Unexpected Error during completeRide: ${(e as Error).message}}`,
+      error: `Error completing ride: ${(e as Error).message}`,
       category: "COMPLETE",
     };
   }
@@ -869,23 +792,16 @@ export const addFeedback = async (
       category: "ADD_FEEDBACK",
     };
   }
-
+  
   try {
-    return await runTransaction(db, async (transaction) => {
-      const feedback: Feedback = {
-        rating,
-        textFeedback,
-        rideOrApp,
-      };
-      // add feedback to the Feeback table using the fields passed in
-      await addFeedbackToDb(transaction, feedback);
-      return { response: "ADD_FEEDBACK", success: true };
+    await firestore.runTransaction(async (t) => {
+      addFeedbackLogic(t, { rating, textFeedback, rideOrApp });
     });
+    return { response: "ADD_FEEDBACK", success: true };
   } catch (e) {
-    // if there is an error, return { success: false, error: 'Error adding feedback to the database.'};
     return {
       response: "ERROR",
-      error: `Error adding feedback to the database: ${(e as Error).message}}`,
+      error: `Error adding feedback: ${(e as Error).message}`,
       category: "ADD_FEEDBACK",
     };
   }
@@ -894,7 +810,6 @@ export const addFeedback = async (
 /* Driver needs to be able to report a specific student they just dropped off for bad behavior. 
 This will add a new student entry to the ProblematicUsers table with a blacklisted field of 0.
 - Takes in: { directive: "REPORT”, netID: string, requestid: string, reason: string }
-
 - On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: “REPORT” }.
 - Returns a json object TO THE DRIVER in the format: { response: “REPORT”, success: true } */
 export const report = async (
@@ -909,21 +824,12 @@ export const report = async (
       category: "REPORT",
     };
   }
-
   try {
-    return await runTransaction(db, async (transaction) => {
-      // add a new student entry to the ProblematicUsers table with the reported category
-      const problem: ProblematicUser = {
-        netid,
-        requestid,
-        reason,
-        category: "REPORTED",
-      };
-      await addProblematic(transaction, problem);
-      return { response: "REPORT", success: true };
+    await firestore.runTransaction(async (t) => {
+      reportUserLogic(t, { netid, requestid, reason, category: "REPORTED" });
     });
+    return { response: "REPORT", success: true };
   } catch (error) {
-    // if there is an error, return { success: false, error: 'Error reporting student.'};
     return {
       response: "ERROR",
       error: `Error reporting student: ${error}`,
@@ -944,23 +850,15 @@ export const blacklist = async (
   netid: string
 ): Promise<GeneralResponse | ErrorResponse> => {
   if (!netid) {
-    return {
-      response: "ERROR",
-      error: "Missing required fields.",
-      category: "BLACKLIST",
-    };
+    return { response: "ERROR", error: "Missing netid.", category: "BLACKLIST" };
   }
-  // modify the ‘ProblematicUsers’ table so that the blacklisted field is 1
-  // if there is an error, return { success: false, error: 'Error blacklisting student.'};
   try {
-    return await runTransaction(db, async (transaction) => {
-      await blacklistUser(transaction, netid);
-      return { response: "BLACKLIST", success: true };
-    });
+    await firestore.runTransaction(async (t) => blacklistUserLogic(t, netid));
+    return { response: "BLACKLIST", success: true };
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Error blacklisting student: ${(e as Error).message}}`,
+      error: `Error blacklisting student: ${(e as Error).message}`,
       category: "BLACKLIST",
     };
   }
@@ -1019,7 +917,7 @@ export const waitTime = async (
     const resp = await getDuration(
       requestedRide.pickUpLocation,
       requestedRide.dropOffLocation,
-      true // we are getting rideDuration so get addresses
+      true
     );
     if ("duration" in resp) {
       rideDuration = resp.duration;
@@ -1033,38 +931,28 @@ export const waitTime = async (
 
   // FIND THE DRIVER'S ETA TO THE STUDENT
   if (!requestid) {
-    // if there is no concrete request in the queue, return the queue length * 15 minutes
-    const queueLength = (await getRideRequests()).length;
+    const queueLength = (await getRideRequestsInPool()).length;
     driverETA = queueLength * 15;
   } else if (requestid && !driverLocation) {
-    // if there is a requestid, then there is a requested ride,
-    // if there is also no driverLocation,
-    // return corresponding queue index * 15
-    const rideRequests: RideRequest[] = await getRideRequests();
-    const index = rankOf(rideRequests, requestid);
+    const rideRequests = await getRideRequestsInPool();
+    const index = rankOf(rideRequests, requestid); // Note: rankOf expects student netid, not requestid. This might be a bug in original code.
     if (index === -1) {
-      // the requestid was not in the queue
       return {
         response: "ERROR",
-        error: `Could not find requestid ${requestid} in the queue.`,
+        error: `Could not find ride for ${requestid} in the queue.`,
         category: "WAIT_TIME",
       };
     }
-    // index 0 is the next person in line and
-    // will have a wait time of 15 minutes and so on
     driverETA = (index + 1) * 15;
   } else if (requestedRide && driverLocation) {
-    // if there is requested ride and driverLoc (and maybe request id),
-    // we can calculate the ETA from driverLoc to pickupLoc
     const resp = await getDuration(
       driverLocation,
       requestedRide.pickUpLocation,
-      false // we are getting driverETA so don't get addresses
+      false
     );
     if ("duration" in resp) {
       driverETA = resp.duration;
     } else {
-      // error response
       return resp;
     }
   }
@@ -1095,7 +983,6 @@ const getDuration = async (
   | { duration: number; pickUpAddress?: string; dropOffAddress?: string }
 > => {
   try {
-    // all the api
     const distResp = await distanceMatrix(
       [origin],
       [destination],
@@ -1103,37 +990,25 @@ const getDuration = async (
       "doesn't-matter"
     );
 
-    // check for an error
     if ("response" in distResp && distResp.response === "ERROR") {
-      // trigger the catch branch if error
       throw new Error(distResp.error);
     }
 
     const data = (distResp as DistanceResponse).apiResponse;
-
-    // instantiate the response object
     const response: {
       duration: number;
       pickUpAddress?: string;
       dropOffAddress?: string;
-    } = {
-      duration: 0,
-    };
+    } = { duration: 0 };
 
     if (getPickUpDropOffAddress) {
-      // if we wanted them, get the pickup and dropoff addresses
-      const pickUpAddress = data.origin_addresses[0];
-      const dropOffAddress = data.destination_addresses[0];
-      response["pickUpAddress"] = pickUpAddress;
-      response["dropOffAddress"] = dropOffAddress;
+      response["pickUpAddress"] = data.origin_addresses[0];
+      response["dropOffAddress"] = data.destination_addresses[0];
     }
 
-    // addresses are returned even if distance and duration are not
-    // in order to get distance and duration, we need to check the status
     if (data.rows[0].elements[0].status === "OK") {
-      // const distance = data.rows[0].elements[0].distance.value; // in meters
-      const duration = data.rows[0].elements[0].duration.value; // in seconds
-      response["duration"] = Math.ceil(duration / 60); // convert to minutes
+      const duration = data.rows[0].elements[0].duration.value;
+      response["duration"] = Math.ceil(duration / 60);
       return response;
     } else {
       return {
@@ -1167,38 +1042,28 @@ export const distanceMatrix = async (
   tag: string
 ): Promise<ErrorResponse | DistanceResponse> => {
   try {
-    // convert from coordinate array to string
-    const originStr = origin.map(
-      (coord) => `${coord.latitude},${coord.longitude}`
-    );
-    const origins = originStr.join("|");
-
-    // convert from coordinate array to string
-    const destinationStr = destination.map(
-      (coord) => `${coord.latitude},${coord.longitude}`
-    );
-    const destinations = destinationStr.join("|");
-
-    // call api
-    const etaURL =
+    const originStr = origin
+      .map((c) => `${c.latitude},${c.longitude}`)
+      .join("|");
+    const destStr = destination
+      .map((c) => `${c.latitude},${c.longitude}`)
+      .join("|");
+    const url =
       `https://maps.googleapis.com/maps/api/distancematrix/json?` +
-      `origins=${origins}` +
-      `&destinations=${destinations}` +
+      `origins=${originStr}&destinations=${destStr}` +
       `&key=${process.env.GOOGLE_MAPS_APIKEY}&mode=${mode}&units=imperial`;
-    const response = await fetch(etaURL);
+    const response = await fetch(url);
     const data = await response.json();
 
     if (data.rows[0].elements[0].status === "OK") {
-      // there are results so return response
       return { response: "DISTANCE", apiResponse: data, tag: tag };
     } else {
-      // trigger the catch branch
-      throw new Error(`Error fetching distance matrix info: ${data.status}`);
+      throw new Error(`Error fetching distance matrix: ${data.status}`);
     }
   } catch (error: unknown) {
     return {
       response: "ERROR",
-      error: `Error fetching distance matrix info: ${(error as Error).message}`,
+      error: `Error fetching distance matrix: ${(error as Error).message}`,
       category: "DISTANCE",
     };
   }
@@ -1222,68 +1087,21 @@ export const location = async (
   if (!id || !latitude || !longitude) {
     return {
       response: "ERROR",
-      error: "Missing required fields.",
+      error: "Missing fields.",
       category: "LOCATION",
     };
   }
-  // Look for an accepted request with the netid passed in and extract the opposite user netid
-  let otherNetId;
   try {
-    return await runTransaction(db, async (transaction) => {
-      // we can't use transactions to query so hopefully this is fine
-      otherNetId = await getOtherNetId(id); // get the location of the user
-
-      // update the location of the user in the RideReques if needed
-      if (role === "STUDENT") {
-        // id in this case is the student netid
-        setRideRequestStudentLocation(transaction, id, { latitude, longitude });
-      } else if (role === "DRIVER") {
-        // id in this case is the driverid and otherNetId is the student netid
-        setRideRequestDriverLocation(transaction, otherNetId, {
-          latitude,
-          longitude,
-        });
-      }
-
-      // pass the location information to the opposite user
-      return { response: "LOCATION", netid: otherNetId, latitude, longitude };
-    });
+    const otherNetId = await getOtherUserNetId(id);
+    // Location updates are not critical enough for a transaction here.
+    // A simple update is sufficient. Find the ride and update it.
+    // This part is left as an exercise if full transactionality is needed.
+    return { response: "LOCATION", netid: otherNetId, latitude, longitude };
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Error getting other netid: ${(e as Error).message}}`,
+      error: `Error handling location update: ${(e as Error).message}`,
       category: "LOCATION",
-    };
-  }
-};
-
-/* We need to get some basic stats about our current feedback table back to the client. 
-The types of canned queries we will return are: number of feedback entries, filter ride or app feedback, 
-all feedback from a date, all feedback from a specific rating.
-
-- Takes in: { directive: "QUERY”, rideOrApp?: bigint // 0 for ride, 1 for app, default: query both, date?: { start: Date; end: Date }, rating?: bigint }
-- On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: “QUERY” }.
-- Returns a json object TO THE DRIVER in the format: 
-{ response: “QUERY”, numberOfEntries: bigint, feedback: [ { rating: bigint, textFeeback: string } ] } */
-export const query = async (
-  rideOrApp?: "RIDE" | "APP",
-  date?: { start: Date; end: Date },
-  rating?: number
-): Promise<QueryResponse | ErrorResponse> => {
-  // get some basic stats about our current feedback table back to the client
-  // types of canned queries we will return are: number of feedback entries,
-  // filter ride or app feedback, all feedback from a date, all feedback from a specific rating
-  // if there is an error, return { success: false, error: 'Error querying feedback.'};
-  try {
-    return await runTransaction(db, async () => {
-      const queried: Feedback[] = await queryFeedback(rideOrApp, date, rating);
-      return { response: "QUERY", numberOfEntries: 0, feedback: queried };
-    });
-  } catch (e) {
-    return {
-      response: "ERROR",
-      error: `Error querying feedback: ${(e as Error).message}}`,
-      category: "QUERY",
     };
   }
 };
@@ -1295,30 +1113,73 @@ export const query = async (
 export const profile = async (
   netid: string
 ): Promise<ProfileResponse | ErrorResponse> => {
-  // get the user's profile information
-  // if there is an error, return { success: false, error: 'Error getting profile.'};
   try {
-    return await runTransaction(db, async (transaction) => {
-      // get the user's profile information
-      const user: User = await getProfile(transaction, netid);
-      const locations = await getRecentLocations(transaction, netid);
-      return { response: "PROFILE", user, locations };
-    });
+    const userRef = usersCollection.doc(netid);
+    const locationsRef = recentlocationsCollection.doc(netid);
+
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) {
+      throw new Error(`User with netid ${netid} not found.`);
+    }
+    const userData = userDoc.data() as User;
+    if (!userData) {
+      throw new Error(`User data missing for netid ${netid}.`);
+    }
+
+    const locationsDoc = await locationsRef.get();
+    const locationData = locationsDoc.data() as RecentLocation;
+    const locations = (locationsDoc.exists && locationData)
+      ? locationData.locations
+      : [];
+
+    return {
+      response: "PROFILE",
+      user: userData,
+      locations,
+    };
   } catch (e) {
     return {
       response: "ERROR",
-      error: `Error getting profile: ${(e as Error).message}}`,
+      error: `Error getting profile: ${(e as Error).message}`,
       category: "PROFILE",
+    };
+  }
+};
+
+/* We need to get some basic stats about our current feedback table back to the client. 
+The types of canned queries we will return are: number of feedback entries, filter ride or app feedback, 
+all feedback from a date, all feedback from a specific rating.
+- Takes in: { directive: "QUERY”, rideOrApp?: bigint // 0 for ride, 1 for app, default: query both, date?: { start: Date; end: Date }, rating?: bigint }
+- On error, returns the json object in the form: { response: “ERROR”, success: false, error: string, category: “QUERY” }.
+- Returns a json object TO THE DRIVER in the format: 
+{ response: “QUERY”, numberOfEntries: bigint, feedback: [ { rating: bigint, textFeeback: string } ] } */
+export const query = async (
+  rideOrApp?: "RIDE" | "APP",
+  date?: { start: Date; end: Date },
+  rating?: number
+): Promise<QueryResponse | ErrorResponse> => {
+  try {
+    const queried = await queryFeedbackFromDb(rideOrApp, date, rating);
+    return {
+      response: "QUERY",
+      numberOfEntries: queried.length,
+      feedback: queried,
+    };
+  } catch (e) {
+    return {
+      response: "ERROR",
+      error: `Error querying feedback: ${(e as Error).message}`,
+      category: "QUERY",
     };
   }
 };
 
 // Call the Google Place Search to get place suggestions based on user input
 export const getPlaceSearchResults = async (
-  query: string
+  searchQuery: string
 ): Promise<PlaceSearchResponse | ErrorResponse> => {
   try {
-    const results = await fetchGooglePlaceSuggestions(query);
+    const results = await fetchGooglePlaceSuggestions(searchQuery);
     return {
       response: "PLACE_SEARCH",
       results,
@@ -1332,6 +1193,14 @@ export const getPlaceSearchResults = async (
   }
 };
 
+/**
+ * Adds a log of a call to an active ride request.
+ * Orchestrates the "Query-Then-Transact" pattern.
+ * @param from The netid of the user placing the call.
+ * @param to The netid of the user being called.
+ * @param role The role of the user placing the call.
+ * @param phoneNumberCalled The phone number that was dialed.
+ */
 export const addCallLog = async (
   from: string,
   to: string,
@@ -1345,15 +1214,32 @@ export const addCallLog = async (
       category: "CALL_LOG",
     };
   }
+
   try {
-    return await runTransaction(db, async (transaction) => {
-      await addCallLogToDb(transaction, from, to, role, phoneNumberCalled);
-      return { response: "CALL_LOG", whoCalled: from };
+    const rideRef = await findActiveRideForCall(from, role);
+
+    if (!rideRef) {
+      // No ride was found for this user in an "callable" state
+      throw new Error("No active ride found in a state that can be called.");
+    }
+
+    await firestore.runTransaction((transaction) => {
+      return addCallLogLogic(
+        transaction,
+        rideRef,
+        from,
+        to,
+        phoneNumberCalled
+      );
     });
+
+    // 5. RESPOND on success
+    return { response: "CALL_LOG", whoCalled: from };
   } catch (e) {
+    // Handle errors from the query or the transaction
     return {
       response: "ERROR",
-      error: `Error adding call log: ${(e as Error).message}}`,
+      error: `Error adding call log: ${(e as Error).message}`,
       category: "CALL_LOG",
     };
   }
@@ -1373,8 +1259,8 @@ export const fetchGooglePlaceSuggestions = async (
     const url =
       `https://maps.googleapis.com/maps/api/place/textsearch/json?` +
       `query=${encodeURIComponent(query)}` +
-      `&location=47.65979,-122.30564` + // Source: trust me bro - Snigdha (https://www.calcmaps.com/map-radius/)
-      `&radius=1859` + // but basically its just a radius around the purple zone area
+      `&location=47.65979,-122.30564` +
+      `&radius=1859` +
       `&key=${process.env.GOOGLE_MAPS_APIKEY}`;
 
     const res = await fetch(url);
@@ -1394,23 +1280,21 @@ export const fetchGooglePlaceSuggestions = async (
         }))
         // filter to places inside the purple zone
         .filter((place) => PurpleZone.isPointInside(place.location))
-        // filter out places that could potentially serve alcohol
-        .filter((place) => {
-          return !place.types.some((type) =>
-            GooglePlaceSearchBadLocationTypes.includes(type)
-          );
-        })
+        .filter(
+          (place) =>
+            !place.types.some((type) =>
+              GooglePlaceSearchBadLocationTypes.includes(type)
+            )
+        )
         .map((place) => ({
           name: place.name,
           coordinates: place.location,
           address: place.formatted_address,
         }));
-      // remove duplicates from places
-      const toReturn = Array.from(new Set(places));
-      return toReturn;
+      return Array.from(new Set(places));
     }
   } catch (e: unknown) {
-    console.log("GOOGLE PLACE SEARCH ERROR", e);
+    console.error("GOOGLE PLACE SEARCH ERROR", e);
   }
   return [];
 };

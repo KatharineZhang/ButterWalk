@@ -1,4 +1,4 @@
-import { RideRequest } from "./api";
+import { RideRequest } from "../api";
 
 // This file encapsulates the ranking alogithm / blackbox used to rank ride requests
 // and decide which one to return to a given driver at any time.

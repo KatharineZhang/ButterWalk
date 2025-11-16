@@ -41,7 +41,7 @@ import {
   ViewRideRequestResponse,
   WrapperCancelResponse,
 } from "./api";
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from "firebase-admin/firestore";
 
 export const handleWebSocketMessage = async (
   ws: WebSocketServer,
