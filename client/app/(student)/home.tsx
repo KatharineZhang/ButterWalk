@@ -45,7 +45,7 @@ export default function HomePage() {
   // which bottom component to show
   const [whichComponent, setWhichComponent] = useState<
     "rideReq" | "confirmRide" | "Loading" | "handleRide"
-  >("handleRide");
+  >("rideReq");
 
   // what notification to show
   const [notifState, setNotifState] = useState<NotificationType>({

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 import { styles } from "@/assets/styles";
 import WebSocketService from "@/services/WebSocketService";
 import { useEffect, useState, useRef } from "react";
