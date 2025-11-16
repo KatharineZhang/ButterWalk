@@ -79,9 +79,9 @@ function Message({ isVisible, onClose, studentId, driverId }: MessageProps) {
 
     const prevTime = prevMsg.toReceiver.timestamp.toMillis();
     const currTime = currMsg.toReceiver.timestamp.toMillis();
-    const FIVE_MIN = 5 * 60 * 1000;
+    const THREE_MIN = 3 * 60 * 1000;
 
-    const timeClose = currTime - prevTime < FIVE_MIN;
+    const timeClose = currTime - prevTime < THREE_MIN;
 
     return !timeClose;
   }
