@@ -39,6 +39,7 @@ import { useRouter } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import DisconnectedModal from "@/components/Both_Disconnected";
 import { Coordinates } from "@/services/BuildingService";
+import Message from "./message";
 
 export type HandleRidePhase =
   | "headingToPickup"

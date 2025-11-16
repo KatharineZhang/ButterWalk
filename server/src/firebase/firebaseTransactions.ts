@@ -28,6 +28,12 @@ import {
 } from "./firebaseQueries";
 import { defaultCampusLocations } from "../constants/defaultCampusLocations";
 
+import {
+  getDocs,
+  query,
+  where
+} from "firebase/firestore";
+
 /**
  * Logic to create a new user if they don't exist and are not blacklisted.
  * This also creates a default list of recent locations for the new user.
@@ -342,4 +348,63 @@ export async function addCallLogLogic(
   t.update(rideRef, {
     callLog: [...oldCallLog, newCallLogEntry],
   });
+}
+
+// Adds a chat message to the message log of an active ride request
+export async function addChatToRideRequest(
+  transaction: Transaction,
+  senderID: string,
+  recipientID: string,
+  message: string,
+  timestamp: Timestamp,
+  role: "STUDENT" | "DRIVER"
+): Promise<void> {
+  // builds the query based on the sender’s role
+  let queryRide;
+  if (role === "STUDENT") {
+    queryRide = query(
+      rideRequestsCollection,
+      where("netid", "==", senderID),
+      where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS])
+    );
+  } else {
+    queryRide = query(
+      rideRequestsCollection,
+      where("driverid", "==", senderID),
+      where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS])
+    );
+  }
+
+  const res = await getDocs(queryRide);
+
+  if (res.empty) {
+    throw new Error(`No active ride request found for sender ${senderID}`);
+  }
+  if (res.docs.length > 1) {
+    throw new Error(`Multiple active ride requests found for sender ${senderID}`);
+  }
+
+  const docRef = res.docs[0].ref;
+  const docSnap = await transaction.get(docRef);
+
+  if (!docSnap.exists()) {
+    throw new Error("Ride Request data is undefined");
+  }
+
+  const rideRequest = docSnap.data() as RideRequest;
+
+  // new message log
+  const newMessageEntry = {
+    sender: senderID,
+    recipient: recipientID,
+    message,
+    timestamp,
+  };
+
+  const updatedMessageLog = [
+    ...(rideRequest.messageLog || []),
+    newMessageEntry,
+  ];
+
+  transaction.update(docRef, { messageLog: updatedMessageLog });
 }

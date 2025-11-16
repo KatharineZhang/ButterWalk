@@ -1,15 +1,15 @@
 import dotenv from "dotenv";
 import { AuthSessionResult } from "expo-auth-session";
 // Removed client-side imports
-// import {
-//   runTransaction,
+import {
+  runTransaction,
 //   doc,
 //   getDoc,
 //   DocumentReference,
-// } from "firebase/firestore";
+} from "firebase/firestore";
 
 // Added admin-side imports
-import { DocumentReference } from "firebase-admin/firestore";
+import { DocumentReference, Timestamp } from "firebase-admin/firestore";
 import { firestore } from "./firebase/firebaseConfig"; // Import the admin firestore service
 
 import {
@@ -57,6 +57,7 @@ import {
 } from "./firebase/firebaseQueries";
 import {
   addCallLogLogic,
+  addChatToRideRequest,
   addFeedbackLogic,
   addRideRequestToPoolLogic,
   assignRideForViewingLogic,
