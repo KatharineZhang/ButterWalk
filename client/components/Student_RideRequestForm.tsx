@@ -139,7 +139,7 @@ export default function RideRequestForm({
   // the user clicked a dropdown result
   // figure out if it was a pickup or dropoff and call the right function
   const handleSelection = (value: string) => {
-    if (currentQuery === "pickup") {
+    if (currentQuery !== "dropoff") {
       setPickUpQuery(value);
       //switch to dropoff
       setCurrentQuery("dropoff");
