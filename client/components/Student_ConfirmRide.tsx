@@ -252,7 +252,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
         >
           <Text
             style={{
-              color: "#4B2E83",
+              color: "white",
               fontSize: 18,
             }}
           >

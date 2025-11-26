@@ -584,8 +584,7 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
   },
   confirmButton: {
-    borderWidth: 2,
-    borderColor: "#4B2E83",
+    backgroundColor: "#4B2E83",
   },
   cancelButton: {
     backgroundColor: "red",
