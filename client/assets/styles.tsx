@@ -970,6 +970,7 @@ export const loadingPageCompStyles = StyleSheet.create({
     alignItems: "center",
     height: 150,
     justifyContent: "space-between",
+    wordWrap: "normal",
   },
   mainTextTypography: {
     color: "#FFF",
