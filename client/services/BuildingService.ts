@@ -185,43 +185,43 @@ export class BuildingService {
     {
       name: "Central Plaza Garage C1",
       location: {
-        latitude: 47.656872597222964,
-        longitude: -122.31167702345559,
+        latitude: 47.655001739100825,
+        longitude: -122.3099611359588,
       },
     },
     {
       name: "Central Plaza Garage C2",
       location: {
-        latitude: 47.656872597222964,
-        longitude: -122.31167702345559,
+        latitude: 47.655001739100825,
+        longitude: -122.3099611359588,
       },
     },
     {
       name: "Central Plaza Garage C3",
       location: {
-        latitude: 47.656872597222964,
-        longitude: -122.31167702345559,
+        latitude: 47.655001739100825,
+        longitude: -122.3099611359588,
       },
     },
     {
       name: "Central Plaza Garage C4",
       location: {
-        latitude: 47.656872597222964,
-        longitude: -122.31167702345559,
+        latitude: 47.655001739100825,
+        longitude: -122.3099611359588,
       },
     },
     {
       name: "Central Plaza Garage C5",
       location: {
-        latitude: 47.656872597222964,
-        longitude: -122.31167702345559,
+        latitude: 47.655001739100825,
+        longitude: -122.3099611359588,
       },
     },
     {
       name: "Central Plaza Garage C6",
       location: {
-        latitude: 47.656872597222964,
-        longitude: -122.31167702345559,
+        latitude: 47.655001739100825,
+        longitude: -122.3099611359588,
       },
     },
     {
