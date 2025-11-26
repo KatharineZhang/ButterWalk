@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  KeyboardAvoidingView,
   Pressable,
   TextInput,
   TouchableWithoutFeedback,
@@ -76,14 +75,14 @@ const Login = () => {
     />
   ) : (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <KeyboardAvoidingView
+      <View
         style={{
           flex: 1,
           justifyContent: "center",
           paddingHorizontal: 40,
           backgroundColor: "#fff",
         }}
-        behavior="padding"
+        // behavior="padding"
       >
         <View style={{ position: "absolute", top: "5%", left: "5%" }}>
           <Link href="/driverOrstudent" asChild>
@@ -167,7 +166,7 @@ const Login = () => {
             Log In
           </Text>
         </Pressable>
-      </KeyboardAvoidingView>
+      </View>
     </TouchableWithoutFeedback>
   );
 };
