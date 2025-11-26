@@ -600,7 +600,6 @@ export const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "white",
     padding: 16,
-    borderRadius: 10,
     width: "100%",
   },
   progressBarTop: {

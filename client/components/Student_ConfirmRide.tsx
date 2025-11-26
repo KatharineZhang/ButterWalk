@@ -41,7 +41,6 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
     <View
       style={{
         backgroundColor: "white",
-        borderRadius: 10,
         position: "absolute",
         bottom: 0,
         width: "100%",

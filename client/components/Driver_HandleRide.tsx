@@ -228,7 +228,6 @@ export default function HandleRide({
           width: "100%",
           backgroundColor: "white",
           paddingHorizontal: 16,
-          borderRadius: 10,
           paddingVertical: "8%",
           paddingBottom:
             phase === "waitingForPickup" || phase === "arrivedAtDropoff"

@@ -64,7 +64,6 @@ export default function RequestAvailable({
           width: "100%",
           backgroundColor: "white",
           paddingHorizontal: 16,
-          borderRadius: 10,
           paddingVertical: "8%",
         },
         showAcceptScreen && { paddingBottom: "21%" }, // the screens require different padding since the containers in each screen took up different sizing

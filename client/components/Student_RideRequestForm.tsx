@@ -990,7 +990,6 @@ export default function RideRequestForm({
         width: "100%",
         backgroundColor: "white",
         padding: 16,
-        borderRadius: 10,
       }}
       onLayout={(event) => {
         // on render, update the sidebar height to the height of this component
