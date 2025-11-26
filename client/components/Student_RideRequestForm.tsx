@@ -119,9 +119,9 @@ export default function RideRequestForm({
   const [previousDropOffQuery, setPreviousDropOffQuery] = useState(""); // Previous dropoff query
 
   // which text box is currently being updated
-  const [currentQuery, setCurrentQuery] = useState<"pickup" | "dropoff">(
-    "pickup"
-  );
+  const [currentQuery, setCurrentQuery] = useState<
+    "none" | "pickup" | "dropoff"
+  >("none");
 
   // if the user clicks current location on campus, give them the closest Building
   const [closestBuilding, setClosestBuilding] = useState<string>("");
@@ -493,6 +493,8 @@ export default function RideRequestForm({
         query: text,
       });
     }
+    // remove the focused styling on the textbox
+    setCurrentQuery("none");
   };
 
   // TEST: call place search every time the text changes,
@@ -759,6 +761,7 @@ export default function RideRequestForm({
                     setCurrentQuery("pickup");
                     expand();
                   }}
+                  focused={currentQuery == "pickup"}
                   query={pickUpQuery}
                   setQuery={(query) => {
                     setPickUpQuery(query);
@@ -772,6 +775,7 @@ export default function RideRequestForm({
                     setCurrentQuery("dropoff");
                     expand();
                   }}
+                  focused={currentQuery == "dropoff"}
                   query={dropOffQuery}
                   setQuery={(query) => {
                     setDropOffQuery(query);
