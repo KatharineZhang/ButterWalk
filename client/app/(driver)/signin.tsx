@@ -8,7 +8,7 @@ import {
   Keyboard,
 } from "react-native";
 import { useEffect, useState } from "react";
-import { Redirect } from "expo-router";
+import { Link, Redirect } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
@@ -85,6 +85,13 @@ const Login = () => {
         }}
         behavior="padding"
       >
+        <View style={{ position: "absolute", top: "5%", left: "5%" }}>
+          <Link href="/driverOrstudent" asChild>
+            <Pressable>
+              <Ionicons name="arrow-back" size={40} color="#4B2E83" />
+            </Pressable>
+          </Link>
+        </View>
         <Text
           style={{
             fontSize: 30,
@@ -147,7 +154,7 @@ const Login = () => {
           style={{
             backgroundColor: driverId.length > 0 ? "#4B2E83" : "gray",
             borderRadius: 16,
-            marginTop: 280, 
+            marginTop: 280,
             width: "100%",
             height: 70,
             justifyContent: "center",
