@@ -948,16 +948,22 @@ export default function HomePage() {
             position: "absolute",
             // set the height of the sidebar to the height of the current component + padding
             bottom: currentComponentHeight + 10,
-            left: 10,
+            paddingHorizontal: 10,
             alignItems: "flex-start",
+            width: "100%",
+            flexDirection: "row",
+            justifyContent: "space-between",
           }}
         >
+          {/* Side map legend */}
+          {whichComponent == "rideReq" ? <Legend /> : null}
+
           {/* Recenter Button */}
           <Pressable
             style={{
               backgroundColor: "#4b2e83",
-              width: 35,
-              height: 35,
+              width: 45,
+              height: 45,
               borderRadius: 50,
               borderWidth: 3,
               borderColor: "white",
@@ -966,14 +972,12 @@ export default function HomePage() {
               marginBottom: 10,
               shadowOpacity: 0.3,
               left: 2,
+              alignSelf: "flex-end",
             }}
             onPress={recenter}
           >
-            <Ionicons name="locate" size={20} color="white" />
+            <Ionicons name="locate" size={30} color="white" />
           </Pressable>
-
-          {/* Side map legend */}
-          <Legend role={"STUDENT"}></Legend>
         </View>
 
         {/* Figure out which component to render */}
