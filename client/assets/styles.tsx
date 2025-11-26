@@ -366,7 +366,6 @@ export const styles = StyleSheet.create({
     backgroundColor: "white",
     justifyContent: "center",
     alignItems: "center",
-    borderBottomWidth: 1,
     borderBottomColor: "#4B2E83",
   },
   infoText: {
