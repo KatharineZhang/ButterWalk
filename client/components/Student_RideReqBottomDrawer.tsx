@@ -1,5 +1,17 @@
-import React, { forwardRef, useImperativeHandle, useState, useRef, useEffect } from "react";
-import { View, StyleSheet, Dimensions, PanResponder, Animated } from "react-native";
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useState,
+  useRef,
+  useEffect,
+} from "react";
+import {
+  View,
+  StyleSheet,
+  Dimensions,
+  PanResponder,
+  Animated,
+} from "react-native";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
