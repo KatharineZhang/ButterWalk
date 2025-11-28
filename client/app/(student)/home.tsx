@@ -469,6 +469,7 @@ export default function HomePage() {
         setDropOffAddress(ride.locationTo.address);
         setWhichComponent("handleRide");
         setDriverLocation(ride.driverLocation.coords);
+        setRequestID(ride.requestId);
 
         // on student side, if there is a ride, go to handle ride component
         setWhichComponent("handleRide");
@@ -512,10 +513,10 @@ export default function HomePage() {
           });
           // if the ride is not completed,
           // show a quick alert telling the student to cancel if needed
-          alert(
-            "Seems like you have an active ride!" +
-              " If you didn't want this ride, hit the cancel ride button."
-          );
+          // alert(
+          //   "Seems like you have an active ride!" +
+          //     " If you didn't want this ride, hit the cancel ride button."
+          // );
         }
       }
       // no active ride request, do nothing

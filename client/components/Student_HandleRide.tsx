@@ -201,7 +201,15 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
                 : status == "RideInProgress"
                   ? // convert the arrival time to our best guess of the user's timezone
                     `Estimated Arrival Time: ${momentTimezone.tz(moment().add(rideDuration, "minutes"), moment.tz.guess()).format("h:mm A")}`
-                  : `Estimated Wait Time: ${driverETA == 0 ? "<2" : driverETA} min`}
+                  : status == "WaitingForRide"
+                    ? `${
+                        driverETA == 0
+                          ? "You are first in line!"
+                          : driverETA == 1
+                            ? "1 person ahead of you in line"
+                            : driverETA + " people ahead of you in line"
+                      }`
+                    : `Estimated Wait Time: ${driverETA == 0 ? "<2" : driverETA} min`}
             </Text>
           </View>
         )}
