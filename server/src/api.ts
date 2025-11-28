@@ -30,7 +30,8 @@ export type Command =
   | "DISCONNECT"
   | "PLACE_SEARCH"
   | "LOAD_RIDE"
-  | "CALL_LOG";
+  | "CALL_LOG"
+  | "PING";
 
 // Input types
 export type WebSocketMessage =
@@ -154,7 +155,8 @@ export type WebSocketMessage =
       to: string;
       role: "STUDENT" | "DRIVER";
       phoneNumberCalled: string;
-  };
+    }
+  | {directive: "PING"};
 
 // TEMP FIX
 export type ConnectMessage = {
@@ -183,7 +185,8 @@ export type WebSocketResponse =
   | ViewDecisionResponse
   | PlaceSearchResponse
   | LoadRideResponse
-  | CallLogResponse;
+  | CallLogResponse
+  | PingResponse;
 
 export type LocationType = {
   name: string;
@@ -198,6 +201,10 @@ export type GeneralResponse = {
   response: Command;
   success: true;
 };
+
+export type PingResponse = {
+  response: "PING"
+}
 
 export type StudentSignInResponse = {
   response: "SIGNIN";
