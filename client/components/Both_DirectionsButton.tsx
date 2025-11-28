@@ -2,22 +2,25 @@ import { Pressable, Text, Linking } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
 
 interface DirectionsProps {
-  pickUpLocation: {
+  locationTo: {
     latitude: number;
     longitude: number;
   };
+  role: "STUDENT" | "DRIVER";
 }
 
-export default function Student_DirectionsButton({
-  pickUpLocation,
+export default function DirectionsButton({
+  locationTo,
+  role,
 }: DirectionsProps) {
   // Function to open Google Maps with directions while app still runs in background
   const openGoogleMapsDirections = async (destination: {
     latitude: number;
     longitude: number;
   }) => {
+    const mode = role == "STUDENT" ? "walking" : "driving";
     try {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${destination.latitude},${destination.longitude}&travelmode=walking`;
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${destination.latitude},${destination.longitude}&travelmode=${mode}`;
 
       const canOpen = await Linking.canOpenURL(url);
       if (canOpen) {
@@ -47,7 +50,7 @@ export default function Student_DirectionsButton({
         elevation: 2,
       }}
       onPress={() => {
-        openGoogleMapsDirections(pickUpLocation);
+        openGoogleMapsDirections(locationTo);
       }}
     >
       <FontAwesome5 name="directions" size={20} color="#4B2E83" />

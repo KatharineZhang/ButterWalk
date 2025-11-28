@@ -36,7 +36,7 @@ import LoadingPageComp from "@/components/Student_LoadingPage";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Legend from "@/components/Student_Legend";
 import DisconnectedModal from "@/components/Both_Disconnected";
-import Student_DirectionsButton from "@/components/Student_DirectionsButton";
+import DirectionsButton from "@/components/Both_DirectionsButton";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -989,7 +989,10 @@ export default function HomePage() {
                   alignItems: "flex-end",
                 }}
               >
-                <Student_DirectionsButton pickUpLocation={pickUpLocation} />
+                <DirectionsButton
+                  locationTo={pickUpLocation}
+                  role={"STUDENT"}
+                />
               </View>
             )
           : null}

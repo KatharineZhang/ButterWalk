@@ -11,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import moment from "moment";
 import momentTimezone from "moment-timezone";
 import { NotificationType } from "./Both_Notification";
-import Both_ProgressBar from "./Both_ProgressBar";
+import ProgressBar from "./Both_ProgressBar";
 
 export type RideStatus =
   | "WaitingForRide" // the ride has been requested
@@ -218,7 +218,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             : {},
         ]}
       >
-        <Both_ProgressBar
+        <ProgressBar
           rideStatus={
             status === "WaitingForRide"
               ? "start"
@@ -318,10 +318,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
           >
             {/* I Have Arrived Button */}
             <Pressable
-              style={[
-                styles.bottomModalButton,
-                { borderWidth: 2, backgroundColor: "#4B2E83" },
-              ]}
+              style={[styles.bottomModalButton, { backgroundColor: "#4B2E83" }]}
               onPress={() => {
                 setShowWaitingForConfirmation(true);
               }}

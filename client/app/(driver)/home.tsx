@@ -39,6 +39,7 @@ import { useRouter } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import DisconnectedModal from "@/components/Both_Disconnected";
 import { Coordinates } from "@/services/BuildingService";
+import DirectionsButton from "@/components/Both_DirectionsButton";
 
 export type HandleRidePhase =
   | "headingToPickup"
@@ -1096,7 +1097,6 @@ export default function HomePage() {
             borderColor: "white",
             justifyContent: "center",
             alignItems: "center",
-            marginBottom: 10,
             shadowOpacity: 0.3,
             left: 2,
             alignSelf: "flex-end",
@@ -1105,6 +1105,18 @@ export default function HomePage() {
         >
           <Ionicons name="locate" size={30} color="white" />
         </Pressable>
+
+        {/* Directions button - positioned on the right side */}
+        {whichComponent.current === "handleRide" && (
+          <DirectionsButton
+            locationTo={
+              phase == "waitingForPickup" || phase == "headingToPickup"
+                ? pickUpLocation
+                : dropOffLocation
+            }
+            role={"DRIVER"}
+          />
+        )}
       </View>
 
       {/* Decide which component to render */}

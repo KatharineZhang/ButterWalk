@@ -14,7 +14,7 @@ type ProgressBarProps = {
   role: "STUDENT" | "DRIVER";
 };
 
-export default function Both_ProgressBar({
+export default function ProgressBar({
   rideStatus,
   pickupAddress,
   dropoffAddress,
@@ -124,7 +124,7 @@ export default function Both_ProgressBar({
         <View
           style={[
             progressBarStyles.progressBarLabelSectionDropoff,
-            { paddingLeft: "2%" },
+            { paddingLeft: "4%" },
           ]}
         >
           <Text style={progressBarStyles.progressBarLabel}>Dropoff</Text>
