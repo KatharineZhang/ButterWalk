@@ -683,7 +683,7 @@ export default function RideRequestForm({
   // If the query is empty, show recent locations first, then all campus locations,
   // and finally external place search results (excluding duplicates).
   const formattedResults: FormattedResult[] =
-    (currentQuery === "pickup" ? pickUpQuery : dropOffQuery) == ""
+    (currentQuery !== "dropoff" ? pickUpQuery : dropOffQuery) == ""
       ? [
           // Only show campusAPIResults if the query is not empty
           ...recentLocations.map((item, index) => ({
@@ -871,7 +871,7 @@ export default function RideRequestForm({
             data={formattedResults}
             keyExtractor={(item) => item.key}
             ListHeaderComponent={
-              currentQuery === "pickup" ? (
+              currentQuery !== "dropoff" ? (
                 <TouchableOpacity
                   onPress={() => handleSelection("Current Location")}
                   key="current-location"
