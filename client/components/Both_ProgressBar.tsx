@@ -3,6 +3,17 @@ import { FontAwesome6, Entypo, FontAwesome } from "@expo/vector-icons";
 import { progressBarStyles } from "../assets/styles";
 import { useState } from "react";
 
+type ProgressBarProps = {
+  rideStatus: "start" | "pickup" | "dropoff";
+  pickupAddress: string;
+  dropoffAddress: string;
+  pickUpLocationName: string;
+  dropOffLocationName: string;
+  driverToPickupMinutes?: number;
+  pickupToDropoffMinutes?: number;
+  role: "STUDENT" | "DRIVER";
+};
+
 export default function Both_ProgressBar({
   rideStatus,
   pickupAddress,
@@ -11,15 +22,8 @@ export default function Both_ProgressBar({
   dropOffLocationName,
   driverToPickupMinutes,
   pickupToDropoffMinutes,
-}: {
-  rideStatus: "start" | "pickup" | "dropoff";
-  pickupAddress: string;
-  dropoffAddress: string;
-  pickUpLocationName: string;
-  dropOffLocationName: string;
-  driverToPickupMinutes?: number;
-  pickupToDropoffMinutes?: number;
-}) {
+  role,
+}: ProgressBarProps) {
   const [showDetails, setShowDetails] = useState(false);
 
   // Define icon colors based on rideStatus
@@ -35,12 +39,12 @@ export default function Both_ProgressBar({
 
   if (rideStatus === "start") {
     startColor = black;
-    pickupColor = grey;
-    dropoffColor = grey;
+    pickupColor = purple;
+    dropoffColor = red;
   } else if (rideStatus === "pickup") {
     startColor = grey;
     pickupColor = purple;
-    dropoffColor = grey;
+    dropoffColor = red;
   } else if (rideStatus === "dropoff") {
     startColor = grey;
     pickupColor = grey;
@@ -64,11 +68,13 @@ export default function Both_ProgressBar({
               {pickupToDropoffMinutes} min
             </Text>
           )}
-          <Pressable onPress={() => setShowDetails(!showDetails)}>
-            <Text style={progressBarStyles.progressBarDetailsLink}>
-              {showDetails ? "Less Details" : "More Details"}
-            </Text>
-          </Pressable>
+          {role == "DRIVER" && (
+            <Pressable onPress={() => setShowDetails(!showDetails)}>
+              <Text style={progressBarStyles.progressBarDetailsLink}>
+                {showDetails ? "Less Details" : "More Details"}
+              </Text>
+            </Pressable>
+          )}
         </View>
       </View>
 
@@ -95,7 +101,12 @@ export default function Both_ProgressBar({
       </View>
 
       {/* Row 3: Labels */}
-      <View style={progressBarStyles.progressBarLabelRow}>
+      <View
+        style={[
+          progressBarStyles.progressBarLabelRow,
+          { marginHorizontal: "3.5%", marginTop: "1%" },
+        ]}
+      >
         <View style={progressBarStyles.progressBarLabelSectionStart}>
           <Text style={progressBarStyles.progressBarLabel}>Start</Text>
         </View>
@@ -110,7 +121,12 @@ export default function Both_ProgressBar({
             </Text>
           )}
         </View>
-        <View style={progressBarStyles.progressBarLabelSectionDropoff}>
+        <View
+          style={[
+            progressBarStyles.progressBarLabelSectionDropoff,
+            { paddingLeft: "2%" },
+          ]}
+        >
           <Text style={progressBarStyles.progressBarLabel}>Dropoff</Text>
           <Text style={progressBarStyles.progressBarLocationNameDropoff}>
             {dropOffLocationName}

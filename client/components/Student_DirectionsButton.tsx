@@ -33,7 +33,6 @@ export default function Student_DirectionsButton({
     <Pressable
       style={{
         backgroundColor: "#F5F5F5",
-        borderWidth: 2, // Add border width
         borderColor: "#6B4FA3",
         paddingVertical: 10,
         paddingHorizontal: 16,

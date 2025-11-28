@@ -234,6 +234,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             walkDuration > driverETA ? walkDuration : driverETA
           }
           pickupToDropoffMinutes={rideDuration}
+          role={"STUDENT"}
         />
       </View>
       {/* Cancel Button */}

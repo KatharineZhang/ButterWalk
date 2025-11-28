@@ -443,6 +443,11 @@ export default function HomePage() {
       resetAllFields();
       setWhichComponent("noRequests");
       whichComponent.current = "noRequests";
+      setNotifState({
+        text: "Successfully completed ride",
+        color: "#C9FED0",
+        trigger: Date.now(),
+      });
     } else {
       // if not successful, log the error
       const errMessage = message as ErrorResponse;

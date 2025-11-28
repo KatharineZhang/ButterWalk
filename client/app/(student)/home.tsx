@@ -967,7 +967,6 @@ export default function HomePage() {
               borderColor: "white",
               justifyContent: "center",
               alignItems: "center",
-              marginBottom: 10,
               shadowOpacity: 0.3,
               left: 2,
               alignSelf: "flex-end",
