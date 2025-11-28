@@ -155,6 +155,7 @@ export default function HomePage() {
   const [user, setUser] = useState<User>({} as User);
 
   /* CONFIRM RIDE STATE AND METHODS */
+  const [confirmAllowed, setConfirmAllowed] = useState<boolean>(true);
   // the amount of time the ride will take
   const [rideDuration, setRideDuration] = useState(0);
   // the amount of time the driver will take to reach the student
@@ -842,6 +843,12 @@ export default function HomePage() {
         const walkSeconds =
           distanceResp.apiResponse.rows[0].elements[0].duration.value;
         const walkMin = Math.floor(walkSeconds / 60);
+        setShowRequestLoading(false);
+        // go to confirm ride page
+        setWhichComponent("confirmRide");
+        setWalkDuration(walkMin); // convert seconds to minutes
+        setWalkAddress(distanceResp.apiResponse.origin_addresses[0]);
+
         if (walkMin > 20) {
           // send a notification
           setNotifState({
@@ -849,15 +856,10 @@ export default function HomePage() {
             color: "#FFCBCB",
             trigger: Date.now(),
           });
-          // exit
-          setShowRequestLoading(false);
-          return;
+          // return;
+          // invalidate confirm button
+          setConfirmAllowed(false);
         }
-        // everything is good, set state and go to the confirm ride page
-        setShowRequestLoading(false);
-        setWalkDuration(walkMin); // convert seconds to minutes
-        setWalkAddress(distanceResp.apiResponse.origin_addresses[0]);
-        setWhichComponent("confirmRide");
       }
     } else {
       console.log("Distance response error: ", message);
@@ -1012,6 +1014,7 @@ export default function HomePage() {
                 walkDuration={walkDuration}
                 driverETA={driverETA}
                 numPassengers={numPassengers}
+                confirmAllowed={confirmAllowed}
                 onClose={closeConfirmRide}
                 onConfirm={requestRide}
                 setFAQVisible={setFAQVisible}
