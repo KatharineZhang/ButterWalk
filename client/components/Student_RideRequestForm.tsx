@@ -136,6 +136,17 @@ export default function RideRequestForm({
     PlaceSearchResult[]
   >([]);
 
+  useEffect(() => {
+    if (chosenPickup != "" && chosenDropoff != "") {
+      // if both locations are chosen, shrink form to original size
+      if (bottomSheetRef == null) {
+        console.log("bottomSheetRef is null");
+        return;
+      }
+      bottomSheetRef.current?.shrink();
+    }
+  }, [chosenPickup, chosenDropoff]);
+
   // the user clicked a dropdown result
   // figure out if it was a pickup or dropoff and call the right function
   const handleSelection = (value: string) => {
@@ -849,7 +860,13 @@ export default function RideRequestForm({
         </View>
 
         {/* Suggestions */}
-        <View style={{ flex: 1, height: suggestionListHeight }}>
+        <View
+          style={{
+            flex: 1,
+            height: suggestionListHeight,
+            marginBottom: screenHeight * 0.17,
+          }}
+        >
           <FlatList
             data={formattedResults}
             keyExtractor={(item) => item.key}
