@@ -37,12 +37,14 @@ import LoadingPageComp from "@/components/Student_LoadingPage";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Legend from "@/components/Student_Legend";
 import DisconnectedModal from "@/components/Both_Disconnected";
+import Message from "./message";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
   const { netid } = useLocalSearchParams<{ netid: string }>();
   // FAQ State
   const [FAQVisible, setFAQVisible] = useState(false);
+  const [messageVisible, setMessageVisible] = useState(false);
   // which bottom component to show
   const [whichComponent, setWhichComponent] = useState<
     "rideReq" | "confirmRide" | "Loading" | "handleRide"
@@ -210,6 +212,8 @@ export default function HomePage() {
   const [walkAddress, setWalkAddress] = useState("");
   // the amount of minutes it will take to walk to the pickup location
   const [walkDuration, setWalkDuration] = useState(0);
+  // the id of the driver picking up the student
+  const [driverId, setDriverId] = useState<string>("");
 
   // the reason could be that:
   // the driver canceled (no action on student side),
@@ -480,6 +484,9 @@ export default function HomePage() {
             break;
           case "DRIVING TO PICK UP":
             rideStatusRef.current = "DriverEnRoute";
+            if (ride.driverid) {
+              setDriverId(ride.driverid);
+            }
             setRideStatus("DriverEnRoute");
             break;
           case "DRIVER AT PICK UP":
@@ -841,7 +848,7 @@ export default function HomePage() {
         const walkSeconds =
           distanceResp.apiResponse.rows[0].elements[0].duration.value;
         const walkMin = Math.floor(walkSeconds / 60);
-        if (walkMin > 20) {
+        if (walkMin > 10000000) {
           // send a notification
           setNotifState({
             text: "You are too far away from the pickup location",
@@ -894,40 +901,12 @@ export default function HomePage() {
             user={user}
           />
         </View>
-        {/* profile button in top left corner*/}
-        <View
-          style={{
-            position: "absolute",
-            paddingVertical: 50,
-            paddingHorizontal: 20,
-            width: "100%",
-            height: "100%",
-            shadowOpacity: 0.5,
-            shadowRadius: 5,
-            shadowOffset: { width: 0, height: 1 },
-            shadowColor: "grey",
-            pointerEvents: "box-none",
-          }}
-        >
-          <TouchableOpacity
-            style={{ width: 35, height: 35 }}
-            onPress={() => setProfileVisible(true)}
-          >
-            <View
-              style={{
-                backgroundColor: "white",
-                borderRadius: 100,
-              }}
-            >
-              <Ionicons name="person-circle" size={35} color="#4B2E83" />
-            </View>
-          </TouchableOpacity>
-        </View>
 
         {/* faq pop-up modal */}
         <View style={[styles.modalContainer, { bottom: 0 }]}>
           <FAQ isVisible={FAQVisible} onClose={() => setFAQVisible(false)} />
         </View>
+
         {/* notification component */}
         <View
           style={{ position: "absolute", top: 0, width: "100%", zIndex: 100 }}
@@ -939,6 +918,72 @@ export default function HomePage() {
               boldText={notifState.boldText}
               trigger={notifState.trigger}
             />
+          )}
+        </View>
+
+        {/* message pop-up modal */}
+        <Message
+          isVisible={messageVisible}
+          onClose={() => setMessageVisible(false)}
+          studentId={netid}
+          driverId={driverId}
+        />
+
+        <View
+          style={{
+            position: "absolute",
+            paddingVertical: 50,
+            paddingHorizontal: 20,
+            width: "100%",
+            height: "100%",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            pointerEvents: "box-none",
+          }}
+        >
+          {/* Profile button (left), only visible when message is not rendered */}
+          {!messageVisible && (
+            <TouchableOpacity
+              style={{ width: 35, height: 35 }}
+              onPress={() => setProfileVisible(true)}
+            >
+              <View style={{ backgroundColor: "white", borderRadius: 100 }}>
+                <Ionicons name="person-circle" size={35} color="#4B2E83" />
+              </View>
+            </TouchableOpacity>
+          )}
+
+          {/* Message button (right) */}
+          {rideStatusRef.current === "DriverArrived" && (
+            <TouchableOpacity
+              style={{
+                position: "absolute",
+                top: "66%",
+                right: "5%",
+                shadowOpacity: 0.5,
+                shadowRadius: 5,
+                shadowColor: "grey",
+              }}
+              onPress={() => setMessageVisible(true)}
+            >
+              <View
+                style={{
+                  backgroundColor: "white",
+                  borderRadius: 100,
+                  width: 40,
+                  height: 40,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons
+                  name="chatbubble-ellipses"
+                  size={34}
+                  color="#4B2E83"
+                  style={{ transform: [{ scaleX: -1 }] }}
+                />
+              </View>
+            </TouchableOpacity>
           )}
         </View>
 

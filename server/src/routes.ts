@@ -2,14 +2,13 @@ import dotenv from "dotenv";
 import { AuthSessionResult } from "expo-auth-session";
 // Removed client-side imports
 // import {
-//   runTransaction,
 //   doc,
 //   getDoc,
 //   DocumentReference,
 // } from "firebase/firestore";
 
 // Added admin-side imports
-import { DocumentReference } from "firebase-admin/firestore";
+import { DocumentReference, Timestamp } from "firebase-admin/firestore";
 import { firestore } from "./firebase/firebaseConfig"; // Import the admin firestore service
 
 import {
@@ -40,6 +39,7 @@ import {
   GooglePlaceSearchResponse,
   GooglePlaceSearchBadLocationTypes,
   CallLogResponse,
+  ChatMessageResponse,
 } from "./api";
 // Updated import paths to admin-migrated files
 import {
@@ -56,6 +56,7 @@ import {
 } from "./firebase/firebaseQueries";
 import {
   addCallLogLogic,
+  addChatToRideRequest,
   addFeedbackLogic,
   addRideRequestToPoolLogic,
   assignRideForViewingLogic,
@@ -1296,4 +1297,62 @@ export const fetchGooglePlaceSuggestions = async (
     console.error("GOOGLE PLACE SEARCH ERROR", e);
   }
   return [];
+};
+
+/**
+ * Adds a chat message to the active ride request in Firestore and returns a structured response.
+ *
+ * @param senderID - The NetID of the user sending the message (student or driver).
+ * @param recipientID - The NetID of the recipient user.
+ * @param message - The text content of the chat message.
+ * @param timestamp - The time the message was sent (in milliseconds since epoch).
+ * @param role - The role of the sender, either "STUDENT" or "DRIVER".
+ * @returns A promise that resolves to either:
+ *   - ChatMessageResponse: Contains a success response for the sender and the chat details for the recipient.
+ *   - ErrorResponse: Contains error information if the operation fails.
+ */
+export const chatMessage = async (
+  senderID: string,
+  recipientID: string,
+  message: string,
+  timestamp: Timestamp,
+  role: "STUDENT" | "DRIVER"
+): Promise<ChatMessageResponse | ErrorResponse> => {
+  try {
+    return await firestore.runTransaction(async (transaction) => {
+      await addChatToRideRequest(
+        transaction,
+        senderID,
+        recipientID,
+        message,
+        timestamp,
+        role
+      );
+
+      // Build and return the success response
+      const response: ChatMessageResponse = {
+        response: "CHAT_MESSAGE",
+        toSender: {
+          response: "CHAT_MESSAGE",
+          success: true,
+        } as GeneralResponse,
+        toReceiver: {
+          senderID,
+          recipientID,
+          message,
+          timestamp,
+          role,
+        },
+      };
+
+      return response;
+    });
+  } catch (e: unknown) {
+    console.error("Error in chatMessage():", e);
+    return {
+      response: "ERROR",
+      error: e instanceof Error ? e.message : "Unknown error",
+      category: "CHAT_MESSAGE",
+    } as ErrorResponse;
+  }
 };

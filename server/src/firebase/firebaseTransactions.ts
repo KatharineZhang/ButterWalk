@@ -18,6 +18,7 @@ import {
   VIEWING_STATUS,
   DRIVER_AT_PICK_UP_STATUS,
   CallLog,
+  MessageEntry,
 } from "../api";
 import {
   usersCollection,
@@ -342,4 +343,54 @@ export async function addCallLogLogic(
   t.update(rideRef, {
     callLog: [...oldCallLog, newCallLogEntry],
   });
+}
+
+export async function addChatToRideRequest(
+  t: Transaction,
+  senderID: string,
+  recipientID: string,
+  message: string,
+  timestamp: Timestamp,
+  role: "STUDENT" | "DRIVER"
+): Promise<void> {
+  // Build the admin query (admin SDK style)
+  let q;
+  if (role === "STUDENT") {
+    q = rideRequestsCollection
+      .where("netid", "==", senderID)
+      .where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS]);
+  } else {
+    q = rideRequestsCollection
+      .where("driverid", "==", senderID)
+      .where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS]);
+  }
+
+  const querySnap = await q.get();
+
+  if (querySnap.empty) {
+    throw new Error(`No active ride request found for sender ${senderID}`);
+  }
+  if (querySnap.size > 1) {
+    throw new Error(`Multiple active ride requests found for sender ${senderID}`);
+  }
+
+  const docRef = querySnap.docs[0].ref as DocumentReference;
+  const docSnap = await t.get(docRef);
+
+  if (!docSnap.exists) {
+    throw new Error("Ride Request data is undefined");
+  }
+
+  const rideRequest = docSnap.data() as RideRequest & { messageLog?: MessageEntry[] };
+
+  const newMessageEntry = {
+    sender: senderID,
+    recipient: recipientID,
+    message,
+    timestamp,
+  };
+
+  const updatedMessageLog = [...(rideRequest.messageLog || []), newMessageEntry];
+
+  t.update(docRef, { messageLog: updatedMessageLog });
 }
