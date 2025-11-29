@@ -24,8 +24,10 @@ export class BuildingService {
     {
       name: "Aerodynamics Laboratory",
       location: {
-        latitude: 47.654145909853206,
-        longitude: -122.3054656109872,
+        latitude: 47.653637414026,
+        longitude: -122.30525287966444,
+        // old coordinates: 47.654145909853206, -122.3054656109872
+        // placed on Stevens Way
       },
     },
     {
@@ -40,22 +42,28 @@ export class BuildingService {
     {
       name: "Alder Hall",
       location: {
-        latitude: 47.655896,
-        longitude: -122.314116,
+        latitude: 47.65593587037285,
+        longitude: -122.3134933058272
+        // old coordinates: 47.655896, -122.314116
+        // Placed at bus stop near DM
       },
     },
     {
       name: "Allen Library",
       location: {
-        latitude: 47.655743735011406,
-        longitude: -122.30779774129037,
+        latitude: 47.655154727533876,
+        longitude: -122.30756349195849
+        // original coordinates: 47.655743735011406, -122.30779774129037
+        // placed where Mary Gates Hall pickup is
       },
     },
     {
       name: "Anderson Hall",
       location: {
-        latitude: 47.651856037467894,
-        longitude: -122.30760534579424,
+        latitude: 47.65201148223776,
+        longitude: -122.307507318869,
+        // old coordinates: 47.651856037467894, -122.30760534579424
+        // placed on Stevens Way
       },
     },
     {
@@ -103,15 +111,19 @@ export class BuildingService {
     {
       name: "Bill & Melinda Gates Center for Computer Science & Engineering",
       location: {
-        latitude: 47.653009750062196,
-        longitude: -122.30484320543665,
+        latitude: 47.65316574275937,
+        longitude: -122.30525309433109,
+        // old coordinates: 47.653009750062196, -122.30484320543665,
+        // placed by Stevens Way
       },
     },
     {
       name: "Bloedel Hall",
       location: {
-        latitude: 47.65146984203419,
-        longitude: -122.30817694242195,
+        latitude: 47.652033164087015,
+        longitude:  -122.30750463666011
+        // old coordinates: 47.65146984203419, -122.30817694242195
+        // placed on Stevens Way
       },
     },
     {
@@ -180,8 +192,10 @@ export class BuildingService {
     {
       name: "Conibear Shellhouse (CSH)",
       location: {
-        latitude: 47.65307776703236,
-        longitude: -122.29979157657776,
+        latitude: 47.65291497011575,
+        longitude:  -122.30020895445125,
+        // old coordinates: 47.65307776703236, -122.29979157657776,
+        // placed on Walla Walla Road
       },
     },
     {
@@ -243,15 +257,19 @@ export class BuildingService {
     {
       name: "Denny Hall (DEN)",
       location: {
-        latitude: 47.658707318076885,
-        longitude: -122.30911123861098,
+        latitude: 47.658563639720285,
+        longitude: -122.30958990786026,
+        // old coordinates: 47.658707318076885, -122.30911123861098,
+        // placed on Memorial Way
       },
     },
     {
       name: "Douglas Research Conservatory (DRC)",
       location: {
-        latitude: 47.65786712411186,
-        longitude: -122.28884803921505,
+        latitude: 47.65798732388427,
+        longitude: -122.28867063576486,
+        // old coordinates: 47.65786712411186, -122.28884803921505
+        // placed by nearby road
       },
     },
     {
@@ -271,22 +289,28 @@ export class BuildingService {
     {
       name: "Elm Hall (ELM)",
       location: {
-        latitude: 47.65651821244692,
-        longitude: -122.31503308731979,
+        latitude: 47.65630432362401,
+        longitude: -122.31533692245992,
+        // old coordinates: 47.65651821244692,-122.31503308731979
+        // placed by bus stop nearby
       },
     },
     {
       name: "Engineering Annex (EGA)",
       location: {
-        latitude: 47.65373982627239,
-        longitude: -122.3044758978453,
+        latitude: 47.653945268724776,
+        longitude: -122.30503748722825
+        // old coordinates: 47.65373982627239, -122.3044758978453,
+        // placed by Stevens Way
       },
     },
     {
       name: "Engineering Library (ELB)",
       location: {
-        latitude: 47.654583971665964,
-        longitude: -122.30455550041813,
+        latitude: 47.65450972008422,
+        longitude: -122.30512643600905,
+        // old coordinates: 47.654583971665964, -122.30455550041813
+        // placed by Stevens Way
       },
     },
     {
@@ -299,8 +323,10 @@ export class BuildingService {
     {
       name: "Faye G. Allen Center for the Visual Arts (AVA)",
       location: {
-        latitude: 47.65620739893473,
-        longitude: -122.3117701854371,
+        latitude: 47.656242547093484, 
+        longitude: -122.31147709433104,
+        // old coordinates: 47.65620739893473, -122.3117701854371
+        // placed by George Washington Lane
       },
     },
     {
@@ -378,15 +404,20 @@ export class BuildingService {
     {
       name: "Graves Hall (TGB)",
       location: {
-        latitude: 47.65286392858252,
-        longitude: -122.30254796077995,
+        latitude: 47.65310470888307,
+        longitude: -122.30260977654,
+        // old coordinates: 47.65286392858252, -122.30254796077995
+        // placed by parking space, since Montlake Blvd is pretty crowded road, don't want
+        // it to be unsafe
       },
     },
     {
       name: "Guggenheim Annex (GUA)",
       location: {
-        latitude: 47.65457871933468,
-        longitude: -122.30640764030558,
+        latitude: 47.654223162011114,
+        longitude: -122.3066422270683,
+        // old coordinates: 47.65457871933468, -122.30640764030558
+        // placed by Benton Lane, where GUG coordinates are
       },
     },
     {
@@ -432,15 +463,19 @@ export class BuildingService {
     {
       name: "Hansee Hall (HNS)",
       location: {
-        latitude: 47.660849376568244,
-        longitude: -122.30652383310903,
+        latitude: 47.66118751046816, 
+        longitude: -122.30689434739624,
+        // old coordinates: 47.660849376568244, -122.30652383310903
+        // placed by nearest road bus stop
       },
     },
     {
       name: "Harris Hydraulics Laboratory (HHL)",
       location: {
-        latitude: 47.64993372067876,
-        longitude: -122.31156461347433,
+        latitude: 47.650298680769,
+        longitude: -122.31154968239149,
+        // old coordinates: 47.64993372067876, -122.31156461347433
+        // placed by San Juan road
       },
     },
     {
@@ -467,43 +502,55 @@ export class BuildingService {
     {
       name: "Henry Art Gallery (HAG)",
       location: {
-        latitude: 47.65654755104911,
-        longitude: -122.31158360117163,
+        latitude: 47.65638513160857, 
+        longitude: -122.31142568239152,
+        // old coordinates: 47.65654755104911, -122.31158360117163
+        // placed by George Washington Lane
       },
     },
     {
       name: "Hitchcock Hall (HCK)",
       location: {
-        latitude: 47.651888461875366,
-        longitude: -122.31152823186072,
+        latitude: 47.652087090434996, 
+        longitude: -122.31087919018026,
+        // old coordinates: 47.651888461875366, -122.31152823186072
+        // placed on road, bus stop closest by
       },
     },
     {
       name: "Hutchinson Hall (HUT)",
       location: {
-        latitude: 47.65960945800002,
-        longitude: -122.30669754453278,
+        latitude: 47.659821385223815, 
+        longitude: -122.3073881011621,
+        // old coordinates: 47.65960945800002, -122.30669754453278
+        // placed by road, Stevens Way
       },
     },
     {
       name: "Intellectual House (INT)",
       location: {
-        latitude: 47.658440551281906,
-        longitude: -122.3047065933891,
+        latitude: 47.658156705911615,
+        longitude: -122.30505331886883,
+        // old coordinates: 47.658440551281906, -122.3047065933891
+        // placed on Stevens Way
       },
     },
     {
       name: "Intramural Activities Building (IMA)",
       location: {
-        latitude: 47.65364154337595,
-        longitude: -122.30158796924562,
+        latitude: 47.653095713530455,
+        longitude: -122.30257577564474,
+        // old coordinates: 47.65364154337595, -122.30158796924562
+        // placed at front round about parking
       },
     },
     {
       name: "Isaacson Hall (ISA)",
       location: {
-        latitude: 47.657976549574144,
-        longitude: -122.2899435864212,
+        latitude: 47.658151651273386,
+        longitude: -122.28880739789288,
+        // old coordinates: 47.657976549574144, -122.2899435864212
+        // placed on Union Bay Place (parking next to it)
       },
     },
     {
@@ -548,15 +595,19 @@ export class BuildingService {
     {
       name: "Laurel Village (LAV)",
       location: {
-        latitude: 47.66015074613112,
-        longitude: -122.2912697237839,
+        latitude: 47.6597821246158,
+        longitude: -122.29112854340667,
+        // old coordinates: 47.66015074613112, -122.2912697237839
+        // placed by road
       },
     },
     {
       name: "Lewis Hall (LEW)",
       location: {
-        latitude: 47.65888042909602,
-        longitude: -122.30530053000759,
+        latitude: 47.659012997533395, 
+        longitude: -122.30618868328665,
+        // old coordinates: 47.65888042909602, -122.30530053000759
+        // placed by Stevens Way
       },
     },
     {
@@ -709,8 +760,10 @@ export class BuildingService {
     {
       name: "Mercer Court (MRC)",
       location: {
-        latitude: 47.65481930770117,
-        longitude: -122.31760013031219,
+        latitude: 47.654677741608495, 
+        longitude: -122.31698554340682
+        // old coordinates: 47.65481930770117, -122.31760013031219
+        // placed by road
       },
     },
     {
@@ -757,8 +810,10 @@ export class BuildingService {
     {
       name: "Mueller Hall (MUE)",
       location: {
-        latitude: 47.65219748028658,
-        longitude: -122.30543624905793,
+        latitude: 47.6523774341147, 
+        longitude: -122.30601387465626
+        // old coordinates: 47.65219748028658, -122.30543624905793
+        // placed on Stevens Way, at the closest bus stop
       },
     },
     {
@@ -808,15 +863,19 @@ export class BuildingService {
     {
       name: "PACCAR Hall (PCAR)",
       location: {
-        latitude: 47.65936371854245,
-        longitude: -122.30887362815483,
+        latitude: 47.659779124617906,
+        longitude: -122.30850795445107,
+        // old coordinates: 47.65936371854245, -122.30887362815483
+        // placed on E Stevens Way
       },
     },
     {
       name: "Padelford Hall (PDL)",
       location: {
-        latitude: 47.65658543847523,
-        longitude: -122.30418194500425,
+        latitude: 47.65704193316046,
+        longitude:  -122.30476741212215,
+        // old coordinates: 47.65658543847523, -122.30418194500425
+        // placed on Stevens Way
       },
     },
     {
@@ -843,8 +902,10 @@ export class BuildingService {
     {
       name: "Hec Edumundson Pavilion Pool (PVP)",
       location: {
-        latitude: 47.651918452751005,
-        longitude: -122.30099637030055,
+        latitude: 47.653106163158945,
+        longitude: -122.3025634121223,
+        // old coordinates: 47.651918452751005, -122.30099637030055
+        // placed by road/at IMA location
       },
     },
     {
@@ -857,8 +918,10 @@ export class BuildingService {
     {
       name: "Physics-Astronomy Building (PAB)",
       location: {
-        latitude: 47.653311228500186,
-        longitude: -122.31176901721835,
+        latitude: 47.653613196689825,
+        longitude: -122.31204140249032
+        // old coordinates: 47.653311228500186, -122.31176901721835
+        // placed on 15th/bus stop closest by 
       },
     },
     {
@@ -952,8 +1015,10 @@ export class BuildingService {
     {
       name: "Sieg Hall (SIG)",
       location: {
-        latitude: 47.65482274873043,
-        longitude: -122.30671231803865,
+        latitude: 47.65502766135199,
+        longitude: -122.30709882999933,
+        // old coordinates: 47.65482274873043, -122.30671231803865
+        // placed by Benton Lane
       },
     },
     {
@@ -982,15 +1047,19 @@ export class BuildingService {
     {
       name: "Husky Stadium (STD)",
       location: {
-        latitude: 47.650676328253795,
-        longitude: -122.30322392179896,
+        latitude: 47.650144985901875,
+        longitude: -122.30422305423167
+        // old coordinates: 47.650676328253795, -122.30322392179896
+        // placed by Montlake bus stop (closest to Montlake)
       },
     },
     {
       name: "Stevens Court (SCA)",
       location: {
-        latitude: 47.654402182885086,
-        longitude: -122.31595034702345,
+        latitude: 47.654692662325594, 
+        longitude: -122.31676182999932
+        // old coordinates: 47.654402182885086, -122.31595034702345
+        // placed by Adams Lane
       },
     },
     {
@@ -1021,8 +1090,10 @@ export class BuildingService {
     {
       name: "Theodor Jacobsen Observatory (OBS)",
       location: {
-        latitude: 47.66041756450559,
-        longitude: -122.30923047397464,
+        latitude: 47.66048590265454, 
+        longitude: -122.30953163576487,
+        // old coordinates: 47.66041756450559, -122.30923047397464
+        // placed on Memorial Way
       },
     },
     {
@@ -1044,8 +1115,10 @@ export class BuildingService {
     {
       name: "UW Police Department (UWPD)",
       location: {
-        latitude: 47.65425359063252,
-        longitude: -122.31279817829237,
+        latitude: 47.654864290171986, 
+        longitude: -122.31226008218498
+        // old coordinates: 47.65425359063252, -122.31279817829237
+        // placed on 15th Ave, nearest bus stop
       },
     },
     {
@@ -1072,8 +1145,10 @@ export class BuildingService {
     {
       name: "Wilcox Hall (WIL)",
       location: {
-        latitude: 47.65194037461812,
-        longitude: -122.30436998284932,
+        latitude: 47.6518072882349, 
+        longitude: -122.30419398929405,
+        // old coordinates: 47.65194037461812, -122.30436998284932
+        // placed by Mason Road
       },
     },
     {
@@ -1086,8 +1161,10 @@ export class BuildingService {
     {
       name: "William H. Gates Hall (LAW)",
       location: {
-        latitude: 47.659370039022754,
-        longitude: -122.31105392377053,
+        latitude: 47.65866655731769,
+        longitude: -122.31190295594328,
+        // old coordinates: 47.659370039022754, -122.31105392377053
+        // placed by 15th Ave, nearest bus stop
       },
     },
     {
@@ -1116,8 +1193,10 @@ export class BuildingService {
     {
       name: "Winkenwerder Forest Sciences Laboratory (WFS)",
       location: {
-        latitude: 47.65125849356901,
-        longitude: -122.30702974653657,
+        latitude: 47.652033164087015,
+        longitude:  -122.30750463666011
+        // old coordinates: 47.65125849356901, -122.30702974653657,
+        // placed at Stevens Way
       },
     },
   ];
