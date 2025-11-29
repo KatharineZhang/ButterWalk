@@ -51,7 +51,7 @@ export default function HomePage() {
   /* HOME PAGE STATE */
   const [, setWhichComponent] = useState<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
-  >(TimeService.inServicableTime() ? "noRequests" : "noRequests");
+  >(TimeService.inServicableTime() ? "noRequests" : "endShift");
   const whichComponent = useRef<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
   >("endShift");
@@ -946,7 +946,7 @@ export default function HomePage() {
         dropOffLocation={dropOffLocation}
         studentLocation={studentLocation.current}
         userLocationChanged={userLocationChanged}
-        currPhase={whichComponent.current == "handleRide" ? phase : "none"}
+        currPhase={phase}
       />
       {/* Disconnected pop-up. Show it if the websocket is not connected */}
       <View style={styles.modalContainer}>

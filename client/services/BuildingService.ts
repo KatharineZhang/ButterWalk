@@ -183,6 +183,48 @@ export class BuildingService {
       },
     },
     {
+      name: "Central Plaza Garage C1",
+      location: {
+        latitude: 47.655001739100825,
+        longitude: -122.3099611359588,
+      },
+    },
+    {
+      name: "Central Plaza Garage C2",
+      location: {
+        latitude: 47.655001739100825,
+        longitude: -122.3099611359588,
+      },
+    },
+    {
+      name: "Central Plaza Garage C3",
+      location: {
+        latitude: 47.655001739100825,
+        longitude: -122.3099611359588,
+      },
+    },
+    {
+      name: "Central Plaza Garage C4",
+      location: {
+        latitude: 47.655001739100825,
+        longitude: -122.3099611359588,
+      },
+    },
+    {
+      name: "Central Plaza Garage C5",
+      location: {
+        latitude: 47.655001739100825,
+        longitude: -122.3099611359588,
+      },
+    },
+    {
+      name: "Central Plaza Garage C6",
+      location: {
+        latitude: 47.655001739100825,
+        longitude: -122.3099611359588,
+      },
+    },
+    {
       name: "Dempsey Hall (DEM)",
       location: {
         latitude: 47.65937139553685,
@@ -489,8 +531,8 @@ export class BuildingService {
     {
       name: "Lander Hall (LAN)",
       location: {
-        latitude: 47.655798083774954,
-        longitude: -122.31504353371332,
+        latitude: 47.655982627641194,
+        longitude: -122.315010993999,
       },
     },
     {
@@ -609,8 +651,8 @@ export class BuildingService {
     {
       name: "Maple Hall (MAH)",
       location: {
-        latitude: 47.65595673980453,
-        longitude: -122.3163337344104,
+        latitude: 47.65597239975355,
+        longitude: -122.31499908990595,
       },
     },
     {
@@ -917,8 +959,8 @@ export class BuildingService {
     {
       name: "Terry Hall (TEH)",
       location: {
-        latitude: 47.65564055939026,
-        longitude: -122.31726623339738,
+        latitude: 47.65597962648944,
+        longitude: -122.31500713653254,
       },
     },
     {
