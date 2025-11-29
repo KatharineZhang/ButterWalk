@@ -11,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import moment from "moment";
 import momentTimezone from "moment-timezone";
 import { NotificationType } from "./Both_Notification";
-import Both_ProgressBar from "./Both_ProgressBar";
+import Student_ProgressBar from "./Student_ProgressBar";
 
 export type RideStatus =
   | "WaitingForRide" // the ride has been requested
@@ -210,7 +210,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             : {},
         ]}
       >
-        <Both_ProgressBar
+        <Student_ProgressBar
           rideStatus={
             status === "WaitingForRide"
               ? "start"
@@ -218,8 +218,6 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
                 ? "pickup"
                 : "dropoff"
           }
-          pickupAddress={pickUpAddress}
-          dropoffAddress={dropOffAddress}
           pickUpLocationName={pickUpLocationName}
           dropOffLocationName={dropOffLocationName}
           driverToPickupMinutes={
