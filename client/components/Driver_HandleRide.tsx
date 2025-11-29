@@ -255,8 +255,6 @@ export default function HandleRide({
             dropOffLocationName={requestInfo.locationTo.name}
             pickUpLocationAddress={requestInfo.locationFrom.address}
             dropOffLocationAddress={requestInfo.locationTo.address}
-            driverToPickupMinutes={driverToPickupDuration}
-            pickupToDropoffMinutes={pickupToDropoffDuration}
           />
 
           {/* If proximity to pickup location is near, 
@@ -367,8 +365,6 @@ export default function HandleRide({
             dropOffLocationName={requestInfo.locationTo.name}
             pickUpLocationAddress={requestInfo.locationFrom.address}
             dropOffLocationAddress={requestInfo.locationTo.address}
-            driverToPickupMinutes={driverToPickupDuration}
-            pickupToDropoffMinutes={pickupToDropoffDuration}
           />
 
           {/* Two buttons side by side */}
@@ -516,8 +512,6 @@ export default function HandleRide({
             dropOffLocationName={requestInfo.locationTo.name}
             pickUpLocationAddress={requestInfo.locationFrom.address}
             dropOffLocationAddress={requestInfo.locationTo.address}
-            driverToPickupMinutes={driverToPickupDuration}
-            pickupToDropoffMinutes={pickupToDropoffDuration}
           />
         </>
       ) : phase === "arrivedAtDropoff" ? (
@@ -554,8 +548,6 @@ export default function HandleRide({
             dropOffLocationName={requestInfo.locationTo.name}
             pickUpLocationAddress={requestInfo.locationFrom.address}
             dropOffLocationAddress={requestInfo.locationTo.address}
-            driverToPickupMinutes={driverToPickupDuration}
-            pickupToDropoffMinutes={pickupToDropoffDuration}
           />
 
           {/* Grey line */}

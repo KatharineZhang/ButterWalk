@@ -8,8 +8,6 @@ type StudentProgressBarProps = {
   dropOffLocationName: string;
   pickUpLocationAddress?: string;
   dropOffLocationAddress?: string;
-  driverToPickupMinutes?: number;
-  pickupToDropoffMinutes?: number;
 };
 
 export default function Driver_ProgressBar({
@@ -18,8 +16,6 @@ export default function Driver_ProgressBar({
   dropOffLocationName,
   pickUpLocationAddress,
   dropOffLocationAddress,
-  driverToPickupMinutes,
-  pickupToDropoffMinutes,
 }: StudentProgressBarProps) {
   // Icon colors based on rideStatus
   const grey = "#adacaa";
