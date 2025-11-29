@@ -878,7 +878,7 @@ export default function HomePage() {
           dropOffLocation={dropOffLocation}
           driverLocation={driverLocation}
           userLocationChanged={userLocationChanged}
-          status={rideStatusRef.current}
+          status={whichComponent == "handleRide" ? rideStatusRef.current: "none"}
           startLocation={startLocation}
           whichComponent={"rideReq"}
         />

@@ -4,8 +4,8 @@ import * as WebBrowser from "expo-web-browser";
 // need to 'npx expo install expo-web-browser expo-auth-session expo-crypto' ON MAC
 // or 'npm i expo-auth-session@~6.0.3' on windows
 import * as Google from "expo-auth-session/providers/google";
-import { useEffect } from "react";
-import { router, useLocalSearchParams, Link } from "expo-router";
+import { useEffect, useState } from "react";
+import { Redirect, router, useLocalSearchParams, Link } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 // Images
@@ -15,6 +15,9 @@ import logo from "@/assets/images/GoogleG.png";
 // import butterWalkLogo from "@/assets/images/butterWalkLogo.png";
 import huskyCarImage from "@/assets/images/husky-car.png";
 import { SafeAreaView } from "react-native-safe-area-context";
+import WebSocketService, {
+  WebsocketConnectMessage,
+} from "@/services/WebSocketService";
 
 const webClientId = process.env.EXPO_PUBLIC_WEB_CLIENT_ID;
 const iosClientId = process.env.EXPO_PUBLIC_IOS_CLIENT_ID;
@@ -35,6 +38,7 @@ const Login = () => {
   // but is not explicitly used, hence the override
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [request, response, promptAsync] = Google.useAuthRequest(config);
+  const [goToFinishAcc, setGoToFinishAcc] = useState<boolean>(false);
 
   useEffect(() => {
     if (response?.type === "success") {
@@ -49,7 +53,29 @@ const Login = () => {
     }
   }, [response]);
 
-  return (
+  const connectWebSocket = async () => {
+    const msg: WebsocketConnectMessage = await WebSocketService.connect();
+    if (msg === "Connected Successfully") {
+      WebSocketService.send({
+        directive: "CONNECT",
+        netid: "snigsm",
+        role: "STUDENT",
+      });
+    } else {
+      console.log("Failed to connect to WebSocket.");
+    }
+  };
+
+  return goToFinishAcc ? (
+    <Redirect
+      href={{
+        pathname: "/(student)/finishAcc",
+        params: {
+          netid: "snigsm",
+        },
+      }}
+    />
+  ) : (
     <SafeAreaView style={[styles.container, { padding: 20 }]}>
       <View style={{ flex: 1, width: "100%", justifyContent: "space-between" }}>
         <View style={{ alignSelf: "flex-start" }}>
@@ -106,6 +132,16 @@ const Login = () => {
             </Text>
           </TouchableOpacity>
           <Text style={{ color: "red", marginTop: 10 }}>{error}</Text>
+          <Pressable
+            style={[styles.button, { position: "absolute", bottom: "5%" }]}
+            onPress={() => {
+              // temporary connection to websocket since we aren't going through the sign in process
+              connectWebSocket();
+              setGoToFinishAcc(true);
+            }}
+          >
+            <Text style={styles.text}>Bypass Signin</Text>
+          </Pressable>
         </View>
       </View>
     </SafeAreaView>
