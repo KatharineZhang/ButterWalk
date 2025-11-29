@@ -1,11 +1,11 @@
 import dotenv from "dotenv";
 import { AuthSessionResult } from "expo-auth-session";
 // Removed client-side imports
-import {
+// import {
 //   doc,
 //   getDoc,
 //   DocumentReference,
-} from "firebase/firestore";
+// } from "firebase/firestore";
 
 // Added admin-side imports
 import { DocumentReference, Timestamp } from "firebase-admin/firestore";
