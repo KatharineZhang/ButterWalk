@@ -274,10 +274,10 @@ export default function HomePage() {
   };
 
   type HandleRidePhase =
-  | "headingToPickup"
-  | "waitingForPickup"
-  | "headingToDropoff"
-  | "arrivedAtDropoff";
+    | "headingToPickup"
+    | "waitingForPickup"
+    | "headingToDropoff"
+    | "arrivedAtDropoff";
 
   // Handler for the "Let's Go" action in RequestAvailable
   const onLetsGo = () => {
