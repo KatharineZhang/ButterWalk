@@ -147,9 +147,6 @@ export default function HomePage() {
   // the user's recent locations that will be displayed in the dropdown
   const [recentLocations, setRecentLocations] = useState<LocationType[]>([]);
 
-  // darken the screen when the user clicks on the confirmation modal
-  const [darkenScreen, setDarkenScreen] = useState(false);
-
   /* PROFILE STATE AND METHODS */
   const [profileVisible, setProfileVisible] = useState(false);
   const [user, setUser] = useState<User>({} as User);
@@ -1014,7 +1011,6 @@ export default function HomePage() {
                 recentLocations={recentLocations}
                 setNotificationState={setNotifState}
                 updateSideBarHeight={setCurrentComponentHeight}
-                darkenScreen={setDarkenScreen}
                 showRequestLoading={showRequestLoading}
               />
             </View>
@@ -1068,7 +1064,7 @@ export default function HomePage() {
           ) : null // default
         }
         {/* Overlay an semi-transparent screen when FAQ or profile or ride request confirmation mdoal is visible */}
-        {(FAQVisible || profileVisible || darkenScreen) && (
+        {(FAQVisible || profileVisible) && (
           <View
             style={{
               position: "absolute",

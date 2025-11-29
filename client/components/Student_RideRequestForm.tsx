@@ -17,7 +17,6 @@ import { Image } from "react-native";
 import AutocompleteInput from "./Student_AutocompleteTextInput";
 import { styles } from "../assets/styles";
 import BottomDrawer, { BottomDrawerRef } from "./Student_RideReqBottomDrawer";
-import PopUpModal from "./Student_PopUpModal";
 // import BottomSheet from "@gorhom/bottom-sheet";
 import SegmentedProgressBar from "./Both_SegmentedProgressBar";
 import {
@@ -61,7 +60,6 @@ type RideRequestFormProps = {
   setFAQVisible: (visible: boolean) => void;
   updateSideBarHeight: (bottom: number) => void;
   setNotificationState: (state: NotificationType) => void;
-  darkenScreen: (darken: boolean) => void; // darken the screen behind the confirmation modal
 };
 
 export default function RideRequestForm({
@@ -76,7 +74,6 @@ export default function RideRequestForm({
   recentLocations,
   setNotificationState,
   updateSideBarHeight,
-  darkenScreen,
   showRequestLoading,
 }: RideRequestFormProps) {
   /* STATE */
@@ -108,10 +105,6 @@ export default function RideRequestForm({
   // Bottom Sheet Reference needed to expand the bottom sheet
   const bottomSheetRef = useRef<BottomDrawerRef>(null);
 
-  // Confirmation Modal
-  const [confirmationModalVisible, setConfirmationModalVisible] =
-    useState(false);
-
   // what the user types in to the text boxes
   const [pickUpQuery, setPickUpQuery] = useState(""); // Typed in pickup query
   const [previousPickUpQuery, setPreviousPickUpQuery] = useState(""); // Previous pickup query
@@ -137,7 +130,12 @@ export default function RideRequestForm({
   >([]);
 
   useEffect(() => {
-    if (chosenPickup != "" && chosenDropoff != "") {
+    if (chosenPickup == "" && chosenDropoff == "") {
+      // if nothing has been selected, set text boxes to gray
+      setCurrentQuery("none");
+    } else if (chosenPickup != "" && chosenDropoff != "") {
+      // if all locations have been selected, set boxes to gray
+      setCurrentQuery("none");
       // if both locations are chosen, shrink form to original size
       if (bottomSheetRef == null) {
         console.log("bottomSheetRef is null");
@@ -215,7 +213,6 @@ export default function RideRequestForm({
       } else {
         // the user is in the purple zone,
         // so we need to snap the location to the closest building or street
-
         // first try to get a closest building
         const closestCampusBuilding =
           BuildingService.closestBuilding(userLocation);
@@ -233,8 +230,16 @@ export default function RideRequestForm({
           // otherwise, store the closest building
           setClosestBuilding(closestCampusBuilding.name);
           // show the confirmation modal to let the user know where they are being snapped to
-          setConfirmationModalVisible(true);
-          darkenScreen(true);
+          setPickUpQuery(closestCampusBuilding.name);
+          setChosenPickup(closestCampusBuilding.name);
+          pickUpLocationNameChanged(closestCampusBuilding.name);
+          const pickupCoord =
+            BuildingService.getClosestBuildingEntranceCoordinates(
+              closestCampusBuilding.name,
+              userLocation
+            );
+          setPickupCoordinates(pickupCoord);
+          pickUpLocationCoordChanged(pickupCoord);
         }
       }
     } else {
@@ -392,21 +397,6 @@ export default function RideRequestForm({
     setWhichPanel("NumberRiders");
   };
 
-  // the user clicked confirm on the confirmation modal
-  const confirmPickUpLocation = () => {
-    setPickUpQuery(closestBuilding);
-    setChosenPickup(closestBuilding);
-    pickUpLocationNameChanged(closestBuilding);
-    const pickupCoord = BuildingService.getClosestBuildingEntranceCoordinates(
-      closestBuilding,
-      userLocation
-    );
-    setPickupCoordinates(pickupCoord);
-    pickUpLocationCoordChanged(pickupCoord);
-    setConfirmationModalVisible(false);
-    darkenScreen(false);
-  };
-
   // the user clicked one of the suggested closest buildings
   const selectTopThreeBuilding = (buildingName: string) => {
     setPickUpQuery(buildingName);
@@ -504,8 +494,6 @@ export default function RideRequestForm({
         query: text,
       });
     }
-    // remove the focused styling on the textbox
-    setCurrentQuery("none");
   };
 
   // TEST: call place search every time the text changes,
@@ -770,6 +758,7 @@ export default function RideRequestForm({
                 <AutocompleteInput
                   onPress={() => {
                     setCurrentQuery("pickup");
+                    setPlaceSearchResults([]); // clear any old results
                     expand();
                   }}
                   focused={currentQuery == "pickup"}
@@ -784,6 +773,7 @@ export default function RideRequestForm({
                 <AutocompleteInput
                   onPress={() => {
                     setCurrentQuery("dropoff");
+                    setPlaceSearchResults([]); // clear any old results
                     expand();
                   }}
                   focused={currentQuery == "dropoff"}
@@ -974,30 +964,6 @@ export default function RideRequestForm({
             }
           />
         </View>
-
-        {/* Confirmation Modal */}
-        <PopUpModal
-          type="half"
-          isVisible={confirmationModalVisible}
-          onClose={() => {
-            setConfirmationModalVisible(false);
-            darkenScreen(false);
-          }}
-          content={
-            <View style={{ padding: 20 }}>
-              <Text style={styles.formHeader}>Confirm Pickup Location</Text>
-              <Text style={styles.description}>
-                Setting your pickup location to: {closestBuilding}
-              </Text>
-              <Pressable
-                onPress={confirmPickUpLocation}
-                style={styles.sendButton}
-              >
-                <Text style={styles.buttonLabel}>Confirm</Text>
-              </Pressable>
-            </View>
-          }
-        />
       </BottomDrawer>
     </View>
   );
