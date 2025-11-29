@@ -1,5 +1,6 @@
 import { View, Text, ScrollView } from "react-native";
 import { FontAwesome6, Entypo, FontAwesome } from "@expo/vector-icons";
+import { LinearGradient } from 'expo-linear-gradient';
 
 type StudentProgressBarProps = {
   rideStatus: "start" | "pickup" | "dropoff";
@@ -46,6 +47,35 @@ export default function Driver_ProgressBar({
 
 return (
     <View style={{ width: "100%", height: 160 }}>
+
+      {/* TOP fade */}
+      <LinearGradient
+        colors={['rgba(255,255,255,1)', 'rgba(255,255,255,0)']}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 20,
+          zIndex: 10,
+        }}
+        pointerEvents="none"
+      />
+
+      {/* BOTTOM fade */}
+      <LinearGradient
+        colors={['rgba(255,255,255,0)', 'rgba(255,255,255,1)']}
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 20,
+          zIndex: 10,
+        }}
+        pointerEvents="none"
+      />
+
       <ScrollView
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={true}
