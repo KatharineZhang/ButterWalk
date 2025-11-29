@@ -159,7 +159,6 @@ export type WebSocketMessage =
   | {
       directive: "CHAT_MESSAGE";
       senderID: string;
-      recipientID: string;
       message: string;
       timestamp: Timestamp;
       role: "STUDENT" | "DRIVER";

@@ -409,7 +409,6 @@ export const handleWebSocketMessage = async (
     case "CHAT_MESSAGE": {
       resp = await chatMessage(
         input.senderID,
-        input.recipientID,
         input.message,
         input.timestamp,
         input.role
@@ -417,7 +416,7 @@ export const handleWebSocketMessage = async (
 
       if ("toReceiver" in resp && "toSender" in resp) {
         // send message to recipient
-        sendMessageToNetid(input.recipientID, resp);
+        sendMessageToNetid(resp.toReceiver.recipientID, resp);
         // send message to sender
         sendWebSocketMessage(ws, resp);
       } else {

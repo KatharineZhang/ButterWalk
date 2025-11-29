@@ -212,8 +212,6 @@ export default function HomePage() {
   const [walkAddress, setWalkAddress] = useState("");
   // the amount of minutes it will take to walk to the pickup location
   const [walkDuration, setWalkDuration] = useState(0);
-  // the id of the driver picking up the student
-  const [driverId, setDriverId] = useState<string>("");
 
   // the reason could be that:
   // the driver canceled (no action on student side),
@@ -484,9 +482,6 @@ export default function HomePage() {
             break;
           case "DRIVING TO PICK UP":
             rideStatusRef.current = "DriverEnRoute";
-            if (ride.driverid) {
-              setDriverId(ride.driverid);
-            }
             setRideStatus("DriverEnRoute");
             break;
           case "DRIVER AT PICK UP":
@@ -925,8 +920,7 @@ export default function HomePage() {
         <Message
           isVisible={messageVisible}
           onClose={() => setMessageVisible(false)}
-          studentId={netid}
-          driverId={driverId}
+          userId={netid}
         />
 
         <View

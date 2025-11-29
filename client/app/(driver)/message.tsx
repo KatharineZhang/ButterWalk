@@ -24,11 +24,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 interface MessageProps {
   isVisible: boolean;
   onClose: () => void;
-  studentId: string;
-  driverId: string;
+  userId: string;
 }
 
-function Message({ isVisible, onClose, studentId, driverId }: MessageProps) {
+function Message({ isVisible, onClose, userId }: MessageProps) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessageResponse[]>([]);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -61,8 +60,7 @@ function Message({ isVisible, onClose, studentId, driverId }: MessageProps) {
     if (input.trim()) {
       WebSocketService.send({
         directive: "CHAT_MESSAGE",
-        senderID: driverId,
-        recipientID: studentId,
+        senderID: userId,
         message: input,
         timestamp: Timestamp.now(),
         role: "DRIVER",

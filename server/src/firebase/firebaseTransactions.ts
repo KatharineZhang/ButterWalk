@@ -348,11 +348,10 @@ export async function addCallLogLogic(
 export async function addChatToRideRequest(
   t: Transaction,
   senderID: string,
-  recipientID: string,
   message: string,
   timestamp: Timestamp,
   role: "STUDENT" | "DRIVER"
-): Promise<void> {
+): Promise<string> {
   // Build the admin query (admin SDK style)
   let q;
   if (role === "STUDENT") {
@@ -371,7 +370,9 @@ export async function addChatToRideRequest(
     throw new Error(`No active ride request found for sender ${senderID}`);
   }
   if (querySnap.size > 1) {
-    throw new Error(`Multiple active ride requests found for sender ${senderID}`);
+    throw new Error(
+      `Multiple active ride requests found for sender ${senderID}`
+    );
   }
 
   const docRef = querySnap.docs[0].ref as DocumentReference;
@@ -381,7 +382,11 @@ export async function addChatToRideRequest(
     throw new Error("Ride Request data is undefined");
   }
 
-  const rideRequest = docSnap.data() as RideRequest & { messageLog?: MessageEntry[] };
+  const rideRequest = docSnap.data() as RideRequest & {
+    messageLog?: MessageEntry[];
+  };
+  const recipientID =
+    role == "STUDENT" ? rideRequest.driverid : rideRequest.netid;
 
   const newMessageEntry = {
     sender: senderID,
@@ -390,7 +395,12 @@ export async function addChatToRideRequest(
     timestamp,
   };
 
-  const updatedMessageLog = [...(rideRequest.messageLog || []), newMessageEntry];
+  const updatedMessageLog = [
+    ...(rideRequest.messageLog || []),
+    newMessageEntry,
+  ];
 
   t.update(docRef, { messageLog: updatedMessageLog });
+  // return the recipient
+  return recipientID ? recipientID : "";
 }

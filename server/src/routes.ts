@@ -1313,21 +1313,27 @@ export const fetchGooglePlaceSuggestions = async (
  */
 export const chatMessage = async (
   senderID: string,
-  recipientID: string,
   message: string,
   timestamp: Timestamp,
   role: "STUDENT" | "DRIVER"
 ): Promise<ChatMessageResponse | ErrorResponse> => {
   try {
     return await firestore.runTransaction(async (transaction) => {
-      await addChatToRideRequest(
+      const recipientID = await addChatToRideRequest(
         transaction,
         senderID,
-        recipientID,
         message,
         timestamp,
         role
       );
+
+      if (!recipientID) {
+        return {
+          response: "ERROR",
+          error: "Could not find who to send message to",
+          category: "CHAT_MESSAGE",
+        } as ErrorResponse;
+      }
 
       // Build and return the success response
       const response: ChatMessageResponse = {

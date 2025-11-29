@@ -54,7 +54,7 @@ export default function HomePage() {
   >(TimeService.inServicableTime() ? "noRequests" : "endShift");
   const whichComponent = useRef<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
-  >("endShift");
+  >("noRequests");
   // only visibile when driver accepts ride request
   const [messageVisible, setMessageVisible] = useState(false);
 
@@ -1000,8 +1000,7 @@ export default function HomePage() {
       <Message
         isVisible={messageVisible}
         onClose={() => setMessageVisible(false)}
-        studentId={requestInfo.current.netid}
-        driverId={netid}
+        userId={netid}
       />
       {/* Message button in top right corner */}
       {phase === "waitingForPickup" && (
