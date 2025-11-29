@@ -54,7 +54,7 @@ export default function HomePage() {
   >(TimeService.inServicableTime() ? "noRequests" : "endShift");
   const whichComponent = useRef<
     "noRequests" | "requestsAreAvailable" | "handleRide" | "endShift"
-  >("noRequests");
+  >(TimeService.inServicableTime() ? "noRequests" : "endShift");
   // only visibile when driver accepts ride request
   const [messageVisible, setMessageVisible] = useState(false);
 
