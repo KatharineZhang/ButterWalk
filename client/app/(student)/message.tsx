@@ -78,12 +78,16 @@ function Message({ isVisible, onClose, studentId, driverId }: MessageProps) {
   ) {
     if (!prevMsg) return true;
 
-    const prevTime = prevMsg.toReceiver.timestamp.toMillis();
-    const currTime = currMsg.toReceiver.timestamp.toMillis();
-    const THREE_MIN = 3 * 60 * 1000;
+    const prev = prevMsg.toReceiver.timestamp;
+    const curr = currMsg.toReceiver.timestamp;
 
-    const timeClose = currTime - prevTime < THREE_MIN;
+    // Convert to ms
+    const prevMs = prev.seconds * 1000 + prev.nanoseconds / 1e6;
+    const currMs = curr.seconds * 1000 + curr.nanoseconds / 1e6;
 
+    const THREE_MIN = 3 * 60 * 1000; // 3 minutes in ms
+
+    const timeClose = currMs - prevMs < THREE_MIN;
     return !timeClose;
   }
 
@@ -176,17 +180,22 @@ function Message({ isVisible, onClose, studentId, driverId }: MessageProps) {
                       <Text
                         style={{
                           alignSelf: "center",
-                          color: "#888",
+                          color: "#7f7e7eff",
                           marginVertical: 10,
-                          fontSize: 12,
+                          fontSize: 15,
                         }}
                       >
-                        {msg.toReceiver.timestamp
-                          .toDate()
-                          .toLocaleTimeString([], {
+                        {(() => {
+                          const ts = msg.toReceiver.timestamp;
+                          const date = new Date(
+                            ts.seconds * 1000 + ts.nanoseconds / 1e6
+                          );
+
+                          return date.toLocaleTimeString([], {
                             hour: "numeric",
                             minute: "2-digit",
-                          })}
+                          });
+                        })()}
                       </Text>
                     )}
 
