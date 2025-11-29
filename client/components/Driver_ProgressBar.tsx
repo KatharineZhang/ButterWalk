@@ -44,164 +44,99 @@ export default function Driver_ProgressBar({
     dropoffColor = red;
   }
 
-  return (
-    <View style={{ width: "100%", height: "100%" }}>
+return (
+    <View style={{ width: "100%", height: 160 }}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingRight: "4%", paddingVertical: 8 }}
         showsVerticalScrollIndicator={true}
         persistentScrollbar={true}
       >
-        {/* Start Section */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            paddingHorizontal: "5%",
-            marginBottom: 8,
-          }}
-        >
-          <View style={{ width: "10%", alignItems: "center" }}>
+        <View style={{ flex: 1, flexDirection: "row"}}>
+          <View style={
+            { width: "10%", 
+            alignItems: "center", 
+            flexDirection: "column", 
+            paddingVertical: "5%",
+            }}>
+          
             <Entypo name="circle" size={20} color={startColor} />
-          </View>
 
-          <View style={{ marginLeft: 16, flex: 1 }}>
-            <Text style={{ fontSize: 17, fontWeight: "bold" }}>Start</Text>
-          </View>
-        </View>
-
-        {/* Dotted line + Duration to Pickup */}
-        <View
-          style={{
-            flexDirection: "row",
-            paddingHorizontal: "5%",
-            marginVertical: 4,
-          }}
-        >
-          <View
-            style={{
-              width: "10%",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <View
-              style={{
-                width: 2,
-                height: 40,
-                borderLeftWidth: 2,
-                borderLeftColor: grey,
-                borderStyle: "dotted",
-              }}
-            />
-          </View>
-
-          {driverToPickupMinutes != null && (
-            <View style={{ marginLeft: 16, justifyContent: "center" }}>
-              <Text style={{ fontSize: 14, color: "#666" }}>
-                {driverToPickupMinutes} min
-              </Text>
+            <View style={{ flex: 1, justifyContent: "center" }}>
+              {[...Array(10)].map((_, i) => (
+                <View
+                  key={i}
+                  style={{
+                    width: 2,
+                    height: 4,
+                    backgroundColor: grey,
+                    marginVertical: 2,
+                    borderRadius: 2,
+                  }}
+                />
+              ))}
             </View>
-          )}
-        </View>
 
-        {/* Pickup Section */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "flex-start",
-            paddingHorizontal: "5%",
-            marginBottom: 8,
-          }}
-        >
-          <View
-            style={{
-              width: "10%",
-              alignItems: "center",
-              paddingTop: 3,
-            }}
-          >
             <FontAwesome name="circle" size={20} color={pickupColor} />
-          </View>
 
-          <View style={{ marginLeft: 16, flex: 1, flexDirection: "column" }}>
-            <Text style={{ fontSize: 17, fontWeight: "bold" }}>Pickup</Text>
-            <Text style={{ fontSize: 14.5, marginTop: 2 }}>
-              {pickUpLocationName}
-            </Text>
-            {pickUpLocationAddress && (
-              <Text style={{ fontSize: 14, color: "#666", marginTop: 2 }}>
-                {pickUpLocationAddress}
-              </Text>
-            )}
-          </View>
-        </View>
-
-        {/* Dotted line + Duration to Dropoff */}
-        <View
-          style={{
-            flexDirection: "row",
-            paddingHorizontal: "5%",
-            marginVertical: 4,
-          }}
-        >
-          <View
-            style={{
-              width: "10%",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <View
-              style={{
-                width: 2,
-                height: 40,
-                borderLeftWidth: 2,
-                borderLeftColor: grey,
-                borderStyle: "dotted",
-              }}
-            />
-          </View>
-
-          {pickupToDropoffMinutes != null && (
-            <View style={{ marginLeft: 16, justifyContent: "center" }}>
-              <Text style={{ fontSize: 14, color: "#666" }}>
-                {pickupToDropoffMinutes} min
-              </Text>
+            <View style={{ flex: 1, justifyContent: "center" }}>
+              {[...Array(10)].map((_, i) => (
+                <View
+                  key={i}
+                  style={{
+                    width: 2,
+                    height: 4,
+                    backgroundColor: grey,
+                    marginVertical: 2,
+                    borderRadius: 2,
+                  }}
+                />
+              ))}
             </View>
-          )}
-        </View>
 
-        {/* Dropoff Section */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "flex-start",
-            paddingHorizontal: "5%",
-            marginBottom: 8,
-          }}
-        >
-          <View
-            style={{
-              width: "10%",
-              alignItems: "center",
-              paddingTop: 3,
-            }}
-          >
             <FontAwesome6 name="location-dot" size={24} color={dropoffColor} />
           </View>
 
-          <View style={{ marginLeft: 16, flex: 1, flexDirection: "column" }}>
-            <Text style={{ fontSize: 17, fontWeight: "bold" }}>Dropoff</Text>
-            <Text style={{ fontSize: 14.5, marginTop: 2 }}>
-              {dropOffLocationName}
-            </Text>
-            {dropOffLocationAddress && (
-              <Text style={{ fontSize: 14, color: "#666", marginTop: 2 }}>
-                {dropOffLocationAddress}
+
+          {/* Right container: All text content */}
+          <View style={{
+              flex: 1,
+              paddingLeft: "5%",
+              paddingTop: "5%",
+              flexDirection: "column",
+              alignItems: "flex-start",
+            }}
+          >
+
+            {/* Start Text */}
+            <View style={{paddingBottom: "10%"}}>
+              <Text style={{ fontSize: 16, fontWeight: "bold" }}>Start</Text>
+            </View>
+
+            {/* Pickup Text */}
+            <View style={{paddingVertical: "10%"}}>
+              <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+                {pickUpLocationName}
               </Text>
-            )}
+              {pickUpLocationAddress && (
+                <Text style={{ fontSize: 12, color: "#666", marginTop: 2 }}>
+                  {pickUpLocationAddress}
+                </Text>
+              )}
+            </View>
+
+            {/* Dropoff Text */}
+            <View style={{paddingTop: "10%"}}>
+              <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+                {dropOffLocationName}
+              </Text>
+              {dropOffLocationAddress && (
+                <Text style={{ fontSize: 12, color: "#666", marginTop: 2 }}>
+                  {dropOffLocationAddress}
+                </Text>
+              )}
+            </View>
           </View>
+
         </View>
       </ScrollView>
     </View>
