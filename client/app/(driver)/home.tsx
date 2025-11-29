@@ -1004,7 +1004,7 @@ export default function HomePage() {
         driverId={netid}
       />
       {/* Message button in top right corner */}
-      {phase === "headingToPickup" || phase === "waitingForPickup" && (
+      {phase === "waitingForPickup" && (
         <TouchableOpacity
           style={{
             position: "absolute",

@@ -954,7 +954,7 @@ export default function HomePage() {
           )}
 
           {/* Message button (right) */}
-          {(rideStatusRef.current === "DriverEnRoute" || rideStatusRef.current === "DriverArrived") && (
+          {(rideStatusRef.current === "DriverArrived") && (
             <TouchableOpacity
               style={{
                 position: "absolute",
