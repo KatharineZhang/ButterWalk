@@ -71,6 +71,7 @@ function Message({ isVisible, onClose, studentId, driverId }: MessageProps) {
     }
   };
 
+  // shows timestamps for messages that are 3 minutes apart
   function shouldShowTimestamp(
     prevMsg: ChatMessageResponse,
     currMsg: ChatMessageResponse

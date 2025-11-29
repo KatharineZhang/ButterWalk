@@ -18,6 +18,7 @@ import {
   VIEWING_STATUS,
   DRIVER_AT_PICK_UP_STATUS,
   CallLog,
+  MessageEntry,
 } from "../api";
 import {
   usersCollection,
@@ -27,12 +28,6 @@ import {
   rideRequestsCollection,
 } from "./firebaseQueries";
 import { defaultCampusLocations } from "../constants/defaultCampusLocations";
-
-import {
-  getDocs,
-  query,
-  where
-} from "firebase/firestore";
 
 /**
  * Logic to create a new user if they don't exist and are not blacklisted.
@@ -350,50 +345,44 @@ export async function addCallLogLogic(
   });
 }
 
-// Adds a chat message to the message log of an active ride request
 export async function addChatToRideRequest(
-  transaction: Transaction,
+  t: Transaction,
   senderID: string,
   recipientID: string,
   message: string,
   timestamp: Timestamp,
   role: "STUDENT" | "DRIVER"
 ): Promise<void> {
-  // builds the query based on the sender’s role
-  let queryRide;
+  // Build the admin query (admin SDK style)
+  let q;
   if (role === "STUDENT") {
-    queryRide = query(
-      rideRequestsCollection,
-      where("netid", "==", senderID),
-      where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS])
-    );
+    q = rideRequestsCollection
+      .where("netid", "==", senderID)
+      .where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS]);
   } else {
-    queryRide = query(
-      rideRequestsCollection,
-      where("driverid", "==", senderID),
-      where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS])
-    );
+    q = rideRequestsCollection
+      .where("driverid", "==", senderID)
+      .where("status", "not-in", [CANCELED_STATUS, COMPLETED_STATUS]);
   }
 
-  const res = await getDocs(queryRide);
+  const querySnap = await q.get();
 
-  if (res.empty) {
+  if (querySnap.empty) {
     throw new Error(`No active ride request found for sender ${senderID}`);
   }
-  if (res.docs.length > 1) {
+  if (querySnap.size > 1) {
     throw new Error(`Multiple active ride requests found for sender ${senderID}`);
   }
 
-  const docRef = res.docs[0].ref;
-  const docSnap = await transaction.get(docRef);
+  const docRef = querySnap.docs[0].ref as DocumentReference;
+  const docSnap = await t.get(docRef);
 
-  if (!docSnap.exists()) {
+  if (!docSnap.exists) {
     throw new Error("Ride Request data is undefined");
   }
 
-  const rideRequest = docSnap.data() as RideRequest;
+  const rideRequest = docSnap.data() as RideRequest & { messageLog?: MessageEntry[] };
 
-  // new message log
   const newMessageEntry = {
     sender: senderID,
     recipient: recipientID,
@@ -401,10 +390,7 @@ export async function addChatToRideRequest(
     timestamp,
   };
 
-  const updatedMessageLog = [
-    ...(rideRequest.messageLog || []),
-    newMessageEntry,
-  ];
+  const updatedMessageLog = [...(rideRequest.messageLog || []), newMessageEntry];
 
-  transaction.update(docRef, { messageLog: updatedMessageLog });
+  t.update(docRef, { messageLog: updatedMessageLog });
 }

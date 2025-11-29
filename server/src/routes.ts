@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 import { AuthSessionResult } from "expo-auth-session";
 // Removed client-side imports
 import {
-  runTransaction,
 //   doc,
 //   getDoc,
 //   DocumentReference,
@@ -1320,8 +1319,7 @@ export const chatMessage = async (
   role: "STUDENT" | "DRIVER"
 ): Promise<ChatMessageResponse | ErrorResponse> => {
   try {
-    return await runTransaction(db, async (transaction) => {
-      // Call your Firestore helper to add chat to the relevant ride request
+    return await firestore.runTransaction(async (transaction) => {
       await addChatToRideRequest(
         transaction,
         senderID,
@@ -1331,7 +1329,7 @@ export const chatMessage = async (
         role
       );
 
-      // Build a structured success response
+      // Build and return the success response
       const response: ChatMessageResponse = {
         response: "CHAT_MESSAGE",
         toSender: {
