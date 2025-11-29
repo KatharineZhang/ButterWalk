@@ -31,8 +31,10 @@ export class BuildingService {
     {
       name: "Aerospace and Engineering Research Building",
       location: {
-        latitude: 47.653996,
-        longitude: -122.306079,
+        latitude: 47.65421412828437,
+        longitude: -122.30666100248473,
+        // original coordinates: 47.653996, -122.306079,
+        // set to road next to it
       },
     },
     {
@@ -134,7 +136,7 @@ export class BuildingService {
       },
     },
     {
-      name: "Cedar  Apartments",
+      name: "Cedar Apartments",
       location: {
         latitude: 47.65699243504848,
         longitude: -122.31574245566567,
@@ -360,8 +362,10 @@ export class BuildingService {
     {
       name: "Gowen Hall (GWN)",
       location: {
-        latitude: 47.656247,
-        longitude: -122.307443,
+        latitude: 47.656819484717275,
+        longitude: -122.3061170002069
+        // original coordinates: 47.656247, -122.307443,
+        // set to the road next to it
       },
     },
     {
@@ -388,8 +392,10 @@ export class BuildingService {
     {
       name: "Guggenheim Hall (GUG)",
       location: {
-        latitude: 47.65411634644492,
-        longitude: -122.30637718121088,
+        latitude: 47.654223162011114,
+        longitude: -122.3066422270683,
+        // original coordinates: 47.65411634644492, -122.30637718121088
+        // set to road next to it
       },
     },
     {
@@ -510,15 +516,19 @@ export class BuildingService {
     {
       name: "Johnson Hall (JHN)",
       location: {
-        latitude: 47.654899,
-        longitude: -122.309003,
+        latitude: 47.655065519086975,
+        longitude: -122.30958568240627,
+        // original coordinates: 47.654899, -122.309003
+        // set to parking near Mol building
       },
     },
     {
       name: "Kane Hall (KNE)",
       location: {
-        latitude: 47.65691551950023,
-        longitude: -122.30903347347314,
+        latitude: 47.65704626842585,
+        longitude: -122.30973987385975,
+        // original coordinates, 47.65691551950023, -122.30903347347314
+        // set to flagpole
       },
     },
     {
@@ -564,60 +574,76 @@ export class BuildingService {
       },
     },
     {
-      name: "Madrona Hall (MDR)",
+      name: "Spratlen Hall (MDR)",
       location: {
-        latitude: 47.660240320482835,
-        longitude: -122.30532402669247,
+        latitude: 47.660262483168495,
+        longitude: -122.30583136462452,
+        // original coordinates, 47.660240320482835, -122.30532402669247
+        // set to Denny Field coordinates
       },
     },
     {
       name: "Magnuson Health Sciences Center A (HSA)",
       location: {
-        latitude: 47.6502648298363,
-        longitude: -122.3081718600694,
+        latitude: 47.64925714895808,
+        longitude: -122.30532704701017,
+        // original coordinates:  47.6502648298363, -122.3081718600694
+        // set to the bus stop closest to it
       },
     },
     {
       name: "Magnuson Health Sciences Center B (HSB)",
       location: {
-        latitude: 47.64973556725395,
-        longitude: -122.30925193383219,
+        latitude: 47.64925714895808, 
+        longitude: -122.30532704701017
+        // original coordinates: 47.64973556725395, -122.30925193383219,
+        // set to the bus stop closest to it
       },
     },
     {
       name: "Magnuson Health Sciences Center D (HSD)",
       location: {
-        latitude: 47.650149588451455,
-        longitude: -122.3093451472053,
+        latitude: 47.64925714895808, 
+        longitude: -122.30532704701017, 
+        // original coordinates: 47.650149588451455, -122.3093451472053,
+        // set to the bus stop closest to it
       },
     },
     {
       name: "Magnuson Health Sciences Center E (HSE)",
       location: {
-        latitude: 47.65063107791709,
-        longitude: -122.30939585723543,
+        latitude: 47.64925714895808,
+        longitude: -122.30532704701017,
+        // original coordinates:  47.65063107791709, -122.30939585723543
+        // set to the bus stop closest to it
       },
     },
     {
       name: "Magnuson Health Sciences Center F (HSF)",
       location: {
-        latitude: 47.65023705383899,
-        longitude: -122.31015970676567,
+        latitude: 47.64925714895808,
+        longitude: -122.30532704701017,
+        // original coordinates: 47.65023705383899, -122.31015970676567, 
+        // set to the bus stop closest to it
       },
     },
     {
       name: "Magnuson Health Sciences Center H (HSH)",
       location: {
-        latitude: 47.65054795253484,
-        longitude: -122.3107626112857,
+        latitude: 47.64925714895808,
+        longitude: -122.30532704701017,
+        // original coordinates:  47.65054795253484, -122.3107626112857,
+        // set to the bus stop closest to it
       },
     },
 
     {
       name: "Magnuson Health Sciences Center T (HST)",
       location: {
-        latitude: 47.651088578683364,
-        longitude: -122.30921479604416,
+        latitude: 47.64925714895808,
+        longitude: -122.30532704701017
+        // original coordinates: 47.651088578683364, -122.30921479604416
+        // set to the bus stop closest to it
       },
     },
     {
@@ -644,8 +670,10 @@ export class BuildingService {
     {
       name: "McCarty Hall (MCC)",
       location: {
-        latitude: 47.660447301948984,
-        longitude: -122.30489067545548,
+        latitude: 47.660262483168495,
+        longitude: -122.30583136462452,
+        // original coordinates: 47.660447301948984, -122.30489067545548
+        // set to Denny Hall coordinates
       },
     },
     {
@@ -665,8 +693,10 @@ export class BuildingService {
     {
       name: "Meany Hall (MNY)",
       location: {
-        latitude: 47.65573381723382,
-        longitude: -122.31064092601596,
+        latitude: 47.657047507772994,
+        longitude: -122.309740793848,
+        // original coordinates: 47.65573381723382, -122.31064092601596
+        // set to flagpole coordinates
       },
     },
     {
@@ -686,8 +716,10 @@ export class BuildingService {
     {
       name: "Odegaard Library",
       location: {
-        latitude: 47.65675486360317,
-        longitude: -122.30994734434229,
+        latitude: 47.657047507772994,
+        longitude: -122.309740793848,
+        // original coordinates: 47.65675486360317, -122.30994734434229
+        // set to flagpole coordinates
       },
     },
     {
@@ -700,15 +732,19 @@ export class BuildingService {
     {
       name: "Miller Hall (MLR)",
       location: {
-        latitude: 47.657039,
-        longitude: -122.306337,
+        latitude: 47.656819484717275,
+        longitude: -122.3061170002069,
+        // original coordinates: 47.657039, -122.306337
+        // set to road next to it
       },
     },
     {
       name: "Molecular Engineering & Sciences Building (MOL/NAN)",
       location: {
-        latitude: 47.65444121894472,
-        longitude: -122.3101735533603,
+        latitude: 47.655063712372886,
+        longitude:  -122.30957763580813,
+        // original coordinates: 47.65444121894472, -122.3101735533603
+        // set to parking right next to Mol building
       },
     },
     {
@@ -742,8 +778,10 @@ export class BuildingService {
     {
       name: "Oak Hall (OAK)",
       location: {
-        latitude: 47.65911326385438,
-        longitude: -122.30591783948768,
+        latitude: 47.660262483168495,
+        longitude: -122.30583136462452,
+        // original coordinates: 47.65911326385438, -122.30591783948768,
+        // set to Denny Field coordinates
       },
     },
     {
@@ -779,6 +817,13 @@ export class BuildingService {
       location: {
         latitude: 47.65658543847523,
         longitude: -122.30418194500425,
+      },
+    },
+    {
+      name: "Padelford Parking Garage",
+      location: {
+        latitude: 47.65716030260452,
+        longitude: -122.30316485923683,
       },
     },
     {
@@ -868,8 +913,10 @@ export class BuildingService {
     {
       name: "Raitt Hall (RAI)",
       location: {
-        latitude: 47.65787529165982,
-        longitude: -122.3072924472048,
+        latitude: 47.65809465487039,
+        longitude: -122.3073297861621,
+        // old coordinates: 47.65787529165982, -122.3072924472048
+        // set to road next to it: 
       },
     },
     {
@@ -889,8 +936,10 @@ export class BuildingService {
     {
       name: "Savery Hall (SAV)",
       location: {
-        latitude: 47.657077531986964,
-        longitude: -122.30843471752385,
+        latitude: 47.65730997500709,
+        longitude: -122.30870528894197,
+        // original coordinates: 47.657077531986964, -122.30843471752385,
+        // set to parking lot/road behind Savery
       },
     },
     {
@@ -910,8 +959,10 @@ export class BuildingService {
     {
       name: "Smith Hall (SMI)",
       location: {
-        latitude: 47.656394649030126,
-        longitude: -122.30760912801728,
+        latitude: 47.656819484717275,
+        longitude: -122.3061170002069,
+        // original coordinates: 47.656394649030126, -122.30760912801728
+        // set to road next to it
       },
     },
     {
@@ -945,15 +996,19 @@ export class BuildingService {
     {
       name: "Husky Union Building (HUB)",
       location: {
-        latitude: 47.65491709706143,
-        longitude: -122.3056741257775,
+        latitude: 47.65632871326765,
+        longitude: -122.30506493548226,
+        // original coordinates: 47.65491709706143, -122.3056741257775,
+        // changed it to the parking right next to the Hub
       },
     },
     {
       name: "Suzzallo Library (SUZ)",
       location: {
-        latitude: 47.65569067672928,
-        longitude: -122.30796072007158,
+        latitude: 47.6570431700579,
+        longitude: -122.3097417138362,
+        // original coordinates: 47.65569067672928, -122.30796072007158, 
+        // set to flagpole
       },
     },
     {
@@ -973,8 +1028,10 @@ export class BuildingService {
     {
       name: "Thomson Hall (THO)",
       location: {
-        latitude: 47.65648102453225,
-        longitude: -122.30575637589331,
+        latitude: 47.656819484717275,
+        longitude: -122.3061170002069,
+        // original coordinates: 47.65648102453225, -122.30575637589331
+        // set to road next to it
       },
     },
     {
@@ -1034,10 +1091,12 @@ export class BuildingService {
       },
     },
     {
-      name: "Willow Hall (WLW)",
+      name: "Oliver Hall (WLW)",
       location: {
-        latitude: 47.65946849274097,
-        longitude: -122.30431356541132,
+        latitude: 47.660262483168495,
+        longitude: -122.30583136462452,
+        // original coordinates 47.65946849274097, -122.30431356541132
+        // set to Denny Field coordinates
       },
     },
     {
