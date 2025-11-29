@@ -70,6 +70,7 @@ import {
 } from "./firebase/firebaseTransactions";
 import { highestRank, rankOf } from "./util/rankingAlgorithm";
 import { PurpleZone } from "./util/zones";
+import { RideTakenError } from "./firebase/errors";
 
 dotenv.config();
 
@@ -501,57 +502,66 @@ export const viewRide = async (
   }
 ): Promise<ViewRideRequestResponse | ErrorResponse> => {
   try {
-    const availableRides = await getRideRequestsInPool();
+    const MAX_RETRIES = 3; // How many times to retry after race condition
+    let attempts = 0;
 
-    if (availableRides.length === 0) {
-      return { response: "VIEW_RIDE", rideExists: false, notifyDrivers: false };
-    }
+    while (attempts < MAX_RETRIES) {
+      const availableRides = await getRideRequestsInPool();
 
-    const bestRequest = highestRank(availableRides, driverid, driverLocation);
-    if (!bestRequest.requestId) {
-      throw new Error("Assertion failed: Highest ranked ride must have an ID.");
-    }
-    const rideRef = rideRequestsCollection.doc(bestRequest.requestId);
+      if (availableRides.length === 0) {
+        return { response: "VIEW_RIDE", rideExists: false, notifyDrivers: false };
+      }
 
-    await firestore.runTransaction(async (t) => {
-      return assignRideForViewingLogic(t, rideRef, driverid);
-    });
+      const bestRequest = highestRank(availableRides, driverid, driverLocation);
+      
+      if (!bestRequest.requestId) {
+        throw new Error("Assertion failed: Highest ranked ride must have an ID.");
+      }
+      const rideRef = rideRequestsCollection.doc(bestRequest.requestId);
 
-    const driverToPickUpDuration = await getDuration(
-      driverLocation,
-      bestRequest.locationFrom.coordinates,
-      false
-    ).then((r) => ("duration" in r ? r.duration : 0));
-    const pickUpToDropOffDuration = await getDuration(
-      bestRequest.locationFrom.coordinates,
-      bestRequest.locationTo.coordinates,
-      false
-    ).then((r) => ("duration" in r ? r.duration : 0));
+      try {
+        await firestore.runTransaction(async (t) => {
+          return assignRideForViewingLogic(t, rideRef, driverid);
+        });
 
+        const [driverToPickUpDuration, pickUpToDropOffDuration, studentProfile] = await Promise.all([
+           getDuration(driverLocation, bestRequest.locationFrom.coordinates, false)
+             .then((r) => ("duration" in r ? r.duration : 0)),
+           getDuration(bestRequest.locationFrom.coordinates, bestRequest.locationTo.coordinates, false)
+             .then((r) => ("duration" in r ? r.duration : 0)),
+           getProfile(bestRequest.netid)
+        ]);
 
-    // get student's phone number from their profile to send to driver
-    const studentPhoneNumber = await getProfile(bestRequest.netid).then(
-      (profileResp: User) => {
-        if ("phoneNumber" in profileResp) {
-          // Ensure studentPhoneNumber is always a string
-          return profileResp.phoneNumber as string;
+        if (!studentProfile.phoneNumber) {
+             throw new Error(`Error getting student phone number`);
+        }
+
+        return {
+          response: "VIEW_RIDE",
+          rideExists: true,
+          rideInfo: {
+            rideRequest: { ...bestRequest, requestId: bestRequest.requestId },
+            driverToPickUpDuration,
+            pickUpToDropOffDuration,
+            studentPhoneNumber: studentProfile.phoneNumber,
+          },
+          notifyDrivers: availableRides.length === 1,
+        };
+
+      } catch (e) {
+        if (e instanceof RideTakenError) {
+          console.log(`Race condition for ride ${bestRequest.requestId}, retrying...`);
+          attempts++;
+          continue;
         } else {
-          throw new Error(`Error getting student phone number`);
+          throw e; 
         }
       }
-    );
+    }
 
-    return {
-      response: "VIEW_RIDE",
-      rideExists: true,
-      rideInfo: {
-        rideRequest: { ...bestRequest, requestId: bestRequest.requestId },
-        driverToPickUpDuration,
-        pickUpToDropOffDuration,
-        studentPhoneNumber,
-      },
-      notifyDrivers: availableRides.length === 1,
-    };
+    // Exceeded retry limit.
+    return { response: "VIEW_RIDE", rideExists: false, notifyDrivers: false };
+
   } catch (e) {
     return {
       response: "ERROR",
