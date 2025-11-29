@@ -4,7 +4,7 @@ import { RideRequest } from "../../server/src/api";
 import { NotificationType } from "./Both_Notification";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { styles } from "@/assets/styles";
-import Both_ProgressBar from "./Both_ProgressBar";
+import Driver_ProgressBar from "./Driver_ProgressBar";
 
 interface HandleRideProps {
   requestInfo: RideRequest;
@@ -249,10 +249,12 @@ export default function HandleRide({
           <View style={styles.driverGreyLine} />
 
           {/* Progress Bar Section */}
-          <Both_ProgressBar
+           <Driver_ProgressBar
             rideStatus={"start"}
-            pickupAddress={requestInfo.locationFrom.address}
-            dropoffAddress={requestInfo.locationTo.address}
+            pickUpLocationName={requestInfo.locationFrom.name}
+            dropOffLocationName={requestInfo.locationTo.name}
+            pickUpLocationAddress={requestInfo.locationFrom.address}
+            dropOffLocationAddress={requestInfo.locationTo.address}
             driverToPickupMinutes={driverToPickupDuration}
             pickupToDropoffMinutes={pickupToDropoffDuration}
           />
@@ -359,10 +361,12 @@ export default function HandleRide({
           />
 
           {/* Actual Progress Bar */}
-          <Both_ProgressBar
+           <Driver_ProgressBar
             rideStatus={"pickup"}
-            pickupAddress={requestInfo.locationFrom.address}
-            dropoffAddress={requestInfo.locationTo.address}
+            pickUpLocationName={requestInfo.locationFrom.name}
+            dropOffLocationName={requestInfo.locationTo.name}
+            pickUpLocationAddress={requestInfo.locationFrom.address}
+            dropOffLocationAddress={requestInfo.locationTo.address}
             driverToPickupMinutes={driverToPickupDuration}
             pickupToDropoffMinutes={pickupToDropoffDuration}
           />
@@ -506,10 +510,12 @@ export default function HandleRide({
           {/* Grey line */}
           <View style={styles.driverGreyLine} />
           {/* Progress Bar Section */}
-          <Both_ProgressBar
+           <Driver_ProgressBar
             rideStatus={"dropoff"}
-            pickupAddress={requestInfo.locationFrom.address}
-            dropoffAddress={requestInfo.locationTo.address}
+            pickUpLocationName={requestInfo.locationFrom.name}
+            dropOffLocationName={requestInfo.locationTo.name}
+            pickUpLocationAddress={requestInfo.locationFrom.address}
+            dropOffLocationAddress={requestInfo.locationTo.address}
             driverToPickupMinutes={driverToPickupDuration}
             pickupToDropoffMinutes={pickupToDropoffDuration}
           />
@@ -542,10 +548,12 @@ export default function HandleRide({
             </View>
           </View>
           {/* Progress Bar Section */}
-          <Both_ProgressBar
+           <Driver_ProgressBar
             rideStatus={"dropoff"}
-            pickupAddress={requestInfo.locationFrom.address}
-            dropoffAddress={requestInfo.locationTo.address}
+            pickUpLocationName={requestInfo.locationFrom.name}
+            dropOffLocationName={requestInfo.locationTo.name}
+            pickUpLocationAddress={requestInfo.locationFrom.address}
+            dropOffLocationAddress={requestInfo.locationTo.address}
             driverToPickupMinutes={driverToPickupDuration}
             pickupToDropoffMinutes={pickupToDropoffDuration}
           />
