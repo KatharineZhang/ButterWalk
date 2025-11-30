@@ -136,16 +136,16 @@ export default function Driver_ProgressBar({
           >
             {/* Start Text */}
             <View style={{ paddingBottom: "5%" }}>
-              <Text style={{ fontSize: 16, fontWeight: "bold" }}>Start</Text>
+              <Text style={{ fontSize: 14, fontWeight: "bold" }}>Start</Text>
             </View>
 
             {/* Pickup Text */}
             <View style={{ paddingVertical: "6%" }}>
-              <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+              <Text style={{ fontSize: 14, fontWeight: "bold" }}>
                 {pickUpLocationName}
               </Text>
               {pickUpLocationAddress && (
-                <Text style={{ fontSize: 12, color: "#666", marginTop: 2 }}>
+                <Text style={{ fontSize: 14, color: "#666", marginTop: 2 }}>
                   {pickUpLocationAddress}
                 </Text>
               )}
@@ -153,11 +153,11 @@ export default function Driver_ProgressBar({
 
             {/* Dropoff Text */}
             <View style={{ paddingTop: "5%" }}>
-              <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+              <Text style={{ fontSize: 14, fontWeight: "bold" }}>
                 {dropOffLocationName}
               </Text>
               {dropOffLocationAddress && (
-                <Text style={{ fontSize: 12, color: "#666", marginTop: 2 }}>
+                <Text style={{ fontSize: 14, color: "#666", marginTop: 2 }}>
                   {dropOffLocationAddress}
                 </Text>
               )}
