@@ -238,6 +238,7 @@ export default function RideRequestForm({
       const recentLocOptionClicked = recentLocations.find(
         (item) => item.name === value
       );
+      
       if (placeSearchOptionClicked) {
         // if it was, we can just use the coordinates attached to it
         pickupCoord = placeSearchOptionClicked.coordinates;
