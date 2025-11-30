@@ -17,7 +17,6 @@ export default function Student_ProgressBar({
   driverToPickupMinutes,
   pickupToDropoffMinutes,
 }: StudentProgressBarProps) {
-
   // icon colors based on rideStatus
   const grey = "#adacaa";
   const purple = "#4B2E83";

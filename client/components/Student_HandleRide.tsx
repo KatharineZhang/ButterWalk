@@ -42,8 +42,6 @@ interface HandleRideProps {
 
 const HandleRideComponent: React.FC<HandleRideProps> = ({
   status,
-  pickUpAddress,
-  dropOffAddress,
   pickUpLocationName,
   dropOffLocationName,
   walkProgress,

@@ -1,6 +1,6 @@
 import { View, Text, ScrollView } from "react-native";
 import { FontAwesome6, Entypo, FontAwesome } from "@expo/vector-icons";
-import { LinearGradient } from 'expo-linear-gradient';
+import { LinearGradient } from "expo-linear-gradient";
 
 type StudentProgressBarProps = {
   rideStatus: "start" | "pickup" | "dropoff";
@@ -41,14 +41,13 @@ export default function Driver_ProgressBar({
     dropoffColor = red;
   }
 
-return (
+  return (
     <View style={{ width: "100%", height: 160 }}>
-
       {/* TOP fade */}
       <LinearGradient
-        colors={['rgba(255,255,255,1)', 'rgba(255,255,255,0)']}
+        colors={["rgba(255,255,255,1)", "rgba(255,255,255,0)"]}
         style={{
-          position: 'absolute',
+          position: "absolute",
           top: 0,
           left: 0,
           right: 0,
@@ -60,9 +59,9 @@ return (
 
       {/* BOTTOM fade */}
       <LinearGradient
-        colors={['rgba(255,255,255,0)', 'rgba(255,255,255,1)']}
+        colors={["rgba(255,255,255,0)", "rgba(255,255,255,1)"]}
         style={{
-          position: 'absolute',
+          position: "absolute",
           bottom: 0,
           left: 0,
           right: 0,
@@ -73,18 +72,19 @@ return (
       />
 
       <ScrollView
-        style={{ flex : 1}}
+        style={{ flex: 1 }}
         showsVerticalScrollIndicator={true}
         persistentScrollbar={true}
       >
-        <View style={{ flex: 1, flexDirection: "row"}}>
-          <View style={
-            { width: "10%", 
-            alignItems: "center", 
-            flexDirection: "column", 
-            paddingVertical: "5%",
-            }}>
-          
+        <View style={{ flex: 1, flexDirection: "row" }}>
+          <View
+            style={{
+              width: "10%",
+              alignItems: "center",
+              flexDirection: "column",
+              paddingVertical: "5%",
+            }}
+          >
             <Entypo name="circle" size={20} color={startColor} />
 
             {/* Dotted line */}
@@ -124,9 +124,9 @@ return (
             <FontAwesome6 name="location-dot" size={24} color={dropoffColor} />
           </View>
 
-
           {/* Right container: All text content */}
-          <View style={{
+          <View
+            style={{
               flex: 1,
               paddingLeft: "5%",
               paddingTop: "5%",
@@ -134,14 +134,13 @@ return (
               alignItems: "flex-start",
             }}
           >
-
             {/* Start Text */}
-            <View style={{paddingBottom: "5%"}}>
+            <View style={{ paddingBottom: "5%" }}>
               <Text style={{ fontSize: 16, fontWeight: "bold" }}>Start</Text>
             </View>
 
             {/* Pickup Text */}
-            <View style={{paddingVertical: "6%"}}>
+            <View style={{ paddingVertical: "6%" }}>
               <Text style={{ fontSize: 16, fontWeight: "bold" }}>
                 {pickUpLocationName}
               </Text>
@@ -153,7 +152,7 @@ return (
             </View>
 
             {/* Dropoff Text */}
-            <View style={{paddingTop: "5%"}}>
+            <View style={{ paddingTop: "5%" }}>
               <Text style={{ fontSize: 16, fontWeight: "bold" }}>
                 {dropOffLocationName}
               </Text>
@@ -164,7 +163,6 @@ return (
               )}
             </View>
           </View>
-
         </View>
       </ScrollView>
     </View>

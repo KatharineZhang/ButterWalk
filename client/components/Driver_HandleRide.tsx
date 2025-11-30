@@ -43,8 +43,6 @@ interface HandleRideProps {
 export default function HandleRide({
   phase,
   requestInfo,
-  driverToPickupDuration,
-  pickupToDropoffDuration,
   isNearPickup,
   isNearDropoff,
   studentPhoneNumber,
@@ -249,7 +247,7 @@ export default function HandleRide({
           <View style={styles.driverGreyLine} />
 
           {/* Progress Bar Section */}
-           <Driver_ProgressBar
+          <Driver_ProgressBar
             rideStatus={"start"}
             pickUpLocationName={requestInfo.locationFrom.name}
             dropOffLocationName={requestInfo.locationTo.name}
@@ -359,7 +357,7 @@ export default function HandleRide({
           />
 
           {/* Actual Progress Bar */}
-           <Driver_ProgressBar
+          <Driver_ProgressBar
             rideStatus={"pickup"}
             pickUpLocationName={requestInfo.locationFrom.name}
             dropOffLocationName={requestInfo.locationTo.name}
@@ -506,7 +504,7 @@ export default function HandleRide({
           {/* Grey line */}
           <View style={styles.driverGreyLine} />
           {/* Progress Bar Section */}
-           <Driver_ProgressBar
+          <Driver_ProgressBar
             rideStatus={"dropoff"}
             pickUpLocationName={requestInfo.locationFrom.name}
             dropOffLocationName={requestInfo.locationTo.name}
@@ -542,7 +540,7 @@ export default function HandleRide({
             </View>
           </View>
           {/* Progress Bar Section */}
-           <Driver_ProgressBar
+          <Driver_ProgressBar
             rideStatus={"dropoff"}
             pickUpLocationName={requestInfo.locationFrom.name}
             dropOffLocationName={requestInfo.locationTo.name}
