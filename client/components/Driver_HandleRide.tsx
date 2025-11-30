@@ -1,10 +1,19 @@
 import { useState, useEffect } from "react";
-import { View, Text, Pressable, Linking } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  Linking,
+  Modal,
+  Platform,
+  TouchableOpacity,
+} from "react-native";
 import { RideRequest } from "../../server/src/api";
 import { NotificationType } from "./Both_Notification";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { styles } from "@/assets/styles";
 import { ProgressBar } from "react-native-paper";
+import openMap from "react-native-open-maps";
 
 interface HandleRideProps {
   requestInfo: RideRequest;
@@ -118,6 +127,13 @@ export default function HandleRide({
   // When timer is done in "waitingForPickup" state
   const [timerDone, setTimerDone] = useState(false);
   const [seconds, setSeconds] = useState(5 * 60); // 5 minutes
+  // State for map selection modal
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [selectedDestination, setSelectedDestination] = useState<{
+    lat: number;
+    lng: number;
+    title: string;
+  } | null>(null);
 
   useEffect(() => {
     if (phase === "headingToPickup") {
@@ -173,15 +189,83 @@ export default function HandleRide({
     onCancel();
   };
 
-  // Function to open Google Maps with directions while app still runs in background
-  const openGoogleMapsDirections = async (destination: {
+  // Function to open map selection modal
+  const showMapSelectionModal = (destination: {
+    lat: number;
+    lng: number;
+    title: string;
+  }) => {
+    setSelectedDestination(destination);
+    setShowMapModal(true);
+  };
+
+  // Function to open Google Maps
+  const openGoogleMaps = async (destination: {
+    lat: number;
+    lng: number;
+    title: string;
+  }) => {
+    try {
+      // with this url, it will open in app if app is installed, else it will open in web browser
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${destination.lat},${destination.lng}&travelmode=driving`;
+      await Linking.openURL(url);
+    } catch (error) {
+      console.error("Error opening Google Maps:", error);
+    }
+    setShowMapModal(false);
+  };
+
+  // Function to open Apple Maps (iOS only)
+  const openAppleMaps = async (destination: {
+    lat: number;
+    lng: number;
+    title: string;
+  }) => {
+    try {
+      openMap({
+        latitude: destination.lat,
+        longitude: destination.lng,
+        provider: Platform.OS === "ios" ? "apple" : "google",
+        query: destination.title,
+      });
+    } catch (error) {
+      console.error("Error opening Apple Maps:", error);
+    }
+    setShowMapModal(false);
+  };
+
+  // Function to open default map app (Android) (NOT TESTED)
+  const openDefaultMaps = async (destination: {
+    lat: number;
+    lng: number;
+    title: string;
+  }) => {
+    try {
+      // Use geo, URI scheme which Android will route to default map app
+      const url = `geo:${destination.lat},${destination.lng}?q=${destination.lat},${destination.lng}(${encodeURIComponent(destination.title)})`;
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        // Fallback to Google Maps if geo scheme is not available
+        openGoogleMaps(destination);
+      }
+    } catch (error) {
+      console.error("Error opening default maps:", error);
+      // Fallback to Google Maps on error
+      openGoogleMaps(destination);
+    }
+    setShowMapModal(false);
+  };
+
+  // Function to open google maps in web browser
+  const openWebBrowser = async (destination: {
     lat: number;
     lng: number;
     title: string;
   }) => {
     try {
       const url = `https://www.google.com/maps/dir/?api=1&destination=${destination.lat},${destination.lng}&travelmode=driving`;
-
       const canOpen = await Linking.canOpenURL(url);
       if (canOpen) {
         await Linking.openURL(url);
@@ -189,8 +273,9 @@ export default function HandleRide({
         console.error("Cannot open maps URL");
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error opening web browser:", error);
     }
+    setShowMapModal(false);
   };
 
   // Function to format time (mm:ss)
@@ -309,7 +394,7 @@ export default function HandleRide({
                     -122.3321,
                   title: "Pickup Location",
                 };
-                openGoogleMapsDirections(destination);
+                showMapSelectionModal(destination);
               }}
             >
               <Text style={{ color: "white", fontSize: 14, fontWeight: "600" }}>
@@ -595,7 +680,7 @@ export default function HandleRide({
                     requestInfo.locationTo?.coordinates?.longitude || -122.3321,
                   title: "Dropoff Location",
                 };
-                openGoogleMapsDirections(destination);
+                showMapSelectionModal(destination);
               }}
             >
               <Text style={{ color: "white", fontSize: 14, fontWeight: "600" }}>
@@ -690,6 +775,150 @@ export default function HandleRide({
           </Pressable>
         </>
       ) : null}
+
+      {/* Map Selection Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showMapModal}
+        onRequestClose={() => setShowMapModal(false)}
+      >
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            justifyContent: "flex-end",
+          }}
+          activeOpacity={1}
+          onPress={() => setShowMapModal(false)}
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              paddingTop: 20,
+              paddingBottom: 40,
+              paddingHorizontal: 20,
+            }}
+            onStartShouldSetResponder={() => true}
+          >
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: "bold",
+                marginBottom: 20,
+                textAlign: "center",
+                color: "#222",
+              }}
+            >
+              Open Directions In
+            </Text>
+
+            {/* Google Maps Option */}
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#4B2E83",
+                paddingVertical: 16,
+                borderRadius: 8,
+                alignItems: "center",
+                marginBottom: 12,
+              }}
+              onPress={() => {
+                if (selectedDestination) {
+                  openGoogleMaps(selectedDestination);
+                }
+              }}
+            >
+              <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>
+                Google Maps
+              </Text>
+            </TouchableOpacity>
+
+            {/* Default Maps Option (Android only) */}
+            {Platform.OS === "android" && (
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "#4B2E83",
+                  paddingVertical: 16,
+                  borderRadius: 8,
+                  alignItems: "center",
+                  marginBottom: 12,
+                }}
+                onPress={() => {
+                  if (selectedDestination) {
+                    openDefaultMaps(selectedDestination);
+                  }
+                }}
+              >
+                <Text
+                  style={{ color: "white", fontSize: 16, fontWeight: "600" }}
+                >
+                  Default Maps
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Apple Maps Option (iOS only) */}
+            {Platform.OS === "ios" && (
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "#4B2E83",
+                  paddingVertical: 16,
+                  borderRadius: 8,
+                  alignItems: "center",
+                  marginBottom: 12,
+                }}
+                onPress={() => {
+                  if (selectedDestination) {
+                    openAppleMaps(selectedDestination);
+                  }
+                }}
+              >
+                <Text
+                  style={{ color: "white", fontSize: 16, fontWeight: "600" }}
+                >
+                  Apple Maps
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Web Browser Option */}
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#E0E0E0",
+                paddingVertical: 16,
+                borderRadius: 8,
+                alignItems: "center",
+                marginBottom: 12,
+              }}
+              onPress={() => {
+                if (selectedDestination) {
+                  openWebBrowser(selectedDestination);
+                }
+              }}
+            >
+              <Text style={{ color: "#222", fontSize: 16, fontWeight: "600" }}>
+                Web Browser
+              </Text>
+            </TouchableOpacity>
+
+            {/* Cancel Button */}
+            <TouchableOpacity
+              style={{
+                paddingVertical: 16,
+                borderRadius: 8,
+                alignItems: "center",
+              }}
+              onPress={() => setShowMapModal(false)}
+            >
+              <Text style={{ color: "#888", fontSize: 16, fontWeight: "600" }}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
