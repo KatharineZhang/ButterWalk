@@ -73,7 +73,7 @@ return (
       />
 
       <ScrollView
-        style={{ flex: 1 }}
+        style={{ flex : 1}}
         showsVerticalScrollIndicator={true}
         persistentScrollbar={true}
       >
@@ -87,6 +87,7 @@ return (
           
             <Entypo name="circle" size={20} color={startColor} />
 
+            {/* Dotted line */}
             <View style={{ flex: 1, justifyContent: "center" }}>
               {[...Array(10)].map((_, i) => (
                 <View
@@ -104,6 +105,7 @@ return (
 
             <FontAwesome name="circle" size={20} color={pickupColor} />
 
+            {/* Dotted line */}
             <View style={{ flex: 1, justifyContent: "center" }}>
               {[...Array(10)].map((_, i) => (
                 <View
@@ -134,12 +136,12 @@ return (
           >
 
             {/* Start Text */}
-            <View style={{paddingBottom: "10%"}}>
+            <View style={{paddingBottom: "5%"}}>
               <Text style={{ fontSize: 16, fontWeight: "bold" }}>Start</Text>
             </View>
 
             {/* Pickup Text */}
-            <View style={{paddingVertical: "10%"}}>
+            <View style={{paddingVertical: "6%"}}>
               <Text style={{ fontSize: 16, fontWeight: "bold" }}>
                 {pickUpLocationName}
               </Text>
@@ -151,7 +153,7 @@ return (
             </View>
 
             {/* Dropoff Text */}
-            <View style={{paddingTop: "10%"}}>
+            <View style={{paddingTop: "5%"}}>
               <Text style={{ fontSize: 16, fontWeight: "bold" }}>
                 {dropOffLocationName}
               </Text>
