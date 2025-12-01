@@ -1107,16 +1107,15 @@ export default function HomePage() {
         </Pressable>
 
         {/* Directions button - positioned on the right side */}
-        {whichComponent.current === "handleRide" && (
-          <DirectionsButton
-            locationTo={
-              phase == "waitingForPickup" || phase == "headingToPickup"
-                ? pickUpLocation
-                : dropOffLocation
-            }
-            role={"DRIVER"}
-          />
-        )}
+        {whichComponent.current === "handleRide" &&
+          phase != "waitingForPickup" && (
+            <DirectionsButton
+              locationTo={
+                phase == "headingToPickup" ? pickUpLocation : dropOffLocation
+              }
+              role={"DRIVER"}
+            />
+          )}
       </View>
 
       {/* Decide which component to render */}
