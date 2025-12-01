@@ -17,6 +17,9 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.butterwalk.butterwalk",
+      "config": {
+        "googleMapsApiKey": "see app.config.ts"
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "This app uses your location to match you with nearby rides.",
