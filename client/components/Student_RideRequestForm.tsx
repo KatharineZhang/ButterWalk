@@ -17,7 +17,6 @@ import { Image } from "react-native";
 import AutocompleteInput from "./Student_AutocompleteTextInput";
 import { styles } from "../assets/styles";
 import BottomDrawer, { BottomDrawerRef } from "./Student_RideReqBottomDrawer";
-import PopUpModal from "./Student_PopUpModal";
 // import BottomSheet from "@gorhom/bottom-sheet";
 import SegmentedProgressBar from "./Both_SegmentedProgressBar";
 import {
@@ -61,7 +60,6 @@ type RideRequestFormProps = {
   setFAQVisible: (visible: boolean) => void;
   updateSideBarHeight: (bottom: number) => void;
   setNotificationState: (state: NotificationType) => void;
-  darkenScreen: (darken: boolean) => void; // darken the screen behind the confirmation modal
 };
 
 export default function RideRequestForm({
@@ -76,7 +74,6 @@ export default function RideRequestForm({
   recentLocations,
   setNotificationState,
   updateSideBarHeight,
-  darkenScreen,
   showRequestLoading,
 }: RideRequestFormProps) {
   /* STATE */
@@ -108,10 +105,6 @@ export default function RideRequestForm({
   // Bottom Sheet Reference needed to expand the bottom sheet
   const bottomSheetRef = useRef<BottomDrawerRef>(null);
 
-  // Confirmation Modal
-  const [confirmationModalVisible, setConfirmationModalVisible] =
-    useState(false);
-
   // what the user types in to the text boxes
   const [pickUpQuery, setPickUpQuery] = useState(""); // Typed in pickup query
   const [previousPickUpQuery, setPreviousPickUpQuery] = useState(""); // Previous pickup query
@@ -119,9 +112,9 @@ export default function RideRequestForm({
   const [previousDropOffQuery, setPreviousDropOffQuery] = useState(""); // Previous dropoff query
 
   // which text box is currently being updated
-  const [currentQuery, setCurrentQuery] = useState<"pickup" | "dropoff">(
-    "pickup"
-  );
+  const [currentQuery, setCurrentQuery] = useState<
+    "none" | "pickup" | "dropoff"
+  >("none");
 
   // if the user clicks current location on campus, give them the closest Building
   const [closestBuilding, setClosestBuilding] = useState<string>("");
@@ -136,10 +129,26 @@ export default function RideRequestForm({
     PlaceSearchResult[]
   >([]);
 
+  useEffect(() => {
+    if (chosenPickup == "" && chosenDropoff == "") {
+      // if nothing has been selected, set text boxes to gray
+      setCurrentQuery("none");
+    } else if (chosenPickup != "" && chosenDropoff != "") {
+      // if all locations have been selected, set boxes to gray
+      setCurrentQuery("none");
+      // if both locations are chosen, shrink form to original size
+      if (bottomSheetRef == null) {
+        console.log("bottomSheetRef is null");
+        return;
+      }
+      bottomSheetRef.current?.shrink();
+    }
+  }, [chosenPickup, chosenDropoff]);
+
   // the user clicked a dropdown result
   // figure out if it was a pickup or dropoff and call the right function
   const handleSelection = (value: string) => {
-    if (currentQuery === "pickup") {
+    if (currentQuery !== "dropoff") {
       setPickUpQuery(value);
       //switch to dropoff
       setCurrentQuery("dropoff");
@@ -204,7 +213,6 @@ export default function RideRequestForm({
       } else {
         // the user is in the purple zone,
         // so we need to snap the location to the closest building or street
-
         // first try to get a closest building
         const closestCampusBuilding =
           BuildingService.closestBuilding(userLocation);
@@ -222,8 +230,16 @@ export default function RideRequestForm({
           // otherwise, store the closest building
           setClosestBuilding(closestCampusBuilding.name);
           // show the confirmation modal to let the user know where they are being snapped to
-          setConfirmationModalVisible(true);
-          darkenScreen(true);
+          setPickUpQuery(closestCampusBuilding.name);
+          setChosenPickup(closestCampusBuilding.name);
+          pickUpLocationNameChanged(closestCampusBuilding.name);
+          const pickupCoord =
+            BuildingService.getClosestBuildingEntranceCoordinates(
+              closestCampusBuilding.name,
+              userLocation
+            );
+          setPickupCoordinates(pickupCoord);
+          pickUpLocationCoordChanged(pickupCoord);
         }
       }
     } else {
@@ -238,6 +254,7 @@ export default function RideRequestForm({
       const recentLocOptionClicked = recentLocations.find(
         (item) => item.name === value
       );
+      
       if (placeSearchOptionClicked) {
         // if it was, we can just use the coordinates attached to it
         pickupCoord = placeSearchOptionClicked.coordinates;
@@ -379,21 +396,6 @@ export default function RideRequestForm({
       return;
     }
     setWhichPanel("NumberRiders");
-  };
-
-  // the user clicked confirm on the confirmation modal
-  const confirmPickUpLocation = () => {
-    setPickUpQuery(closestBuilding);
-    setChosenPickup(closestBuilding);
-    pickUpLocationNameChanged(closestBuilding);
-    const pickupCoord = BuildingService.getClosestBuildingEntranceCoordinates(
-      closestBuilding,
-      userLocation
-    );
-    setPickupCoordinates(pickupCoord);
-    pickUpLocationCoordChanged(pickupCoord);
-    setConfirmationModalVisible(false);
-    darkenScreen(false);
   };
 
   // the user clicked one of the suggested closest buildings
@@ -670,7 +672,7 @@ export default function RideRequestForm({
   // If the query is empty, show recent locations first, then all campus locations,
   // and finally external place search results (excluding duplicates).
   const formattedResults: FormattedResult[] =
-    (currentQuery === "pickup" ? pickUpQuery : dropOffQuery) == ""
+    (currentQuery !== "dropoff" ? pickUpQuery : dropOffQuery) == ""
       ? [
           // Only show campusAPIResults if the query is not empty
           ...recentLocations.map((item, index) => ({
@@ -757,8 +759,10 @@ export default function RideRequestForm({
                 <AutocompleteInput
                   onPress={() => {
                     setCurrentQuery("pickup");
+                    setPlaceSearchResults([]); // clear any old results
                     expand();
                   }}
+                  focused={currentQuery == "pickup"}
                   query={pickUpQuery}
                   setQuery={(query) => {
                     setPickUpQuery(query);
@@ -770,8 +774,10 @@ export default function RideRequestForm({
                 <AutocompleteInput
                   onPress={() => {
                     setCurrentQuery("dropoff");
+                    setPlaceSearchResults([]); // clear any old results
                     expand();
                   }}
+                  focused={currentQuery == "dropoff"}
                   query={dropOffQuery}
                   setQuery={(query) => {
                     setDropOffQuery(query);
@@ -845,12 +851,18 @@ export default function RideRequestForm({
         </View>
 
         {/* Suggestions */}
-        <View style={{ flex: 1, height: suggestionListHeight }}>
+        <View
+          style={{
+            flex: 1,
+            height: suggestionListHeight,
+            marginBottom: screenHeight * 0.17,
+          }}
+        >
           <FlatList
             data={formattedResults}
             keyExtractor={(item) => item.key}
             ListHeaderComponent={
-              currentQuery === "pickup" ? (
+              currentQuery !== "dropoff" ? (
                 <TouchableOpacity
                   onPress={() => handleSelection("Current Location")}
                   key="current-location"
@@ -953,30 +965,6 @@ export default function RideRequestForm({
             }
           />
         </View>
-
-        {/* Confirmation Modal */}
-        <PopUpModal
-          type="half"
-          isVisible={confirmationModalVisible}
-          onClose={() => {
-            setConfirmationModalVisible(false);
-            darkenScreen(false);
-          }}
-          content={
-            <View style={{ padding: 20 }}>
-              <Text style={styles.formHeader}>Confirm Pickup Location</Text>
-              <Text style={styles.description}>
-                Setting your pickup location to: {closestBuilding}
-              </Text>
-              <Pressable
-                onPress={confirmPickUpLocation}
-                style={styles.sendButton}
-              >
-                <Text style={styles.buttonLabel}>Confirm</Text>
-              </Pressable>
-            </View>
-          }
-        />
       </BottomDrawer>
     </View>
   );
@@ -990,7 +978,6 @@ export default function RideRequestForm({
         width: "100%",
         backgroundColor: "white",
         padding: 16,
-        borderRadius: 10,
       }}
       onLayout={(event) => {
         // on render, update the sidebar height to the height of this component

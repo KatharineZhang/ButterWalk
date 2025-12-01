@@ -40,6 +40,24 @@ export const rankOf = (rideRequests: RideRequest[], studentNetid: string) => {
   });
 };
 
+/**
+ * Returns the 0 based rank of the ride request currently associated with
+ * the given student netid in the provided array. Returns an index out of
+ * the bounds of the array if the student does not have an associated req.
+ * @param rideRequests Array of ride requets to use for ranking
+ * @param requestId the id of the ride we should identify
+ */
+export const rankOfRequest = (
+  rideRequests: RideRequest[],
+  requestId: string
+) => {
+  rideRequests = rankRequests(rideRequests);
+  console.log(rideRequests);
+  return rideRequests.findIndex((rideRequest: RideRequest) => {
+    return rideRequest.requestId === requestId;
+  });
+};
+
 ///////////////////////////////////////////////////////////
 // Private functions -- Ranking Algorithm Implementation //
 ///////////////////////////////////////////////////////////

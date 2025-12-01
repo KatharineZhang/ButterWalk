@@ -32,12 +32,12 @@ import FAQ from "./faq";
 import { Ionicons } from "@expo/vector-icons";
 import { styles } from "@/assets/styles";
 import HandleRideComponent from "@/components/Student_HandleRide";
-import { createOpenLink } from "react-native-open-maps";
 import LoadingPageComp from "@/components/Student_LoadingPage";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Legend from "@/components/Student_Legend";
 import DisconnectedModal from "@/components/Both_Disconnected";
 import Message from "./message";
+import DirectionsButton from "@/components/Both_DirectionsButton";
 
 export default function HomePage() {
   /* GENERAL HOME PAGE STATE AND METHODS */
@@ -149,14 +149,12 @@ export default function HomePage() {
   // the user's recent locations that will be displayed in the dropdown
   const [recentLocations, setRecentLocations] = useState<LocationType[]>([]);
 
-  // darken the screen when the user clicks on the confirmation modal
-  const [darkenScreen, setDarkenScreen] = useState(false);
-
   /* PROFILE STATE AND METHODS */
   const [profileVisible, setProfileVisible] = useState(false);
   const [user, setUser] = useState<User>({} as User);
 
   /* CONFIRM RIDE STATE AND METHODS */
+  const [confirmAllowed, setConfirmAllowed] = useState<boolean>(true);
   // the amount of time the ride will take
   const [rideDuration, setRideDuration] = useState(0);
   // the amount of time the driver will take to reach the student
@@ -209,6 +207,7 @@ export default function HomePage() {
   const [pickUpAddress, setPickUpAddress] = useState("");
   const [dropOffAddress, setDropOffAddress] = useState("");
   // the address of the user's starting location
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [walkAddress, setWalkAddress] = useState("");
   // the amount of minutes it will take to walk to the pickup location
   const [walkDuration, setWalkDuration] = useState(0);
@@ -256,12 +255,6 @@ export default function HomePage() {
   // A number between 0 and 1 that represents the progress of the
   // ride from the pickup location to the dropoff location
   const [rideProgress, setRideProgress] = useState(0);
-
-  const routeToPickup = createOpenLink({
-    travelType: "walk",
-    start: walkAddress,
-    end: pickUpAddress,
-  });
 
   // when the user clicks the go-home button
   // reset all fields to their default values and go back to the ride request form
@@ -471,6 +464,7 @@ export default function HomePage() {
         setDropOffAddress(ride.locationTo.address);
         setWhichComponent("handleRide");
         setDriverLocation(ride.driverLocation.coords);
+        setRequestID(ride.requestId);
 
         // on student side, if there is a ride, go to handle ride component
         setWhichComponent("handleRide");
@@ -514,10 +508,10 @@ export default function HomePage() {
           });
           // if the ride is not completed,
           // show a quick alert telling the student to cancel if needed
-          alert(
-            "Seems like you have an active ride!" +
-              " If you didn't want this ride, hit the cancel ride button."
-          );
+          // alert(
+          //   "Seems like you have an active ride!" +
+          //     " If you didn't want this ride, hit the cancel ride button."
+          // );
         }
       }
       // no active ride request, do nothing
@@ -843,22 +837,23 @@ export default function HomePage() {
         const walkSeconds =
           distanceResp.apiResponse.rows[0].elements[0].duration.value;
         const walkMin = Math.floor(walkSeconds / 60);
-        if (walkMin > 10000000) {
+        setShowRequestLoading(false);
+        // go to confirm ride page
+        setWhichComponent("confirmRide");
+        setWalkDuration(walkMin); // convert seconds to minutes
+        setWalkAddress(distanceResp.apiResponse.origin_addresses[0]);
+
+        if (walkMin > 20) {
           // send a notification
           setNotifState({
             text: "You are too far away from the pickup location",
             color: "#FFCBCB",
             trigger: Date.now(),
           });
-          // exit
-          setShowRequestLoading(false);
-          return;
+          // return;
+          // invalidate confirm button
+          setConfirmAllowed(false);
         }
-        // everything is good, set state and go to the confirm ride page
-        setShowRequestLoading(false);
-        setWalkDuration(walkMin); // convert seconds to minutes
-        setWalkAddress(distanceResp.apiResponse.origin_addresses[0]);
-        setWhichComponent("confirmRide");
       }
     } else {
       console.log("Distance response error: ", message);
@@ -987,33 +982,56 @@ export default function HomePage() {
             position: "absolute",
             // set the height of the sidebar to the height of the current component + padding
             bottom: currentComponentHeight + 10,
-            left: 10,
+            paddingHorizontal: 10,
             alignItems: "flex-start",
+            width: "100%",
+            flexDirection: "row",
+            justifyContent: "space-between",
           }}
         >
+          {/* Side map legend */}
+          {whichComponent == "rideReq" ? <Legend /> : null}
+
           {/* Recenter Button */}
           <Pressable
             style={{
               backgroundColor: "#4b2e83",
-              width: 35,
-              height: 35,
+              width: 45,
+              height: 45,
               borderRadius: 50,
               borderWidth: 3,
               borderColor: "white",
               justifyContent: "center",
               alignItems: "center",
-              marginBottom: 10,
               shadowOpacity: 0.3,
               left: 2,
+              alignSelf: "flex-end",
             }}
             onPress={recenter}
           >
-            <Ionicons name="locate" size={20} color="white" />
+            <Ionicons name="locate" size={30} color="white" />
           </Pressable>
-
-          {/* Side map legend */}
-          <Legend role={"STUDENT"}></Legend>
         </View>
+
+        {/* Directions button - positioned on the right side */}
+        {whichComponent === "handleRide"
+          ? (rideStatusRef.current === "WaitingForRide" ||
+              rideStatusRef.current === "DriverEnRoute") && (
+              <View
+                style={{
+                  position: "absolute",
+                  bottom: currentComponentHeight + 10,
+                  right: 10, // Position on the right side
+                  alignItems: "flex-end",
+                }}
+              >
+                <DirectionsButton
+                  locationTo={pickUpLocation}
+                  role={"STUDENT"}
+                />
+              </View>
+            )
+          : null}
 
         {/* Figure out which component to render */}
         {
@@ -1032,7 +1050,6 @@ export default function HomePage() {
                 recentLocations={recentLocations}
                 setNotificationState={setNotifState}
                 updateSideBarHeight={setCurrentComponentHeight}
-                darkenScreen={setDarkenScreen}
                 showRequestLoading={showRequestLoading}
               />
             </View>
@@ -1046,6 +1063,7 @@ export default function HomePage() {
                 walkDuration={walkDuration}
                 driverETA={driverETA}
                 numPassengers={numPassengers}
+                confirmAllowed={confirmAllowed}
                 onClose={closeConfirmRide}
                 onConfirm={requestRide}
                 setFAQVisible={setFAQVisible}
@@ -1068,16 +1086,13 @@ export default function HomePage() {
                 status={rideStatusRef.current}
                 walkProgress={walkProgress}
                 rideProgress={rideProgress}
-                pickUpLocation={pickUpLocationName}
-                dropOffLocation={dropOffLocationName}
-                pickUpAddress={pickUpAddress}
-                dropOffAddress={dropOffAddress}
+                pickUpLocationName={pickUpLocationName}
+                dropOffLocationName={dropOffLocationName}
                 walkDuration={walkDuration}
                 driverETA={driverETA}
                 rideDuration={rideDuration}
                 onCancel={cancelRide}
                 setFAQVisible={setFAQVisible}
-                openNavigation={routeToPickup}
                 setNotificationState={setNotifState}
                 goHome={goHome}
                 updateSideBarHeight={setCurrentComponentHeight}
@@ -1086,7 +1101,7 @@ export default function HomePage() {
           ) : null // default
         }
         {/* Overlay an semi-transparent screen when FAQ or profile or ride request confirmation mdoal is visible */}
-        {(FAQVisible || profileVisible || darkenScreen) && (
+        {(FAQVisible || profileVisible) && (
           <View
             style={{
               position: "absolute",

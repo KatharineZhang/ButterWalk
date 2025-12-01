@@ -28,6 +28,7 @@ import {
   rideRequestsCollection,
 } from "./firebaseQueries";
 import { defaultCampusLocations } from "../constants/defaultCampusLocations";
+import { RideTakenError } from "./errors";
 
 /**
  * Logic to create a new user if they don't exist and are not blacklisted.
@@ -128,8 +129,11 @@ export async function assignRideForViewingLogic(
 ) {
   const rideDoc = await t.get(rideToViewRef);
   const rideData = rideDoc.data();
+
+  // Possible race condition: some other driver also tried to view at the same
+  // time and won the transaction. Now the ride we thought existed is not available.
   if (!rideDoc.exists || !rideData || rideData.status !== REQUESTED_STATUS) {
-    throw new Error("This ride is no longer available to be viewed.");
+    throw new RideTakenError("This ride is no longer available to be viewed.");
   }
 
   t.update(rideToViewRef, {
@@ -225,8 +229,6 @@ export async function completeRideLogic(
     );
   }
 
-  t.update(rideRef, { status: COMPLETED_STATUS, completedAt: Timestamp.now() });
-
   // Update recent locations for the student
   const locationRef = recentlocationsCollection.doc(ride.netid);
   const locationDoc = await t.get(locationRef);
@@ -242,6 +244,8 @@ export async function completeRideLogic(
     .slice(0, 20);
 
   t.set(locationRef, { netid: ride.netid, locations: newLocations });
+
+  t.update(rideRef, { status: COMPLETED_STATUS, completedAt: Timestamp.now() });
 
   return { student: ride.netid, driver: ride.driverid };
 }

@@ -69,8 +69,9 @@ import {
   reportUserLogic,
   setRideStatusLogic,
 } from "./firebase/firebaseTransactions";
-import { highestRank, rankOf } from "./util/rankingAlgorithm";
+import { highestRank, rankOfRequest } from "./util/rankingAlgorithm";
 import { PurpleZone } from "./util/zones";
+import { RideTakenError } from "./firebase/errors";
 
 dotenv.config();
 
@@ -502,57 +503,66 @@ export const viewRide = async (
   }
 ): Promise<ViewRideRequestResponse | ErrorResponse> => {
   try {
-    const availableRides = await getRideRequestsInPool();
+    const MAX_RETRIES = 3; // How many times to retry after race condition
+    let attempts = 0;
 
-    if (availableRides.length === 0) {
-      return { response: "VIEW_RIDE", rideExists: false, notifyDrivers: false };
-    }
+    while (attempts < MAX_RETRIES) {
+      const availableRides = await getRideRequestsInPool();
 
-    const bestRequest = highestRank(availableRides, driverid, driverLocation);
-    if (!bestRequest.requestId) {
-      throw new Error("Assertion failed: Highest ranked ride must have an ID.");
-    }
-    const rideRef = rideRequestsCollection.doc(bestRequest.requestId);
+      if (availableRides.length === 0) {
+        return { response: "VIEW_RIDE", rideExists: false, notifyDrivers: false };
+      }
 
-    await firestore.runTransaction(async (t) => {
-      return assignRideForViewingLogic(t, rideRef, driverid);
-    });
+      const bestRequest = highestRank(availableRides, driverid, driverLocation);
+      
+      if (!bestRequest.requestId) {
+        throw new Error("Assertion failed: Highest ranked ride must have an ID.");
+      }
+      const rideRef = rideRequestsCollection.doc(bestRequest.requestId);
 
-    const driverToPickUpDuration = await getDuration(
-      driverLocation,
-      bestRequest.locationFrom.coordinates,
-      false
-    ).then((r) => ("duration" in r ? r.duration : 0));
-    const pickUpToDropOffDuration = await getDuration(
-      bestRequest.locationFrom.coordinates,
-      bestRequest.locationTo.coordinates,
-      false
-    ).then((r) => ("duration" in r ? r.duration : 0));
+      try {
+        await firestore.runTransaction(async (t) => {
+          return assignRideForViewingLogic(t, rideRef, driverid);
+        });
 
+        const [driverToPickUpDuration, pickUpToDropOffDuration, studentProfile] = await Promise.all([
+           getDuration(driverLocation, bestRequest.locationFrom.coordinates, false)
+             .then((r) => ("duration" in r ? r.duration : 0)),
+           getDuration(bestRequest.locationFrom.coordinates, bestRequest.locationTo.coordinates, false)
+             .then((r) => ("duration" in r ? r.duration : 0)),
+           getProfile(bestRequest.netid)
+        ]);
 
-    // get student's phone number from their profile to send to driver
-    const studentPhoneNumber = await getProfile(bestRequest.netid).then(
-      (profileResp: User) => {
-        if ("phoneNumber" in profileResp) {
-          // Ensure studentPhoneNumber is always a string
-          return profileResp.phoneNumber as string;
+        if (!studentProfile.phoneNumber) {
+             throw new Error(`Error getting student phone number`);
+        }
+
+        return {
+          response: "VIEW_RIDE",
+          rideExists: true,
+          rideInfo: {
+            rideRequest: { ...bestRequest, requestId: bestRequest.requestId },
+            driverToPickUpDuration,
+            pickUpToDropOffDuration,
+            studentPhoneNumber: studentProfile.phoneNumber,
+          },
+          notifyDrivers: availableRides.length === 1,
+        };
+
+      } catch (e) {
+        if (e instanceof RideTakenError) {
+          console.log(`Race condition for ride ${bestRequest.requestId}, retrying...`);
+          attempts++;
+          continue;
         } else {
-          throw new Error(`Error getting student phone number`);
+          throw e; 
         }
       }
-    );
+    }
 
-    return {
-      response: "VIEW_RIDE",
-      rideExists: true,
-      rideInfo: {
-        rideRequest: { ...bestRequest, requestId: bestRequest.requestId },
-        driverToPickUpDuration,
-        pickUpToDropOffDuration,
-        studentPhoneNumber,
-      },
-      notifyDrivers: availableRides.length === 1,
-    };
+    // Exceeded retry limit.
+    return { response: "VIEW_RIDE", rideExists: false, notifyDrivers: false };
+
   } catch (e) {
     return {
       response: "ERROR",
@@ -792,7 +802,7 @@ export const addFeedback = async (
       category: "ADD_FEEDBACK",
     };
   }
-  
+
   try {
     await firestore.runTransaction(async (t) => {
       addFeedbackLogic(t, { rating, textFeedback, rideOrApp });
@@ -850,7 +860,11 @@ export const blacklist = async (
   netid: string
 ): Promise<GeneralResponse | ErrorResponse> => {
   if (!netid) {
-    return { response: "ERROR", error: "Missing netid.", category: "BLACKLIST" };
+    return {
+      response: "ERROR",
+      error: "Missing netid.",
+      category: "BLACKLIST",
+    };
   }
   try {
     await firestore.runTransaction(async (t) => blacklistUserLogic(t, netid));
@@ -896,7 +910,8 @@ The driverETA is calculated as the Google Maps eta from driverLocation to pickup
 - On error, returns the json object in the form:
     { response: “ERROR”, success: false, error: string, category: “WAIT_TIME” }.
 - Returns a json object TO THE STUDENT in the format:
-    { response: “WAIT_TIME”, rideDuration: number //in minutes, driverETA: number //in minutes, 
+    { response: “WAIT_TIME”, rideDuration: number //in minutes, 
+     driverETA: number // in people if requestId or driverLocation was invalid else in minutes, 
      pickUpAddress?: string, dropOffAddress?: string } 
  */
 export const waitTime = async (
@@ -911,6 +926,12 @@ export const waitTime = async (
   let driverETA = -1;
   let pickUpAddress = undefined;
   let dropOffAddress = undefined;
+
+  // make sure that is we are passed an invalid driverLocation
+  // we treat it as if driverLocation was never passed in
+  if (driverLocation?.latitude == 0 && driverLocation?.longitude == 0) {
+    driverLocation = undefined;
+  }
 
   // FIND THE RIDE DURATION (PICKUP TO DROPOFF)
   if (requestedRide) {
@@ -932,10 +953,10 @@ export const waitTime = async (
   // FIND THE DRIVER'S ETA TO THE STUDENT
   if (!requestid) {
     const queueLength = (await getRideRequestsInPool()).length;
-    driverETA = queueLength * 15;
+    driverETA = queueLength;
   } else if (requestid && !driverLocation) {
     const rideRequests = await getRideRequestsInPool();
-    const index = rankOf(rideRequests, requestid); // Note: rankOf expects student netid, not requestid. This might be a bug in original code.
+    const index = rankOfRequest(rideRequests, requestid);
     if (index === -1) {
       return {
         response: "ERROR",
@@ -943,7 +964,7 @@ export const waitTime = async (
         category: "WAIT_TIME",
       };
     }
-    driverETA = (index + 1) * 15;
+    driverETA = index;
   } else if (requestedRide && driverLocation) {
     const resp = await getDuration(
       driverLocation,
@@ -960,7 +981,7 @@ export const waitTime = async (
   return {
     response: "WAIT_TIME",
     rideDuration,
-    driverETA,
+    driverETA, // will be # of people ahead of you in queue if no driverLocation was passed in
     pickUpAddress,
     dropOffAddress,
   };
