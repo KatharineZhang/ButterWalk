@@ -6,11 +6,7 @@ import {
   useImperativeHandle,
   forwardRef,
 } from "react";
-import MapView, {
-  PROVIDER_GOOGLE,
-  Polygon,
-  Marker,
-} from "react-native-maps";
+import MapView, { PROVIDER_GOOGLE, Polygon, Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { styles } from "@/assets/styles";
@@ -353,7 +349,7 @@ const Map = forwardRef<MapRef, MapProps>(
                 destination={dropOffLocation}
                 apikey={GOOGLE_MAPS_APIKEY}
                 strokeWidth={3}
-                strokeColor="#000000" 
+                strokeColor="#000000"
               />
             )}
         </MapView>

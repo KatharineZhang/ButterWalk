@@ -1,5 +1,17 @@
-import React, { forwardRef, useImperativeHandle, useState, useRef, useEffect } from "react";
-import { View, StyleSheet, Dimensions, PanResponder, Animated } from "react-native";
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useState,
+  useRef,
+  useEffect,
+} from "react";
+import {
+  View,
+  StyleSheet,
+  Dimensions,
+  PanResponder,
+  Animated,
+} from "react-native";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -12,6 +24,7 @@ export interface BottomDrawerRef {
   open: () => void;
   close: () => void;
   expand: () => void;
+  shrink: () => void;
 }
 
 const BottomDrawer = forwardRef<BottomDrawerRef, BottomDrawerProps>(
@@ -21,7 +34,9 @@ const BottomDrawer = forwardRef<BottomDrawerRef, BottomDrawerProps>(
     const snap40 = 0.4 * SCREEN_HEIGHT;
     const snap70 = 0.85 * SCREEN_HEIGHT;
 
-    const translateY = useRef(new Animated.Value(SCREEN_HEIGHT - snap40)).current;
+    const translateY = useRef(
+      new Animated.Value(SCREEN_HEIGHT - snap40)
+    ).current;
 
     // Track current translateY without accessing _value
     const currentY = useRef(SCREEN_HEIGHT - snap40);
@@ -59,6 +74,12 @@ const BottomDrawer = forwardRef<BottomDrawerRef, BottomDrawerProps>(
         }).start(() => setVisible(false));
       },
       expand: modalExpand,
+      shrink: () => {
+        Animated.spring(translateY, {
+          toValue: SCREEN_HEIGHT - snap40,
+          useNativeDriver: true,
+        }).start();
+      },
     }));
 
     // Gesture handler
@@ -67,14 +88,22 @@ const BottomDrawer = forwardRef<BottomDrawerRef, BottomDrawerProps>(
         onStartShouldSetPanResponder: () => true,
         onPanResponderMove: (_, gestureState) => {
           let newY = currentY.current + gestureState.dy;
-          newY = Math.min(Math.max(newY, SCREEN_HEIGHT - snap70), SCREEN_HEIGHT);
+          newY = Math.min(
+            Math.max(newY, SCREEN_HEIGHT - snap70),
+            SCREEN_HEIGHT
+          );
           translateY.setValue(newY);
         },
         onPanResponderRelease: () => {
           const middle = SCREEN_HEIGHT - (snap40 + snap70) / 2;
           const toValue =
-            currentY.current > middle ? SCREEN_HEIGHT - snap40 : SCREEN_HEIGHT - snap70;
-          Animated.spring(translateY, { toValue, useNativeDriver: true }).start();
+            currentY.current > middle
+              ? SCREEN_HEIGHT - snap40
+              : SCREEN_HEIGHT - snap70;
+          Animated.spring(translateY, {
+            toValue,
+            useNativeDriver: true,
+          }).start();
         },
       })
     ).current;

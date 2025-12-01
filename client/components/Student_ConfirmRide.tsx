@@ -19,6 +19,7 @@ interface ConfirmRideProps {
   rideDuration: number;
   walkDuration: number;
   driverETA: number;
+  confirmAllowed: boolean;
   onClose: () => void; // callback function for when the user closes modal
   onConfirm: (numPassengers: number) => void; // callback function for when the user confirms ride
   setFAQVisible: (visible: boolean) => void; // callback function to set the visibility of the FAQ modal
@@ -32,6 +33,7 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
   rideDuration,
   walkDuration,
   driverETA,
+  confirmAllowed,
   onClose,
   onConfirm,
   setFAQVisible,
@@ -41,7 +43,6 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
     <View
       style={{
         backgroundColor: "white",
-        borderRadius: 10,
         position: "absolute",
         bottom: 0,
         width: "100%",
@@ -248,12 +249,25 @@ const ConfirmRide: React.FC<ConfirmRideProps> = ({
       {/* Confirm Button */}
       <View style={styles.bottomModalButtonContainer}>
         <Pressable
-          style={[styles.bottomModalButton, styles.confirmButton]}
-          onPress={() => onConfirm(numPassengers)}
+          style={[
+            styles.bottomModalButton,
+            confirmAllowed
+              ? styles.confirmButton
+              : { backgroundColor: "#aeaeaeee" },
+          ]}
+          onPress={() => {
+            if (confirmAllowed) {
+              onConfirm(numPassengers);
+            } else {
+              alert(
+                "You are too far from the pickup location to request this ride."
+              );
+            }
+          }}
         >
           <Text
             style={{
-              color: "#4B2E83",
+              color: "white",
               fontSize: 18,
             }}
           >

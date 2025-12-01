@@ -1,8 +1,9 @@
-// Used for fuzze search in RideRequestForm component!
+// Used for fuzzy search in RideRequestForm component!
 import React from "react";
 import { View, StyleSheet, TextInput } from "react-native";
 
 interface AutoCompleteInputProps {
+  focused: boolean;
   onPress: () => void;
   query: string;
   setQuery: (text: string) => void;
@@ -11,6 +12,7 @@ interface AutoCompleteInputProps {
 }
 
 const AutoCompleteInput: React.FC<AutoCompleteInputProps> = ({
+  focused,
   onPress,
   query,
   setQuery,
@@ -20,7 +22,7 @@ const AutoCompleteInput: React.FC<AutoCompleteInputProps> = ({
   return (
     <View style={styles.autocompleteContainer}>
       <TextInput
-        style={styles.inputContainer}
+        style={focused ? styles.focusInputContainer : styles.inputContainer}
         value={query}
         onPress={onPress}
         onChangeText={(text) => {
@@ -42,14 +44,23 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     width: "100%",
   },
-  inputContainer: {
+  focusInputContainer: {
     borderRadius: 8,
     paddingVertical: 16,
-    paddingLeft: 35,
+    paddingLeft: 40,
     paddingRight: 20,
     borderColor: "#4B2E83",
     borderWidth: 2,
     backgroundColor: "white",
+    overflow: "hidden",
+    height: 60,
+  },
+  inputContainer: {
+    borderRadius: 8,
+    paddingVertical: 16,
+    paddingLeft: 40,
+    paddingRight: 20,
+    backgroundColor: "#eeeeee",
     overflow: "hidden",
     height: 60,
   },
