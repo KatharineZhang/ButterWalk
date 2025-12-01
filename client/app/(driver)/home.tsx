@@ -34,9 +34,12 @@ import HandleRide from "@/components/Driver_HandleRide";
 import Flagging from "@/components/Driver_Flagging";
 import WebSocketService, {
   WebsocketConnectMessage,
+  WSConnectionState,
 } from "@/services/WebSocketService";
 import { useRouter } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import DisconnectedModal from "@/components/Both_Disconnected";
+import { Coordinates } from "@/services/BuildingService";
 
 export type HandleRidePhase =
   | "headingToPickup"
@@ -73,6 +76,8 @@ export default function HomePage() {
       driverArrivedAtPickupListener,
       "DRIVER_ARRIVED_AT_PICKUP"
     );
+    // handle disconnects by listening for changes in websocket state
+    WebSocketService.addConnectionListener(handleWebsocketConnection);
 
     // Connect to the websocket server
     // needs to be its own function to avoid async issues
@@ -179,10 +184,11 @@ export default function HomePage() {
   }>({ latitude: 0, longitude: 0 });
 
   // The student's location
-  const [studentLocation, setStudentLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  }>({ latitude: 0, longitude: 0 });
+  const studentLocation = useRef<Coordinates>({ latitude: 0, longitude: 0 });
+  const [, setStudentLocation] = useState<Coordinates>({
+    latitude: 0,
+    longitude: 0,
+  });
 
   // retain a reference to the map to call functions on it later
   const mapRef = useRef<MapRef>(null);
@@ -464,8 +470,8 @@ export default function HomePage() {
     if ("response" in message && message.response === "RIDES_EXIST") {
       const ridesExistMessage = message as RidesExistResponse;
       if (
-        whichComponent.current === "noRequests" ||
-        whichComponent.current === "requestsAreAvailable"
+        whichComponent.current === "noRequests" // ||
+        // whichComponent.current === "requestsAreAvailable"
       ) {
         // if the driver is waiting for a request
         if (ridesExistMessage.ridesExist) {
@@ -641,7 +647,10 @@ export default function HomePage() {
         const ride = loadRideMessage.rideRequest;
         setPickUpLocation(ride.locationFrom.coordinates);
         setDropOffLocation(ride.locationTo.coordinates);
+
+        studentLocation.current = ride.studentLocation.coords;
         setStudentLocation(ride.studentLocation.coords);
+
         requestInfo.current = ride;
         setRequestInfo(ride);
 
@@ -691,6 +700,22 @@ export default function HomePage() {
       // something went wrong
       console.log("Load Ride response error: ", message);
     }
+  };
+
+  // WEBSOCKET- for checking the websocket state
+  // store the websocket's status
+  const [websocketStatus, setWebsocketStatus] =
+    useState<WSConnectionState>("CONNECTED");
+  // listener that will update websocket status when called
+  const handleWebsocketConnection = (wsStatus: number | undefined) => {
+    const status: WSConnectionState =
+      wsStatus == WebSocket.OPEN
+        ? "CONNECTED"
+        : wsStatus == WebSocket.CONNECTING
+          ? "CONNECTING"
+          : "DISCONNECTED";
+    console.log("DRIVER SEES WS " + status);
+    setWebsocketStatus(status);
   };
 
   // WEBSOCKET - WAIT_TIME
@@ -771,6 +796,10 @@ export default function HomePage() {
         latitude: locationMessage.latitude,
         longitude: locationMessage.longitude,
       });
+      studentLocation.current = {
+        latitude: locationMessage.latitude,
+        longitude: locationMessage.longitude,
+      };
     } else {
       const errMessage = message as ErrorResponse;
       console.log("Failed to send location: ", errMessage.error);
@@ -916,11 +945,14 @@ export default function HomePage() {
         startLocation={startLocation}
         pickUpLocation={pickUpLocation}
         dropOffLocation={dropOffLocation}
-        studentLocation={studentLocation}
+        studentLocation={studentLocation.current}
         userLocationChanged={userLocationChanged}
         currPhase={phase}
       />
-
+      {/* Disconnected pop-up. Show it if the websocket is not connected */}
+      <View style={styles.modalContainer}>
+        <DisconnectedModal isVisible={websocketStatus != "CONNECTED"} />
+      </View>
       {/* profile button in top left corner*/}
       <View
         style={{
