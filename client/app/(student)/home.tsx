@@ -947,7 +947,7 @@ export default function HomePage() {
             <TouchableOpacity
               style={{
                 position: "absolute",
-                top: "66%",
+                bottom: currentComponentHeight + 10,
                 right: "5%",
                 shadowOpacity: 0.5,
                 shadowRadius: 5,
