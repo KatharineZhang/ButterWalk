@@ -254,13 +254,12 @@ export default function HandleRide({
             pickUpLocationAddress={requestInfo.locationFrom.address}
             dropOffLocationAddress={requestInfo.locationTo.address}
           />
-
           {/* If proximity to pickup location is near, 
           panel grows and button to confirm pickup shows */}
           {isNearPickup && (
             <View
               style={{
-                paddingTop: "10%",
+                marginTop: "10%",
                 alignContent: "center",
               }}
             >
@@ -550,7 +549,7 @@ export default function HandleRide({
 
           {/* Grey line */}
           <Pressable
-            style={[styles.driverCompleteButton, { marginTop: "2%" }]}
+            style={[styles.driverCompleteButton, { marginTop: "10%" }]}
             onPress={completeRide}
           >
             <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>

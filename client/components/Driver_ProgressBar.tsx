@@ -1,6 +1,5 @@
-import { View, Text, ScrollView } from "react-native";
+import { View, Text } from "react-native";
 import { FontAwesome6, Entypo, FontAwesome } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 
 type StudentProgressBarProps = {
   rideStatus: "start" | "pickup" | "dropoff";
@@ -42,136 +41,124 @@ export default function Driver_ProgressBar({
   }
 
   return (
-    <View style={{ width: "100%", height: 160 }}>
-      {/* TOP fade */}
-      <LinearGradient
-        colors={["rgba(255,255,255,1)", "rgba(255,255,255,0)"]}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 30,
-          zIndex: 10,
-        }}
-        pointerEvents="none"
-      />
+    <View style={{ width: "100%" }}>
+      <View style={{ flex: 1, flexDirection: "column" }}>
+        <View
+          style={{
+            alignItems: "flex-start",
+            flexDirection: "column",
+          }}
+        >
+          <View style={{ alignItems: "center", flexDirection: "row" }}>
+            {/* Start Icon */}
+            <View>
+              <Entypo name="circle" size={20} color={startColor} />
+            </View>
 
-      {/* BOTTOM fade */}
-      <LinearGradient
-        colors={["rgba(255,255,255,0)", "rgba(255,255,255,1)"]}
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 30,
-          zIndex: 10,
-        }}
-        pointerEvents="none"
-      />
+            {/* Start Text */}
+            <View style={{ paddingLeft: "4%" }}>
+              <Text style={{ fontSize: 14, fontWeight: "bold" }}>Start</Text>
+            </View>
+          </View>
 
-      <ScrollView
-        style={{ flex: 1 }}
-        showsVerticalScrollIndicator={true}
-        persistentScrollbar={true}
-      >
-        <View style={{ flex: 1, flexDirection: "column" }}>
+          {/* Dotted line */}
           <View
             style={{
-              alignItems: "flex-start",
-              flexDirection: "column",
-              paddingVertical: "5%",
+              flex: 1,
+              justifyContent: "center",
+              paddingLeft: "2.5%",
+              paddingVertical: "1%",
             }}
           >
-            <View style={{alignItems: "center", flexDirection: "row"}}>
-              {/* Start Icon */}
-              <View>
-                <Entypo name="circle" size={20} color={startColor} />
-              </View>
-              
-              {/* Start Text */}
-              <View style={{paddingLeft: "4%"}}>
-                <Text style={{ fontSize: 14, fontWeight: "bold" }}>Start</Text>
-              </View>
-            </View>
-            
+            {[...Array(5)].map((_, i) => (
+              <View
+                key={i}
+                style={{
+                  width: 2,
+                  height: 4,
+                  backgroundColor: grey,
+                  marginVertical: 2,
+                  borderRadius: 2,
+                }}
+              />
+            ))}
+          </View>
 
-            {/* Dotted line */}
-            <View style={{ flex: 1, justifyContent: "center", paddingLeft: "2.5%", paddingVertical: "1%" }}>
-              {[...Array(10)].map((_, i) => (
-                <View
-                  key={i}
-                  style={{
-                    width: 2,
-                    height: 4,
-                    backgroundColor: grey,
-                    marginVertical: 2,
-                    borderRadius: 2,
-                  }}
-                />
-              ))}
+          <View style={{ alignItems: "center", flexDirection: "row" }}>
+            {/* Pickup Icon */}
+            <View>
+              <FontAwesome name="circle" size={20} color={pickupColor} />
             </View>
 
-            <View style={{alignItems: "center", flexDirection: "row"}}>
-              {/* Pickup Icon */}
-              <View>
-                <FontAwesome name="circle" size={20} color={pickupColor} />
-              </View>
-              
-              {/* Pickup Text */}
-              <View style={{paddingLeft: "4%"}}>
-                <Text style={{ fontSize: 14, fontWeight: "bold" }}>
-                  {pickUpLocationName}
+            {/* Pickup Text */}
+            <View style={{ paddingHorizontal: "4%" }}>
+              <Text
+                style={{ fontSize: 14, fontWeight: "bold", flexWrap: "wrap" }}
+              >
+                {pickUpLocationName}
+              </Text>
+              {pickUpLocationAddress && (
+                <Text style={{ fontSize: 14, color: "#666", marginTop: 2 }}>
+                  {pickUpLocationAddress}
                 </Text>
-                {pickUpLocationAddress && (
-                  <Text style={{ fontSize: 14, color: "#666", marginTop: 2 }}>
-                    {pickUpLocationAddress}
-                  </Text>
-                )}
-              </View>
+              )}
+            </View>
+          </View>
+
+          {/* Dotted line */}
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              paddingLeft: "2.5%",
+              paddingVertical: "1%",
+            }}
+          >
+            {[...Array(5)].map((_, i) => (
+              <View
+                key={i}
+                style={{
+                  width: 2,
+                  height: 4,
+                  backgroundColor: grey,
+                  marginVertical: 2,
+                  borderRadius: 2,
+                }}
+              />
+            ))}
+          </View>
+
+          <View
+            style={{
+              alignItems: "center",
+              flexDirection: "row",
+            }}
+          >
+            {/* dropoff Icon */}
+            <View>
+              <FontAwesome6
+                name="location-dot"
+                size={24}
+                color={dropoffColor}
+              />
             </View>
 
-            
-
-            {/* Dotted line */}
-            <View style={{ flex: 1, justifyContent: "center" , paddingLeft: "2.5%", paddingVertical: "1%"  }}>
-              {[...Array(10)].map((_, i) => (
-                <View
-                  key={i}
-                  style={{
-                    width: 2,
-                    height: 4,
-                    backgroundColor: grey,
-                    marginVertical: 2,
-                    borderRadius: 2,
-                  }}
-                />
-              ))}
-            </View>
-
-            <View style={{alignItems: "center", flexDirection: "row"}}>
-              {/* dropoff Icon */}
-              <View>
-                <FontAwesome6 name="location-dot" size={24} color={dropoffColor} />
-              </View>
-              
-              {/* Dropoff Text */}
-              <View style={{paddingLeft: "4%"}}>
-                <Text style={{ fontSize: 14, fontWeight: "bold" }}>
-                  {dropOffLocationName}
+            {/* Dropoff Text */}
+            <View style={{ paddingHorizontal: "4%" }}>
+              <Text
+                style={{ fontSize: 14, fontWeight: "bold", flexWrap: "wrap" }}
+              >
+                {dropOffLocationName}
+              </Text>
+              {dropOffLocationAddress && (
+                <Text style={{ fontSize: 14, color: "#666", marginTop: 2 }}>
+                  {dropOffLocationAddress}
                 </Text>
-                {dropOffLocationAddress && (
-                  <Text style={{ fontSize: 14, color: "#666", marginTop: 2 }}>
-                    {dropOffLocationAddress}
-                  </Text>
-                )}
-              </View>
+              )}
             </View>
-            
           </View>
         </View>
-      </ScrollView>
+      </View>
     </View>
   );
 }
