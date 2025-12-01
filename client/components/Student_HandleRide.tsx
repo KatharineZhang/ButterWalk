@@ -21,10 +21,6 @@ export type RideStatus =
   | "RideCompleted"; // the driver arrived at the dropoff location
 
 interface HandleRideProps {
-  pickUpAddress: string;
-  dropOffAddress: string;
-  pickUpLocationName: string;
-  dropOffLocationName: string;
   pickUpLocationName: string;
   dropOffLocationName: string;
   status: RideStatus;
@@ -44,8 +40,6 @@ interface HandleRideProps {
 
 const HandleRideComponent: React.FC<HandleRideProps> = ({
   status,
-  pickUpAddress,
-  dropOffAddress,
   pickUpLocationName,
   dropOffLocationName,
   walkProgress,
@@ -220,7 +214,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
             : {},
         ]}
       >
-        <ProgressBar
+        <Student_ProgressBar
           rideStatus={
             status === "WaitingForRide"
               ? "start"
@@ -228,15 +222,12 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
                 ? "pickup"
                 : "dropoff"
           }
-          pickupAddress={pickUpAddress}
-          dropoffAddress={dropOffAddress}
           pickUpLocationName={pickUpLocationName}
           dropOffLocationName={dropOffLocationName}
           driverToPickupMinutes={
             walkDuration > driverETA ? walkDuration : driverETA
           }
           pickupToDropoffMinutes={rideDuration}
-          role={"STUDENT"}
         />
       </View>
       {/* Cancel Button */}

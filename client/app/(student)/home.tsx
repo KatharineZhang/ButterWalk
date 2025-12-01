@@ -1047,8 +1047,6 @@ export default function HomePage() {
                 status={rideStatusRef.current}
                 walkProgress={walkProgress}
                 rideProgress={rideProgress}
-                pickUpAddress={pickUpAddress}
-                dropOffAddress={dropOffAddress}
                 pickUpLocationName={pickUpLocationName}
                 dropOffLocationName={dropOffLocationName}
                 walkDuration={walkDuration}
