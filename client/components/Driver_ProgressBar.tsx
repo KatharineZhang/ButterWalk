@@ -51,7 +51,7 @@ export default function Driver_ProgressBar({
           top: 0,
           left: 0,
           right: 0,
-          height: 20,
+          height: 30,
           zIndex: 10,
         }}
         pointerEvents="none"
@@ -65,7 +65,7 @@ export default function Driver_ProgressBar({
           bottom: 0,
           left: 0,
           right: 0,
-          height: 20,
+          height: 30,
           zIndex: 10,
         }}
         pointerEvents="none"
@@ -76,19 +76,29 @@ export default function Driver_ProgressBar({
         showsVerticalScrollIndicator={true}
         persistentScrollbar={true}
       >
-        <View style={{ flex: 1, flexDirection: "row" }}>
+        <View style={{ flex: 1, flexDirection: "column" }}>
           <View
             style={{
-              width: "10%",
-              alignItems: "center",
+              alignItems: "flex-start",
               flexDirection: "column",
               paddingVertical: "5%",
             }}
           >
-            <Entypo name="circle" size={20} color={startColor} />
+            <View style={{alignItems: "center", flexDirection: "row"}}>
+              {/* Start Icon */}
+              <View>
+                <Entypo name="circle" size={20} color={startColor} />
+              </View>
+              
+              {/* Start Text */}
+              <View style={{paddingLeft: "4%"}}>
+                <Text style={{ fontSize: 14, fontWeight: "bold" }}>Start</Text>
+              </View>
+            </View>
+            
 
             {/* Dotted line */}
-            <View style={{ flex: 1, justifyContent: "center" }}>
+            <View style={{ flex: 1, justifyContent: "center", paddingLeft: "2.5%", paddingVertical: "1%" }}>
               {[...Array(10)].map((_, i) => (
                 <View
                   key={i}
@@ -103,10 +113,29 @@ export default function Driver_ProgressBar({
               ))}
             </View>
 
-            <FontAwesome name="circle" size={20} color={pickupColor} />
+            <View style={{alignItems: "center", flexDirection: "row"}}>
+              {/* Pickup Icon */}
+              <View>
+                <FontAwesome name="circle" size={20} color={pickupColor} />
+              </View>
+              
+              {/* Pickup Text */}
+              <View style={{paddingLeft: "4%"}}>
+                <Text style={{ fontSize: 14, fontWeight: "bold" }}>
+                  {pickUpLocationName}
+                </Text>
+                {pickUpLocationAddress && (
+                  <Text style={{ fontSize: 14, color: "#666", marginTop: 2 }}>
+                    {pickUpLocationAddress}
+                  </Text>
+                )}
+              </View>
+            </View>
+
+            
 
             {/* Dotted line */}
-            <View style={{ flex: 1, justifyContent: "center" }}>
+            <View style={{ flex: 1, justifyContent: "center" , paddingLeft: "2.5%", paddingVertical: "1%"  }}>
               {[...Array(10)].map((_, i) => (
                 <View
                   key={i}
@@ -121,47 +150,25 @@ export default function Driver_ProgressBar({
               ))}
             </View>
 
-            <FontAwesome6 name="location-dot" size={24} color={dropoffColor} />
-          </View>
-
-          {/* Right container: All text content */}
-          <View
-            style={{
-              flex: 1,
-              paddingLeft: "5%",
-              paddingTop: "5%",
-              flexDirection: "column",
-              alignItems: "flex-start",
-            }}
-          >
-            {/* Start Text */}
-            <View style={{ paddingBottom: "5%" }}>
-              <Text style={{ fontSize: 14, fontWeight: "bold" }}>Start</Text>
-            </View>
-
-            {/* Pickup Text */}
-            <View style={{ paddingVertical: "6%" }}>
-              <Text style={{ fontSize: 14, fontWeight: "bold" }}>
-                {pickUpLocationName}
-              </Text>
-              {pickUpLocationAddress && (
-                <Text style={{ fontSize: 14, color: "#666", marginTop: 2 }}>
-                  {pickUpLocationAddress}
+            <View style={{alignItems: "center", flexDirection: "row"}}>
+              {/* dropoff Icon */}
+              <View>
+                <FontAwesome6 name="location-dot" size={24} color={dropoffColor} />
+              </View>
+              
+              {/* Dropoff Text */}
+              <View style={{paddingLeft: "4%"}}>
+                <Text style={{ fontSize: 14, fontWeight: "bold" }}>
+                  {dropOffLocationName}
                 </Text>
-              )}
+                {dropOffLocationAddress && (
+                  <Text style={{ fontSize: 14, color: "#666", marginTop: 2 }}>
+                    {dropOffLocationAddress}
+                  </Text>
+                )}
+              </View>
             </View>
-
-            {/* Dropoff Text */}
-            <View style={{ paddingTop: "5%" }}>
-              <Text style={{ fontSize: 14, fontWeight: "bold" }}>
-                {dropOffLocationName}
-              </Text>
-              {dropOffLocationAddress && (
-                <Text style={{ fontSize: 14, color: "#666", marginTop: 2 }}>
-                  {dropOffLocationAddress}
-                </Text>
-              )}
-            </View>
+            
           </View>
         </View>
       </ScrollView>
