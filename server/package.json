@@ -19,7 +19,6 @@
     "dotenv": "^16.4.5",
     "expo-auth-session": "^6.0.3",
     "express": "^4.21.0",
-    "firebase": "^11.1.0",
     "firebase-admin": "^13.0.2",
     "react-native-geolocation-service": "^5.3.1",
     "react-native-permissions": "^5.4.0",
