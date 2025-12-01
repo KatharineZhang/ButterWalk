@@ -667,11 +667,16 @@ export default function HomePage() {
             setPhase("headingToPickup");
             break;
           case "DRIVER AT PICK UP":
+            console.log("loading pickup");
             setWhichComponent("handleRide");
+            whichComponent.current = "handleRide";
+
             setPhase("waitingForPickup");
             break;
           case "DRIVING TO DESTINATION":
             setWhichComponent("handleRide");
+            whichComponent.current = "handleRide";
+
             setPhase("headingToDropoff");
             break;
           default:
@@ -710,7 +715,6 @@ export default function HomePage() {
         : wsStatus == WebSocket.CONNECTING
           ? "CONNECTING"
           : "DISCONNECTED";
-    console.log("DRIVER SEES WS " + status);
     setWebsocketStatus(status);
   };
 
