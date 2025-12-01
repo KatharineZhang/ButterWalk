@@ -4,7 +4,7 @@ import { RideRequest } from "../../server/src/api";
 import { NotificationType } from "./Both_Notification";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { styles } from "@/assets/styles";
-import ProgressBar from "./Both_ProgressBar";
+import Driver_ProgressBar from "./Driver_ProgressBar";
 
 interface HandleRideProps {
   requestInfo: RideRequest;
@@ -43,8 +43,6 @@ interface HandleRideProps {
 export default function HandleRide({
   phase,
   requestInfo,
-  driverToPickupDuration,
-  pickupToDropoffDuration,
   isNearPickup,
   isNearDropoff,
   studentPhoneNumber,
@@ -191,23 +189,19 @@ export default function HandleRide({
           <View style={styles.driverGreyLine} />
 
           {/* Progress Bar Section */}
-          <ProgressBar
+          <Driver_ProgressBar
             rideStatus={"start"}
-            pickupAddress={requestInfo.locationFrom.address}
-            dropoffAddress={requestInfo.locationTo.address}
-            driverToPickupMinutes={driverToPickupDuration}
-            pickupToDropoffMinutes={pickupToDropoffDuration}
-            role={"DRIVER"}
             pickUpLocationName={requestInfo.locationFrom.name}
             dropOffLocationName={requestInfo.locationTo.name}
+            pickUpLocationAddress={requestInfo.locationFrom.address}
+            dropOffLocationAddress={requestInfo.locationTo.address}
           />
-
           {/* If proximity to pickup location is near, 
           panel grows and button to confirm pickup shows */}
           {isNearPickup && (
             <View
               style={{
-                paddingTop: "10%",
+                marginTop: "10%",
                 alignContent: "center",
               }}
             >
@@ -304,15 +298,12 @@ export default function HandleRide({
           />
 
           {/* Actual Progress Bar */}
-          <ProgressBar
+          <Driver_ProgressBar
             rideStatus={"pickup"}
-            pickupAddress={requestInfo.locationFrom.address}
-            dropoffAddress={requestInfo.locationTo.address}
-            driverToPickupMinutes={driverToPickupDuration}
-            pickupToDropoffMinutes={pickupToDropoffDuration}
-            role={"DRIVER"}
             pickUpLocationName={requestInfo.locationFrom.name}
             dropOffLocationName={requestInfo.locationTo.name}
+            pickUpLocationAddress={requestInfo.locationFrom.address}
+            dropOffLocationAddress={requestInfo.locationTo.address}
           />
 
           {/* Two buttons side by side */}
@@ -420,15 +411,12 @@ export default function HandleRide({
           {/* Grey line */}
           <View style={styles.driverGreyLine} />
           {/* Progress Bar Section */}
-          <ProgressBar
+          <Driver_ProgressBar
             rideStatus={"dropoff"}
-            pickupAddress={requestInfo.locationFrom.address}
-            dropoffAddress={requestInfo.locationTo.address}
-            driverToPickupMinutes={driverToPickupDuration}
-            pickupToDropoffMinutes={pickupToDropoffDuration}
-            role={"DRIVER"}
             pickUpLocationName={requestInfo.locationFrom.name}
             dropOffLocationName={requestInfo.locationTo.name}
+            pickUpLocationAddress={requestInfo.locationFrom.address}
+            dropOffLocationAddress={requestInfo.locationTo.address}
           />
         </>
       ) : phase === "arrivedAtDropoff" ? (
@@ -459,20 +447,17 @@ export default function HandleRide({
             </View>
           </View>
           {/* Progress Bar Section */}
-          <ProgressBar
+          <Driver_ProgressBar
             rideStatus={"dropoff"}
-            pickupAddress={requestInfo.locationFrom.address}
-            dropoffAddress={requestInfo.locationTo.address}
-            driverToPickupMinutes={driverToPickupDuration}
-            pickupToDropoffMinutes={pickupToDropoffDuration}
-            role={"DRIVER"}
             pickUpLocationName={requestInfo.locationFrom.name}
             dropOffLocationName={requestInfo.locationTo.name}
+            pickUpLocationAddress={requestInfo.locationFrom.address}
+            dropOffLocationAddress={requestInfo.locationTo.address}
           />
 
           {/* Grey line */}
           <Pressable
-            style={[styles.driverCompleteButton, { marginTop: "5%" }]}
+            style={[styles.driverCompleteButton, { marginTop: "10%" }]}
             onPress={completeRide}
           >
             <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>

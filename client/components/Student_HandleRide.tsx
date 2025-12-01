@@ -11,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import moment from "moment";
 import momentTimezone from "moment-timezone";
 import { NotificationType } from "./Both_Notification";
-import ProgressBar from "./Both_ProgressBar";
+import Student_ProgressBar from "./Student_ProgressBar";
 
 export type RideStatus =
   | "WaitingForRide" // the ride has been requested
@@ -23,6 +23,8 @@ export type RideStatus =
 interface HandleRideProps {
   pickUpAddress: string;
   dropOffAddress: string;
+  pickUpLocationName: string;
+  dropOffLocationName: string;
   pickUpLocationName: string;
   dropOffLocationName: string;
   status: RideStatus;

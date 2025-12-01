@@ -969,7 +969,7 @@ export const progressBarStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 4,
-    paddingHorizontal: "8%",
+    paddingHorizontal: "8%"
   },
   progressBarLine: {
     flex: 1,
@@ -988,27 +988,27 @@ export const progressBarStyles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    paddingHorizontal: "4%",
+    paddingHorizontal: "4%"
   },
   progressBarLabelSection: {
-    flex: 1,
-    alignItems: "center",
-  },
-  progressBarLabelSectionStart: {
-    flex: 1,
-    alignItems: "flex-start", // Align to left edge
-  },
-  progressBarLabelSectionDropoff: {
-    flex: 1,
-    alignItems: "flex-end", // Align to right edge
-  },
+  flex: 1,
+  alignItems: "center",
+},
+progressBarLabelSectionStart: {
+  flex: 1,
+  alignItems: "flex-start", // Align to left edge
+},
+progressBarLabelSectionDropoff: {
+  flex: 1,
+  alignItems: "flex-end", // Align to right edge
+},
   progressBarLabel: {
     fontSize: 12,
     fontWeight: "bold",
     textAlign: "center",
   },
   progressBarLocationNamePickup: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "bold",
     color: "#4B2E83",
     marginTop: 4,
@@ -1016,7 +1016,7 @@ export const progressBarStyles = StyleSheet.create({
     textAlign: "center",
   },
   progressBarLocationNameDropoff: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "bold",
     color: "#4B2E83",
     marginTop: 4,
@@ -1024,26 +1024,26 @@ export const progressBarStyles = StyleSheet.create({
     textAlign: "right",
   },
   progressBarAddress: {
-    fontSize: 12,
+    fontSize: 8,
     color: "#333",
     marginTop: 4,
     textAlign: "left",
-    backgroundColor: "blue",
+    backgroundColor: "blue"
   },
   progressBarAddressPickup: {
-    fontSize: 12,
-    color: "#333",
-    marginTop: 4,
-    width: "100%",
-    textAlign: "center",
-  },
-  progressBarAddressDropoff: {
-    fontSize: 12,
-    color: "#333",
-    marginTop: 4,
-    width: "100%",
-    textAlign: "right", // Align to right edge
-  },
+  fontSize: 8,
+  color: "#333",
+  marginTop: 4,
+  width: "100%",
+  textAlign: "left", // Align to left edge
+},
+progressBarAddressDropoff: {
+  fontSize: 8,
+  color: "#333",
+  marginTop: 4,
+  width: "100%",
+  textAlign: "right", // Align to right edge
+},
   progressBarDetailsLink: {
     color: "#4B2E83",
     fontSize: 12,
