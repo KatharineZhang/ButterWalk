@@ -68,7 +68,7 @@ import {
   reportUserLogic,
   setRideStatusLogic,
 } from "./firebase/firebaseTransactions";
-import { highestRank, rankOf } from "./util/rankingAlgorithm";
+import { highestRank, rankOfRequest } from "./util/rankingAlgorithm";
 import { PurpleZone } from "./util/zones";
 import { RideTakenError } from "./firebase/errors";
 
@@ -801,7 +801,7 @@ export const addFeedback = async (
       category: "ADD_FEEDBACK",
     };
   }
-  
+
   try {
     await firestore.runTransaction(async (t) => {
       addFeedbackLogic(t, { rating, textFeedback, rideOrApp });
@@ -859,7 +859,11 @@ export const blacklist = async (
   netid: string
 ): Promise<GeneralResponse | ErrorResponse> => {
   if (!netid) {
-    return { response: "ERROR", error: "Missing netid.", category: "BLACKLIST" };
+    return {
+      response: "ERROR",
+      error: "Missing netid.",
+      category: "BLACKLIST",
+    };
   }
   try {
     await firestore.runTransaction(async (t) => blacklistUserLogic(t, netid));
@@ -905,7 +909,8 @@ The driverETA is calculated as the Google Maps eta from driverLocation to pickup
 - On error, returns the json object in the form:
     { response: “ERROR”, success: false, error: string, category: “WAIT_TIME” }.
 - Returns a json object TO THE STUDENT in the format:
-    { response: “WAIT_TIME”, rideDuration: number //in minutes, driverETA: number //in minutes, 
+    { response: “WAIT_TIME”, rideDuration: number //in minutes, 
+     driverETA: number // in people if requestId or driverLocation was invalid else in minutes, 
      pickUpAddress?: string, dropOffAddress?: string } 
  */
 export const waitTime = async (
@@ -920,6 +925,12 @@ export const waitTime = async (
   let driverETA = -1;
   let pickUpAddress = undefined;
   let dropOffAddress = undefined;
+
+  // make sure that is we are passed an invalid driverLocation
+  // we treat it as if driverLocation was never passed in
+  if (driverLocation?.latitude == 0 && driverLocation?.longitude == 0) {
+    driverLocation = undefined;
+  }
 
   // FIND THE RIDE DURATION (PICKUP TO DROPOFF)
   if (requestedRide) {
@@ -941,10 +952,10 @@ export const waitTime = async (
   // FIND THE DRIVER'S ETA TO THE STUDENT
   if (!requestid) {
     const queueLength = (await getRideRequestsInPool()).length;
-    driverETA = queueLength * 15;
+    driverETA = queueLength;
   } else if (requestid && !driverLocation) {
     const rideRequests = await getRideRequestsInPool();
-    const index = rankOf(rideRequests, requestid); // Note: rankOf expects student netid, not requestid. This might be a bug in original code.
+    const index = rankOfRequest(rideRequests, requestid);
     if (index === -1) {
       return {
         response: "ERROR",
@@ -952,7 +963,7 @@ export const waitTime = async (
         category: "WAIT_TIME",
       };
     }
-    driverETA = (index + 1) * 15;
+    driverETA = index;
   } else if (requestedRide && driverLocation) {
     const resp = await getDuration(
       driverLocation,
@@ -969,7 +980,7 @@ export const waitTime = async (
   return {
     response: "WAIT_TIME",
     rideDuration,
-    driverETA,
+    driverETA, // will be # of people ahead of you in queue if no driverLocation was passed in
     pickUpAddress,
     dropOffAddress,
   };

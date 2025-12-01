@@ -21,7 +21,7 @@ import {
 import Map, { MapRef, isSameLocation } from "./map";
 import { useLocalSearchParams } from "expo-router";
 import RequestAvailable from "@/components/Driver_RequestAvailable";
-import Legend from "@/components/Student_Legend";
+// import Legend from "@/components/Student_Legend";
 import Profile from "./profile";
 import { Ionicons } from "@expo/vector-icons";
 import Notification, { NotificationType } from "@/components/Both_Notification";
@@ -39,6 +39,7 @@ import { useRouter } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import DisconnectedModal from "@/components/Both_Disconnected";
 import { Coordinates } from "@/services/BuildingService";
+import DirectionsButton from "@/components/Both_DirectionsButton";
 
 export type HandleRidePhase =
   | "headingToPickup"
@@ -443,6 +444,11 @@ export default function HomePage() {
       resetAllFields();
       setWhichComponent("noRequests");
       whichComponent.current = "noRequests";
+      setNotifState({
+        text: "Successfully completed ride",
+        color: "#C9FED0",
+        trigger: Date.now(),
+      });
     } else {
       // if not successful, log the error
       const errMessage = message as ErrorResponse;
@@ -661,11 +667,16 @@ export default function HomePage() {
             setPhase("headingToPickup");
             break;
           case "DRIVER AT PICK UP":
+            console.log("loading pickup");
             setWhichComponent("handleRide");
+            whichComponent.current = "handleRide";
+
             setPhase("waitingForPickup");
             break;
           case "DRIVING TO DESTINATION":
             setWhichComponent("handleRide");
+            whichComponent.current = "handleRide";
+
             setPhase("headingToDropoff");
             break;
           default:
@@ -704,7 +715,6 @@ export default function HomePage() {
         : wsStatus == WebSocket.CONNECTING
           ? "CONNECTING"
           : "DISCONNECTED";
-    console.log("DRIVER SEES WS " + status);
     setWebsocketStatus(status);
   };
 
@@ -1073,32 +1083,43 @@ export default function HomePage() {
           position: "absolute",
           // set the height of the sidebar to the height of the current component + padding
           bottom: currentComponentHeight + 10,
-          left: 10,
+          paddingHorizontal: 10,
           alignItems: "flex-start",
+          width: "100%",
+          flexDirection: "row",
+          justifyContent: "space-between",
         }}
       >
         {/* Recenter Button */}
         <Pressable
           style={{
             backgroundColor: "#4b2e83",
-            width: 35,
-            height: 35,
+            width: 45,
+            height: 45,
             borderRadius: 50,
             borderWidth: 3,
             borderColor: "white",
             justifyContent: "center",
             alignItems: "center",
-            marginBottom: 10,
             shadowOpacity: 0.3,
             left: 2,
+            alignSelf: "flex-end",
           }}
           onPress={recenter}
         >
-          <Ionicons name="locate" size={20} color="white" />
+          <Ionicons name="locate" size={30} color="white" />
         </Pressable>
 
-        {/* Side map legend */}
-        <Legend role={"DRIVER"}></Legend>
+        {/* Directions button - positioned on the right side */}
+        {whichComponent.current === "handleRide" &&
+          phase != "waitingForPickup" && (
+            <DirectionsButton
+              locationTo={
+                phase == "headingToPickup" ? pickUpLocation : dropOffLocation
+              }
+              role={"DRIVER"}
+            />
+          )}
       </View>
 
       {/* Decide which component to render */}

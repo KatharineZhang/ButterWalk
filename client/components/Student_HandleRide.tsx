@@ -21,8 +21,6 @@ export type RideStatus =
   | "RideCompleted"; // the driver arrived at the dropoff location
 
 interface HandleRideProps {
-  pickUpAddress: string;
-  dropOffAddress: string;
   pickUpLocationName: string;
   dropOffLocationName: string;
   status: RideStatus;
@@ -194,7 +192,15 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
                 : status == "RideInProgress"
                   ? // convert the arrival time to our best guess of the user's timezone
                     `Estimated Arrival Time: ${momentTimezone.tz(moment().add(rideDuration, "minutes"), moment.tz.guess()).format("h:mm A")}`
-                  : `Estimated Wait Time: ${driverETA == 0 ? "<2" : driverETA} min`}
+                  : status == "WaitingForRide"
+                    ? `${
+                        driverETA == 0
+                          ? "You are first in line!"
+                          : driverETA == 1
+                            ? "1 person ahead of you in line"
+                            : driverETA + " people ahead of you in line"
+                      }`
+                    : `Estimated Wait Time: ${driverETA == 0 ? "<2" : driverETA} min`}
             </Text>
           </View>
         )}
@@ -305,10 +311,7 @@ const HandleRideComponent: React.FC<HandleRideProps> = ({
           >
             {/* I Have Arrived Button */}
             <Pressable
-              style={[
-                styles.bottomModalButton,
-                { borderWidth: 2, backgroundColor: "#4B2E83" },
-              ]}
+              style={[styles.bottomModalButton, { backgroundColor: "#4B2E83" }]}
               onPress={() => {
                 setShowWaitingForConfirmation(true);
               }}

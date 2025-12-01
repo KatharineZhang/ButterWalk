@@ -24,6 +24,7 @@ export interface BottomDrawerRef {
   open: () => void;
   close: () => void;
   expand: () => void;
+  shrink: () => void;
 }
 
 const BottomDrawer = forwardRef<BottomDrawerRef, BottomDrawerProps>(
@@ -73,6 +74,12 @@ const BottomDrawer = forwardRef<BottomDrawerRef, BottomDrawerProps>(
         }).start(() => setVisible(false));
       },
       expand: modalExpand,
+      shrink: () => {
+        Animated.spring(translateY, {
+          toValue: SCREEN_HEIGHT - snap40,
+          useNativeDriver: true,
+        }).start();
+      },
     }));
 
     // Gesture handler

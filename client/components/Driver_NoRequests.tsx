@@ -23,7 +23,6 @@ export default function NoRequests({
         width: "100%",
         backgroundColor: "white",
         paddingHorizontal: 16,
-        borderRadius: 10,
         paddingVertical: "10%",
       }}
       onLayout={(event) => {

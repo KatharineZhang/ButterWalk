@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { View, Text, Pressable, Linking } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { RideRequest } from "../../server/src/api";
 import { NotificationType } from "./Both_Notification";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -115,26 +115,6 @@ export default function HandleRide({
     onCancel();
   };
 
-  // Function to open Google Maps with directions while app still runs in background
-  const openGoogleMapsDirections = async (destination: {
-    lat: number;
-    lng: number;
-    title: string;
-  }) => {
-    try {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${destination.lat},${destination.lng}&travelmode=driving`;
-
-      const canOpen = await Linking.canOpenURL(url);
-      if (canOpen) {
-        await Linking.openURL(url);
-      } else {
-        console.error("Cannot open maps URL");
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   // Function to format time (mm:ss)
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -153,7 +133,6 @@ export default function HandleRide({
           width: "100%",
           backgroundColor: "white",
           paddingHorizontal: 16,
-          borderRadius: 10,
           paddingVertical: "8%",
           paddingBottom:
             phase === "waitingForPickup" || phase === "arrivedAtDropoff"
@@ -204,43 +183,6 @@ export default function HandleRide({
                 </Text>
               </View>
             </View>
-          </View>
-
-          <View
-            style={{
-              marginTop: 4,
-              marginBottom: 12,
-              flexDirection: "row", // row layout
-              alignItems: "center", // vertically align buttons
-            }}
-          >
-            {/* Directions Button */}
-            <Pressable
-              style={{
-                backgroundColor: "#4B2E83",
-                paddingVertical: 10,
-                paddingHorizontal: 16,
-                borderRadius: 8,
-                alignItems: "center",
-                justifyContent: "center",
-                flexDirection: "row",
-              }}
-              onPress={() => {
-                const destination = {
-                  lat:
-                    requestInfo.locationFrom?.coordinates?.latitude || 47.6062,
-                  lng:
-                    requestInfo.locationFrom?.coordinates?.longitude ||
-                    -122.3321,
-                  title: "Pickup Location",
-                };
-                openGoogleMapsDirections(destination);
-              }}
-            >
-              <Text style={{ color: "white", fontSize: 14, fontWeight: "600" }}>
-                Directions
-              </Text>
-            </Pressable>
           </View>
 
           {/* Grey line */}
@@ -464,40 +406,6 @@ export default function HandleRide({
                 </Text>
               </View>
             </View>
-          </View>
-
-          {/*Directions Button */}
-          <View
-            style={{
-              marginTop: 4,
-              marginBottom: 12,
-            }}
-          >
-            <Pressable
-              style={{
-                backgroundColor: "#4B2E83",
-                paddingVertical: 10,
-                paddingHorizontal: 16,
-                borderRadius: 8,
-                alignItems: "center",
-                justifyContent: "center",
-                flexDirection: "row",
-                alignSelf: "flex-start",
-              }}
-              onPress={() => {
-                const destination = {
-                  lat: requestInfo.locationTo?.coordinates?.latitude || 47.6062,
-                  lng:
-                    requestInfo.locationTo?.coordinates?.longitude || -122.3321,
-                  title: "Dropoff Location",
-                };
-                openGoogleMapsDirections(destination);
-              }}
-            >
-              <Text style={{ color: "white", fontSize: 14, fontWeight: "600" }}>
-                Directions
-              </Text>
-            </Pressable>
           </View>
 
           {/* Grey line */}

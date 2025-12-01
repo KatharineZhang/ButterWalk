@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View, Text, Dimensions } from "react-native";
 import { FontAwesome6, Entypo, FontAwesome } from "@expo/vector-icons";
 
 type StudentProgressBarProps = {
@@ -49,7 +49,18 @@ export default function Driver_ProgressBar({
             flexDirection: "column",
           }}
         >
-          <View style={{ alignItems: "center", flexDirection: "row" }}>
+          <View
+            style={{
+              alignItems: "center",
+              flexDirection: "row",
+              paddingLeft:
+                Dimensions.get("screen").height /
+                  Dimensions.get("screen").width <
+                1.6
+                  ? "1.5%"
+                  : "0%",
+            }}
+          >
             {/* Start Icon */}
             <View>
               <Entypo name="circle" size={20} color={startColor} />
@@ -84,7 +95,18 @@ export default function Driver_ProgressBar({
             ))}
           </View>
 
-          <View style={{ alignItems: "center", flexDirection: "row" }}>
+          <View
+            style={{
+              alignItems: "center",
+              flexDirection: "row",
+              paddingLeft:
+                Dimensions.get("screen").height /
+                  Dimensions.get("screen").width <
+                1.6
+                  ? "1.5%"
+                  : "0%",
+            }}
+          >
             {/* Pickup Icon */}
             <View>
               <FontAwesome name="circle" size={20} color={pickupColor} />
@@ -132,6 +154,12 @@ export default function Driver_ProgressBar({
             style={{
               alignItems: "center",
               flexDirection: "row",
+              paddingLeft:
+                Dimensions.get("screen").height /
+                  Dimensions.get("screen").width <
+                1.6
+                  ? "1.5%"
+                  : "0%",
             }}
           >
             {/* dropoff Icon */}

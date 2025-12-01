@@ -228,8 +228,6 @@ export async function completeRideLogic(
     );
   }
 
-  t.update(rideRef, { status: COMPLETED_STATUS, completedAt: Timestamp.now() });
-
   // Update recent locations for the student
   const locationRef = recentlocationsCollection.doc(ride.netid);
   const locationDoc = await t.get(locationRef);
@@ -245,6 +243,8 @@ export async function completeRideLogic(
     .slice(0, 20);
 
   t.set(locationRef, { netid: ride.netid, locations: newLocations });
+
+  t.update(rideRef, { status: COMPLETED_STATUS, completedAt: Timestamp.now() });
 
   return { student: ride.netid, driver: ride.driverid };
 }

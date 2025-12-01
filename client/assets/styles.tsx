@@ -366,7 +366,6 @@ export const styles = StyleSheet.create({
     backgroundColor: "white",
     justifyContent: "center",
     alignItems: "center",
-    borderBottomWidth: 1,
     borderBottomColor: "#4B2E83",
   },
   infoText: {
@@ -584,8 +583,7 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
   },
   confirmButton: {
-    borderWidth: 2,
-    borderColor: "#4B2E83",
+    backgroundColor: "#4B2E83",
   },
   cancelButton: {
     backgroundColor: "red",
@@ -1106,6 +1104,7 @@ export const loadingPageCompStyles = StyleSheet.create({
     alignItems: "center",
     height: 150,
     justifyContent: "space-between",
+    wordWrap: "normal",
   },
   mainTextTypography: {
     color: "#FFF",

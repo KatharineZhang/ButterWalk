@@ -1,9 +1,17 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { styles } from "@/assets/styles";
-import { View, Text, Pressable, Image, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  Image,
+  ActivityIndicator,
+  Dimensions,
+} from "react-native";
 import { RideRequest } from "../../server/src/api";
 import { useRef, useEffect, useState } from "react";
 import { Animated, Easing } from "react-native";
+import { FontAwesome, Ionicons, MaterialIcons } from "@expo/vector-icons";
 
 interface RequestAvailableProps {
   requestInfo: RideRequest;
@@ -33,6 +41,8 @@ export default function RequestAvailable({
     outputRange: ["30deg", "0deg", "-30deg", "0deg", "30deg"],
   });
   const [showLoading, setShowLoading] = useState(false);
+
+  const screenWidth = Dimensions.get("screen").width;
 
   // changes the screen when the driver clicks accept
   const handleAccept = () => {
@@ -64,7 +74,6 @@ export default function RequestAvailable({
           width: "100%",
           backgroundColor: "white",
           paddingHorizontal: 16,
-          borderRadius: 10,
           paddingVertical: "8%",
         },
         showAcceptScreen && { paddingBottom: "21%" }, // the screens require different padding since the containers in each screen took up different sizing
@@ -89,10 +98,7 @@ export default function RequestAvailable({
             </Text>
             <View style={{ flex: 1 }} />
             <View style={{ width: "5%", aspectRatio: 1 }}>
-              <Image
-                source={require("@/assets/images/profile-filled.png")}
-                style={{ width: "100%", height: "100%", resizeMode: "contain" }}
-              />
+              <Ionicons name="person" size={screenWidth * 0.05} color="black" />
             </View>
             <View style={{ width: "1%" }} />
             <Text style={{ fontSize: 17 }}>({requestInfo.numRiders})</Text>
@@ -130,16 +136,28 @@ export default function RequestAvailable({
             <View
               style={[
                 styles.driverRequestRowCenter,
-                { paddingHorizontal: "12%" },
+                { paddingLeft: "14.5%", paddingBottom: "1%" },
               ]}
             >
-              <View style={{ width: "16%", aspectRatio: 1 }}>
-                <Image
-                  source={require("@/assets/images/arrow.png")}
-                  style={[styles.driverRequestPageImage]}
+              <View
+                style={{
+                  width: screenWidth * 0.07,
+                  height: screenWidth * 0.07,
+                  borderRadius: 500,
+                  backgroundColor: "white",
+                  // padding: 20,
+                  borderWidth: screenWidth * 0.003,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <FontAwesome
+                  name="location-arrow"
+                  size={screenWidth * 0.05}
+                  color="#4B2E83"
                 />
               </View>
-
+              <View style={{ width: "2.5%" }} />
               <Text style={{ fontSize: 17, fontWeight: "bold" }}>
                 {" "}
                 Your Location{" "}
@@ -150,7 +168,7 @@ export default function RequestAvailable({
             <View
               style={[
                 styles.driverRequestRowCenter,
-                { marginHorizontal: "3.5%" },
+                { marginHorizontal: "3.5%", paddingVertical: "3%" },
               ]}
             >
               <View style={[styles.driverRequestDotsImage]}>
@@ -173,7 +191,11 @@ export default function RequestAvailable({
             <View
               style={[
                 styles.driverRequestRowCenter,
-                { paddingHorizontal: "15%" },
+                {
+                  paddingHorizontal: "15%",
+                  alignItems: "center",
+                  paddingBottom: "1%",
+                },
               ]}
             >
               <View style={{ width: "9%", aspectRatio: 1 }}>
@@ -199,7 +221,7 @@ export default function RequestAvailable({
             <View
               style={[
                 styles.driverRequestRowCenter,
-                { marginHorizontal: "3.5%" },
+                { marginHorizontal: "3.5%", paddingVertical: "3%" },
               ]}
             >
               <View
@@ -226,12 +248,14 @@ export default function RequestAvailable({
                 marginHorizontal: "15%",
                 flexDirection: "row",
                 paddingBottom: "7%",
+                alignItems: "flex-start",
               }}
             >
               <View style={{ width: "10%", aspectRatio: 1 }}>
-                <Image
-                  source={require("@/assets/images/location-on.png")}
-                  style={[styles.driverRequestPageImage]}
+                <MaterialIcons
+                  name="location-pin"
+                  size={screenWidth * 0.06}
+                  color="red"
                 />
               </View>
 
