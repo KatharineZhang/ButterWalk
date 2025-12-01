@@ -25,6 +25,7 @@ import {
   checkIfDriverSignin,
   addCallLog,
   loadRide,
+  chatMessage,
 } from "./routes";
 import {
   CompleteResponse,
@@ -39,7 +40,6 @@ import {
   RidesExistResponse,
   ViewRideRequestResponse,
   WrapperCancelResponse,
-  PingResponse,
 } from "./api";
 import { Timestamp } from "firebase-admin/firestore";
 
@@ -406,13 +406,23 @@ export const handleWebSocketMessage = async (
       break;
     }
 
-    case "PING": {
-      // if we got a ping from a client, just send a "pong" response back
-      resp = {
-        response: "PING",
-      } as PingResponse;
-      // send to client
-      sendWebSocketMessage(ws, resp);
+    case "CHAT_MESSAGE": {
+      resp = await chatMessage(
+        input.senderID,
+        input.message,
+        input.timestamp,
+        input.role
+      );
+
+      if ("toReceiver" in resp && "toSender" in resp) {
+        // send message to recipient
+        sendMessageToNetid(resp.toReceiver.recipientID, resp);
+        // send message to sender
+        sendWebSocketMessage(ws, resp);
+      } else {
+        console.error("Failed to send chat message:", resp.error);
+      }
+
       break;
     }
 

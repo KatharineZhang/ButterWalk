@@ -347,6 +347,21 @@ export const styles = StyleSheet.create({
     height: "90%",
     position: "absolute",
   },
+  chatModalView: {
+    backgroundColor: "#D6CBEB",
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    width: "100%",
+    height: "90%",
+    position: "absolute",
+  },
 
   // Ride Request Form styles
 
