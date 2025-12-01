@@ -572,7 +572,7 @@ export const styles = StyleSheet.create({
     paddingLeft: 80,
   },
   bottomModalButtonContainer: {
-    paddingVertical: 10,
+    paddingVertical: 20,
     justifyContent: "center",
     width: "100%",
   },
@@ -599,7 +599,7 @@ export const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     backgroundColor: "white",
-    padding: 16,
+    padding: 8,
     borderRadius: 10,
     width: "100%",
   },
@@ -612,7 +612,7 @@ export const styles = StyleSheet.create({
   },
   mainTextContainer: {
     flexDirection: "row",
-    marginBottom: 10,
+    marginBottom: 5,
   },
   mainText: {
     fontSize: 18,
@@ -623,7 +623,7 @@ export const styles = StyleSheet.create({
   subTextContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 5,
+    margin: 5,
   },
   subText: {
     fontSize: 16,
@@ -632,7 +632,7 @@ export const styles = StyleSheet.create({
   },
   progressBarBottom: {
     alignItems: "center",
-    paddingBottom: 25,
+    padding: 8,
   },
   rideTimeText: {
     fontSize: 12,
@@ -940,6 +940,140 @@ export const styles = StyleSheet.create({
     backgroundColor: "#FFD055",
     borderRadius: 8,
     justifyContent: "space-between",
+  },
+});
+
+export const progressBarStyles = StyleSheet.create({
+  // Row 1: Minutes
+  progressBarMinutesRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+    paddingHorizontal: 10,
+  },
+  progressBarMinutesSection: {
+    flex: 1,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 5,
+  },
+  progressBarTimeLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  // Row 2: Icons and Lines
+  progressBarIconRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
+    paddingHorizontal: "8%"
+  },
+  progressBarLine: {
+    flex: 1,
+    paddingHorizontal: 5,
+  },
+  progressBarDottedLine: {
+    width: "100%",
+    height: 2,
+    borderTopWidth: 2,
+    borderStyle: "dashed",
+    borderColor: "#999",
+  },
+
+  // Row 3: Labels
+  progressBarLabelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    paddingHorizontal: "4%"
+  },
+  progressBarLabelSection: {
+  flex: 1,
+  alignItems: "center",
+},
+progressBarLabelSectionStart: {
+  flex: 1,
+  alignItems: "flex-start", // Align to left edge
+},
+progressBarLabelSectionDropoff: {
+  flex: 1,
+  alignItems: "flex-end", // Align to right edge
+},
+  progressBarLabel: {
+    fontSize: 12,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  progressBarLocationNamePickup: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: "#4B2E83",
+    marginTop: 4,
+    width: "100%",
+    textAlign: "center",
+  },
+  progressBarLocationNameDropoff: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: "#4B2E83",
+    marginTop: 4,
+    width: "100%",
+    textAlign: "right",
+  },
+  progressBarAddress: {
+    fontSize: 8,
+    color: "#333",
+    marginTop: 4,
+    textAlign: "left",
+    backgroundColor: "blue"
+  },
+  progressBarAddressPickup: {
+  fontSize: 8,
+  color: "#333",
+  marginTop: 4,
+  width: "100%",
+  textAlign: "left", // Align to left edge
+},
+progressBarAddressDropoff: {
+  fontSize: 8,
+  color: "#333",
+  marginTop: 4,
+  width: "100%",
+  textAlign: "right", // Align to right edge
+},
+  progressBarDetailsLink: {
+    color: "#4B2E83",
+    fontSize: 12,
+    textDecorationLine: "underline",
+  },
+
+  // Old styles (can be removed if not used elsewhere)
+  progressBarRowContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  progressBarNode: {
+    alignItems: "center",
+    maxWidth: 100,
+    paddingHorizontal: 2,
+  },
+  progressBarLineContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  progressBarTimeLabelContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    marginBottom: 4,
   },
 });
 

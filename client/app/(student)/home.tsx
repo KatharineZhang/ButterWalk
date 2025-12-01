@@ -32,10 +32,10 @@ import FAQ from "./faq";
 import { Ionicons } from "@expo/vector-icons";
 import { styles } from "@/assets/styles";
 import HandleRideComponent from "@/components/Student_HandleRide";
-import { createOpenLink } from "react-native-open-maps";
 import LoadingPageComp from "@/components/Student_LoadingPage";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Legend from "@/components/Student_Legend";
+import Student_DirectionsButton from "@/components/Student_DirectionsButton";
 import DisconnectedModal from "@/components/Both_Disconnected";
 
 export default function HomePage() {
@@ -207,6 +207,7 @@ export default function HomePage() {
   const [pickUpAddress, setPickUpAddress] = useState("");
   const [dropOffAddress, setDropOffAddress] = useState("");
   // the address of the user's starting location
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [walkAddress, setWalkAddress] = useState("");
   // the amount of minutes it will take to walk to the pickup location
   const [walkDuration, setWalkDuration] = useState(0);
@@ -254,12 +255,6 @@ export default function HomePage() {
   // A number between 0 and 1 that represents the progress of the
   // ride from the pickup location to the dropoff location
   const [rideProgress, setRideProgress] = useState(0);
-
-  const routeToPickup = createOpenLink({
-    travelType: "walk",
-    start: walkAddress,
-    end: pickUpAddress,
-  });
 
   // when the user clicks the go-home button
   // reset all fields to their default values and go back to the ride request form
@@ -976,6 +971,23 @@ export default function HomePage() {
           <Legend role={"STUDENT"}></Legend>
         </View>
 
+        {/* Directions button - positioned on the right side */}
+        {whichComponent === "handleRide"
+          ? (rideStatusRef.current === "WaitingForRide" ||
+              rideStatusRef.current === "DriverEnRoute") && (
+              <View
+                style={{
+                  position: "absolute",
+                  bottom: currentComponentHeight + 10,
+                  right: 10, // Position on the right side
+                  alignItems: "flex-end",
+                }}
+              >
+                <Student_DirectionsButton pickUpLocation={pickUpLocation} />
+              </View>
+            )
+          : null}
+
         {/* Figure out which component to render */}
         {
           whichComponent === "rideReq" ? (
@@ -1029,16 +1041,15 @@ export default function HomePage() {
                 status={rideStatusRef.current}
                 walkProgress={walkProgress}
                 rideProgress={rideProgress}
-                pickUpLocation={pickUpLocationName}
-                dropOffLocation={dropOffLocationName}
                 pickUpAddress={pickUpAddress}
                 dropOffAddress={dropOffAddress}
+                pickUpLocationName={pickUpLocationName}
+                dropOffLocationName={dropOffLocationName}
                 walkDuration={walkDuration}
                 driverETA={driverETA}
                 rideDuration={rideDuration}
                 onCancel={cancelRide}
                 setFAQVisible={setFAQVisible}
-                openNavigation={routeToPickup}
                 setNotificationState={setNotifState}
                 goHome={goHome}
                 updateSideBarHeight={setCurrentComponentHeight}
