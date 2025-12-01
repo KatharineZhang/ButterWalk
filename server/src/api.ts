@@ -31,7 +31,7 @@ export type Command =
   | "PLACE_SEARCH"
   | "LOAD_RIDE"
   | "CALL_LOG"
-  | "PING";
+  | "CHAT_MESSAGE";
 
 // Input types
 export type WebSocketMessage =
@@ -156,7 +156,13 @@ export type WebSocketMessage =
       role: "STUDENT" | "DRIVER";
       phoneNumberCalled: string;
     }
-  | {directive: "PING"};
+  | {
+      directive: "CHAT_MESSAGE";
+      senderID: string;
+      message: string;
+      timestamp: Timestamp;
+      role: "STUDENT" | "DRIVER";
+    };
 
 // TEMP FIX
 export type ConnectMessage = {
@@ -186,7 +192,7 @@ export type WebSocketResponse =
   | PlaceSearchResponse
   | LoadRideResponse
   | CallLogResponse
-  | PingResponse;
+  | ChatMessageResponse;
 
 export type LocationType = {
   name: string;
@@ -201,10 +207,6 @@ export type GeneralResponse = {
   response: Command;
   success: true;
 };
-
-export type PingResponse = {
-  response: "PING"
-}
 
 export type StudentSignInResponse = {
   response: "SIGNIN";
@@ -329,6 +331,18 @@ export type ProfileResponse = {
 export type LoadRideResponse = {
   response: "LOAD_RIDE";
   rideRequest?: RideRequest & { requestId: string };
+};
+
+export type ChatMessageResponse = {
+  response: "CHAT_MESSAGE";
+  toSender: GeneralResponse;
+  toReceiver: {
+    senderID: string;
+    recipientID: string;
+    message: string;
+    timestamp: Timestamp;
+    role: string;
+  };
 };
 
 export type ErrorResponse = {
@@ -470,6 +484,14 @@ export type CallLog = {
   timestamp: Timestamp;
 };
 
+// metadata behind a single chat message
+export interface MessageEntry {
+  sender: string;
+  recipient: string;
+  message: string;
+  timestamp: Timestamp;
+}
+
 /**
  * Possible states of RideRequest.status
  */
@@ -595,6 +617,9 @@ export type RideRequest = {
    * - `COMPLETED`: The student was dropped off after completion of the ride.
    */
   status: RideRequestStatus;
+
+  // the message history between student and driver
+  messageLog?: MessageEntry[];
 };
 
 // CREATE TABLE ProblematicUsers (netid varchar(20) REFERENCES Users(netid) PRIMARY KEY,
