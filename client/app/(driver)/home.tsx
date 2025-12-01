@@ -1012,40 +1012,6 @@ export default function HomePage() {
         onClose={() => setMessageVisible(false)}
         userId={netid}
       />
-      {/* Message button in top right corner */}
-      {phase === "waitingForPickup" && (
-        <TouchableOpacity
-          style={{
-            position: "absolute",
-            top: "66%",
-            right: "5%",
-            zIndex: 200,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.5,
-            shadowRadius: 5,
-            shadowColor: "grey",
-          }}
-          onPress={() => setMessageVisible(true)}
-        >
-          <View
-            style={{
-              backgroundColor: "white",
-              borderRadius: 100,
-              width: 40,
-              height: 40,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Ionicons
-              name="chatbubble-ellipses"
-              size={30}
-              color="#4B2E83"
-              style={{ transform: [{ scaleX: -1 }] }}
-            />
-          </View>
-        </TouchableOpacity>
-      )}
 
       {/* Flag button in top right corner*/}
       {flaggingAllowed && (
@@ -1162,14 +1128,45 @@ export default function HomePage() {
 
         {/* Directions button - positioned on the right side */}
         {whichComponent.current === "handleRide" &&
-          phase != "waitingForPickup" && (
+          (phase != "waitingForPickup" ? (
             <DirectionsButton
               locationTo={
                 phase == "headingToPickup" ? pickUpLocation : dropOffLocation
               }
               role={"DRIVER"}
             />
-          )}
+          ) : (
+            <TouchableOpacity
+              style={{
+                position: "absolute",
+                right: "5%",
+                zIndex: 200,
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.5,
+                shadowRadius: 5,
+                shadowColor: "grey",
+              }}
+              onPress={() => setMessageVisible(true)}
+            >
+              <View
+                style={{
+                  backgroundColor: "white",
+                  borderRadius: 100,
+                  width: 40,
+                  height: 40,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons
+                  name="chatbubble-ellipses"
+                  size={30}
+                  color="#4B2E83"
+                  style={{ transform: [{ scaleX: -1 }] }}
+                />
+              </View>
+            </TouchableOpacity>
+          ))}
       </View>
 
       {/* Decide which component to render */}

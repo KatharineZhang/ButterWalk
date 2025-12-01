@@ -941,39 +941,6 @@ export default function HomePage() {
               </View>
             </TouchableOpacity>
           )}
-
-          {/* Message button (right) */}
-          {rideStatusRef.current === "DriverArrived" && (
-            <TouchableOpacity
-              style={{
-                position: "absolute",
-                top: "66%",
-                right: "5%",
-                shadowOpacity: 0.5,
-                shadowRadius: 5,
-                shadowColor: "grey",
-              }}
-              onPress={() => setMessageVisible(true)}
-            >
-              <View
-                style={{
-                  backgroundColor: "white",
-                  borderRadius: 100,
-                  width: 40,
-                  height: 40,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Ionicons
-                  name="chatbubble-ellipses"
-                  size={34}
-                  color="#4B2E83"
-                  style={{ transform: [{ scaleX: -1 }] }}
-                />
-              </View>
-            </TouchableOpacity>
-          )}
         </View>
 
         {/* Side Bar */}
@@ -1011,6 +978,37 @@ export default function HomePage() {
           >
             <Ionicons name="locate" size={30} color="white" />
           </Pressable>
+          {/* Message button (right) */}
+          {rideStatusRef.current === "DriverArrived" && (
+            <TouchableOpacity
+              style={{
+                position: "absolute",
+                right: "5%",
+                shadowOpacity: 0.5,
+                shadowRadius: 5,
+                shadowColor: "grey",
+              }}
+              onPress={() => setMessageVisible(true)}
+            >
+              <View
+                style={{
+                  backgroundColor: "white",
+                  borderRadius: 100,
+                  width: 40,
+                  height: 40,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons
+                  name="chatbubble-ellipses"
+                  size={34}
+                  color="#4B2E83"
+                  style={{ transform: [{ scaleX: -1 }] }}
+                />
+              </View>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Directions button - positioned on the right side */}
